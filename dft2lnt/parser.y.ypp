@@ -1,0 +1,329 @@
+%pure-parser
+%locations
+%defines
+%error-verbose
+
+%parse-param{ Parser* currentParser}
+%parse-param{ yyscan_t scanner}
+%parse-param{std::vector<DFT::AST::ASTNode*>** result_nodes}
+%lex-param { yyscan_t scanner }
+
+//%define api.pure
+
+// Header
+%code requires {
+
+	#define __PARSER_Y_HPP
+	#define YYDEBUG 1
+
+	#include <stdint.h>
+	#include <vector>
+	#include <string>
+//	#ifndef COMPILING_LEXER
+//	#	include "lexer.l.h"
+//	#endif
+	#include "dftnodes/Nodes.h"
+	#include "dft_ast.h"
+	#include "DFTree.h"
+	#include "dft2lnt.h"
+
+#ifdef assert
+	#undef assert
+#endif
+#define assert(e) if(e) {} else { cerr << endl << __FILE__ << ":" << __LINE__ << ":" << endl << "Assertion failed: " << #e << endl; errno = *(int*)(e); }
+
+	typedef struct NumberSuffix {
+		int number;
+		char* suffix;
+	} NumberSuffix;
+	
+}
+
+%union {
+		int number;
+		float f_number;
+		char character;
+		char* c_string;
+		char* address;
+		NumberSuffix numbersuffix;
+		std::vector<DFT::AST::ASTNode*>* nodes;
+		DFT::AST::ASTNode* node;
+		DFT::DFTree* dft;
+		DFT::AST::ASTIdentifier* string;
+		std::vector<DFT::AST::ASTIdentifier*>* strings;
+		DFT::AST::ASTAttribute* attribute;
+		std::vector<DFT::AST::ASTAttribute*>* attributes;
+		DFT::AST::ASTAttrib* attributeValue;
+}
+
+%code {
+	#include "dft_parser.h"
+	#include "yyheader.h"
+//	#include "parser.y.hpp"
+}
+
+%token <c_string> IDENTIFIER
+%token <c_string> STRING
+%token <f_number> FLOAT
+%token <character> CHAR
+%token <number> NUMBER
+%token <numbersuffix> NUMBERSUFFIX
+
+// Gate names
+%token<c_string> PHASEDOR
+%token<c_string> OR
+%token<c_string> AND
+%token<c_string> HSP
+%token<c_string> WSP
+%token<c_string> CSP
+%token<c_string> PAND
+%token<c_string> SEQ
+%token<c_string> OF
+%token<c_string> FDEP
+%token<c_string> TRANSFER
+
+// Attribute names
+%token<c_string> PROB
+%token<c_string> LAMBDA
+%token<c_string> RATE
+%token<c_string> SHAPE
+%token<c_string> MEAN
+%token<c_string> STDDEV
+%token<c_string> COV
+%token<c_string> RES
+%token<c_string> REPL
+%token<c_string> DORM
+%token<c_string> APH
+
+// Other
+%token ENDLINE
+%token EQUALS
+%token TOPLEVEL
+%token PAGE
+%token PHASE
+%token SEMICOLON
+
+// Rules
+%type <nodes> lines dft
+%type <node>  line toplevel_line gate_line be_line page_line
+%type <strings>  names
+%type <string>  string nodeid gate
+%type <attributes>  be_attribs
+%type <attribute>  be_attrib
+%type <attribute>  be_attrib_name
+%type <attributeValue> be_attrib_value
+
+//%type <dft>       dft
+
+%initial-action{
+	@$.filename = currentParser->getCurrentFileName();
+}
+
+%%
+
+dft //{
+	:	lines
+	{
+		*result_nodes = $1;
+//		$$ = DFT::DFT2LNT::createDFT(*$1);
+//		for(int i=0; i<$1->size();++i) {
+//			delete $1->at(i);
+//		}
+//		delete $1;
+		@$ = @$; // Otherwise yylloc is not defined
+	}
+	;
+//}
+
+/* Rule 1: A DFT specification consists of a number of lines */
+lines //{
+	:	/* empty */
+	{
+		$$ = new std::vector<DFT::AST::ASTNode*>();
+	}
+	|	lines line
+	{
+		assert($1);
+		assert($2);
+		$1->push_back($2);
+		$$ = $1;
+	}
+	;
+//}
+
+/* Rule 2: A line either defines the toplevel element, a gate, a basic event or a page allocation */
+line //{
+	:	toplevel_line SEMICOLON
+	|	gate_line SEMICOLON
+	|	be_line SEMICOLON
+	|	page_line SEMICOLON
+	;
+//}
+
+/* Rule 3: A list of zero or more names */
+names //{
+	:	/* empty */
+	{
+		$$ = new std::vector<DFT::AST::ASTIdentifier*>();
+	}
+	|	names nodeid
+	{
+		assert($1);
+		assert($2);
+		$1->push_back($2);
+		$$ = $1;
+	}
+	;
+//}
+
+/* Rule 4: A list of zero or more BE attributes */
+be_attribs //{
+	:	/* empty */
+	{
+		$$ = new std::vector<DFT::AST::ASTAttribute*>();
+	}
+	|	be_attribs be_attrib
+	{
+		assert($1);
+		assert($2);
+		$1->push_back($2);
+		$$ = $1;
+	}
+	;
+//}
+
+be_attrib // {
+	:	be_attrib_name EQUALS be_attrib_value
+	{
+		$$ = $1;
+		$$->setValue($3);
+	}
+//	:	be_attrib_name EQUALS FLOAT
+//	{
+//		$$ = $1;
+//		$$->setValue(new DFT::AST::ASTAttribFloat(@3,$3));
+//	}
+//	|	be_attrib_name EQUALS NUMBER
+//	{
+//		$$ = $1;
+//		$$->setValue(new DFT::AST::ASTAttribNumber(@3,$3));
+//	}
+//	|	be_attrib_name EQUALS string
+//	{
+//		$$ = $1;
+//		$1->setValue(new DFT::AST::ASTAttribString(@3,$3));
+//	}
+	;
+//}
+
+be_attrib_name //{
+//	:	IDENTIFIER { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	:	PROB   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelProb  ); free($1); }
+	|	LAMBDA { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelLambda); free($1); }
+	|	RATE   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRate  ); free($1); }
+	|	SHAPE  { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelShape ); free($1); }
+	|	MEAN   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelMean  ); free($1); }
+	|	STDDEV { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelStddev); free($1); }
+	|	COV    { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelCov   ); free($1); }
+	|	RES    { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRes   ); free($1); }
+	|	REPL   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepl  ); free($1); }
+	|	DORM   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelDorm  ); free($1); }
+	|	APH    { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelAph   ); free($1); }
+	;
+//}
+
+be_attrib_value //{
+	:	FLOAT
+	{
+		$$ = new DFT::AST::ASTAttribFloat(@1,$1);
+	}
+	|	NUMBER
+	{
+		$$ = new DFT::AST::ASTAttribNumber(@1,$1);
+	}
+	|	string
+	{
+		$$ = new DFT::AST::ASTAttribString(@1,$1);
+	}
+	;
+//}
+
+/* Rule 5: The toplevel line defines the toplevel element of the DFT */
+toplevel_line //{
+	:	TOPLEVEL nodeid
+		{
+			//printf("TopLevel "); LOCATION_PRINT(@$);
+			$$ = new DFT::AST::ASTTopLevel(@$,$2);
+		}
+	;
+//}
+
+/* Rule 6: A gate line defines a gate with its inputs */
+gate_line //{
+	:	nodeid gate names
+		{
+			$$ = new DFT::AST::ASTGate(@$,$1,$2,$3);
+		}
+	|	nodeid NUMBER gate NUMBER names
+		{
+			$$ = new DFT::AST::ASTGate(@$,$1,$3,$5);
+		}
+	;
+//}
+
+/* Rule 7: A basic event line describes a basic event with its attributes and its phase */
+be_line //{
+	:	nodeid be_attribs
+		{
+			//printf("BE1 "); LOCATION_PRINT(@$);
+			DFT::AST::ASTBasicEvent* be = new DFT::AST::ASTBasicEvent(@$,$1);
+			be->setAttributes($2);
+			$$ = be;
+		}
+	|	nodeid PHASE NUMBER be_attribs
+		{
+			//printf("BE2 "); LOCATION_PRINT(@$);
+			DFT::AST::ASTBasicEvent* be = new DFT::AST::ASTBasicEvent(@$,$1);
+			be->setPhase($3);
+			be->setAttributes($4);
+			$$ = be;
+		}
+	;
+//}
+
+/* Rule 8: A page line assigns an element to a page (for the graphical display of Galileo) */
+page_line //{
+	:	PAGE NUMBER nodeid
+	{
+		$$ = new DFT::AST::ASTPage(@$,$2,$3);
+	}
+	;
+//}
+
+/* gate */
+gate //{
+	:	PHASEDOR  { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	|	OR        { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	|	AND       { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	|	HSP       { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	|	WSP       { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	|	CSP       { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	|	PAND      { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	|	SEQ       { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	|	OF        { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	|	FDEP      { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	|	TRANSFER  { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	;
+//}
+
+/* Node identifier (string) */
+nodeid
+	: string
+	;
+
+string // {
+	:	STRING {
+		$$ = new DFT::AST::ASTIdentifier(@1,std::string($1));
+		free($1);
+	}
+// }

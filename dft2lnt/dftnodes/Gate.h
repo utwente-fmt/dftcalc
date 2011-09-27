@@ -1,0 +1,32 @@
+#ifndef GATE_H
+#define GATE_H
+
+#include <vector>
+#include "Node.h"
+
+using namespace std;
+
+namespace DFT {
+namespace Nodes {
+
+class Gate: public Node {
+private:
+	std::vector<Node*> children;
+public:
+	Gate(std::string name): Node(name,GateType) {
+	}
+	std::vector<Node*>& getChildren() { return children; }
+	void addChild(Node* child) { children.push_back(child); }
+	virtual ~Gate() {
+	}
+	virtual void addReferencesTo(std::vector<Node*>& nodeList) {
+		for(int i=0; i<children.size(); ++i) {
+			nodeList.push_back(children.at(i));
+		}
+	}
+};
+
+} // Namespace: Node
+} // Namespace: DFT
+
+#endif // GATE_H
