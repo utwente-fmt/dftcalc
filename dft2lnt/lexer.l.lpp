@@ -218,30 +218,30 @@ page                    return PAGE;
 phase                   return PHASE;
 
  /* gates */
-phasedor                return PHASEDOR;
-or                      return OR;
-and                     return AND;
-hsp                     return HSP;
-wsp                     return WSP;
-csp                     return CSP;
-pand                    return PAND;
-seq                     return SEQ;
-of                      return OF;
-fdep                    return FDEP;
-{transfer}              return TRANSFER;
+phasedor                { yylval->c_string=my_strdup(yytext); return PHASEDOR; }
+or                      { yylval->c_string=my_strdup(yytext); return OR;       }
+and                     { yylval->c_string=my_strdup(yytext); return AND;      }
+hsp                     { yylval->c_string=my_strdup(yytext); return HSP;      }
+wsp                     { yylval->c_string=my_strdup(yytext); return WSP;      }
+csp                     { yylval->c_string=my_strdup(yytext); return CSP;      }
+pand                    { yylval->c_string=my_strdup(yytext); return PAND;     }
+seq                     { yylval->c_string=my_strdup(yytext); return SEQ;      }
+of                      { yylval->c_string=my_strdup(yytext); return OF;       }
+fdep                    { yylval->c_string=my_strdup(yytext); return FDEP;     }
+{transfer}              { yylval->c_string=my_strdup(yytext); return TRANSFER; }
 
  /* Attributes */
-prob                    { yylval->c_string=my_strdup(yytext); return PROB; }
+prob                    { yylval->c_string=my_strdup(yytext); return PROB;   }
 lambda                  { yylval->c_string=my_strdup(yytext); return LAMBDA; }
-rate                    { yylval->c_string=my_strdup(yytext); return RATE; }
-shape                   { yylval->c_string=my_strdup(yytext); return SHAPE; }
-mean                    { yylval->c_string=my_strdup(yytext); return MEAN; }
+rate                    { yylval->c_string=my_strdup(yytext); return RATE;   }
+shape                   { yylval->c_string=my_strdup(yytext); return SHAPE;  }
+mean                    { yylval->c_string=my_strdup(yytext); return MEAN;   }
 stddev                  { yylval->c_string=my_strdup(yytext); return STDDEV; }
-cov                     { yylval->c_string=my_strdup(yytext); return COV; }
-res                     { yylval->c_string=my_strdup(yytext); return RES; }
-repl                    { yylval->c_string=my_strdup(yytext); return REPL; }
-dorm                    { yylval->c_string=my_strdup(yytext); return DORM; }
-aph                     { yylval->c_string=my_strdup(yytext); return APH; }
+cov                     { yylval->c_string=my_strdup(yytext); return COV;    }
+res                     { yylval->c_string=my_strdup(yytext); return RES;    }
+repl                    { yylval->c_string=my_strdup(yytext); return REPL;   }
+dorm                    { yylval->c_string=my_strdup(yytext); return DORM;   }
+aph                     { yylval->c_string=my_strdup(yytext); return APH;    }
 
 {identifier} {
 	yylval->c_string=my_strdup(yytext);
