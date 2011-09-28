@@ -14,6 +14,7 @@
 #include "dft2lnt.h"
 #include "DFTree.h"
 #include "DFTreeValidator.h"
+#include "DFTreePrinter.h"
 
 FILE* pp_outputFile = stdout;
 
@@ -270,9 +271,9 @@ int main(int argc, char** argv) {
 	}
 	
 	/* Create DFT */
-	printf(":: Building DFT...\n"); fflush(stdout);
 	DFT::DFTree* dft = NULL;
-	{
+	if(astValid) {
+		printf(":: Building DFT...\n"); fflush(stdout);
 		DFT::ASTDFTBuilder builder(ast,compilerContext);
 		dft = builder.build();
 	}
@@ -282,10 +283,12 @@ int main(int argc, char** argv) {
 	}
 
 	/* Validate DFT */
-	printf(":: Validating DFT...\n"); fflush(stdout);
-	{
+	int dftValid = false;
+	if(dft) {
+		printf(":: Validating DFT...\n"); fflush(stdout);
 		DFT::DFTreeValidator validator(dft,compilerContext);
-		if(valid) {
+		dftValid = validator.validate();
+		if(dftValid) {
 			printf(":: DFT determined valid\n");
 		} else {
 			printf(":: DFT determined invalid\n");

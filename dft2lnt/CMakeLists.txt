@@ -35,6 +35,7 @@ add_library(dft2lnt
 	dftnodes/BasicEvent.cpp
 	DFTree.cpp
 	DFTreeValidator.cpp
+	DFTreePrinter.cpp
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
 )
 
