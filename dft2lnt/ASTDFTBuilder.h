@@ -19,7 +19,47 @@ private:
 	std::string topNode;
 	//std::map<std::string,DFT::Nodes::Node*> nodeTable;
 public:
+	static DFT::Nodes::Gate* buildGate(DFT::AST::ASTGate* astgate) {
+		DFT::Nodes::Gate* gate = NULL;
+		DFT::Nodes::NodeType gateType = astgate->getGateType()->getGateType();
 
+		switch(gateType) {
+		case DFT::Nodes::GatePhasedOrType:
+			break;
+		case DFT::Nodes::GateOrType:
+			break;
+		case DFT::Nodes::GateAndType:
+			gate = new DFT::Nodes::GateAnd(astgate->getName()->getString());
+			break;
+		case DFT::Nodes::GateHSPType:
+			break;
+		case DFT::Nodes::GateWSPType:
+			break;
+		case DFT::Nodes::GateCSPType:
+			break;
+		case DFT::Nodes::GatePAndType:
+			break;
+		case DFT::Nodes::GateSeqType:
+			break;
+		case DFT::Nodes::GateOFType:
+			break;
+		case DFT::Nodes::GateFDEPType:
+			break;
+		case DFT::Nodes::GateTransferType:
+			break;
+		default:
+			break;
+		}
+		return gate;
+	}
+	static bool buildGateTest(DFT::AST::ASTGate* astgate) {
+		DFT::Nodes::Gate* gate = buildGate(astgate);
+		if(gate) {
+			delete gate;
+			return true;
+		}
+		return false;
+	}
 	ASTDFTBuilderPass1(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc, DFT::DFTree* dft):
 		ASTVisitor(ast,cc,[](int& ret, int val) {}),
 		dft(dft),
@@ -44,11 +84,16 @@ public:
 		ASTVisitor::visitBasicEvent(basicEvent);
 	}
 	virtual int visitGate(DFT::AST::ASTGate* gate) {
-		
-		DFT::Nodes::Gate* n_gate = new DFT::Nodes::Gate(gate->getName()->getString());
-		//nodeTable.insert( pair<std::string,DFT::Nodes::Node*>(gate->getName()->getString(),n_gate) );
-		dft->addNode(n_gate);
-				
+		DFT::Nodes::Gate* gate = buildGate(astgate);
+
+		if(!gate) {
+			cc->reportError("ASTDFTBuilder does not support this Gate yet: " + astgate->getGateType()->getString());
+			return 0;
+		}
+
+		//nodeTable.insert( pair<std::string,DFT::Nodes::Node*>(astgate->getName()->getString(),n_gate) );
+		dft->addNode(gate);
+
 		ASTVisitor::visitGate(gate);
 	}
 	virtual int visitPage(DFT::AST::ASTPage* page) {

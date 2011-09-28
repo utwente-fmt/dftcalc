@@ -113,6 +113,11 @@ public:
 	virtual int visitGate(DFT::AST::ASTGate* gate) {
 		int valid = true;
 
+		if(!ASTDFTBuilderPass1::buildGateTest(gate)) {
+			valid = false;
+			cc->reportErrorAt(gate->getLocation(),"unsupported gate type: " + gate->getGateType()->getString());
+		}
+
 		valid = ASTVisitor::visitGate(gate) ? valid : false ;
 
 		std::vector<DFT::AST::ASTIdentifier*>* children = gate->getChildren();
