@@ -26,6 +26,7 @@ enum NodeType {
     BEAttributeNumberType,
     BEAttributeStringType,
     AttributeLabelType,
+    ASTGateTypeType,
 
     AnyType,
     NUMBEROF
@@ -174,6 +175,19 @@ public:
 	}
 };
 
+class ASTGateType: public ASTIdentifier {
+private:
+	DFT::Nodes::NodeType nodeType;
+public:
+	ASTGateType(Location location, std::string str, DFT::Nodes::NodeType nodeType):
+		ASTIdentifier(ASTGateTypeType,location,str),
+		nodeType(nodeType) {
+	}
+	const DFT::Nodes::NodeType& getGateType() const {
+		return nodeType;
+	}
+};
+
 class ASTBasicEvent: public ASTNode {
 private:
 	ASTIdentifier* name;
@@ -212,10 +226,10 @@ public:
 class ASTGate: public ASTNode {
 private:
 	ASTIdentifier* name;
-	ASTIdentifier* gateType;
+	ASTGateType* gateType;
 	std::vector<ASTIdentifier*>* children;
 public:
-	ASTGate(Location location, ASTIdentifier* name, ASTIdentifier* gateType, std::vector<ASTIdentifier*>* children):
+	ASTGate(Location location, ASTIdentifier* name, ASTGateType* gateType, std::vector<ASTIdentifier*>* children):
 		ASTNode(GateType,location),
 		name(name),
 		gateType(gateType),
@@ -228,6 +242,9 @@ public:
 	}
 	ASTIdentifier* getName() const {
 		return name;
+	}
+	ASTGateType* getGateType() {
+		return gateType;
 	}
 	std::vector<ASTIdentifier*>* getChildren() {
 		return children;

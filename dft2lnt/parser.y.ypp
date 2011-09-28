@@ -54,6 +54,7 @@
 		DFT::AST::ASTAttribute* attribute;
 		std::vector<DFT::AST::ASTAttribute*>* attributes;
 		DFT::AST::ASTAttrib* attributeValue;
+		DFT::AST::ASTGateType* gateType;
 }
 
 %code {
@@ -107,7 +108,8 @@
 %type <nodes> lines dft
 %type <node>  line toplevel_line gate_line be_line page_line
 %type <strings>  names
-%type <string>  string nodeid gate
+%type <string>  string nodeid
+%type <gateType> gate
 %type <attributes>  be_attribs
 %type <attribute>  be_attrib
 %type <attribute>  be_attrib_name
@@ -302,17 +304,17 @@ page_line //{
 
 /* gate */
 gate //{
-	:	PHASEDOR  { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
-	|	OR        { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
-	|	AND       { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
-	|	HSP       { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
-	|	WSP       { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
-	|	CSP       { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
-	|	PAND      { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
-	|	SEQ       { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
-	|	OF        { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
-	|	FDEP      { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
-	|	TRANSFER  { $$ = new DFT::AST::ASTIdentifier(@1,std::string($1)); free($1); }
+	:	PHASEDOR  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GatePhasedOrType); free($1); }
+	|	OR        { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateOrType      ); free($1); }
+	|	AND       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateAndType     ); free($1); }
+	|	HSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateHSPType     ); free($1); }
+	|	WSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateWSPType     ); free($1); }
+	|	CSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateCSPType     ); free($1); }
+	|	PAND      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GatePAndType    ); free($1); }
+	|	SEQ       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateSeqType     ); free($1); }
+	|	OF        { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateOFType      ); free($1); }
+	|	FDEP      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateFDEPType    ); free($1); }
+	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType); free($1); }
 	;
 //}
 
