@@ -83,7 +83,7 @@ public:
 		dft->addNode(be);
 		ASTVisitor::visitBasicEvent(basicEvent);
 	}
-	virtual int visitGate(DFT::AST::ASTGate* gate) {
+	virtual int visitGate(DFT::AST::ASTGate* astgate) {
 		DFT::Nodes::Gate* gate = buildGate(astgate);
 
 		if(!gate) {
@@ -94,7 +94,7 @@ public:
 		//nodeTable.insert( pair<std::string,DFT::Nodes::Node*>(astgate->getName()->getString(),n_gate) );
 		dft->addNode(gate);
 
-		ASTVisitor::visitGate(gate);
+		ASTVisitor::visitGate(astgate);
 	}
 	virtual int visitPage(DFT::AST::ASTPage* page) {
 		ASTVisitor::visitPage(page);

@@ -7,6 +7,7 @@
 #include "dft_ast.h"
 #include "dft_parser.h"
 #include "ASTVisitor.h"
+#include "ASTDFTBuilder.h"
 
 namespace DFT {
 
