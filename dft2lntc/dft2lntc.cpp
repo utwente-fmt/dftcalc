@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
 	printf(":: Validating input...\n"); fflush(stdout);
 	int astValid = false;
 	{
-		DFT::ASTValidator validator(ast,parser);
+		DFT::ASTValidator validator(ast,compilerContext);
 		astValid = validator.validate();
 	}
 	if(!astValid) {
@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
 	printf(":: Building DFT...\n"); fflush(stdout);
 	DFT::DFTree* dft = NULL;
 	{
-		DFT::ASTDFTBuilder builder(ast,parser);
+		DFT::ASTDFTBuilder builder(ast,compilerContext);
 		dft = builder.build();
 	}
 	if(!dft) {
@@ -284,13 +284,19 @@ int main(int argc, char** argv) {
 	/* Validate DFT */
 	printf(":: Validating DFT...\n"); fflush(stdout);
 	{
-		DFT::DFTreeValidator validator(dft,parser);
-		int valid = validator.validate();
+		DFT::DFTreeValidator validator(dft,compilerContext);
 		if(valid) {
 			printf(":: DFT determined valid\n");
 		} else {
 			printf(":: DFT determined invalid\n");
 		}
+	}
+	
+	/* Printing DFT */
+	if(dft) {
+		printf(":: Printing DFT...\n"); fflush(stdout);
+		DFT::DFTreePrinter printer(dft,compilerContext);
+		printer.print(std::cout);
 	}
 	delete dft;
 	

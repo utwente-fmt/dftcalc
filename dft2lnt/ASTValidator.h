@@ -15,8 +15,8 @@ private:
 	std::vector<std::string> definedNodes;
 public:
 
-	ASTValidator(std::vector<DFT::AST::ASTNode*>* ast, Parser* parser):
-		ASTVisitor(ast,parser,[](int& ret, int val){ret = ret && val;}) {
+	ASTValidator(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc):
+		ASTVisitor(ast,cc,[](int& ret, int val){ret = ret && val;}) {
 	}
 
 	void buildDefinedNodesList() {
@@ -101,7 +101,7 @@ public:
 		std::vector<std::string>::iterator it = std::find(definedNodes.begin(),definedNodes.end(),topLevel->getTopNode()->getString());
 		if(it == definedNodes.end()) {
 			valid = false;
-			parser->getCC()->reportErrorAt(topLevel->getTopNode()->getLocation(),"undefined node referenced: " + topLevel->getTopNode()->getString());
+			cc->reportErrorAt(topLevel->getTopNode()->getLocation(),"undefined node referenced: " + topLevel->getTopNode()->getString());
 		}
 		return valid;
 	}
@@ -120,7 +120,7 @@ public:
 			std::vector<std::string>::iterator it = std::find(definedNodes.begin(),definedNodes.end(),children->at(i)->getString());
 			if(it == definedNodes.end()) {
 				valid = false;
-				parser->getCC()->reportErrorAt(children->at(i)->getLocation(),"undefined node referenced: " + children->at(i)->getString());
+				cc->reportErrorAt(children->at(i)->getLocation(),"undefined node referenced: " + children->at(i)->getString());
 			}
 		}
 		return valid;
@@ -133,7 +133,7 @@ public:
 		std::vector<std::string>::iterator it = std::find(definedNodes.begin(),definedNodes.end(),page->getNodeName()->getString());
 		if(it == definedNodes.end()) {
 			valid = false;
-			parser->getCC()->reportErrorAt(page->getNodeName()->getLocation(),"undefined node referenced: " + page->getNodeName()->getString());
+			cc->reportErrorAt(page->getNodeName()->getLocation(),"undefined node referenced: " + page->getNodeName()->getString());
 		}
 		return valid;
 	}

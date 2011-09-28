@@ -20,10 +20,8 @@ private:
 	//std::map<std::string,DFT::Nodes::Node*> nodeTable;
 public:
 
-	ASTDFTBuilderPass1(std::vector<DFT::AST::ASTNode*>* ast, Parser* parser, DFT::DFTree* dft):
-		ASTVisitor(ast,parser,[](int& ret, int val){}),
-		ast(ast),
-		parser(parser),
+	ASTDFTBuilderPass1(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc, DFT::DFTree* dft):
+		ASTVisitor(ast,cc,[](int& ret, int val) {}),
 		dft(dft),
 		topNode("") {
 	}
@@ -81,8 +79,8 @@ private:
 	std::string topNode;
 public:
 
-	ASTDFTBuilder(std::vector<DFT::AST::ASTNode*>* ast, Parser* parser):
-		ASTVisitor(ast,parser,[](int& ret, int val){}),
+	ASTDFTBuilder(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc):
+		ASTVisitor(ast,cc,[](int& ret, int val){}),
 		ast(ast),
 		parser(parser),
 		dft(NULL),
@@ -91,7 +89,7 @@ public:
 
 	DFT::DFTree* build() {
 		dft = new DFT::DFTree();
-		ASTDFTBuilderPass1* pass1 = new ASTDFTBuilderPass1(ast,parser,dft);
+		ASTDFTBuilderPass1* pass1 = new ASTDFTBuilderPass1(ast,cc,dft);
 		pass1->build();
 		ASTVisitor::visit();
 		delete pass1;

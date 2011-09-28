@@ -13,13 +13,13 @@ public:
 	typedef void (*AggregateFunction)(TReturn& result, TReturn value);
 protected:
 	std::vector<DFT::AST::ASTNode*>* ast;
-	Parser* parser;
+	CompilerContext* cc;
 	AggregateFunction f_aggregate;
 public:
 
-	ASTVisitor(std::vector<DFT::AST::ASTNode*>* ast, Parser* parser, AggregateFunction f_aggregate):
+	ASTVisitor(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc, AggregateFunction f_aggregate):
 		ast(ast),
-		parser(parser),
+		cc(cc),
 		f_aggregate(f_aggregate) {
 	}
 	
@@ -50,7 +50,7 @@ public:
 				break;
 			}
 			default:
-				parser->getCC()->reportErrorAt(node->getLocation(),"unexpected input");
+				cc->reportErrorAt(node->getLocation(),"unexpected input");
 				break;
 			}
 		}
@@ -95,7 +95,7 @@ public:
 			break;
 		}
 		default:
-			parser->getCC()->reportErrorAt(attrib->getLocation(),"unexpected input");
+			cc->reportErrorAt(attrib->getLocation(),"unexpected input");
 			break;
 		}
 		return ret;

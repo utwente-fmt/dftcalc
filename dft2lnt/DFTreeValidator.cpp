@@ -1,9 +1,9 @@
 #include "dftreevalidator.h"
-#include "dft_parser.h"
+#include "dft2lnt.h"
 
-DFT::DFTreeValidator::DFTreeValidator(DFT::DFTree* dft, Parser* parser):
+DFT::DFTreeValidator::DFTreeValidator(DFT::DFTree* dft, CompilerContext* cc):
 	dft(dft),
-	parser(parser) {
+	cc(cc) {
 	
 }
 
@@ -23,7 +23,7 @@ int DFT::DFTreeValidator::validateReferences() {
 	}
 	
 	for(std::vector<Nodes::Node*>::iterator i = notDefinedButReferencedNodes.begin(); i != notDefinedButReferencedNodes.end(); i++) {
-		parser->getCC()->reportErrorAt((*i)->getLocation(),"node " + ((*i)->getName()) + " references inexistent node");
+		cc->reportErrorAt((*i)->getLocation(),"node " + ((*i)->getName()) + " references inexistent node");
 	}
 
 	return valid;

@@ -13,11 +13,11 @@ namespace DFT {
 class DFTreeValidator {
 private:
 	DFT::DFTree* dft;
-	Parser* parser;
+	CompilerContext* cc;
 	
 	int validateReferences();
 public:
-	DFTreeValidator(DFT::DFTree* dft, Parser* parser);
+	DFTreeValidator(DFT::DFTree* dft, CompilerContext* cc);
 	virtual ~DFTreeValidator() {
 	}
 
