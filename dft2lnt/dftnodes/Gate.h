@@ -12,9 +12,10 @@ namespace Nodes {
 class Gate: public Node {
 private:
 	std::vector<Node*> children;
-public:
-	Gate(std::string name): Node(name,GateType) {
+protected:
+	Gate(std::string name, DFT::Nodes::NodeType nodeType): Node(name,nodeType) {
 	}
+public:
 	std::vector<Node*>& getChildren() { return children; }
 	void addChild(Node* child) { children.push_back(child); }
 	virtual ~Gate() {
