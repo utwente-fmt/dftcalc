@@ -72,7 +72,7 @@ std::vector<DFT::AST::ASTNode*>* Parser::parse() {
 }
 
 FILE* Parser::pushFile(std::string fileName) {
-	if((compilerContext->fileContexts)>=MAX_FILE_NESTING) {
+	if((compilerContext->getFileContexts())>=MAX_FILE_NESTING) {
 		printf("ERROR: Files nested too deep\n");
 		return NULL;
 	}
@@ -86,7 +86,8 @@ FILE* Parser::pushFile(std::string fileName) {
 	YY_BUFFER_STATE buffer = yy_create_buffer(f,YY_BUF_SIZE,scanner);
 	yypush_buffer_state(buffer,scanner);
 
-	// Add to FILE* stack
+	// Add to FILE* stackLocation
+	//compilerContext->pushFileContext(FileContext(
 	compilerContext->fileContext[(compilerContext->fileContexts)].fileHandle = f;
 	compilerContext->fileContext[(compilerContext->fileContexts)].filename = fileName; //FIXME: memory leak
 	++(compilerContext->fileContexts);
