@@ -157,7 +157,7 @@ public:
 	virtual int visitGate(DFT::AST::ASTGate* gate) {
 		DFT::Nodes::Node* n = dft->getNode(gate->getName()->getString());
 		assert(n);
-		assert(n->getType()==DFT::Nodes::GateType);
+		assert(DFT::Nodes::Node::typeMatch(n->getType(),DFT::Nodes::GateType));
 		DFT::Nodes::Gate* g = static_cast<DFT::Nodes::Gate*>(n);
 		std::vector<DFT::Nodes::Node*>& nodes = g->getChildren();
 		for(int i=0; i<gate->getChildren()->size(); ++i) {
