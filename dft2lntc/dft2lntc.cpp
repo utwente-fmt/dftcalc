@@ -15,6 +15,7 @@
 #include "DFTree.h"
 #include "DFTreeValidator.h"
 #include "DFTreePrinter.h"
+#include "DFTreeSVLAndLNTBuilder.h"
 
 FILE* pp_outputFile = stdout;
 
@@ -300,6 +301,13 @@ int main(int argc, char** argv) {
 		printf(":: Printing DFT...\n"); fflush(stdout);
 		DFT::DFTreePrinter printer(dft,compilerContext);
 		printer.print(std::cout);
+	}
+
+	/* Building SVL and LNT out of DFT */
+	if(dft) {
+		printf(":: Building SVL and LNT...\n"); fflush(stdout);
+		DFT::DFTreeSVLAndLNTBuilder builder(".","try",dft,compilerContext);
+		builder.build();
 	}
 	delete dft;
 	

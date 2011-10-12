@@ -35,6 +35,8 @@
     <File Name="../dft2lnt/ASTLNTBuilder.h"/>
     <File Name="../dft2lnt/DFTreePrinter.cpp"/>
     <File Name="../dft2lnt/DFTreePrinter.h"/>
+    <File Name="../dft2lnt/DFTreeSVLAndLNTBuilder.h"/>
+    <File Name="../dft2lnt/DFTreeSVLAndLNTBuilder.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="CMake">
     <File Name="../dft2lnt/CMakeLists.txt"/>
