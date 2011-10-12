@@ -23,6 +23,7 @@ private:
 
 	int setTopNode_(Nodes::Node* node) {
 		this->topNode = node;
+		return 0;
 	}
 
 public:
@@ -48,20 +49,21 @@ public:
 				return nodes.at(i);
 			}
 		}
+		return NULL;
 	}
 
 	std::vector<Nodes::Node*>& getNodes() {
 		return nodes;
 	}
 
-	int setTopNode(Nodes::Node* node) {
+	bool setTopNode(Nodes::Node* node) {
 		// Check if the specified node is in this DFT
 		for(int i=0; i<nodes.size(); ++i) {
 			if(nodes.at(i)==node) {
 				return setTopNode_(node);
 			}
 		}
-		return 1; // FIXME: ERROR HANDLING
+		return true; // FIXME: ERROR HANDLING
 	}
 	Nodes::Node* getTopNode() {
 		return topNode;
