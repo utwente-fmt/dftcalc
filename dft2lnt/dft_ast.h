@@ -16,6 +16,9 @@ class ASTAttribute;
 namespace DFT {
 namespace AST {
 
+/**
+ * Describes the various ASTNode types.
+ */
 enum NodeType {
     TopLevelType = 0,
     BasicEventType,
@@ -32,19 +35,37 @@ enum NodeType {
     NUMBEROF
 };
 
+/**
+ * Ancestor ASTNode. Contains code for location tracking.
+ */
 class ASTNode {
 private:
 	DFT::AST::NodeType type;
 protected:
 	const Location location;
 public:
+
+	/**
+	 * Constructs a new ASTNode at the specifed source location.
+	 * The type will be used for later identification (like RTTI)
+	 */
 	ASTNode(DFT::AST::NodeType type,Location location):
 		type(type),
 		location(location) {
 	}
+	
+	/**
+	 * Returns the type of this ASTNode.
+	 * @return The type of this ASTNode.
+	 */
 	DFT::AST::NodeType getType() {
 		return type;
 	}
+	
+	/**
+	 * Returns the location in the code of this ASTNode.
+	 * @eturn The location in the code of this ASTNode.
+	 */
 	const Location& getLocation() const {
 		return location;
 	}
@@ -56,17 +77,36 @@ public:
 //	ASTNode(): ASTNode(nodeType) {};
 //};
 
+/**
+ * TopLevel ASTNode.
+ * Specifies what Node is the Top node of the DFT
+ */
 class ASTTopLevel: public ASTNode {
 private:
 	ASTIdentifier* topNode;
-public:
+	public:
+
+	/**
+	 * Constructs a new ASTTopLevel sourced from the specified location.
+	 * @param topNode The node that is to be the Top node in the DFT.
+	 */
 	ASTTopLevel(Location location, ASTIdentifier* topNode):
 		ASTNode(TopLevelType,location),
 		topNode(topNode) {
 	}
+	
+	/**
+	 * Sets the Top node value.
+	 * @param topNode The Top node value to be set.
+	 */
 	void setTopNode(ASTIdentifier* topNode) {
 		this->topNode = topNode;
 	}
+	
+	/**
+	 * Returns the Top node value.
+	 * @return The Top node value.
+	 */
 	ASTIdentifier* getTopNode() const {
 		return topNode;
 	}
@@ -77,6 +117,9 @@ public:
 //	const std::string& getName() const = 0;
 //};
 
+/**
+ * DFT Node attribute value ASTNode
+ */
 class ASTAttrib: public ASTNode {
 public:
 	ASTAttrib(NodeType type, Location location):
@@ -84,6 +127,9 @@ public:
 	}
 };
 
+/**
+ * DFT Node float attribute.
+ */
 class ASTAttribFloat: public ASTAttrib {
 private:
 	float value;
@@ -93,14 +139,26 @@ public:
 		value(value) {
 
 	}
+	/**
+	 * Returns the value of this attribute.
+	 * @return The value of this attribute.
+	 */
 	float getValue() {
 		return value;
 	}
+
+	/**
+	 * Sets the value of this attribute.
+	 * @param value The value to be set.
+	 */
 	void setValue(float value) {
 		this->value = value;
 	}
 };
 
+/**
+ * DFT Node number  attribute.
+ */
 class ASTAttribNumber: public ASTAttrib {
 private:
 	int value;
@@ -110,14 +168,27 @@ public:
 		value(value) {
 
 	}
+
+	/**
+	 * Returns the value of this attribute.
+	 * @return The value of this attribute.
+	 */
 	int getValue() {
 		return value;
 	}
+
+	/**
+	 * Sets the value of this attribute.
+	 * @param value The value to be set.
+	 */
 	void setValue(int value) {
 		this->value = value;
 	}
 };
 
+/**
+ * DFT Node string attribute.
+ */
 class ASTAttribString: public ASTAttrib {
 private:
 	ASTIdentifier* value;
@@ -127,14 +198,27 @@ public:
 		value(value) {
 
 	}
+
+	/**
+	 * Returns the value of this attribute.
+	 * @return The value of this attribute.
+	 */
 	ASTIdentifier* getValue() {
 		return value;
 	}
+	
+	/**
+	 * Sets the value of this attribute.
+	 * @param value The value to be set.
+	 */
 	void setValue(ASTIdentifier* value) {
 		this->value = value;
 	}
 };
 
+/**
+ * Identifier ASTNode
+ */
 class ASTIdentifier: public ASTNode {
 private:
 	std::string str;
@@ -147,14 +231,27 @@ public:
 		ASTNode(IdentifierType,location),
 		str(str) {
 	}
+	
+	/**
+	 * Sets the string value.
+	 * @param str The string value to be set.
+	 */
 	void setString(const std::string& str) {
 		this->str = str;
 	}
+	
+	/**
+	 * Returns the string value.
+	 * @return The string value.
+	 */
 	const std::string& getString() const {
 		return str;
 	}
 };
 
+/**
+ * DFT node attribute ASTNode
+ */
 class ASTAttribute: public ASTIdentifier {
 private:
 	DFT::Nodes::BE::AttributeLabelType label;
@@ -164,17 +261,35 @@ public:
 		ASTIdentifier(AttributeLabelType,location,str),
 		label(label) {
 	}
+	
+	/**
+	 * Returns the attribute label of this attribute.
+	 * @return The attribute label of this attribute.
+	 */
 	const DFT::Nodes::BE::AttributeLabelType& getLabel() const {
 		return label;
 	}
+	
+	/**
+	 * Sets the attribute value of this attribute.
+	 * @param value The attribute value to be set.
+	 */
 	void setValue(ASTAttrib* value) {
 		this->value = value;
 	}
+	
+	/**
+	 * Returns the value of this attribute.
+	 * @return The value of this attribute.
+	 */
 	ASTAttrib* getValue() {
 		return value;
 	}
 };
 
+/**
+ * Gate type ASTNode
+ */
 class ASTGateType: public ASTIdentifier {
 private:
 	DFT::Nodes::NodeType nodeType;
@@ -183,11 +298,19 @@ public:
 		ASTIdentifier(ASTGateTypeType,location,str),
 		nodeType(nodeType) {
 	}
+	
+	/**
+	 * Returns the type of the Gate.
+	 * @return The type of the Gate.
+	 */
 	const DFT::Nodes::NodeType& getGateType() const {
 		return nodeType;
 	}
 };
 
+/**
+ * BasicEvent ASTNode
+ */
 class ASTBasicEvent: public ASTNode {
 private:
 	ASTIdentifier* name;
@@ -203,12 +326,28 @@ public:
 		name(name),
 		attributes(attributes) {
 	}
+	
+	/**
+	 * Sets the name of the BasicEvent.
+	 * @param name The name of the BasicEvent to be set.
+	 */
 	void setName(ASTIdentifier* name) {
 		this->name = name;
 	}
+	
+	/**
+	 * Returns the name of the BasicEvent.
+	 * @return The name of the BasicEvent.
+	 */
 	ASTIdentifier* getName() const {
 		return name;
 	}
+	
+	/**
+	 * Sets the list of attributes of this BasicEvent. The old list will be
+	 * deleted first.
+	 * @param attributes The new list of attributes.
+	 */
 	void setAttributes(std::vector<DFT::AST::ASTAttribute*>* attributes) {
 		if(attributes) {
 			for(int i=attributes->size(); i--;) {
@@ -237,20 +376,44 @@ public:
 	}
 	virtual ~ASTGate() {
 	}
+	
+	/**
+	 * Sets the name of this ASTGate.
+	 * @param name The name to be set.
+	 */
 	void setName(ASTIdentifier* name) {
 		this->name = name;
 	}
+	
+	/**
+	 * Returns the name of this ASTGate.
+	 * @return The name of this ASTGate.
+	 */
 	ASTIdentifier* getName() const {
 		return name;
 	}
+	
+	/**
+	 * Return the type of the Gate described by this ASTGate.
+	 * @return The type of the Gate described by this ASTGate.
+	 */
 	ASTGateType* getGateType() {
 		return gateType;
 	}
+	
+	/**
+	 * Returns the outgoing references of this ASTGate.
+	 * @return The outgoing references of this ASTGate.
+	 */
 	std::vector<ASTIdentifier*>* getChildren() {
 		return children;
 	}
 };
 
+/**
+ * Page ASTNode
+ * This is for the graphical display of Galileo.
+ */
 class ASTPage: public ASTNode {
 private:
 	int page;
@@ -263,11 +426,29 @@ public:
 	}
 	virtual ~ASTPage() {
 	}
+	
+	/**
+	 * Sets the DFT node that will be cast to a specific page.
+	 * @param nodeName The name of the DFT node to be set.
+	 */
 	void setNodeName(ASTIdentifier* nodeName) {
 		this->nodeName = nodeName;
 	}
+	
+	/**
+	 * Returns the name of the DFT Node.
+	 * @return the name of the DFT Node.
+	 */
 	ASTIdentifier* getNodeName() const {
 		return nodeName;
+	}
+	
+	/**
+	 * Returns the page to which a DFT Node will be cast.
+	 * @return The page to which a DFT Node will be cast.
+	 */
+	int getPage() const {
+		return page;
 	}
 };
 

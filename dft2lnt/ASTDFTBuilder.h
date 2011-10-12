@@ -11,6 +11,10 @@
 
 namespace DFT {
 
+/**
+ * This class handles the first AST pass.
+ * It will create empty instances of the needed Nodes.
+ */
 class ASTDFTBuilderPass1: public DFT::ASTVisitor<int> {
 private:
 	std::vector<DFT::AST::ASTNode*>* ast;
@@ -18,7 +22,15 @@ private:
 	DFT::DFTree* dft;
 	std::string topNode;
 	//std::map<std::string,DFT::Nodes::Node*> nodeTable;
+	
 public:
+
+	/**
+	 * Returns a new Gate instance associated with the specified ASTGate
+	 * class. Returns NULL if the ASTGate is not supported.
+	 * The method buildGateTest() provides a way of testing is an ASTGate is
+	 * supported without returning a new Gate.
+	 */
 	static DFT::Nodes::Gate* buildGate(DFT::AST::ASTGate* astgate) {
 		DFT::Nodes::Gate* gate = NULL;
 		DFT::Nodes::NodeType gateType = astgate->getGateType()->getGateType();
@@ -52,6 +64,12 @@ public:
 		}
 		return gate;
 	}
+	
+	/**
+	 * Checks if the specified ASTGate is supported. If it is supported,
+	 * the method buildGate() should return a valid Gate instance for it.
+	 * Returns true if the specified ASTGate is supported, false otherwise.
+	 */
 	static bool buildGateTest(DFT::AST::ASTGate* astgate) {
 		DFT::Nodes::Gate* gate = buildGate(astgate);
 		if(gate) {
@@ -60,12 +78,21 @@ public:
 		}
 		return false;
 	}
+	
+	/**
+	 * Constructs a new ASTDFTBuilderPass1 instance using the specified
+	 * AST and CompilerContext. New nodes will be added to the specified DFTree.
+	 * Call build() to start the first AST pass of the DFT build process.
+	 */
 	ASTDFTBuilderPass1(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc, DFT::DFTree* dft):
 		ASTVisitor(ast,cc,[](int& ret, int val) {}),
 		dft(dft),
 		topNode("") {
 	}
 
+	/**
+	 * Start the first AST pass of the DFT build process.
+	 */
 	void build() {
 		ASTVisitor::visit();
 	}
@@ -116,6 +143,12 @@ public:
 	}
 };
 
+/**
+ * This class handles the building of a DFT from an AST.
+ * It uses a two-pass system. The ASTDFTBuilderPass1 class handles the first
+ * pass. The first pass consists of creating the nodes and the second pass
+ * consists of connecting the nodes.
+ */
 class ASTDFTBuilder: public DFT::ASTVisitor<int> {
 private:
 	std::vector<DFT::AST::ASTNode*>* ast;
@@ -124,6 +157,11 @@ private:
 	std::string topNode;
 public:
 
+	/**
+	 * Constructs a new ASTDFTBuilder instance using the specified
+	 * AST and CompilerContext.
+	 * Call build() to start the DFT build process.
+	 */
 	ASTDFTBuilder(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc):
 		ASTVisitor(ast,cc,[](int& ret, int val){}),
 		ast(ast),
@@ -132,6 +170,11 @@ public:
 		topNode("") {
 	}
 
+	/**
+	 * Starts the AST to DFT build process using the AST given to the
+	 * constructor.
+	 * Returns a new DFTree instance describing the DFT created from the AST.
+	 */
 	DFT::DFTree* build() {
 		dft = new DFT::DFTree();
 		ASTDFTBuilderPass1* pass1 = new ASTDFTBuilderPass1(ast,cc,dft);

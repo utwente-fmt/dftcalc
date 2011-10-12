@@ -11,25 +11,47 @@
 
 namespace DFT {
 
+/**
+ * This class handles the validation of an AST.
+ * It will validate the following concepts:
+ *   - All references are to existing nodes
+ */
 class ASTValidator: public DFT::ASTVisitor<int,true> {
 private:
 	std::vector<std::string> definedNodes;
 public:
 
+	/**
+	 * Constructs a new ASTValidator using the specified
+	 * AST and CompilerContext.
+	 * Call validate() to start the validation process.
+	 */
 	ASTValidator(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc):
 		ASTVisitor(ast,cc,[](int& ret, int val){ret = ret && val;}) {
 	}
 
+	/**
+	 * Builds a list of defined DFT nodes in the AST specified in the
+	 * constructor. The definedNodes member will be overridden.
+	 */
 	void buildDefinedNodesList() {
+		
+		// Clear the list
 		definedNodes.clear();
+		
+		// Go through all the AST nodes in a linear fashion
 		for(int i=0; i<ast->size(); ++i) {
 			DFT::AST::ASTNode* node = ast->at(i);
 			switch(node->getType()) {
+				
+			// TopLevel references a node
 			case DFT::AST::TopLevelType: {
 				DFT::AST::ASTTopLevel* t = static_cast<DFT::AST::ASTTopLevel*>(node);
 				//referencedNodes.push_back(t->getTopNode());
 				break;
 			}
+
+			// A BasicEvent ASTNode defines a DFT node
 			case DFT::AST::BasicEventType: {
 				DFT::AST::ASTBasicEvent* be = static_cast<DFT::AST::ASTBasicEvent*>(node);
 				//std::cout << "Defined: " << basicEvent->getName() << std::endl;
@@ -38,6 +60,9 @@ public:
 				definedNodes.push_back(be->getName()->getString());
 				break;
 			}
+
+			// Any Gate ASTNode defines a DFT node
+			// Any Gate can reference multiple nodes
 			case DFT::AST::GateType: {
 				DFT::AST::ASTGate* g = static_cast<DFT::AST::ASTGate*>(node);
 				definedNodes.push_back(g->getName()->getString());
@@ -47,6 +72,8 @@ public:
 				//}
 				break;
 			}
+			
+			// A Page ASTNode references a node
 			case DFT::AST::PageType: {
 				DFT::AST::ASTPage* p = static_cast<DFT::AST::ASTPage*>(node);
 				//referencedNodes.push_back(p->getNodeName());
@@ -58,6 +85,11 @@ public:
 		}
 	}
 
+	/**
+	 * Starts the validation process of the AST specified in the
+	 * constructor. Returns whether the AST is deemed valid or not.
+	 * Returns true if it is valid, false otherewise.
+	 */
 	int validate() {
 		
 		buildDefinedNodesList();
