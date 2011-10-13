@@ -10,6 +10,9 @@ namespace Nodes {
 
 namespace BE {
 
+/**
+ * The type of attributes a BasicEvent can have.
+ */
 enum AttributeLabelType {
     AttrLabelNone = 0,
 
@@ -28,23 +31,45 @@ enum AttributeLabelType {
     AttrLabelAph
 };
 
+/**
+ * The label of an attribute
+ */
 class AttributeLabel {
 private:
 	AttributeLabelType labelType;
 	std::string label;
 public:
+
+	/**
+	 * Constructs a new AttributeLabel using the specified labelType and
+	 * label name
+	 */
 	AttributeLabel(AttributeLabelType labelType, std::string label):
 		labelType(labelType),
 		label(label) {
 	}
+	
+	/**
+	 * Returns the label name of this label.
+	 * @return The label name of this label.
+	 */
 	const std::string& getLabel() const {
 		return label;
 	}
+	
+	/**
+	 * Returns the label type of this label.
+	 * @return The label type of this label.
+	 */
 	const AttributeLabelType& getLabelType() const {
 		return labelType;
 	}
 };
 
+/**
+ * Attribute superclass handling type and name. The value is handled by the
+ * individual subclasses.
+ */
 class Attrib {
 public:
 //	static std::string Lambda;
@@ -57,12 +82,27 @@ public:
 		name(name) {
 
 	}
+	
+	/**
+	 * Returns the label type of this attribute.
+	 * @return The label type of this attribute.
+	 */
 	const AttributeLabelType& getLabel() const {
 		return label;
 	}
+	
+	/**
+	 * Returns the label name of this attribute.
+	 * @return The label name of this attribute.
+	 */
 	std::string getName() {
 		return name;
 	}
+	
+	/**
+	 * Sets the label name of this attribute.
+	 * @param The label name to be set.
+	 */
 	void setName(std::string name) {
 		this->name = name;
 	}
@@ -79,9 +119,19 @@ public:
 		value(value) {
 
 	}
+
+	/**
+	 * Returns the value of this attribute.
+	 * @return The value of this attribute.
+	 */
 	float getValue() {
 		return value;
 	}
+
+	/**
+	 * Sets the value of this attribute.
+	 * @return The value to be set.
+	 */
 	void setValue(float value) {
 		this->value = value;
 	}
@@ -96,9 +146,19 @@ public:
 		value(value) {
 
 	}
+
+	/**
+	 * Returns the value of this attribute.
+	 * @return The value of this attribute.
+	 */
 	int getValue() {
 		return value;
 	}
+
+	/**
+	 * Sets the value of this attribute.
+	 * @return The value to be set.
+	 */
 	void setValue(int value) {
 		this->value = value;
 	}
@@ -113,9 +173,19 @@ public:
 		value(value) {
 
 	}
+
+	/**
+	 * Returns the value of this attribute.
+	 * @return The value of this attribute.
+	 */
 	std::string getValue() {
 		return value;
 	}
+
+	/**
+	 * Sets the value of this attribute.
+	 * @return The value to be set.
+	 */
 	void setValue(std::string value) {
 		this->value = value;
 	}
@@ -138,6 +208,9 @@ public:
 
 } // Namespace: BE
 
+/**
+ * The BasicEvent DFT Node
+ */
 class BasicEvent: public Node {
 private:
 	float lambda;

@@ -16,8 +16,19 @@ protected:
 	Gate(std::string name, DFT::Nodes::NodeType nodeType): Node(name,nodeType) {
 	}
 public:
+
+	/**
+	 * Returns the list of children of this Gate.
+	 * @return The list of children of this Gate.
+	 */
 	std::vector<Node*>& getChildren() { return children; }
+	
+	/**
+	 * Adds the specified Node to this Node's list of children.
+	 * @param child The Node to add to this Node's list of children.
+	 */
 	void addChild(Node* child) { children.push_back(child); }
+	
 	virtual ~Gate() {
 	}
 	virtual void addReferencesTo(std::vector<Node*>& nodeList) {
