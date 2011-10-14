@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CodeLite_Workspace Name="dft2lnt" Database="./dft2lnt.tags">
-  <Project Name="dft2lntc" Path="dft2lntc.mingw.project" Active="Yes"/>
-  <Project Name="dft2lnt" Path="dft2lnt.mingw.project" Active="No"/>
+  <Project Name="dft2lntc" Path="dft2lntc.msys.project" Active="Yes"/>
+  <Project Name="dft2lnt" Path="dft2lnt.msys.project" Active="No"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="no">
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Project Name="dft2lntc" ConfigName="Debug"/>
       <Project Name="dft2lnt" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Release" Selected="no">
       <Project Name="dft2lntc" ConfigName="Release"/>
       <Project Name="dft2lnt" ConfigName="Release"/>
     </WorkspaceConfiguration>
