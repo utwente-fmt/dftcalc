@@ -3,8 +3,8 @@ project (dft2lnt)
 set (dft2lnt_VERSION_MAJOR 0)
 set (dft2lnt_VERSION_MINOR 1)
 
-## Not sure if needed
-cmake_minimum_required (VERSION 2.6)
+## Needed for bison and flex
+cmake_minimum_required (VERSION 2.8)
 
 ## Make sure we have Bison and FLEX available
 include(FindBISON)
