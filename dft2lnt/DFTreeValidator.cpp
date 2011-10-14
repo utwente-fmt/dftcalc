@@ -12,11 +12,11 @@ int DFT::DFTreeValidator::validateReferences() {
 	std::vector<Nodes::Node*>& nodes = dft->getNodes();
 	std::vector<Nodes::Node*> notDefinedButReferencedNodes;
 
-	for(int i=0; i<nodes.size();++i) {
+	for(size_t i=0; i<nodes.size();++i) {
 		assert(nodes.at(i));
 		nodes.at(i)->addReferencesTo(notDefinedButReferencedNodes);
 	}
-	for(int i=0; i<nodes.size();++i) {
+	for(size_t i=0; i<nodes.size();++i) {
 		//std::remove(notDefinedButReferencedNodes.begin(),notDefinedButReferencedNodes.end(),nodes.at(i));
 		std::vector<Nodes::Node*>::iterator it = std::find(notDefinedButReferencedNodes.begin(),notDefinedButReferencedNodes.end(),nodes.at(i));
 		if(it != notDefinedButReferencedNodes.end()) notDefinedButReferencedNodes.erase(it);

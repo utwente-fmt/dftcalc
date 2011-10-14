@@ -67,7 +67,7 @@ public:
 	 * @return The Node associated with the specified name.
 	 */
 	Nodes::Node* getNode(const std::string& name) {
-		for(int i=0; i<nodes.size(); ++i) {
+		for(size_t i=0; i<nodes.size(); ++i) {
 			if(nodes.at(i)->getName()==name) {
 				return nodes.at(i);
 			}
@@ -91,7 +91,7 @@ public:
 	 */
 	bool setTopNode(Nodes::Node* node) {
 		// Check if the specified node is in this DFT
-		for(int i=0; i<nodes.size(); ++i) {
+		for(size_t i=0; i<nodes.size(); ++i) {
 			if(nodes.at(i)==node) {
 				return setTopNode_(node);
 			}

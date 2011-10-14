@@ -13,7 +13,7 @@ include(FindFLEX)
 ## Not sure if needed
 add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS )
 #add_definitions(-std=c++0x -D_GNU_SOURCE)
-add_definitions(-std=gnu++0x)
+add_definitions(-std=gnu++0x -Wall)
 
 ## Include source directory and the build directory (for generated files)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})

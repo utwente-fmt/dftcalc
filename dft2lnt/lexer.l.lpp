@@ -33,6 +33,10 @@
 	#define compiler_lexer_report_warning(str) currentParser->getCC()->reportWarningAt(*yylloc,str)
 	#define compiler_lexer_report_errorAt(loc,str) { /*printf("@%i: ",__LINE__);*/ currentParser->getCC()->reportErrorAt(loc,str); }
 	#define compiler_lexer_report_warningAt(loc,str) { currentParser->getCC()->reportWarningAt(loc,str); }
+	
+	// The parameter currentParser is not always used, so ignore warning
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-variable"
 %}
 
 underscore    [_]
@@ -312,3 +316,4 @@ int lex_char(yyscan_t yyscanner) {
 		}
 	return c;
 }
+#pragma GCC diagnostic pop

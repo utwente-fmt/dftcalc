@@ -13,7 +13,7 @@ int DFT::DFTreeSVLAndLNTBuilder::build() {
 	// Check all the nodes in the DFT, adding BasicEvents to basicEvents and
 	// Gates to gates. Also keep track of what Lotos NT files are needed by
 	// adding them to neededFiles.
-	for(int i=0; i<dft->getNodes().size(); ++i) {
+	for(size_t i=0; i<dft->getNodes().size(); ++i) {
 		DFT::Nodes::Node* node = dft->getNodes().at(i);
 		neededFiles.insert( (node->getType()) );
 		if(DFT::Nodes::Node::typeMatch(node->getType(),DFT::Nodes::BasicEventType)) {
@@ -36,10 +36,13 @@ int DFT::DFTreeSVLAndLNTBuilder::build() {
 	std::cout << svl_options.toString();
 	std::cout << svl_dependencies.toString();
 	std::cout << svl_body.toString();
+	
+	return 0;
 }
 
 int DFT::DFTreeSVLAndLNTBuilder::buildSVLOptions() {
 	svl_options.appendLine("%BCG_MIN_OPTIONS=\"-self\"");
+	return 0;
 }
 
 const std::string DFT::Files::Unknown             ("");
@@ -75,6 +78,7 @@ int DFT::DFTreeSVLAndLNTBuilder::buildSVLHeader() {
 		const std::string& fileName = getFileForNodeType(*it);
 		svl_dependencies << svl_dependencies.applyprefix << "%lnt.open \"" << fileName << ".lnt\" -" << svl_dependencies.applypostfix;
 	}
+	return 0;
 }
 
 int DFT::DFTreeSVLAndLNTBuilder::buildSVLBody() {
@@ -89,7 +93,7 @@ int DFT::DFTreeSVLAndLNTBuilder::buildSVLBody() {
 	{
 		bool first = true;
 		std::vector<DFT::Nodes::Node*>& nodes = dft->getNodes();
-		for(int i=0; i<nodes.size(); ++i) {
+		for(size_t i=0; i<nodes.size(); ++i) {
 			DFT::Nodes::Node* node = nodes.at(i);
 			if(node != dft->getTopNode()) {
 				if(!first) {
@@ -112,13 +116,13 @@ int DFT::DFTreeSVLAndLNTBuilder::buildSVLBody() {
 		int current = 0;
 		
 		// Basic Events
-		for(int i=0; i<basicEvents.size(); ++i) {
+		for(size_t  i=0; i<basicEvents.size(); ++i) {
 			buildBasicEvent(current, total, basicEvents.at(i));
 		}
 		
 		// Gates
 		// Note that the TopNode is reserved for last.
-		for(int i=0; i<gates.size(); ++i) {
+		for(size_t  i=0; i<gates.size(); ++i) {
 			if(gates.at(i) != dft->getTopNode()) {
 				buildGate(current, total, gates.at(i));
 			}
@@ -133,6 +137,7 @@ int DFT::DFTreeSVLAndLNTBuilder::buildSVLBody() {
 	
 	svl_body.appendLine("};");
 	svl_body.outdent();
+	return 0;
 }
 
 int DFT::DFTreeSVLAndLNTBuilder::buildBasicEvent(int& current, int& total, DFT::Nodes::BasicEvent* basicEvent) {
@@ -178,6 +183,7 @@ int DFT::DFTreeSVLAndLNTBuilder::buildBasicEvent(int& current, int& total, DFT::
 		svl_body.appendPostfix();
 		svl_body.outdent();
 	}
+	return 0;
 }
 int DFT::DFTreeSVLAndLNTBuilder::buildGate(int& current, int& total, DFT::Nodes::Gate* gate) {
 	
@@ -189,7 +195,7 @@ int DFT::DFTreeSVLAndLNTBuilder::buildGate(int& current, int& total, DFT::Nodes:
 		// Rename local F !x gates to global F_y gates where y is the name of
 		// the node that x connects to. Needed for synchronization.
 		svl_body << "total rename ";
-		for(int i=0; i<gate->getChildren().size(); ++i) {
+		for(size_t i=0; i<gate->getChildren().size(); ++i) {
 			svl_body << "\"F !" << (i+1) << "\" -> \"F_" << gate->getChildren().at(i)->getName() << "\", ";
 		}
 		svl_body << "\"F !" << (gate->getChildren().size()+1) << "\" -> \"F_" << gate->getName() << "\" in ";
@@ -215,4 +221,5 @@ int DFT::DFTreeSVLAndLNTBuilder::buildGate(int& current, int& total, DFT::Nodes:
 		svl_body.appendPostfix();
 		svl_body.outdent();
 	}
+	return 0;
 }

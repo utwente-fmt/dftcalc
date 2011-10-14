@@ -12,7 +12,7 @@ int DFT::DFTreePrinter::print(std::ostream& out) {
 	out << "Top Node: " << dft->getTopNode()->getName() << std::endl;
 
 	std::vector<Nodes::Node*>& nodes = dft->getNodes();
-	for(int i=0; i<nodes.size(); ++i) {
+	for(size_t i=0; i<nodes.size(); ++i) {
 		assert(nodes.at(i));
 		switch(nodes.at(i)->getType()) {
 		case DFT::Nodes::BasicEventType: {
@@ -26,16 +26,68 @@ int DFT::DFTreePrinter::print(std::ostream& out) {
 			DFT::DFTreePrinter::printGate(out,gate);
 			break;
 		}
+		case DFT::Nodes::GatePhasedOrType: {
+			assert(0);
+			break;
 		}
+		case DFT::Nodes::GateOrType: {
+			assert(0);
+			break;
+		}
+		case DFT::Nodes::GateAndType: {
+			assert(0);
+			break;
+		}
+		case DFT::Nodes::GateHSPType: {
+			assert(0);
+			break;
+		}
+		case DFT::Nodes::GateWSPType: {
+			assert(0);
+			break;
+		}
+		case DFT::Nodes::GateCSPType: {
+			assert(0);
+			break;
+		}
+		case DFT::Nodes::GatePAndType: {
+			assert(0);
+			break;
+		}
+		case DFT::Nodes::GateSeqType: {
+			assert(0);
+			break;
+		}
+		case DFT::Nodes::GateOFType: {
+			assert(0);
+			break;
+		}
+		case DFT::Nodes::GateFDEPType: {
+			assert(0);
+			break;
+		}
+		case DFT::Nodes::GateTransferType: {
+			assert(0);
+			break;
+		}
+		default: {
+			out << "UnknownNode";
+			break;
+		}
+		}
+		out << std::endl;
 	}
+	return 0;
 }
 
 int DFT::DFTreePrinter::printBasicEvent(std::ostream& out, DFT::Nodes::BasicEvent* basicEvent) {
 	assert(basicEvent);
-	out << "BasicEvent[" << basicEvent->getName() << "]" << std::endl;
+	out << "BasicEvent[" << basicEvent->getName() << "]";
+	return 0;
 }
 int DFT::DFTreePrinter::printGate(std::ostream& out, DFT::Nodes::Gate* gate) {
 	assert(gate);
 	out << "Gate[" << gate->getName() << "] ";
-	out << gate->getType() << std::endl;
+	out << gate->getType();
+	return 0;
 }
