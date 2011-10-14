@@ -76,7 +76,7 @@ public:
 	/**
 	 * Add the specified integer to the stream converted to a string.
 	 * Nothing will be prefixed or postfixed.
-	 * @param s The String to add.
+	 * @param i The interger to add.
 	 */
 	FileWriter& operator<<(int i) {
 		ss << i;
@@ -86,9 +86,29 @@ public:
 	/**
 	 * Add the specified integer to the stream converted to a string.
 	 * Nothing will be prefixed or postfixed.
-	 * @param s The String to add.
+	 * @param i The interger to add.
 	 */
 	FileWriter& operator<<(unsigned int i) {
+		ss << i;
+		return *this;
+	}
+
+	/**
+	 * Add the specified integer to the stream converted to a string.
+	 * Nothing will be prefixed or postfixed.
+	 * @param i The interger to add.
+	 */
+	FileWriter& operator<<(long int i) {
+		ss << i;
+		return *this;
+	}
+
+	/**
+	 * Add the specified integer to the stream converted to a string.
+	 * Nothing will be prefixed or postfixed.
+	 * @param i The interger to add.
+	 */
+	FileWriter& operator<<(long unsigned int i) {
 		ss << i;
 		return *this;
 	}
