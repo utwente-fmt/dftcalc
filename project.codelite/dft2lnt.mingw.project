@@ -37,6 +37,8 @@
     <File Name="../dft2lnt/DFTreePrinter.h"/>
     <File Name="../dft2lnt/DFTreeSVLAndLNTBuilder.h"/>
     <File Name="../dft2lnt/DFTreeSVLAndLNTBuilder.cpp"/>
+    <File Name="../dft2lnt/FileWriter.h"/>
+    <File Name="../dft2lnt/dft_parser_location.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="CMake">
     <File Name="../dft2lnt/CMakeLists.txt"/>
