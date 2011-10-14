@@ -4,11 +4,15 @@ This file has no copyright assigned and is placed in the Public Domain.
 Written by Nach M. S. September 8, 2005
 */
 
-#include <windows.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <string.h>
 #include <errno.h>
 #include <sys/stat.h>
+
+#ifdef WIN32
+
+#include <windows.h>
 
 char *realpath(const char *path, char resolved_path[PATH_MAX]) {
 	char *return_path = 0;
@@ -107,6 +111,8 @@ char *realpath(const char *path, char resolved_path[PATH_MAX]) {
 
 	return return_path;
 }
+
+#endif // WIN32
 
 char* cwd_realpath(const char* path, char resolved_path[PATH_MAX]) {
 	char* relative_path = (char*)malloc(PATH_MAX);
