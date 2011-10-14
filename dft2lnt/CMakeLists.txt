@@ -31,7 +31,6 @@ set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_CURRENT_
 add_library(dft2lnt
 	dft2lnt.cpp
 	dft_parser.cpp
-	dft_commands.cpp
 	dftnodes/BasicEvent.cpp
 	DFTree.cpp
 	DFTreeValidator.cpp
