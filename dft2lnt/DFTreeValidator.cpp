@@ -1,4 +1,4 @@
-#include "dftreevalidator.h"
+#include "DFTreeValidator.h"
 #include "dft2lnt.h"
 
 DFT::DFTreeValidator::DFTreeValidator(DFT::DFTree* dft, CompilerContext* cc):
