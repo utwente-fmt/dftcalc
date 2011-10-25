@@ -28,10 +28,12 @@ enum NodeType {
 	GateCSPType,
 	GatePAndType,
 	GateSeqType,
-	GateOFType,
+	GateVotingType,
 	GateFDEPType,
 	GateTransferType,
-	
+
+	GATES_FIRST = GatePhasedOrType,
+	GATES_LAST  = GateTransferType,
 	
 	AnyType,
 	NUMBEROF
@@ -70,7 +72,8 @@ public:
 		if(type == matchType) {
 			return true;
 		} else if(matchType==GateType) {
-			return type==GateAndType;
+		//	return type==GateAndType;
+			return GATES_FIRST <= type && type <= GATES_LAST;
 		} else {
 			return false;
 		}
@@ -97,7 +100,7 @@ public:
 	 * Returns the name of this Node.
 	 * @return The name of this Node.
 	 */
-	const string& getName() {
+	const string& getName() const {
 		return name;
 	}
 	

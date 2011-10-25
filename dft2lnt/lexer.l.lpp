@@ -44,6 +44,7 @@ digit         [0-9]
 letter        [A-Za-z]
 number        {digit}+
 numbersuffix  {number}({letter}|{underscore})*
+voting        {number}of{number}
 hexdigit	  {digit}|[A-F]
 newline       \r?\n
 whitespace    [ \t]+
@@ -136,6 +137,29 @@ transfer      "accepts transfers from"
 {newline}               LOCATION_LINES(*yylloc, 1); LOCATION_STEP (*yylloc);
 {whitespace}            LOCATION_STEP(*yylloc); /* ignore whitespace */;
 
+{voting} {
+	char buffer[101];
+
+	// Read first number (threshold)
+	char* dst = buffer;
+	char* src = yytext;
+	while(isdigit(*src)) {
+		*dst++ = *src++;
+	}
+	*dst = '\0';
+	yylval->voting.k = atoi(buffer);
+
+	// Read second number (total)
+	dst = buffer;
+	src+=2;
+	while(isdigit(*src)) {
+		*dst++ = *src++;
+	}
+	*dst = '\0';
+	yylval->voting.n = atoi(buffer);
+
+	return VOTING;
+}
 {number} {
 	int c;
 	char buffer[101];

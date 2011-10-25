@@ -7,5 +7,6 @@
 #include "dftnodes/Gate.h"
 #include "dftnodes/GateAnd.h"
 #include "dftnodes/GateOr.h"
+#include "dftnodes/GateVoting.h"
 
 #endif // NODES_H

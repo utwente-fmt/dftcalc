@@ -54,8 +54,11 @@ public:
 			break;
 		case DFT::Nodes::GateSeqType:
 			break;
-		case DFT::Nodes::GateOFType:
+		case DFT::Nodes::GateVotingType: {
+			DFT::AST::ASTVotingGateType* vote = static_cast<DFT::AST::ASTVotingGateType*>(astgate->getGateType());
+			gate = new DFT::Nodes::GateVoting(astgate->getName()->getString(),vote->getThreshold(),vote->getTotal());
 			break;
+		}
 		case DFT::Nodes::GateFDEPType:
 			break;
 		case DFT::Nodes::GateTransferType:

@@ -30,6 +30,7 @@ enum NodeType {
     BEAttributeStringType,
     AttributeLabelType,
     ASTGateTypeType,
+    ASTVotingGateTypeType,
 
     AnyType,
     NUMBEROF
@@ -293,6 +294,12 @@ public:
 class ASTGateType: public ASTIdentifier {
 private:
 	DFT::Nodes::NodeType nodeType;
+protected:
+	ASTGateType(NodeType type, Location location, std::string str, DFT::Nodes::NodeType nodeType):
+		ASTIdentifier(type,location,str),
+		nodeType(nodeType) {
+	}
+	
 public:
 	ASTGateType(Location location, std::string str, DFT::Nodes::NodeType nodeType):
 		ASTIdentifier(ASTGateTypeType,location,str),
@@ -306,6 +313,26 @@ public:
 	const DFT::Nodes::NodeType& getGateType() const {
 		return nodeType;
 	}
+};
+
+/**
+ * The Voting GateType is the only rule that has node specific date in the
+ * gate type identifier
+ */
+class ASTVotingGateType: public ASTGateType {
+private:
+	int threshold; // threshold
+	int total; // total
+	DFT::Nodes::NodeType nodeType;
+public:
+	ASTVotingGateType(Location location, int threshold, int total):
+		ASTGateType(ASTVotingGateTypeType,location,"voting",DFT::Nodes::GateVotingType),
+		threshold(threshold),
+		total(total) {
+	}
+	
+	int getThreshold() const {return threshold;}
+	int getTotal() const {return total;}
 };
 
 /**
