@@ -258,7 +258,10 @@ int main(int argc, char** argv) {
 	printf(":: Checking syntax...\n"); fflush(stdout);
 	Parser* parser = new Parser(inputFile,parserInputFilePath,compilerContext);
 	std::vector<DFT::AST::ASTNode*>* ast = parser->parse();
-	
+	if(!ast) {
+		printf(":error:Could not build AST\n");
+		return 1;
+	}
 	/* Validate input */
 	printf(":: Validating input...\n"); fflush(stdout);
 	int astValid = false;
@@ -267,7 +270,7 @@ int main(int argc, char** argv) {
 		astValid = validator.validate();
 	}
 	if(!astValid) {
-		printf(":error:AST invalid");
+		printf(":error:AST invalid\n");
 		return 1;
 	}
 	
@@ -279,7 +282,7 @@ int main(int argc, char** argv) {
 		dft = builder.build();
 	}
 	if(!dft) {
-		printf(":error:DFT invalid");
+		printf(":error:DFT invalid\n");
 		return 1;
 	}
 
