@@ -21,7 +21,7 @@
 //	#ifndef COMPILING_LEXER
 //	#	include "lexer.l.h"
 //	#endif
-	#include "dftnodes/Nodes.h"
+	#include "dftnodes/nodes.h"
 	#include "dft_ast.h"
 	#include "DFTree.h"
 	#include "dft2lnt.h"

@@ -30,6 +30,9 @@ protected:
 	std::vector<DFT::AST::ASTNode*>* ast;
 	CompilerContext* cc;
 	AggregateFunction f_aggregate;
+	virtual void aggregate(TReturn& result, const TReturn& value) {
+		result = value;
+	}
 public:
 
 	/**
