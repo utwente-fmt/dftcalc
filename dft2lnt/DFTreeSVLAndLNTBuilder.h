@@ -19,6 +19,7 @@ namespace Files {
 	extern const std::string Unknown;
 	extern const std::string BasicEvent;
 	extern const std::string GateAnd;
+	extern const std::string GateOr;
 }
 
 /**

@@ -6,5 +6,6 @@
 #include "dftnodes/BasicEvent.h"
 #include "dftnodes/Gate.h"
 #include "dftnodes/GateAnd.h"
+#include "dftnodes/GateOr.h"
 
 #endif // NODES_H

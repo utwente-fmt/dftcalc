@@ -39,6 +39,7 @@ public:
 		case DFT::Nodes::GatePhasedOrType:
 			break;
 		case DFT::Nodes::GateOrType:
+			gate = new DFT::Nodes::GateOr(astgate->getName()->getString());
 			break;
 		case DFT::Nodes::GateAndType:
 			gate = new DFT::Nodes::GateAnd(astgate->getName()->getString());
