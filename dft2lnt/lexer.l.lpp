@@ -34,9 +34,17 @@
 	#define compiler_lexer_report_errorAt(loc,str) { /*printf("@%i: ",__LINE__);*/ currentParser->getCC()->reportErrorAt(loc,str); }
 	#define compiler_lexer_report_warningAt(loc,str) { currentParser->getCC()->reportWarningAt(loc,str); }
 	
+	#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5)
+	#	define PRAGMA_IGNORE_UNUSED 1
+	#else
+	#	define PRAGMA_IGNORE_UNUSED 0
+	#endif
+
 	// The parameter currentParser is not always used, so ignore warning
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wunused-variable"
+	#if PRAGMA_IGNORE_UNUSED
+	#	pragma GCC diagnostic push
+	#	pragma GCC diagnostic ignored "-Wunused-variable"
+	#endif
 %}
 
 underscore    [_]
@@ -340,4 +348,6 @@ int lex_char(yyscan_t yyscanner) {
 		}
 	return c;
 }
-#pragma GCC diagnostic pop
+#if PRAGMA_IGNORE_UNUSED
+#	pragma GCC diagnostic pop
+#endif
