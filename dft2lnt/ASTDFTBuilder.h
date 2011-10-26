@@ -22,6 +22,8 @@ private:
 	DFT::DFTree* dft;
 	std::string topNode;
 	//std::map<std::string,DFT::Nodes::Node*> nodeTable;
+	static void f_aggregate(int& result, int value) {
+	}
 	
 public:
 
@@ -89,7 +91,7 @@ public:
 	 * Call build() to start the first AST pass of the DFT build process.
 	 */
 	ASTDFTBuilderPass1(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc, DFT::DFTree* dft):
-		ASTVisitor(ast,cc,[](int& ret, int val) {}),
+		ASTVisitor<int>(ast,cc,&f_aggregate),
 		dft(dft),
 		topNode("") {
 	}
@@ -98,21 +100,21 @@ public:
 	 * Start the first AST pass of the DFT build process.
 	 */
 	void build() {
-		ASTVisitor::visit();
+		ASTVisitor<int>::visit();
 	}
 	
 	virtual int visitTopLevel(DFT::AST::ASTTopLevel* topLevel) {
 		
 		topNode = topLevel->getTopNode()->getString();
 		
-		ASTVisitor::visitTopLevel(topLevel);
+		ASTVisitor<int>::visitTopLevel(topLevel);
 	}
 	virtual int visitBasicEvent(DFT::AST::ASTBasicEvent* basicEvent) {
 		
 		DFT::Nodes::BasicEvent* be = new DFT::Nodes::BasicEvent(basicEvent->getName()->getString());
 		//nodeTable.insert( pair<std::string,DFT::Nodes::Node*>(basicEvent->getName()->getString(),be) );
 		dft->addNode(be);
-		ASTVisitor::visitBasicEvent(basicEvent);
+		ASTVisitor<int>::visitBasicEvent(basicEvent);
 	}
 	virtual int visitGate(DFT::AST::ASTGate* astgate) {
 		DFT::Nodes::Gate* gate = buildGate(astgate);
@@ -125,25 +127,25 @@ public:
 		//nodeTable.insert( pair<std::string,DFT::Nodes::Node*>(astgate->getName()->getString(),n_gate) );
 		dft->addNode(gate);
 
-		ASTVisitor::visitGate(astgate);
+		ASTVisitor<int>::visitGate(astgate);
 	}
 	virtual int visitPage(DFT::AST::ASTPage* page) {
-		ASTVisitor::visitPage(page);
+		ASTVisitor<int>::visitPage(page);
 	}
 	virtual int visitAttribute(DFT::AST::ASTAttribute* attribute) {
-		ASTVisitor::visitAttribute(attribute);
+		ASTVisitor<int>::visitAttribute(attribute);
 	}
 	virtual int visitAttrib(DFT::AST::ASTAttrib* attrib) {
-		ASTVisitor::visitAttrib(attrib);
+		ASTVisitor<int>::visitAttrib(attrib);
 	}
 	virtual int visitAttribFloat(DFT::AST::ASTAttribFloat* af) {
-		ASTVisitor::visitAttribFloat(af);
+		ASTVisitor<int>::visitAttribFloat(af);
 	}
 	virtual int visitAttribNumber(DFT::AST::ASTAttribNumber* an) {
-		ASTVisitor::visitAttribNumber(an);
+		ASTVisitor<int>::visitAttribNumber(an);
 	}
 	virtual int visitAttribString(DFT::AST::ASTAttribString* as) {
-		ASTVisitor::visitAttribString(as);
+		ASTVisitor<int>::visitAttribString(as);
 	}
 };
 
@@ -159,6 +161,8 @@ private:
 	Parser* parser;
 	DFT::DFTree* dft;
 	std::string topNode;
+	static void f_aggregate(int& result, int value) {
+	}
 public:
 
 	/**
@@ -167,12 +171,17 @@ public:
 	 * Call build() to start the DFT build process.
 	 */
 	ASTDFTBuilder(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc):
-		ASTVisitor(ast,cc,[](int& ret, int val){}),
+		ASTVisitor<int>(ast,cc,&f_aggregate),
 		ast(ast),
 		parser(parser),
 		dft(NULL),
 		topNode("") {
 	}
+
+	/**
+	 */
+	 virtual void aggregate(int& result, const int& value) {
+	 }
 
 	/**
 	 * Starts the AST to DFT build process using the AST given to the
@@ -183,7 +192,7 @@ public:
 		dft = new DFT::DFTree();
 		ASTDFTBuilderPass1* pass1 = new ASTDFTBuilderPass1(ast,cc,dft);
 		pass1->build();
-		ASTVisitor::visit();
+		ASTVisitor<int>::visit();
 		delete pass1;
 		return dft;
 	}
@@ -192,14 +201,14 @@ public:
 		DFT::Nodes::Node* top = dft->getNode(topLevel->getTopNode()->getString());
 		assert(top);
 		dft->setTopNode(top);
-		ASTVisitor::visitTopLevel(topLevel);
+		ASTVisitor<int>::visitTopLevel(topLevel);
 	}
 	virtual int visitBasicEvent(DFT::AST::ASTBasicEvent* basicEvent) {
 		DFT::Nodes::Node* n = dft->getNode(basicEvent->getName()->getString());
 		assert(n);
 		assert(n->getType()==DFT::Nodes::BasicEventType);
 		DFT::Nodes::BasicEvent* be = static_cast<DFT::Nodes::BasicEvent*>(n);
-		ASTVisitor::visitBasicEvent(basicEvent);
+		ASTVisitor<int>::visitBasicEvent(basicEvent);
 	}
 	virtual int visitGate(DFT::AST::ASTGate* gate) {
 		DFT::Nodes::Node* n = dft->getNode(gate->getName()->getString());
@@ -211,25 +220,25 @@ public:
 			DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(i)->getString());
 			nodes.push_back(node);
 		}
-		ASTVisitor::visitGate(gate);
+		ASTVisitor<int>::visitGate(gate);
 	}
 	virtual int visitPage(DFT::AST::ASTPage* page) {
-		ASTVisitor::visitPage(page);
+		ASTVisitor<int>::visitPage(page);
 	}
 	virtual int visitAttribute(DFT::AST::ASTAttribute* attribute) {
-		ASTVisitor::visitAttribute(attribute);
+		ASTVisitor<int>::visitAttribute(attribute);
 	}
 	virtual int visitAttrib(DFT::AST::ASTAttrib* attrib) {
-		ASTVisitor::visitAttrib(attrib);
+		ASTVisitor<int>::visitAttrib(attrib);
 	}
 	virtual int visitAttribFloat(DFT::AST::ASTAttribFloat* af) {
-		ASTVisitor::visitAttribFloat(af);
+		ASTVisitor<int>::visitAttribFloat(af);
 	}
 	virtual int visitAttribNumber(DFT::AST::ASTAttribNumber* an) {
-		ASTVisitor::visitAttribNumber(an);
+		ASTVisitor<int>::visitAttribNumber(an);
 	}
 	virtual int visitAttribString(DFT::AST::ASTAttribString* as) {
-		ASTVisitor::visitAttribString(as);
+		ASTVisitor<int>::visitAttribString(as);
 	}
 };
 

@@ -19,6 +19,9 @@ namespace DFT {
 class ASTValidator: public DFT::ASTVisitor<int,true> {
 private:
 	std::vector<std::string> definedNodes;
+	static void f_aggregate(int& result, int value) {
+		result = result && value;
+	}
 public:
 
 	/**
@@ -27,8 +30,15 @@ public:
 	 * Call validate() to start the validation process.
 	 */
 	ASTValidator(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc):
-		ASTVisitor(ast,cc,[](int& ret, int val){ret = ret && val;}) {
+		//ASTVisitor(ast,cc,[](int& ret, int val){ret = ret && val;}) {
+		ASTVisitor<int,true>(ast,cc,&f_aggregate) {
 	}
+
+	/**
+	 */
+	 virtual void aggregate(int& result, const int& value) {
+		 result = result && value;
+	 }
 
 	/**
 	 * Builds a list of defined DFT nodes in the AST specified in the
@@ -96,7 +106,7 @@ public:
 		
 		int valid = true;
 		
-		valid = ASTVisitor::visit() ? valid : false;
+		valid = ASTVisitor<int,true>::visit() ? valid : false;
 		
 		return valid;
 	}
@@ -129,7 +139,7 @@ public:
 	virtual int visitTopLevel(DFT::AST::ASTTopLevel* topLevel) {
 		int valid = true;
 		
-		valid = ASTVisitor::visitTopLevel(topLevel) ? valid : false ;
+		valid = ASTVisitor<int,true>::visitTopLevel(topLevel) ? valid : false ;
 		
 		std::vector<std::string>::iterator it = std::find(definedNodes.begin(),definedNodes.end(),topLevel->getTopNode()->getString());
 		if(it == definedNodes.end()) {
@@ -140,7 +150,7 @@ public:
 	}
 	virtual int visitBasicEvent(DFT::AST::ASTBasicEvent* basicEvent) {
 		int valid = true;
-		valid = ASTVisitor::visitBasicEvent(basicEvent) ? valid : false ;
+		valid = ASTVisitor<int,true>::visitBasicEvent(basicEvent) ? valid : false ;
 		return valid;
 	}
 	virtual int visitGate(DFT::AST::ASTGate* gate) {
@@ -151,7 +161,7 @@ public:
 			cc->reportErrorAt(gate->getLocation(),"unsupported gate type: " + gate->getGateType()->getString());
 		}
 
-		valid = ASTVisitor::visitGate(gate) ? valid : false ;
+		valid = ASTVisitor<int,true>::visitGate(gate) ? valid : false ;
 
 		std::vector<DFT::AST::ASTIdentifier*>* children = gate->getChildren();
 		for(int i=children->size();i--;) {
@@ -166,7 +176,7 @@ public:
 	virtual int visitPage(DFT::AST::ASTPage* page) {
 		int valid = true;
 
-		valid = ASTVisitor::visitPage(page) ? valid : false ;
+		valid = ASTVisitor<int,true>::visitPage(page) ? valid : false ;
 
 		std::vector<std::string>::iterator it = std::find(definedNodes.begin(),definedNodes.end(),page->getNodeName()->getString());
 		if(it == definedNodes.end()) {
@@ -177,28 +187,28 @@ public:
 	}
 	virtual int visitAttrib(DFT::AST::ASTAttrib* attr) {
 		int valid = true;
-		valid = ASTVisitor::visitAttrib(attr) ? valid : false;
+		valid = ASTVisitor<int,true>::visitAttrib(attr) ? valid : false;
 		return valid;
 	}
 	
 	virtual int visitAttribute(DFT::AST::ASTAttribute* attribute) {
 		int valid = true;
-		valid = ASTVisitor::visitAttribute(attribute) ? valid : false;
+		valid = ASTVisitor<int,true>::visitAttribute(attribute) ? valid : false;
 		return valid;
 	}
 	virtual int visitAttribFloat(DFT::AST::ASTAttribFloat* af) {
 		int valid = true;
-		valid = ASTVisitor::visitAttribFloat(af) ? valid : false;
+		valid = ASTVisitor<int,true>::visitAttribFloat(af) ? valid : false;
 		return valid;
 	}
 	virtual int visitAttribNumber(DFT::AST::ASTAttribNumber* an) {
 		int valid = true;
-		valid = ASTVisitor::visitAttribNumber(an) ? valid : false;
+		valid = ASTVisitor<int,true>::visitAttribNumber(an) ? valid : false;
 		return valid;
 	}
 	virtual int visitAttribString(DFT::AST::ASTAttribString* as) {
 		int valid = true;
-		valid = ASTVisitor::visitAttribString(as) ? valid : false;
+		valid = ASTVisitor<int,true>::visitAttribString(as) ? valid : false;
 		return valid;
 	}
 };
