@@ -21,9 +21,12 @@ public:
 	virtual ~DFTreePrinter() {
 	}
 
-	int print(std::ostream& out);
-	int printBasicEvent(std::ostream& out, DFT::Nodes::BasicEvent* basicEvent);
-	int printGate(std::ostream& out, DFT::Nodes::Gate* gate);
+	int print           (std::ostream& out);
+	int printBasicEvent (std::ostream& out, const DFT::Nodes::BasicEvent* basicEvent);
+	int printGate       (std::ostream& out, const DFT::Nodes::Gate* gate);
+	int printGateVoting (std::ostream& out, const DFT::Nodes::GateVoting* gate);
+	int printGateAnd    (std::ostream& out, const DFT::Nodes::GateAnd* gate);
+	int printGateOr     (std::ostream& out, const DFT::Nodes::GateOr* gate);
 
 };
 

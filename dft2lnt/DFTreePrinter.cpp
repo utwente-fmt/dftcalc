@@ -31,11 +31,13 @@ int DFT::DFTreePrinter::print(std::ostream& out) {
 			break;
 		}
 		case DFT::Nodes::GateOrType: {
-			assert(0);
+			DFT::Nodes::GateOr* gate = static_cast<DFT::Nodes::GateOr*>(nodes.at(i));
+			DFT::DFTreePrinter::printGateOr(out,gate);
 			break;
 		}
 		case DFT::Nodes::GateAndType: {
-			assert(0);
+			DFT::Nodes::GateAnd* gate = static_cast<DFT::Nodes::GateAnd*>(nodes.at(i));
+			DFT::DFTreePrinter::printGateAnd(out,gate);
 			break;
 		}
 		case DFT::Nodes::GateHSPType: {
@@ -58,8 +60,9 @@ int DFT::DFTreePrinter::print(std::ostream& out) {
 			assert(0);
 			break;
 		}
-		case DFT::Nodes::GateOFType: {
-			assert(0);
+		case DFT::Nodes::GateVotingType: {
+			DFT::Nodes::GateVoting* gate = static_cast<DFT::Nodes::GateVoting*>(nodes.at(i));
+			DFT::DFTreePrinter::printGateVoting(out,gate);
 			break;
 		}
 		case DFT::Nodes::GateFDEPType: {
@@ -80,14 +83,34 @@ int DFT::DFTreePrinter::print(std::ostream& out) {
 	return 0;
 }
 
-int DFT::DFTreePrinter::printBasicEvent(std::ostream& out, DFT::Nodes::BasicEvent* basicEvent) {
+int DFT::DFTreePrinter::printBasicEvent(std::ostream& out, const DFT::Nodes::BasicEvent* basicEvent) {
 	assert(basicEvent);
 	out << "BasicEvent[" << basicEvent->getName() << "]";
 	return 0;
 }
-int DFT::DFTreePrinter::printGate(std::ostream& out, DFT::Nodes::Gate* gate) {
+
+int DFT::DFTreePrinter::printGate(std::ostream& out, const DFT::Nodes::Gate* gate) {
 	assert(gate);
 	out << "Gate[" << gate->getName() << "] ";
 	out << gate->getType();
+	return 0;
+}
+
+int DFT::DFTreePrinter::printGateOr(std::ostream& out, const DFT::Nodes::GateOr* gate) {
+	assert(gate);
+	out << "GateOr[" << gate->getName() << "] ";
+	return 0;
+}
+
+int DFT::DFTreePrinter::printGateAnd(std::ostream& out, const DFT::Nodes::GateAnd* gate) {
+	assert(gate);
+	out << "GateAnd[" << gate->getName() << "] ";
+	return 0;
+}
+
+int DFT::DFTreePrinter::printGateVoting(std::ostream& out, const DFT::Nodes::GateVoting* gate) {
+	assert(gate);
+	out << "GateVoting[" << gate->getName() << "] ";
+	out << "( " << gate->getThreshold() << " / " << gate->getTotal() << " )";
 	return 0;
 }
