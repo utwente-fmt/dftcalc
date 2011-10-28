@@ -26,3 +26,14 @@ void DFT::CompilerContext::message(std::string str) {
 	out << ":: " << str << endl;
 	warnings++;
 }
+
+bool DFT::CompilerContext::testWritable(std::string fileName) {
+	FILE* f = fopen(fileName.c_str(),"a");
+	if(f) {
+		fclose(f);
+		return true;
+	} else {
+		reportError("unable to open outputfile '" + fileName + "'");
+		return false;
+	}
+}

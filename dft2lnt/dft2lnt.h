@@ -174,6 +174,8 @@ public:
 	
 	void message(std::string str);
 
+	bool testWritable(std::string fileName);
+
 	void useColoredMessages(bool useColoredMessages) {
 		m_useColoredMessages = useColoredMessages;
 	}
