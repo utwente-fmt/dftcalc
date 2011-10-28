@@ -47,6 +47,7 @@ public:
 	static const std::string BasicEventStr;
 	static const std::string GateAndStr;
 	static const std::string GateOrStr;
+	static const std::string GateWSPStr;
 	static const std::string UnknownStr;
 	
 	/**
@@ -61,6 +62,8 @@ public:
 			return GateAndStr;
 		case GateOrType:
 			return GateOrStr;
+		case GateWSPType:
+			return GateWSPStr;
 		default:
 			return UnknownStr;
 		}
@@ -133,6 +136,12 @@ public:
 	 * @return The type of this Node.
 	 */
 	const NodeType& getType() const {return type;}
+	
+	/**
+	 * Returns the type of this Node.
+	 * @return The type of this Node.
+	 */
+	const std::string& getTypeStr() const { return getTypeName(getType()); }
 	
 	/**
 	 * Returns whether this Node is a BasicEvent, i.e. typeMatch(type,BasicEventType).

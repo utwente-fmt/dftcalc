@@ -32,6 +32,7 @@ add_library(dft2lnt
 	dft2lnt.cpp
 	dft_parser.cpp
 	dftnodes/BasicEvent.cpp
+	dftnodes/Node.cpp
 	DFTree.cpp
 	DFTreeValidator.cpp
 	DFTreePrinter.cpp
