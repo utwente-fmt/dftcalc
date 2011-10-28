@@ -2,6 +2,11 @@
 #define FILEWRITER_H
 
 #include <sstream>
+#include <stack>
+#include <string>
+#include <assert.h>
+
+using namespace std;
 
 /**
  * The StringWriter class acts as a buffer to write to. It uses a stringstream
@@ -9,17 +14,71 @@
  */
 class FileWriter {
 private:
+
+//	class WidthAdjuster {
+//	public:
+//		unsigned int width;
+//		unsigned int left;
+//		char fill;
+//	};
+
 	int indentation;
 	string prefix;
 	string postfix;
+	std::stack<stringstream*> sss;
+	
+	stringstream& ss() {
+		return *sss.top();
+	}
+
 public:
-	stringstream ss;
+
+	class FileWriterOption {
+	public:
+		enum Option {
+			POP,
+			PUSH
+		};
+		Option option;
+		FileWriterOption(Option option): option(option) {
+		}
+	};
+
+	static const FileWriterOption _pop;
+	static const FileWriterOption _push;
+
 	string applyprefix;
 	string applypostfix;
 
 	FileWriter(): indentation(0), prefix("\t"), postfix("\n"), applyprefix(""), applypostfix(postfix) {
+		sss.push(new stringstream());
 	}
-
+	
+	~FileWriter() {
+		while(sss.size()>0) {
+			delete sss.top();
+			sss.pop();
+		}
+	}
+	
+	void push() {
+		sss.push(new stringstream());
+	}
+	
+	void pop() {
+		std::string s;
+		if(sss.size()>1) {
+			s = sss.top()->str();
+			delete sss.top();
+			sss.pop();
+		}
+		ss() << s;
+	}
+	
+	stringstream& getStringStream() {
+		return ss();
+	}
+	
 	/**
 	 * Add the specified string to the stream. The string will be prefixed
 	 * based on the currently set prefix and indentation level. The currently
@@ -39,7 +98,7 @@ public:
 	 * @param s The String to add.
 	 */
 	FileWriter& append(const string& s) {
-		ss << s;
+		ss() << s;
 		return *this;
 	}
 
@@ -49,7 +108,7 @@ public:
 	 * @param s The String to add.
 	 */
 	FileWriter& operator<<(const string& s) {
-		ss << s;
+		ss() << s;
 		return *this;
 	}
 
@@ -59,7 +118,7 @@ public:
 	 * @param s The String to add.
 	 */
 	FileWriter& append(int i) {
-		ss << i;
+		ss() << i;
 		return *this;
 	}
 
@@ -69,7 +128,7 @@ public:
 	 * @param s The String to add.
 	 */
 	FileWriter& append(unsigned int i) {
-		ss << i;
+		ss() << i;
 		return *this;
 	}
 
@@ -79,7 +138,7 @@ public:
 	 * @param i The interger to add.
 	 */
 	FileWriter& operator<<(int i) {
-		ss << i;
+		ss() << i;
 		return *this;
 	}
 
@@ -89,7 +148,7 @@ public:
 	 * @param i The interger to add.
 	 */
 	FileWriter& operator<<(unsigned int i) {
-		ss << i;
+		ss() << i;
 		return *this;
 	}
 
@@ -99,7 +158,7 @@ public:
 	 * @param i The interger to add.
 	 */
 	FileWriter& operator<<(long int i) {
-		ss << i;
+		ss() << i;
 		return *this;
 	}
 
@@ -109,9 +168,27 @@ public:
 	 * @param i The interger to add.
 	 */
 	FileWriter& operator<<(long unsigned int i) {
-		ss << i;
+		ss() << i;
 		return *this;
 	}
+
+	FileWriter& operator<<(const FileWriterOption& option) {
+		switch(option.option) {
+			case FileWriterOption::POP:
+				pop();
+				break;
+			case FileWriterOption::PUSH:
+				push();
+				break;
+		}
+		return *this;
+	}
+	
+
+//	FileWriter& operator<<(std::ios_base& base) {
+//		ss() << base;
+//		return *this;
+//	}
 
 	/**
 	 * Append the prefix based on the currently set prefix and current
@@ -156,14 +233,37 @@ public:
 		}
 	}
 
+	void outlineLeftNext(unsigned int width, char fill) {
+		ss().fill(fill);
+		ss().width(width);
+		ss() << left;
+	}
+
+	void outlineRightNext(unsigned int width, char fill) {
+		ss().fill(fill);
+		ss().width(width);
+		ss() << right;
+	}
+
 	/**
 	 * Returns the current contents of the buffer.
 	 * @return The current contents of the buffer.
 	 */
 	string toString() {
-		return ss.str();
+		return ss().str();
+	}
+	
+	void clear() {
+		ss().str("");
 	}
 
+	void clearAll() {
+		while(sss.size()>1) {
+			delete sss.top();
+			sss.pop();
+		}
+		clear();
+	}
 };
 
 
