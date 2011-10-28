@@ -18,8 +18,11 @@ int DFT::DFTreeValidator::validateReferences() {
 	}
 	for(size_t i=0; i<nodes.size();++i) {
 		//std::remove(notDefinedButReferencedNodes.begin(),notDefinedButReferencedNodes.end(),nodes.at(i));
-		std::vector<Nodes::Node*>::iterator it = std::find(notDefinedButReferencedNodes.begin(),notDefinedButReferencedNodes.end(),nodes.at(i));
-		if(it != notDefinedButReferencedNodes.end()) notDefinedButReferencedNodes.erase(it);
+		for(;;) {
+			std::vector<Nodes::Node*>::iterator it = std::find(notDefinedButReferencedNodes.begin(),notDefinedButReferencedNodes.end(),nodes.at(i));
+			if(it == notDefinedButReferencedNodes.end()) break;
+			notDefinedButReferencedNodes.erase(it);
+		}
 	}
 	
 	for(std::vector<Nodes::Node*>::iterator i = notDefinedButReferencedNodes.begin(); i != notDefinedButReferencedNodes.end(); i++) {
