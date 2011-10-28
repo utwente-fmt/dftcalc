@@ -56,9 +56,12 @@ typedef struct FileContext {
  */
 class CompilerContext {
 private:
+	std::ostream& out;
 	unsigned int errors;
 	unsigned int warnings;
 	std::string name;
+	bool m_useColoredMessages;
+public:
 	map<string,string> types;
 	FileContext fileContext[MAX_FILE_NESTING]; // max file nesting of MAX_FILE_NESTING allowed
 	int fileContexts;
@@ -66,7 +69,7 @@ private:
 	/**
 	 * Creates a new compiler context with a specific name.
 	 */
-	CompilerContext(std::string name): errors(0), warnings(0), name(name) {
+	CompilerContext(std::ostream& out): out(out), errors(0), warnings(0), name("") {
 	}
 
 	~CompilerContext() {
@@ -168,6 +171,14 @@ private:
 	unsigned int getWarnings() {
 		return warnings;
 	}
+	
+	void message(std::string str);
+
+	void useColoredMessages(bool useColoredMessages) {
+		m_useColoredMessages = useColoredMessages;
+	}
+	const bool& usingColoredMessaged() const { return m_useColoredMessages; }
+
 };
 
 } //Namespace: DFT

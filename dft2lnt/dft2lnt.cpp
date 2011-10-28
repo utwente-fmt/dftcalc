@@ -3,21 +3,26 @@
 #include "dft2lnt.h"
 
 void DFT::CompilerContext::reportErrorAt(Location loc, std::string str) {
-	printf("%s:%i:error: %s\n",loc.filename.c_str(),loc.first_line,str.c_str());
+	out << loc.filename << ":" << loc.first_line << ":" << "error: " << str << endl;
 	errors++;
 }
 
 void DFT::CompilerContext::reportWarningAt(Location loc, std::string str) {
-	printf("%s:%i:warning: %s\n",loc.filename.c_str(),loc.first_line,str.c_str());
+	out << loc.filename << ":" << loc.first_line << ":warning: " << str << endl;
 	warnings++;
 }
 
 void DFT::CompilerContext::reportError(std::string str) {
-	printf("error: %s\n",str.c_str());
+	out << "error: " << str << endl;
 	errors++;
 }
 
 void DFT::CompilerContext::reportWarning(std::string str) {
-	printf("warning: %s\n",str.c_str());
+	out << "warning: " << str << endl;
+	warnings++;
+}
+
+void DFT::CompilerContext::message(std::string str) {
+	out << ":: " << str << endl;
 	warnings++;
 }
