@@ -37,6 +37,7 @@ add_library(dft2lnt
 	DFTreeValidator.cpp
 	DFTreePrinter.cpp
 	DFTreeSVLAndLNTBuilder.cpp
+	DFTreeEXPBuilder.cpp
 	files.cpp
 	FileWriter.cpp
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
