@@ -46,6 +46,7 @@ class Node {
 public:
 	static const std::string BasicEventStr;
 	static const std::string GateAndStr;
+	static const std::string GateOrStr;
 	static const std::string UnknownStr;
 	
 	/**
@@ -58,6 +59,8 @@ public:
 			return BasicEventStr;
 		case GateAndType:
 			return GateAndStr;
+		case GateOrType:
+			return GateOrStr;
 		default:
 			return UnknownStr;
 		}
