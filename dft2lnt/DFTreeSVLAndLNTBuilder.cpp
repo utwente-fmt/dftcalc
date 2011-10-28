@@ -45,17 +45,6 @@ int DFT::DFTreeSVLAndLNTBuilder::buildSVLOptions() {
 	return 0;
 }
 
-const std::string DFT::Files::Unknown             ("");
-const std::string DFT::Files::BasicEvent          ("be_cold");
-const std::string DFT::Files::GateAnd             ("and");
-const std::string DFT::Files::GateOr              ("or");
-const std::string DFT::Files::GateVoting          ("voting");
-
-const std::string DFT::FileExtensions::DFT        ("dft");
-const std::string DFT::FileExtensions::LOTOS      ("lotos");
-const std::string DFT::FileExtensions::LOTOSNT    ("lnt");
-const std::string DFT::FileExtensions::BCG        ("bcg");
-
 const std::string& DFT::DFTreeSVLAndLNTBuilder::getFileForNodeType(DFT::Nodes::NodeType nodeType) {
 	switch(nodeType) {
 	case DFT::Nodes::BasicEventType:
