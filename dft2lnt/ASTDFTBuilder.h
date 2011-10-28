@@ -49,6 +49,7 @@ public:
 		case DFT::Nodes::GateHSPType:
 			break;
 		case DFT::Nodes::GateWSPType:
+			gate = new DFT::Nodes::GateWSP(astgate->getName()->getString());
 			break;
 		case DFT::Nodes::GateCSPType:
 			break;

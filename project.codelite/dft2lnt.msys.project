@@ -22,6 +22,7 @@
       <File Name="../dft2lnt/dftnodes/nodes.h"/>
       <File Name="../dft2lnt/dftnodes/BasicEvent.h"/>
       <File Name="../dft2lnt/dftnodes/BasicEvent.cpp"/>
+      <File Name="../dft2lnt/dftnodes/GateWSP.h"/>
       <File Name="../dft2lnt/dftnodes/GateOr.h"/>
     </VirtualDirectory>
     <File Name="../dft2lnt/DFTree.h"/>

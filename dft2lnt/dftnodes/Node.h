@@ -158,6 +158,8 @@ public:
 	virtual bool isGate() const {
 		return typeMatch(type,GateType);
 	}
+	
+	virtual bool usesDynamicActivation() const { return false; }
 };
 
 class NodePlaceHolder: public Node {
