@@ -1,7 +1,10 @@
 #include "DFTreeSVLAndLNTBuilder.h"
 #include "FileWriter.h"
 
-DFT::DFTreeSVLAndLNTBuilder::DFTreeSVLAndLNTBuilder(std::string tmp, std::string name, DFT::DFTree* dft, CompilerContext* cc):
+#include <iostream>
+
+DFT::DFTreeSVLAndLNTBuilder::DFTreeSVLAndLNTBuilder(std::string root, std::string tmp, std::string name, DFT::DFTree* dft, CompilerContext* cc):
+	root(root),
 	tmp(tmp),
 	name(name),
 	dft(dft),
@@ -73,7 +76,8 @@ int DFT::DFTreeSVLAndLNTBuilder::buildSVLHeader() {
 	std::set<DFT::Nodes::NodeType>::iterator it = neededFiles.begin();
 	for(;it != neededFiles.end(); it++) {
 		const std::string& fileName = getFileForNodeType(*it);
-		svl_dependencies << svl_dependencies.applyprefix << "%lnt.open \"" << fileName << ".lnt\" -" << svl_dependencies.applypostfix;
+		//svl_dependencies << svl_dependencies.applyprefix << "%lnt.open \"" << fileName << ".lnt\" -" << svl_dependencies.applypostfix;
+		svl_dependencies << svl_dependencies.applyprefix << "\"$DFT2LNT_ROOT/bcgnodes/" << fileName << ".bcg\" = strong reduction of \"$DFT2LNT_ROOT/lotosnodes/" << fileName << ".lnt\";" << svl_dependencies.applypostfix;
 	}
 	return 0;
 }
@@ -184,6 +188,8 @@ int DFT::DFTreeSVLAndLNTBuilder::buildBasicEvent(int& current, int& total, DFT::
 }
 int DFT::DFTreeSVLAndLNTBuilder::buildGate(int& current, int& total, DFT::Nodes::Gate* gate) {
 	
+	compileGate(gate);
+	
 	// Add SVL script for the specified Gate
 	svl_body.appendPrefix();
 	{
@@ -218,5 +224,109 @@ int DFT::DFTreeSVLAndLNTBuilder::buildGate(int& current, int& total, DFT::Nodes:
 		svl_body.appendPostfix();
 		svl_body.outdent();
 	}
+	return 0;
+}
+
+bool DFT::DFTreeSVLAndLNTBuilder::shouldCompileBCG_1(std::string fileName) {
+	FILE* fp = fopen((root + "/bcgnodes/" + fileName).c_str(),"r+");
+	if(fp) {
+		fclose(fp);
+		return false;
+	} else {
+		return true;
+	}
+}
+
+bool DFT::DFTreeSVLAndLNTBuilder::shouldGenerateLNT_1(std::string fileName) {
+	FILE* fp = fopen((root + "/lntnodes/" + fileName).c_str(),"r+");
+	if(fp) {
+		fclose(fp);
+		return false;
+	} else {
+		return true;
+	}
+}
+
+int DFT::DFTreeSVLAndLNTBuilder::compileGate(DFT::Nodes::Gate* gate) {
+	
+	int children = gate->getChildren().size();
+
+	std::string targetFileName;
+	{
+		std::stringstream out;
+		out << DFT::Files::GateAnd;
+		out << "_" << children;
+		out << "." << DFT::FileExtensions::BCG;
+		targetFileName = out.str();
+	}
+	std::string targetFilePath = root + "/bcgnodes/" + targetFileName;
+
+	std::string sourceFileName;
+	{
+		std::stringstream out;
+		out << DFT::Files::GateAnd;
+		out << "_" << children;
+		out << "." << DFT::FileExtensions::BCG;
+		sourceFileName = out.str();
+	}
+	std::string sourceFilePath = root + "/lntnodes/" + sourceFileName;
+
+	if(shouldCompileBCG_1(targetFileName)) {
+		if(!shouldGenerateLNT_1(sourceFileName)) {
+			FileWriter node;
+			generateLNT(node,gate);
+		}
+		compileLNT(sourceFileName,targetFileName);
+	}
+	
+	return 0;
+}
+
+void DFT::DFTreeSVLAndLNTBuilder::generateLNT(FileWriter& out, DFT::Nodes::Gate* gate) {
+	switch(gate->getType()) {
+		case DFT::Nodes::GatePhasedOrType:
+		case DFT::Nodes::GateOrType:
+		case DFT::Nodes::GateAndType: {
+			DFT::Nodes::GateAnd* gateAnd = static_cast<DFT::Nodes::GateAnd*>(gate);
+			generateLNTAnd(out,gateAnd);
+			break;
+		}
+		case DFT::Nodes::GateHSPType:
+		case DFT::Nodes::GateWSPType:
+		case DFT::Nodes::GateCSPType:
+		case DFT::Nodes::GatePAndType:
+		case DFT::Nodes::GateSeqType:
+		case DFT::Nodes::GateVotingType:
+		case DFT::Nodes::GateFDEPType:
+		case DFT::Nodes::GateTransferType:
+		default:
+			assert(0 && "not yet implemented");
+			break;
+	}
+}
+
+void DFT::DFTreeSVLAndLNTBuilder::generateLNTAnd(FileWriter& out, DFT::Nodes::GateAnd* gate) {
+	
+	int children = gate->getChildren().size();
+	
+	out << out.applyprefix << "module AND(VOTING_GENERIC) is";
+
+	out.indent();
+		out << out.applyprefix << "type NAT_SET is array[1.." << children << "] of BOOL end type" << out.applypostfix;
+		out << out.applyprefix << "process MAIN [F : NAT_CHANNEL] is" << out.applypostfix;
+		out.indent();
+			out << out.applyprefix << "VOTING [F] (" << children << " of NAT, " << children << " of NAT, (NAT_SET(FALSE";
+			for(int i=1; i < children; ++i) {
+				out << ", FALSE";
+			}
+			out << ")))" << out.applypostfix;
+		out.outdent();
+		out << out.applyprefix << "end process" << out.applypostfix;
+	out.outdent();
+
+	out << out.applyprefix << "end module" << out.applypostfix;
+}
+
+int DFT::DFTreeSVLAndLNTBuilder::compileLNT(std::string lntFile, std::string bcgFile) {
 	return 0;
 }

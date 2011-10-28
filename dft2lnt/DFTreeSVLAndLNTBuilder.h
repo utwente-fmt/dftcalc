@@ -15,6 +15,7 @@ namespace DFT {
 
 class DFTreeSVLAndLNTBuilder {
 private:
+	std::string root;
 	std::string tmp;
 	std::string name;
 	DFT::DFTree* dft;
@@ -35,12 +36,13 @@ public:
 	/**
 	 * Constructs a new DFTreeSVLAndLNTBuilder using the specified DFT and
 	 * CompilerContext.
+	 * @param tmp The root dft2lnt folder
 	 * @param tmp The folder in which temporary files will be put in.
 	 * @param The name of the SVL script to generate.
 	 * @param dft The DFT to be validated.
 	 * @param cc The CompilerConstruct used for eg error reports.
 	 */
-	DFTreeSVLAndLNTBuilder(std::string tmp, std::string name, DFT::DFTree* dft, CompilerContext* cc);
+	DFTreeSVLAndLNTBuilder(std::string root, std::string tmp, std::string name, DFT::DFTree* dft, CompilerContext* cc);
 	virtual ~DFTreeSVLAndLNTBuilder() {
 	}
 
@@ -93,6 +95,12 @@ public:
 	 */
 	int buildGate(int& current, int& total, DFT::Nodes::Gate* gate);
 
+	bool shouldCompileBCG_1(std::string fileName);
+	bool shouldGenerateLNT_1(std::string fileName);
+	int compileGate(DFT::Nodes::Gate* gate);
+	void generateLNT(FileWriter& out, DFT::Nodes::Gate* gate);
+	void generateLNTAnd(FileWriter& out, DFT::Nodes::GateAnd* gate);
+	int compileLNT(std::string lntFile, std::string bcgFile);
 };
 
 } // Namespace: DFT
