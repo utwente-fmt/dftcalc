@@ -58,8 +58,6 @@ class CompilerContext {
 private:
 	unsigned int errors;
 	unsigned int warnings;
-public:
-	int indentLevel;
 	std::string name;
 	map<string,string> types;
 	FileContext fileContext[MAX_FILE_NESTING]; // max file nesting of MAX_FILE_NESTING allowed

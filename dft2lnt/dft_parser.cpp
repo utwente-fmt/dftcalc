@@ -49,7 +49,6 @@ std::vector<DFT::AST::ASTNode*>* Parser::parse() {
 	//yyin = file;
 	yyset_in(file,scanner);
 	compilerContext->fileContexts = 1;
-	compilerContext->indentLevel = 1;
 
 	// Add to FILE* stack
 	compilerContext->fileContext[0].fileHandle = file;
