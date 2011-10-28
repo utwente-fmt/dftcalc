@@ -147,7 +147,7 @@ public:
 	 * Returns whether this Node is a BasicEvent, i.e. typeMatch(type,BasicEventType).
 	 * @return true: this node is a BasicEvent, false otherwise
 	 */
-	virtual bool isBasicEvent() {
+	virtual bool isBasicEvent() const {
 		return typeMatch(type,BasicEventType);
 	}
 	
@@ -155,7 +155,7 @@ public:
 	 * Returns whether this Node is a Gate, i.e. typeMatch(type,GateType).
 	 * @return true: this node is a Gate, false otherwise
 	 */
-	virtual bool isGate() {
+	virtual bool isGate() const {
 		return typeMatch(type,GateType);
 	}
 };

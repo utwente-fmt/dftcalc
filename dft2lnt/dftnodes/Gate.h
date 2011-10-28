@@ -22,6 +22,7 @@ public:
 	 * @return The list of children of this Gate.
 	 */
 	std::vector<Node*>& getChildren() { return children; }
+	const std::vector<Node*>& getChildren() const { return const_cast<const std::vector<Node*>&>(children); }
 	
 	/**
 	 * Adds the specified Node to this Node's list of children.
@@ -36,6 +37,8 @@ public:
 			nodeList.push_back(children.at(i));
 		}
 	}
+	virtual bool isBasicEvent() const { return false; }
+	virtual bool isGate() const { return true; }
 };
 
 } // Namespace: Node

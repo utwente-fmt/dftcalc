@@ -221,6 +221,8 @@ public:
 	}
 	virtual ~BasicEvent() {
 	}
+	virtual bool isBasicEvent() const { return true; }
+	virtual bool isGate() const { return false; }
 };
 
 } // Namespace: Nodes
