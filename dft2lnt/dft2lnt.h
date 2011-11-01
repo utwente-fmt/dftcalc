@@ -66,6 +66,35 @@ public:
 	FileContext fileContext[MAX_FILE_NESTING]; // max file nesting of MAX_FILE_NESTING allowed
 	int fileContexts;
 
+	class MessageType {
+	public:
+		enum MType {
+
+			MESSAGE=1,
+			WARNING,
+			ERROR,
+
+			MESSAGE_FIRST=MESSAGE,
+			MESSAGE_LAST =MESSAGE,
+			WARNING_FIRST=WARNING,
+			WARNING_LAST =WARNING,
+			ERROR_FIRST  =ERROR,
+			ERROR_LAST   =ERROR,
+
+			NUMBEROF
+		};
+	private:
+		MType type;
+	public:
+		MessageType(MType type): type(type) {}
+		static const MessageType Message;
+		static const MessageType Warning;
+		static const MessageType Error;
+		bool isMessage() { return MESSAGE_FIRST <= type && type <= MESSAGE_LAST; }
+		bool isWarning() { return WARNING_FIRST <= type && type <= WARNING_LAST; }
+		bool isError()   { return ERROR_FIRST   <= type && type <= ERROR_LAST; }
+	};
+
 	/**
 	 * Creates a new compiler context with a specific name.
 	 */
@@ -173,6 +202,8 @@ public:
 	}
 	
 	void message(std::string str);
+	
+	void message(std::string str, const MessageType& mType);
 
 	bool testWritable(std::string fileName);
 
