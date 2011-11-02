@@ -131,9 +131,15 @@ int DFT::DFTreeEXPBuilder::buildEXPHeader() {
 
 int DFT::DFTreeEXPBuilder::buildEXPBody() {
 	
+	/* Create synchronization rules for all nodes in the DFT */
+
 	vector<DFT::EXPSyncRule*> activationRules;
 	vector<DFT::EXPSyncRule*> failRules;
+
+	// Create synchronization rules for the Top node in the DFT
 	createSyncRuleTop(activationRules,failRules);
+
+	// Create synchronization rules for all nodes in the DFT
 	{
 		std::vector<DFT::Nodes::Node*>::const_iterator it = dft->getNodes().begin();
 		for(;it!=dft->getNodes().end();++it) {
@@ -143,7 +149,9 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 			}
 		}
 	}
-	
+
+	/* Generate the EXP based on the generated synchronization rules */
+
 	exp_body << exp_body.applyprefix << "(* Number of rules: " << (activationRules.size()+failRules.size()) << "*)" << exp_body.applypostfix;
 	exp_body << exp_body.applyprefix << "hide" << exp_body.applypostfix;
 	exp_body.indent();
@@ -184,6 +192,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 		exp_body << " *)" << exp_body.applypostfix;
 		
 		exp_body.indent();
+		// Generate activation rules
 		{
 			for(size_t s=0; s<activationRules.size(); ++s) {
 				exp_body << exp_body.applyprefix;
@@ -192,6 +201,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 				exp_body << exp_body.applypostfix;
 			}
 		}
+		// Generate fail rules
 		{
 			for(size_t s=0; s<failRules.size(); ++s) {
 				exp_body << exp_body.applyprefix;
@@ -201,7 +211,8 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 			}
 		}
 		exp_body.outdent();
-		
+
+		// Generate the parallel composition of all the nodes
 		exp_body << exp_body.applyprefix << "in" << exp_body.applypostfix;
 		exp_body.indent();
 		{
@@ -247,23 +258,36 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 	}
 	int DFT::DFTreeEXPBuilder::createSyncRuleTop(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules) {
 		std::stringstream ss;
+		
+		// Obtain the Top Node
+		std::map<const DFT::Nodes::Node*, unsigned int>::iterator it = nodeIDs.find(dft->getTopNode());
+		assert( (it != nodeIDs.end()) );
+
+		// Generate the Top Node Activate rule
 		ss << "A_A";
 		DFT::EXPSyncRule* ruleA = new EXPSyncRule(ss.str(),false);
 		ss.str("");
+		ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncActivate(0,false)) );
+		
+		// Generate the Top Node Fail rule
 		ss << "F_A";
 		DFT::EXPSyncRule* ruleF = new EXPSyncRule(ss.str(),false);
-		std::map<const DFT::Nodes::Node*, unsigned int>::iterator it = nodeIDs.find(dft->getTopNode());
-		assert( (it != nodeIDs.end()) );
-		ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncActivate(0,false)) );
 		ruleF->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncFail(0)) );
+		
+		// Add the generated rules to the lists
 		activationRules.push_back(ruleA);
 		failRules.push_back(ruleF);
+		
 		return 0;
 	}
 	int DFT::DFTreeEXPBuilder::createSyncRule(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::Gate& node, unsigned int nodeID) {
 		
+		/* Generate non-specific rules for the node */
+		
 		// Go through all the children
 		for(size_t n = 0; n<node.getChildren().size(); ++n) {
+			
+			// Get the current child and associated childID
 			const DFT::Nodes::Node& child = *node.getChildren().at(n);
 			std::map<const DFT::Nodes::Node*, unsigned int>::iterator it = nodeIDs.find(&child);
 			assert( (it != nodeIDs.end()) && "createSyncRule() was looking for nonexistent node");
@@ -271,20 +295,47 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 			
 			/** ACTIVATION RULE **/
 			{
+				// Create labelTo string
 				std::stringstream ss;
 				ss << "a_" << node.getTypeStr() << nodeID << "_" << child.getTypeStr() << childID;
 				EXPSyncRule* ruleA = new EXPSyncRule(ss.str());
+				
+				// Set synchronization node
 				ruleA->syncOnNode = &child;
+				
+				// Add synchronization of THIS node to the synchronization rule
 				ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncActivate(n+1,true)) );
+				
+				// Go through all the existing activation rules
 				std::vector<DFT::EXPSyncRule*>::iterator ita = activationRules.begin();
-				bool areOtherRules = false;
 				for(;ita != activationRules.end();++ita) {
+					
+					// If there is a rule that also synchronizes on the same node,
+					// we have come across a child with another parent.
 					if((*ita)->syncOnNode == &child) {
-						areOtherRules = true;
 						EXPSyncRule* otherRuleA = *ita;
 						std::cerr << "Found matching rule: " << otherRuleA->toLabel << std::endl;
+						
+						// The synchronization depends if THIS node uses
+						// dynamic activation or not. The prime example of
+						// this is the Spare gate.
 						if(node.usesDynamicActivation()) {
+							
+							// If the THIS node used dynamic activation, the
+							// node is activated by an other parent.
+
+							// Thus, add a synchronization item to the
+							// existing synchronization rule, specifying that
+							// the THIS node also receives a sent Activate.
 							otherRuleA->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncActivate(n+1,false)) );
+							
+							// This is not enough, because the other way
+							// around also has to be added: the other node
+							// wants to listen to Activates of the THIS node
+							// as well.
+							
+							// First, we look up the sending Node of the
+							// current activation rule...
 							std::map<unsigned int,EXPSyncItem*>::const_iterator it = otherRuleA->label.begin();
 							unsigned int otherNodeID = 0;
 							unsigned int otherLocalNodeID = 0;
@@ -295,36 +346,61 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 									break;
 								}
 							}
+							
+							// ... then we add a synchronization item to the
+							// new rule we create for the THIS node, specifying
+							// the other node wants to listen to activates of
+							// the THIS node.
 							std::cerr << "  Adding sync for: " << otherNodeID << std::endl;
 							assert( (otherNodeID < otherRuleA->label.size()) && "The other rule sync should have a sending process");
 							ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(otherNodeID,syncActivate(otherLocalNodeID,false)) );
 							
-							// TODO: here the a !FALSE need to be added for the other rules that synchronize
 							// TODO: primary is a special case??????
 						} else {
+							
+							// If the THIS node does not use dynamic
+							// activation, we can simply add the THIS node
+							// as a sender to the other synchronization rule.
+							// FIXME: Possibly this is actually never wanted,
+							// as it could allow multiple senders to synchronize
+							// with each other.
 							otherRuleA->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncActivate(n+1,true)) );
 						}
 					}
 				}
-				//if(!areOtherRules) {
-					// Create synchronization rules a_<nodetype><nodeid>_<childtype><childid>
-					ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(childID,syncActivate(0,false)) );
-					activationRules.push_back(ruleA);
-				//}
+				
+				// Add the child Node to the synchronization rule
+				// Create synchronization rules a_<nodetype><nodeid>_<childtype><childid>
+				ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(childID,syncActivate(0,false)) );
+				activationRules.push_back(ruleA);
 			}
 			
 			/** FAIL RULE **/
 			{
+				// Go through all the existing fail rules
 				std::vector<EXPSyncRule*>::iterator itf = failRules.begin();
 				bool areOtherRules = false;
 				for(;itf != failRules.end();++itf) {
+					
+					// If there is a rule that also synchronizes on the same node,
+					// we have come across a child with another parent.
 					if((*itf)->syncOnNode == &child) {
 						assert(!areOtherRules && "there should be only one FAIL rule per node");
 						areOtherRules = true;
+						// We can simply add the THIS node as a sender to
+						// the other synchronization rule.
+						// FIXME: Possibly this is actually never wanted,
+						// as it could allow multiple senders to synchronize
+						// with each other.
 						(*itf)->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncFail(n+1)) );
 					}
 				}
+				
+				// If there are other rules that synchronize on the same node,
+				// we do not need to synchronize any further
+				// FIXME: This is probably not true!
 				if(!areOtherRules) {
+					// Add the child Node to the synchronization rule
 					// Create synchronization rules a_<nodetype><nodeid>_<childtype><childid>
 					std::stringstream ss;
 					ss << "f_" << child.getTypeStr() << childID;
@@ -338,6 +414,8 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 			
 		}
 		
+		/* Generate node-specific rules for the node */
+
 		switch(node.getType()) {
 		case DFT::Nodes::BasicEventType: {
 //			const DFT::Nodes::BasicEvent* be = static_cast<const DFT::Nodes::BasicEvent*>(&node);

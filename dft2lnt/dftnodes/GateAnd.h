@@ -12,7 +12,8 @@ class GateAnd: public Gate {
 private:
 	
 public:
-	GateAnd(std::string name): Gate(name,GateAndType) {
+	GateAnd(std::string name):
+		Gate(name,GateAndType) {
 	}
 	virtual ~GateAnd() {
 	}

@@ -32,6 +32,8 @@ public:
 	 * class. Returns NULL if the ASTGate is not supported.
 	 * The method buildGateTest() provides a way of testing is an ASTGate is
 	 * supported without returning a new Gate.
+	 * @param astgate The returned DFT Node will be based on this ASTGate.
+	 * @return The DFT Node based on teh specified ASTGate.
 	 */
 	static DFT::Nodes::Gate* buildGate(DFT::AST::ASTGate* astgate) {
 		DFT::Nodes::Gate* gate = NULL;

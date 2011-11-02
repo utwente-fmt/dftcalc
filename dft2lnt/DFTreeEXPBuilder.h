@@ -17,6 +17,10 @@ class DFTreeEXPBuilder;
 
 namespace DFT {
 
+/**
+ * This class reflects how one Node is synchronized in a synchronization rule.
+ * It consists of a gate name and a list of arguments.
+ */
 class EXPSyncItem {
 protected:
 	std::string name;
@@ -31,15 +35,39 @@ public:
 		args.push_back(arg1);
 		args.push_back(arg2);
 	}
+
+	/**
+	 * Returns the arguments used to synchronize on.
+	 * @return The arguments used to synchronize on.
+	 */
 	int getArg(unsigned int n) const { return args.at(n); }
+	
+	/**
+	 * Sets the argument used to synchronize on at the specified index.
+	 * If there are unspecified arguments before the specified index, they
+	 * will be initialized to 0.
+	 * @param n The index of the new argument used to syncrhonize on.
+	 * @param v The new argument used to syncrhonize on.
+	 */
 	void setArg(unsigned int n, int v) {
 		while(args.size()<n) {
 			args.push_back(0);
 		}
 		args.at(n) = v;
 	}
+	
+	/**
+	 * Returns the name of the gate used to synchronize on.
+	 * @return The name of the gate used to synchronize on.
+	 */
 	const std::string& getName() const { return name; }
 	
+	/**
+	 * Returns the label to be synchronized on. This is a textual
+	 * representation of this class. The format is:
+	 *  <gate name> ( ' !' <arg> )+
+	 * @return The label to synchronize on.
+	 */
 	virtual std::string toString() const {
 		std::stringstream ss;
 		ss << name;
@@ -48,6 +76,12 @@ public:
 		}
 		return ss.str();
 	}
+	/**
+	 * Returns the label to be synchronized on. This is a textual
+	 * representation of this class. This is the same as toString(),
+	 * with doublequotes added.
+	 * @return The label to synchronize on.
+	 */
 	virtual std::string toStringQuoted() const {
 		return "\"" + toString() + "\"";
 	}
@@ -61,6 +95,15 @@ public:
 	EXPSyncItemIB(std::string name, int arg1, bool arg2):
 		EXPSyncItem(name,arg1,arg2?1:0) {
 	}
+	
+	/**
+	 * Returns the label to be synchronized on. This is a textual
+	 * representation of this class. The format is:
+	 *  <gate name> ' !' arg0 ' !' arg1
+	 * Node that arg0 is represented as Integer
+	 * and that arg1 is represented as boolean (TRUE/FALSE)
+	 * @return The label to synchronize on.
+	 */
 	virtual std::string toString() const {
 		assert( (args.size()==2) && "EXPSyncItemIB should have two arguments");
 		std::stringstream ss;
@@ -71,12 +114,29 @@ public:
 	}
 };
 
+/**
+ * This class reflects a single synchronization rule in the "rule table"
+ * of a generated EXP file.
+ * It is built out of various EXPSyncItem belonging to a Node, and a toLabel
+ * string specifying what the label/transition is called after synchronization.
+ * Also specified is whether the new label should be hidden after the
+ * synchronization and what the synchronized Node is (this is to help
+ * synchronize multiple parents of a node)
+ */
 class EXPSyncRule {
 public:
+	/// A mapping from NodeID to EXPSyncItem
 	std::map<unsigned int,EXPSyncItem*> label;
+	
+	/// The renamed label name
 	std::string toLabel;
+	
+	/// Whether the new label should be hidden after synchronization
 	bool hideToLabel;
+	
+	/// The Node on which is synchronized
 	const DFT::Nodes::Node* syncOnNode;
+	
 public:
 	EXPSyncRule(const std::string& toLabel, bool hideToLabel=true):
 		toLabel(toLabel),
@@ -86,6 +146,9 @@ public:
 	}
 };
 
+/**
+ * This class handles the generation of EXP and SVL code out of a DFT.
+ */
 class DFTreeEXPBuilder {
 private:
 	std::string root;
@@ -129,6 +192,11 @@ public:
 	 */
 	std::string getFileForNode(const DFT::Nodes::Node& node) const;
 
+	/**
+	 * Returns an EXP formatted string reflecting the specified Basic Event.
+	 * Takes into account the renaming of failure rates.
+	 * @param be The Basic Event of which an EXP formatted strign is wanted.
+	 */	 
 	std::string getBEProc(const DFT::Nodes::BasicEvent& be) const;
 	
 	/**
@@ -151,12 +219,32 @@ public:
 	 */
 	int buildEXPBody();
 	
+	/**
+	 * Return the Node ID (index in the dft->getNodes() vector) of the
+	 * specified Node.
+	 * @param node The Node of which the Node ID is returned.
+	 * @return The Node ID of the specified Node.
+	 */
 	unsigned int getIDOfNode(const DFT::Nodes::Node& node) const;
 
+	/**
+	 * Create a new EXPSyncItem instance reflecting an Activate action
+	 * based on the specified localNodeID and if this is the sendign action
+	 * or not.
+	 * @param localNodeID This is the ID of the Node seen from the actor.
+	 * @param sending Whether this is a sending action or not.
+	 * @return A new EXPSyncItem instance.
+	 */
 	EXPSyncItem* syncActivate(unsigned int localNodeID, bool sending) {
 		return new EXPSyncItemIB("A",localNodeID,sending);
 	}
 
+	/**
+	 * Create a new EXPSyncItem instance reflecting a Fail action
+	 * based on the specified localNodeID.
+	 * @param localNodeID This is the ID of the Node seen from the actor.
+	 * @return A new EXPSyncItem instance.
+	 */
 	EXPSyncItem* syncFail(unsigned int localNodeID) {
 		return new EXPSyncItem("F",localNodeID);
 	}
@@ -166,12 +254,37 @@ public:
 	int createSyncRuleGateAnd(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateAnd& node, unsigned int nodeID);
 	int createSyncRuleGateWSP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateWSP& node, unsigned int nodeID);
 	int createSyncRuleGatePAnd(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GatePAnd& node, unsigned int nodeID);
+
+	/**
+	 * Generate synchronization rules for the Top Node.
+	 * This generates the Top Node Fail and Activate labels that will not
+	 * be synchronized with during this step.
+	 * @param activationRules Generated activation rules will go here.
+	 * @param activationRules Generated fail rules will go here.
+	 * @return 0.
+	 */
 	int createSyncRuleTop(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules);
 	int createSyncRule(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::Gate& node, unsigned int nodeID);
 
+	/**
+	 * Modifies the specified columnWidths to reflect the width needed by the
+	 * specified syncRules. This can be used for printing to a file in an
+	 * aligned fashion, making it more readable.
+	 * Elements of columnWidths are only updated if the
+	 * existing value is smaller than the calculated value.
+	 */
 	void calculateColumnWidths(vector<unsigned int>& columnWidths, const vector<DFT::EXPSyncRule*>& syncRules);
 
+	/**
+	 * Print the generated EXP output to the specified stream.
+	 * @param out The generated EXP output will be streamed to this stream.
+	 */
 	void printEXP(std::ostream& out);
+
+	/**
+	 * Print the generated SVL output to the specified stream.
+	 * @param out The generated SVL output will be streamed to this stream.
+	 */
 	void printSVL(std::ostream& out);
 };
 
