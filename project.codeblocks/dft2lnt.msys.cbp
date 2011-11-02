@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="dft2lnt" />
+		<Option makefile_is_custom="1" />
+		<Option execution_dir="." />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Option virtualFolders="CMake\;" />
+		<Build>
+			<Target title="Debug">
+				<Option output="..\build\$(TARGET_NAME)\bin\dft2lntc" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\build\$(TARGET_NAME)\bin" />
+				<Option object_output="..\build\$(TARGET_NAME)\" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+				<ExtraCommands>
+					<Add before='cmake -E make_directory &quot;../build/$(TARGET_NAME)&quot;' />
+					<Add before='cmd /C pwd &amp;&amp; cd &quot;../build/$(TARGET_NAME)&quot; &amp;&amp; cmake -DCMAKE_BUILD_TYPE=$(TARGET_NAME) ../../ -G &quot;MSYS Makefiles&quot;' />
+				</ExtraCommands>
+				<MakeCommands>
+					<Build command='make -C &quot;../build/$target&quot; -f $(PROJECT_NAME)/Makefile $(PROJECT_NAME) VERBOSE=1' />
+					<CompileFile command='make -C &quot;../build/$target&quot; -f $(PROJECT_NAME)/Makefile $(ACTIVE_EDITOR_FILENAME).obj' />
+					<Clean command='make -C &quot;../build/$target&quot; clean' />
+					<DistClean command="$make -f $makefile distclean$target" />
+					<AskRebuildNeeded command='make -C &quot;../build/$target&quot; -q -f $(PROJECT_NAME)/Makefile $(PROJECT_NAME)' />
+					<SilentBuild command='make -C &quot;../build/$target&quot; -s -f $(PROJECT_NAME)/Makefile $(PROJECT_NAME)' />
+				</MakeCommands>
+			</Target>
+			<Target title="Release">
+				<Option output="..\build\$(TARGET_NAME)\bin\dft2lntc" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\build\$(TARGET_NAME)\bin" />
+				<Option object_output="..\build\$(TARGET_NAME)\" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<ExtraCommands>
+					<Add before='cmake -E make_directory &quot;../build/$(TARGET_NAME)&quot;' />
+					<Add before='cmd /C cd &quot;../build/$(TARGET_NAME)&quot; &amp;&amp; cmake -DCMAKE_BUILD_TYPE=$(TARGET_NAME) ../../ -G &quot;MSYS Makefiles&quot;' />
+				</ExtraCommands>
+				<MakeCommands>
+					<Build command='make -C &quot;../build/$target&quot; -f $(PROJECT_NAME)/Makefile $(PROJECT_NAME) VERBOSE=1' />
+					<CompileFile command='make -C &quot;../build/$target&quot; -f $(PROJECT_NAME)/Makefile $(ACTIVE_EDITOR_FILENAME).obj' />
+					<Clean command='make -C &quot;../build/$target&quot; clean' />
+					<DistClean command="$make -f $makefile distclean$target" />
+					<AskRebuildNeeded command='make -C &quot;../build/$target&quot; -q -f $(PROJECT_NAME)/Makefile $(PROJECT_NAME)' />
+					<SilentBuild command='make -C &quot;../build/$target&quot; -s -f $(PROJECT_NAME)/Makefile $(PROJECT_NAME)' />
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="..\dft2lnt\ASTDFTBuilder.h" />
+		<Unit filename="..\dft2lnt\ASTLNTBuilder.h" />
+		<Unit filename="..\dft2lnt\ASTValidator.h" />
+		<Unit filename="..\dft2lnt\ASTVisitor.h" />
+		<Unit filename="..\dft2lnt\CMakeLists.txt">
+			<Option virtualFolder="CMake\" />
+		</Unit>
+		<Unit filename="..\dft2lnt\ConsoleWriter.cpp" />
+		<Unit filename="..\dft2lnt\ConsoleWriter.h" />
+		<Unit filename="..\dft2lnt\DFTree.cpp" />
+		<Unit filename="..\dft2lnt\DFTree.h" />
+		<Unit filename="..\dft2lnt\DFTreeEXPBuilder.cpp" />
+		<Unit filename="..\dft2lnt\DFTreeEXPBuilder.h" />
+		<Unit filename="..\dft2lnt\DFTreePrinter.cpp" />
+		<Unit filename="..\dft2lnt\DFTreePrinter.h" />
+		<Unit filename="..\dft2lnt\DFTreeSVLAndLNTBuilder.cpp" />
+		<Unit filename="..\dft2lnt\DFTreeSVLAndLNTBuilder.h" />
+		<Unit filename="..\dft2lnt\DFTreeValidator.cpp" />
+		<Unit filename="..\dft2lnt\DFTreeValidator.h" />
+		<Unit filename="..\dft2lnt\FileWriter.cpp" />
+		<Unit filename="..\dft2lnt\FileWriter.h" />
+		<Unit filename="..\dft2lnt\dft2lnt.cpp" />
+		<Unit filename="..\dft2lnt\dft2lnt.h" />
+		<Unit filename="..\dft2lnt\dft_ast.h" />
+		<Unit filename="..\dft2lnt\dft_parser.cpp" />
+		<Unit filename="..\dft2lnt\dft_parser.h" />
+		<Unit filename="..\dft2lnt\dft_parser_location.h" />
+		<Unit filename="..\dft2lnt\dft_types.h" />
+		<Unit filename="..\dft2lnt\dftnodes\BasicEvent.cpp" />
+		<Unit filename="..\dft2lnt\dftnodes\BasicEvent.h" />
+		<Unit filename="..\dft2lnt\dftnodes\Gate.h" />
+		<Unit filename="..\dft2lnt\dftnodes\GateAnd.h" />
+		<Unit filename="..\dft2lnt\dftnodes\GateOr.h" />
+		<Unit filename="..\dft2lnt\dftnodes\GatePAnd.h" />
+		<Unit filename="..\dft2lnt\dftnodes\GateVoting.h" />
+		<Unit filename="..\dft2lnt\dftnodes\GateWSP.h" />
+		<Unit filename="..\dft2lnt\dftnodes\Node.cpp" />
+		<Unit filename="..\dft2lnt\dftnodes\Node.h" />
+		<Unit filename="..\dft2lnt\dftnodes\nodes.h" />
+		<Unit filename="..\dft2lnt\files.cpp" />
+		<Unit filename="..\dft2lnt\files.h" />
+		<Unit filename="..\dft2lnt\lexer.l.lpp" />
+		<Unit filename="..\dft2lnt\parser.y.ypp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
