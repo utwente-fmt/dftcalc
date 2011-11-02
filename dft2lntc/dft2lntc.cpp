@@ -275,7 +275,7 @@ int main(int argc, char** argv) {
 	std::string parserInputFileName(path_basename(inputFileName.c_str()));
 	
 	/* Parse input file */
-	compilerContext->message("Checking syntax...");
+	compilerContext->notify("Checking syntax...");
 	Parser* parser = new Parser(inputFile,parserInputFilePath,compilerContext);
 	std::vector<DFT::AST::ASTNode*>* ast = parser->parse();
 	if(!ast) {
@@ -284,7 +284,7 @@ int main(int argc, char** argv) {
 	}
 
 	/* Validate input */
-	compilerContext->message("Validating input...");
+	compilerContext->notify("Validating input...");
 	int astValid = false;
 	{
 		DFT::ASTValidator validator(ast,compilerContext);
@@ -309,7 +309,7 @@ int main(int argc, char** argv) {
 	/* Create DFT */
 	DFT::DFTree* dft = NULL;
 	if(astValid) {
-		compilerContext->message("Building DFT...");
+		compilerContext->notify("Building DFT...");
 		DFT::ASTDFTBuilder builder(ast,compilerContext);
 		dft = builder.build();
 	}
@@ -321,7 +321,7 @@ int main(int argc, char** argv) {
 	/* Validate DFT */
 	int dftValid = false;
 	if(dft) {
-		compilerContext->message("Validating DFT...");
+		compilerContext->notify("Validating DFT...");
 		DFT::DFTreeValidator validator(dft,compilerContext);
 		dftValid = validator.validate();
 		if(!dftValid) {
@@ -333,7 +333,7 @@ int main(int argc, char** argv) {
 	
 	/* Printing DFT */
 	if(dft && outputDFTFileSet) {
-		compilerContext->message("Printing DFT...");
+		compilerContext->notify("Printing DFT...");
 		DFT::DFTreePrinter printer(dft,compilerContext);
 		if(outputFileName!="") {
 			std::ofstream dftFile (outputDFTFileName);
@@ -346,14 +346,14 @@ int main(int argc, char** argv) {
 
 	/* Building SVL and LNT out of DFT */
 //	if(dft) {
-//		compilerContext->message("Building SVL and LNT...");
+//		compilerContext->notify("Building SVL and LNT...");
 //		DFT::DFTreeSVLAndLNTBuilder builder("/home/studfmg/bergfi/dft2lnt/dft2lnt/build/Content",".","try",dft,compilerContext);
 //		builder.build();
 //	}
 
 	/* Building EXP out of DFT */
 	if(dft && outputFileSet) {
-		compilerContext->message("Building EXP...");
+		compilerContext->notify("Building EXP...");
 		DFT::DFTreeEXPBuilder builder("/home/studfmg/bergfi/dft2lnt/dft2lnt/build/Content",".",outputBCGFileName,outputEXPFileName,dft,compilerContext);
 		builder.build();
 		
@@ -370,6 +370,10 @@ int main(int argc, char** argv) {
 			builder.printEXP(std::cout);
 		}
 		
+	}
+
+	if(compilerContext->getErrors() > 0 || compilerContext->getWarnings() > 0) {
+		compilerContext->reportErrors();
 	}
 
 	delete dft;

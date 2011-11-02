@@ -7,9 +7,11 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <stack>
 
 #include "dft_ast.h"
 #include "DFTree.h"
+#include "ConsoleWriter.h"
 
 namespace DFT {
 
@@ -56,12 +58,13 @@ typedef struct FileContext {
  */
 class CompilerContext {
 private:
-	std::ostream& out;
+	ConsoleWriter consoleWriter;
 	unsigned int errors;
 	unsigned int warnings;
 	std::string name;
 	bool m_useColoredMessages;
 public:
+ 	ConsoleWriter& out;
 	map<string,string> types;
 	FileContext fileContext[MAX_FILE_NESTING]; // max file nesting of MAX_FILE_NESTING allowed
 	int fileContexts;
@@ -71,15 +74,18 @@ public:
 		enum MType {
 
 			MESSAGE=1,
+			NOTIFY,
 			WARNING,
-			ERROR,
+			ERR,
 
-			MESSAGE_FIRST=MESSAGE,
-			MESSAGE_LAST =MESSAGE,
-			WARNING_FIRST=WARNING,
-			WARNING_LAST =WARNING,
-			ERROR_FIRST  =ERROR,
-			ERROR_LAST   =ERROR,
+			MESSAGE_FIRST = MESSAGE,
+			MESSAGE_LAST  = MESSAGE,
+			NOTIFY_FIRST  = NOTIFY,
+			NOTIFY_LAST   = NOTIFY,
+			WARNING_FIRST = WARNING,
+			WARNING_LAST  = WARNING,
+			ERROR_FIRST   = ERR,
+			ERROR_LAST    = ERR,
 
 			NUMBEROF
 		};
@@ -88,17 +94,19 @@ public:
 	public:
 		MessageType(MType type): type(type) {}
 		static const MessageType Message;
+		static const MessageType Notify;
 		static const MessageType Warning;
 		static const MessageType Error;
-		bool isMessage() { return MESSAGE_FIRST <= type && type <= MESSAGE_LAST; }
-		bool isWarning() { return WARNING_FIRST <= type && type <= WARNING_LAST; }
-		bool isError()   { return ERROR_FIRST   <= type && type <= ERROR_LAST; }
+		bool isMessage() const { return MESSAGE_FIRST <= type && type <= MESSAGE_LAST; }
+		bool isNotify()  const { return NOTIFY_FIRST  <= type && type <= NOTIFY_LAST; }
+		bool isWarning() const { return WARNING_FIRST <= type && type <= WARNING_LAST; }
+		bool isError()   const { return ERROR_FIRST   <= type && type <= ERROR_LAST; }
 	};
 
 	/**
 	 * Creates a new compiler context with a specific name.
 	 */
-	CompilerContext(std::ostream& out): out(out), errors(0), warnings(0), name("") {
+	CompilerContext(std::ostream& out): consoleWriter(out), errors(0), warnings(0), name(""), out(consoleWriter) {
 	}
 
 	~CompilerContext() {
@@ -201,16 +209,22 @@ public:
 		return warnings;
 	}
 	
+	void notify(std::string str);
+
 	void message(std::string str);
 	
 	void message(std::string str, const MessageType& mType);
-
+	
+	void messageAt(Location loc, std::string str, const MessageType& mType);
+	
 	bool testWritable(std::string fileName);
 
 	void useColoredMessages(bool useColoredMessages) {
 		m_useColoredMessages = useColoredMessages;
 	}
 	const bool& usingColoredMessaged() const { return m_useColoredMessages; }
+
+	void reportErrors();
 
 };
 

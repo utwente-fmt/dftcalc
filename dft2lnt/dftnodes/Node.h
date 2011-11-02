@@ -129,7 +129,7 @@ public:
 	 * Returns the location in the source where this node was defined.
 	 * @return The location in the source where this node was defined.
 	 */
-	const Location& getLocation() { return location; }
+	const Location& getLocation() const { return location; }
 	
 	/**
 	 * Returns the type of this Node.
