@@ -48,6 +48,7 @@ public:
 	static const std::string GateAndStr;
 	static const std::string GateOrStr;
 	static const std::string GateWSPStr;
+	static const std::string GatePAndStr;
 	static const std::string UnknownStr;
 	
 	/**
@@ -64,6 +65,8 @@ public:
 			return GateOrStr;
 		case GateWSPType:
 			return GateWSPStr;
+		case GatePAndType:
+			return GatePAndStr;
 		default:
 			return UnknownStr;
 		}

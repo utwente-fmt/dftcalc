@@ -26,6 +26,7 @@
       <File Name="../dft2lnt/dftnodes/Node.cpp"/>
       <File Name="../dft2lnt/dftnodes/GateWSP.h"/>
       <File Name="../dft2lnt/dftnodes/GateOr.h"/>
+      <File Name="../dft2lnt/dftnodes/GatePAnd.h"/>
     </VirtualDirectory>
     <File Name="../dft2lnt/DFTree.h"/>
     <File Name="../dft2lnt/DFTree.cpp"/>

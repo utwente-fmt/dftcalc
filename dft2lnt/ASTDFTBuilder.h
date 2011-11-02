@@ -54,6 +54,7 @@ public:
 		case DFT::Nodes::GateCSPType:
 			break;
 		case DFT::Nodes::GatePAndType:
+			gate = new DFT::Nodes::GatePAnd(astgate->getName()->getString());
 			break;
 		case DFT::Nodes::GateSeqType:
 			break;

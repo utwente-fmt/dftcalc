@@ -242,6 +242,9 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 	int DFT::DFTreeEXPBuilder::createSyncRuleGateWSP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateWSP& node, unsigned int nodeID) {
 		return 0;
 	}
+	int DFT::DFTreeEXPBuilder::createSyncRuleGatePAnd(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GatePAnd& node, unsigned int nodeID) {
+		return 0;
+	}
 	int DFT::DFTreeEXPBuilder::createSyncRuleTop(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules) {
 		std::stringstream ss;
 		ss << "A_A";
@@ -371,6 +374,9 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 		case DFT::Nodes::GateCSPType: {
 		}
 		case DFT::Nodes::GatePAndType: {
+			const DFT::Nodes::GatePAnd* g = static_cast<const DFT::Nodes::GatePAnd*>(&node);
+			createSyncRuleGatePAnd(activationRules,failRules,*g,nodeID);
+			break;
 		}
 		case DFT::Nodes::GateSeqType: {
 		}
