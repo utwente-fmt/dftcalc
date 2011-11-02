@@ -342,10 +342,11 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 			break;
 		}
 		case DFT::Nodes::GateType: {
+			assert(0 && "A gate should have a specialized type, not the general GateType");
 			break;
 		}
 		case DFT::Nodes::GatePhasedOrType: {
-			assert(0);
+			cc->reportErrorAt(node.getLocation(),"DFTreeEXPBuilder: unsupported gate: " + node.getTypeStr());
 			break;
 		}
 		case DFT::Nodes::GateOrType: {
@@ -359,7 +360,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 			break;
 		}
 		case DFT::Nodes::GateHSPType: {
-			assert(0);
+			cc->reportErrorAt(node.getLocation(),"DFTreeEXPBuilder: unsupported gate: " + node.getTypeStr());
 			break;
 		}
 		case DFT::Nodes::GateWSPType: {
@@ -368,27 +369,17 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 			break;
 		}
 		case DFT::Nodes::GateCSPType: {
-			assert(0);
-			break;
 		}
 		case DFT::Nodes::GatePAndType: {
-			assert(0);
-			break;
 		}
 		case DFT::Nodes::GateSeqType: {
-			assert(0);
-			break;
 		}
 		case DFT::Nodes::GateVotingType: {
-			assert(0);
-			break;
 		}
 		case DFT::Nodes::GateFDEPType: {
-			assert(0);
-			break;
 		}
 		case DFT::Nodes::GateTransferType: {
-			assert(0);
+			cc->reportErrorAt(node.getLocation(),"DFTreeEXPBuilder: unsupported gate: " + node.getTypeStr());
 			break;
 		}
 		default: {
