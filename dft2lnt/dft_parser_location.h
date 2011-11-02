@@ -1,13 +1,93 @@
 #ifndef DFT_PARSER_LOCATION_H
 #define DFT_PARSER_LOCATION_H
 
-typedef struct YYLTYPE {
+#include <iostream>
+#include <sstream>
+
+typedef struct Location {
 	std::string filename;
 	int first_line;
 	int first_column;
 	int last_line;
 	int last_column;
-} YYLTYPE;
+	Location():
+		filename(""),
+		first_line(0),
+		first_column(0),
+		last_line(0),
+		last_column(0) {
+	}
+	Location(std::string filename):
+		filename(filename),
+		first_line(0),
+		first_column(0),
+		last_line(0),
+		last_column(0) {
+	}
+	Location(std::string filename, int first_line):
+		filename(filename),
+		first_line(first_line),
+		first_column(0),
+		last_line(first_line),
+		last_column(0) {
+	}
+	Location(std::string filename, int first_line, int last_line):
+		filename(filename),
+		first_line(first_line),
+		first_column(0),
+		last_line(last_line),
+		last_column(0) {
+	}
+	Location(std::string filename, int first_line, int first_column, int last_line, int last_column):
+		filename(filename),
+		first_line(first_line),
+		first_column(first_column),
+		last_line(last_line),
+		last_column(last_column) {
+	}
+	std::string toString() {
+		std::stringstream ss;
+		print(ss);
+		return ss.str();
+	}
+	void print(std::ostream& ss) {
+		ss << filename;
+		if(first_line > 0) {
+			ss << ":";
+			if( first_line == last_line) {
+				if(first_column > 0) {
+					if( first_column == last_column) {
+						ss << first_line;
+						ss << ".";
+						ss << first_column;
+					} else {
+						ss << first_line;
+						ss << ".";
+						ss << first_column;
+						ss << "-";
+						ss << last_column;
+					}
+				} else {
+					ss << first_line;
+				}
+			} else {
+				if(first_column > 0) {
+					ss << first_line;
+					ss << ".";
+					ss << first_column;
+					ss << "-";
+					ss << last_line;
+					ss << ".";
+					ss << last_column;
+				} else {
+					ss << first_line;
+					ss << "-";
+					ss << last_line;
+				}
+			}
+		}
+	}
+} Location;
 #define YYLTYPE_IS_DECLARED 1
 
 #define YYLLOC_DEFAULT(This, Other, N) do { \
@@ -28,7 +108,7 @@ typedef struct YYLTYPE {
 } while(0)
 
 
-typedef YYLTYPE Location;
+typedef Location YYLTYPE;
 
 /* Initialize LOC. */
 # define LOCATION_RESET(Loc)                  \
