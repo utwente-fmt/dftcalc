@@ -105,9 +105,9 @@
       <Completion>
         <ClangCmpFlags/>
         <ClangPP/>
-        <SearchPaths>../dft2lnt
-../dft2lntc
-</SearchPaths>
+        <SearchPaths>../dft2lntc/
+../dft2lnt/dftnodes/
+../dft2lnt/</SearchPaths>
       </Completion>
     </Configuration>
     <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
