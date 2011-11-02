@@ -13,7 +13,7 @@ using namespace std;
  * to write to. The added feature is automatic indentation.
  */
 class FileWriter {
-private:
+protected:
 
 //	class WidthAdjuster {
 //	public:
@@ -27,7 +27,7 @@ private:
 	string postfix;
 	std::stack<stringstream*> sss;
 	
-	stringstream& ss() {
+	virtual ostream& ss() {
 		return *sss.top();
 	}
 
@@ -76,7 +76,7 @@ public:
 	}
 	
 	stringstream& getStringStream() {
-		return ss();
+		return *sss.top();
 	}
 	
 	/**
@@ -85,7 +85,7 @@ public:
 	 * set postfix will be appended after the string.
 	 * @param s The String to add.
 	 */
-	FileWriter& appendLine(const string& s) {
+	virtual FileWriter& appendLine(const string& s) {
 		appendPrefix();
 		append(s);
 		appendPostfix();
@@ -97,8 +97,28 @@ public:
 	 * Nothing will be prefixed or postfixed.
 	 * @param s The String to add.
 	 */
-	FileWriter& append(const string& s) {
+	virtual FileWriter& append(const string& s) {
 		ss() << s;
+		return *this;
+	}
+
+	/**
+	 * Add the specified integer to the stream converted to a string.
+	 * Nothing will be prefixed or postfixed.
+	 * @param s The String to add.
+	 */
+	virtual FileWriter& append(int i) {
+		ss() << i;
+		return *this;
+	}
+
+	/**
+	 * Add the specified integer to the stream converted to a string.
+	 * Nothing will be prefixed or postfixed.
+	 * @param s The String to add.
+	 */
+	virtual FileWriter& append(unsigned int i) {
+		ss() << i;
 		return *this;
 	}
 
@@ -107,7 +127,7 @@ public:
 	 * Nothing will be prefixed or postfixed.
 	 * @param s The String to add.
 	 */
-	FileWriter& operator<<(const string& s) {
+	virtual FileWriter& operator<<(const string& s) {
 		ss() << s;
 		return *this;
 	}
@@ -115,19 +135,9 @@ public:
 	/**
 	 * Add the specified integer to the stream converted to a string.
 	 * Nothing will be prefixed or postfixed.
-	 * @param s The String to add.
+	 * @param i The interger to add.
 	 */
-	FileWriter& append(int i) {
-		ss() << i;
-		return *this;
-	}
-
-	/**
-	 * Add the specified integer to the stream converted to a string.
-	 * Nothing will be prefixed or postfixed.
-	 * @param s The String to add.
-	 */
-	FileWriter& append(unsigned int i) {
+	virtual FileWriter& operator<<(int i) {
 		ss() << i;
 		return *this;
 	}
@@ -137,7 +147,7 @@ public:
 	 * Nothing will be prefixed or postfixed.
 	 * @param i The interger to add.
 	 */
-	FileWriter& operator<<(int i) {
+	virtual FileWriter& operator<<(unsigned int i) {
 		ss() << i;
 		return *this;
 	}
@@ -147,7 +157,7 @@ public:
 	 * Nothing will be prefixed or postfixed.
 	 * @param i The interger to add.
 	 */
-	FileWriter& operator<<(unsigned int i) {
+	virtual FileWriter& operator<<(long int i) {
 		ss() << i;
 		return *this;
 	}
@@ -157,22 +167,12 @@ public:
 	 * Nothing will be prefixed or postfixed.
 	 * @param i The interger to add.
 	 */
-	FileWriter& operator<<(long int i) {
+	virtual FileWriter& operator<<(long unsigned int i) {
 		ss() << i;
 		return *this;
 	}
 
-	/**
-	 * Add the specified integer to the stream converted to a string.
-	 * Nothing will be prefixed or postfixed.
-	 * @param i The interger to add.
-	 */
-	FileWriter& operator<<(long unsigned int i) {
-		ss() << i;
-		return *this;
-	}
-
-	FileWriter& operator<<(const FileWriterOption& option) {
+	virtual FileWriter& operator<<(const FileWriterOption& option) {
 		switch(option.option) {
 			case FileWriterOption::POP:
 				pop();
@@ -194,7 +194,7 @@ public:
 	 * Append the prefix based on the currently set prefix and current
 	 * indentation level.
 	 */
-	FileWriter& appendPrefix() {
+	virtual FileWriter& appendPrefix() {
 		append(applyprefix);
 		return *this;
 	}
@@ -203,7 +203,7 @@ public:
 	 * Append the postfix based on the currently set prefix and current
 	 * indentation level.
 	 */
-	FileWriter& appendPostfix() {
+	virtual FileWriter& appendPostfix() {
 		append(postfix);
 		return *this;
 	}
@@ -250,11 +250,11 @@ public:
 	 * @return The current contents of the buffer.
 	 */
 	string toString() {
-		return ss().str();
+		return sss.top()->str();
 	}
 	
 	void clear() {
-		ss().str("");
+		sss.top()->str("");
 	}
 
 	void clearAll() {

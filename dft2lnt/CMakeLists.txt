@@ -40,6 +40,7 @@ add_library(dft2lnt
 	DFTreeEXPBuilder.cpp
 	files.cpp
 	FileWriter.cpp
+	ConsoleWriter.cpp
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
 )
 
