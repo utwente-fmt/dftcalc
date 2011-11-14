@@ -166,10 +166,10 @@ lines //{
 
 /* Rule 2: A line either defines the toplevel element, a gate, a basic event or a page allocation */
 line //{
-	:	toplevel_line SEMICOLON
-	|	gate_line SEMICOLON
-	|	be_line SEMICOLON
-	|	page_line SEMICOLON
+	:	toplevel_line
+	|	gate_line
+	|	be_line
+	|	page_line
 	;
 //}
 
@@ -232,6 +232,42 @@ be_attrib // {
 //		$$ = $1;
 //		$1->setValue(new DFT::AST::ASTAttribString(@3,$3));
 //	}
+
+	/** Error rules */
+	|	IDENTIFIER EQUALS be_attrib_value
+		{
+			currentParser->getCC()->reportErrorAt(@1,"unsupported attribute name: `" + string($1) + "'");
+			free($1);
+		}
+	|	error EQUALS be_attrib_value
+		{
+			currentParser->getCC()->reportErrorAt(@1,"unexpected tokens, expected attribute name");
+		}
+	|	EQUALS be_attrib_value
+		{
+			currentParser->getCC()->reportErrorAt(@1.begin(),"expected attribute name");
+		}
+	|	be_attrib_name EQUALS IDENTIFIER
+		{
+			if(!YYRECOVERING()) currentParser->getCC()->reportErrorAt(@$,"assigning identifiers not supported");
+			free($3);
+		}
+	|	be_attrib_name EQUALS error
+		{
+			currentParser->getCC()->reportErrorAt(@3,"unexpected tokens, expected attribute value");
+		}
+	|	be_attrib_name EQUALS
+		{
+			currentParser->getCC()->reportErrorAt(@2.end(),"expected attribute value");
+		}
+	|	be_attrib_name
+		{
+			currentParser->getCC()->reportErrorAt(@1.end(),"name needs a value assigned");
+		}
+	|	be_attrib_value
+		{
+			currentParser->getCC()->reportErrorAt(@1.begin(),"value needs to be assigned to a name");
+		}
 	;
 //}
 
@@ -269,37 +305,65 @@ be_attrib_value //{
 
 /* Rule 5: The toplevel line defines the toplevel element of the DFT */
 toplevel_line //{
-	:	TOPLEVEL nodeid
+	:	TOPLEVEL nodeid SEMICOLON
 		{
 			//printf("TopLevel "); LOCATION_PRINT(@$);
 			$$ = new DFT::AST::ASTTopLevel(@$,$2);
+		}
+
+	/** Error rules */
+	|	TOPLEVEL SEMICOLON
+		{
+			currentParser->getCC()->reportErrorAt(@1.end(),string("expected nodeid"));
+		}
+
+	|	TOPLEVEL error SEMICOLON
+		{
+			currentParser->getCC()->reportErrorAt(@2,string("unexpected tokens, expected nodeid"));
 		}
 	;
 //}
 
 /* Rule 6: A gate line defines a gate with its inputs */
 gate_line //{
-	:	nodeid gate names
+	:	nodeid gate names SEMICOLON
 		{
 			$$ = new DFT::AST::ASTGate(@$,$1,$2,$3);
 		}
-	|	nodeid NUMBER gate NUMBER names
+	|	nodeid number gate number names SEMICOLON
 		{
 			$$ = new DFT::AST::ASTGate(@$,$1,$3,$5);
+		}
+	
+	/** Error rules */
+	|	nodeid gate names be_attribs SEMICOLON
+		{
+			currentParser->getCC()->reportErrorAt(@4,"gate `" + $1->getString() + "':gates cannot have attributes");
+			$$ = NULL;
+		}
+	|	nodeid gate names error be_attribs SEMICOLON
+		{
+			currentParser->getCC()->reportErrorAt(@4,"gate `" + $1->getString() + "':gates cannot have attributes");
+			$$ = NULL;
+		}
+	|	nodeid gate names error SEMICOLON
+		{
+			currentParser->getCC()->reportErrorAt(@4,"gate `" + $1->getString() + "':unexpected tokens, expected basic event attributes");
+			$$ = NULL;
 		}
 	;
 //}
 
 /* Rule 7: A basic event line describes a basic event with its attributes and its phase */
 be_line //{
-	:	nodeid be_attribs
+	:	nodeid be_attribs SEMICOLON
 		{
 			//printf("BE1 "); LOCATION_PRINT(@$);
 			DFT::AST::ASTBasicEvent* be = new DFT::AST::ASTBasicEvent(@$,$1);
 			be->setAttributes($2);
 			$$ = be;
 		}
-	|	nodeid PHASE NUMBER be_attribs
+	|	nodeid PHASE number be_attribs SEMICOLON
 		{
 			//printf("BE2 "); LOCATION_PRINT(@$);
 			DFT::AST::ASTBasicEvent* be = new DFT::AST::ASTBasicEvent(@$,$1);
@@ -307,15 +371,38 @@ be_line //{
 			be->setAttributes($4);
 			$$ = be;
 		}
+
+	/** Error rules */
+	|	nodeid PHASE be_attribs SEMICOLON
+		{
+			currentParser->getCC()->reportErrorAt(@2.end(),string("basicevent `" + $1->getString() + "':phase number expected"));
+		}
 	;
 //}
 
 /* Rule 8: A page line assigns an element to a page (for the graphical display of Galileo) */
 page_line //{
-	:	PAGE NUMBER nodeid
-	{
-		$$ = new DFT::AST::ASTPage(@$,$2,$3);
-	}
+	:	PAGE number nodeid SEMICOLON
+		{
+			$$ = new DFT::AST::ASTPage(@$,$2,$3);
+		}
+	/** Error rules */
+	|	PAGE nodeid SEMICOLON
+		{
+			currentParser->getCC()->reportErrorAt(@1.end(),string("page number expected"));
+		}
+	|	PAGE number SEMICOLON
+		{
+			currentParser->getCC()->reportErrorAt(@2.end(),string("nodeid expected"));
+		}
+	|	PAGE error nodeid SEMICOLON
+		{
+			currentParser->getCC()->reportErrorAt(@1,string("unexpected token, page number expected"));
+		}
+	|	PAGE number error SEMICOLON
+		{
+			currentParser->getCC()->reportErrorAt(@2.end(),string("unexpected token, nodeid expected"));
+		}
 	;
 //}
 
