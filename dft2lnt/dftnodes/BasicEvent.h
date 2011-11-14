@@ -216,6 +216,17 @@ private:
 	float lambda;
 	float mu;
 public:
+	void setLambda(float lambda) {
+		this->lambda = lambda;
+	}
+	void setMu(float mu) {
+		this->mu = mu;
+	}
+	
+	float getLambda() const { return lambda; }
+	float getMu()     const { return mu; }
+	float getDorm()   const { return mu / lambda; }
+
 	BasicEvent(Location loc, std::string name):
 		Node(loc,name,BasicEventType),
 		lambda(-1),
