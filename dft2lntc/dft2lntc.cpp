@@ -278,6 +278,7 @@ int main(int argc, char** argv) {
 	compilerContext->notify("Checking syntax...");
 	Parser* parser = new Parser(inputFile,parserInputFilePath,compilerContext);
 	std::vector<DFT::AST::ASTNode*>* ast = parser->parse();
+	compilerContext->flush();
 	if(!ast) {
 		compilerContext->reportError("could not build AST");
 		return 1;
@@ -290,6 +291,7 @@ int main(int argc, char** argv) {
 		DFT::ASTValidator validator(ast,compilerContext);
 		astValid = validator.validate();
 	}
+	compilerContext->flush();
 	if(!astValid) {
 		printf(":error:AST invalid\n");
 		return 1;
@@ -305,6 +307,7 @@ int main(int argc, char** argv) {
 //			printer.print(std::cout);
 //		}
 	}
+	compilerContext->flush();
 	
 	/* Create DFT */
 	DFT::DFTree* dft = NULL;
@@ -313,6 +316,7 @@ int main(int argc, char** argv) {
 		DFT::ASTDFTBuilder builder(ast,compilerContext);
 		dft = builder.build();
 	}
+	compilerContext->flush();
 	if(!dft) {
 		printf(":error:DFT invalid\n");
 		return 1;
@@ -330,6 +334,7 @@ int main(int argc, char** argv) {
 //			printf(":: DFT determined valid\n");
 		}
 	}
+	compilerContext->flush();
 	
 	/* Printing DFT */
 	if(dft && outputDFTFileSet) {
@@ -343,6 +348,7 @@ int main(int argc, char** argv) {
 		}
 		
 	}
+	compilerContext->flush();
 
 	/* Building SVL and LNT out of DFT */
 //	if(dft) {
@@ -371,10 +377,12 @@ int main(int argc, char** argv) {
 		}
 		
 	}
+	compilerContext->flush();
 
 	if(compilerContext->getErrors() > 0 || compilerContext->getWarnings() > 0) {
 		compilerContext->reportErrors();
 	}
+	compilerContext->flush();
 
 	delete dft;
 	

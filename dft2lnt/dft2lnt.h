@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <vector>
-#include <map>
+#include <set>
 #include <stack>
 
 #include "dft_ast.h"
@@ -57,18 +57,7 @@ typedef struct FileContext {
  * of a file and its dependencies.
  */
 class CompilerContext {
-private:
-	ConsoleWriter consoleWriter;
-	unsigned int errors;
-	unsigned int warnings;
-	std::string name;
-	bool m_useColoredMessages;
 public:
- 	ConsoleWriter& out;
-	map<string,string> types;
-	FileContext fileContext[MAX_FILE_NESTING]; // max file nesting of MAX_FILE_NESTING allowed
-	int fileContexts;
-
 	class MessageType {
 	public:
 		enum MType {
@@ -102,6 +91,43 @@ public:
 		bool isWarning() const { return WARNING_FIRST <= type && type <= WARNING_LAST; }
 		bool isError()   const { return ERROR_FIRST   <= type && type <= ERROR_LAST; }
 	};
+
+private:
+
+	class MSG {
+	public:
+		MSG(unsigned int id, Location loc, std::string message, MessageType type): id(id), loc(loc), message(message), type(type) {
+		}
+		unsigned int id;
+		Location loc;
+		std::string message;
+		MessageType type;
+		bool operator<(const MSG& other) const {
+			if(loc.getFileName().length()>0 && loc.getFileName() == other.loc.getFileName()) {
+				return loc.getFirstLine() <  other.loc.getFirstLine()
+					|| (loc.getFirstLine() == other.loc.getFirstLine() && loc.getFirstColumn() < other.loc.getFirstColumn());
+			} else {
+				return id < other.id;
+			}
+		}
+		bool operator==(const MSG& other) const {
+			return id == other.id;
+		}
+	};
+
+	ConsoleWriter consoleWriter;
+	unsigned int errors;
+	unsigned int warnings;
+	std::string name;
+	bool m_useColoredMessages;
+	std::set<MSG> messages;
+	
+	void print(const Location& l, const std::string& str, const MessageType& mType);
+public:
+ 	ConsoleWriter& out;
+	map<string,string> types;
+	FileContext fileContext[MAX_FILE_NESTING]; // max file nesting of MAX_FILE_NESTING allowed
+	int fileContexts;
 
 	/**
 	 * Creates a new compiler context with a specific name.
@@ -216,6 +242,8 @@ public:
 	void message(std::string str, const MessageType& mType);
 	
 	void messageAt(Location loc, std::string str, const MessageType& mType);
+	
+	void flush();
 	
 	bool testWritable(std::string fileName);
 
