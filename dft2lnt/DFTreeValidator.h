@@ -20,6 +20,7 @@ private:
 	CompilerContext* cc;
 	
 	int validateReferences();
+	int validateSingleParent();
 	int validateNodes();
 	int validateBasicEvent(const DFT::Nodes::BasicEvent& be);
 	int validateGate(const DFT::Nodes::Gate& gate);

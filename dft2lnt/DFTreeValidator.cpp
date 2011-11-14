@@ -32,6 +32,48 @@ int DFT::DFTreeValidator::validateReferences() {
 	return valid;
 }
 
+int DFT::DFTreeValidator::validateSingleParent() {
+	int valid = true;
+	std::vector<Nodes::Node*>& nodes = dft->getNodes();
+	std::map<Nodes::Node*,std::vector<Nodes::Node*>*> parents;
+
+	for(size_t i=0; i<nodes.size();++i) {
+		assert(nodes.at(i));
+		parents.insert(pair<Nodes::Node*,std::vector<Nodes::Node*>*>(nodes.at(i),new std::vector<Nodes::Node*>()));
+	}
+	for(size_t i=0; i<nodes.size();++i) {
+		Nodes::Node& parent = *nodes.at(i);
+		if(parent.isGate()) {
+			Nodes::Gate& gate = static_cast<Nodes::Gate&>(parent);
+			for(size_t c=0; c<gate.getChildren().size(); ++c) {
+				Nodes::Node& child = *gate.getChildren().at(c);
+				std::map<Nodes::Node*,std::vector<Nodes::Node*>*>::iterator it = parents.find(&child);
+				std::vector<Nodes::Node*>* cParents = it->second;
+				if(cParents) {
+					cParents->push_back(&parent);
+				} else {
+					assert(0);
+				}
+			}
+		}
+	}
+	
+	for(size_t i=0; i<nodes.size();++i) {
+		Nodes::Node& node = *nodes.at(i);
+		std::map<Nodes::Node*,std::vector<Nodes::Node*>*>::iterator it = parents.find(&node);
+		std::vector<Nodes::Node*>* cParents = it->second;
+		if(cParents->size() == 0 && &node != dft->getTopNode()) {
+			cc->reportErrorAt(node.getLocation(),"non-top node " + (node.getName()) + " has no parents");
+			valid = 0;
+		} else if(cParents->size() > 1) {
+			cc->reportErrorAt(node.getLocation(),"node " + (node.getName()) + " has multiple parents:");
+			valid = 0;
+		}
+	}
+
+	return valid;
+}
+
 int DFT::DFTreeValidator::validateNodes() {
 	int valid = true;
 	std::vector<Nodes::Node*>& nodes = dft->getNodes();
@@ -79,6 +121,7 @@ int DFT::DFTreeValidator::validateGate(const DFT::Nodes::Gate& gate) {
 int DFT::DFTreeValidator::validate() {
 	int valid = true;
 	valid = validateReferences() ? valid : false;
+	valid = validateSingleParent() ? valid : false;
 	valid = validateNodes() ? valid : false;
 	return valid;
 }
