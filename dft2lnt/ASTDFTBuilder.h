@@ -119,6 +119,28 @@ public:
 		//nodeTable.insert( pair<std::string,DFT::Nodes::Node*>(basicEvent->getName()->getString(),be) );
 		dft->addNode(be);
 		ASTVisitor<int>::visitBasicEvent(basicEvent);
+		
+		// Find lambda
+		{
+			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+			for(; it!=basicEvent->getAttributes()->end(); ++it) {
+				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelLambda) {
+					float v = static_cast<DFT::AST::ASTAttribFloat*>((*it)->getValue())->getValue();
+					be->setLambda(v);
+				}
+			}
+		}
+		
+		// Find dorm
+		{
+			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+			for(; it!=basicEvent->getAttributes()->end(); ++it) {
+				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelDorm) {
+					float v = static_cast<DFT::AST::ASTAttribFloat*>((*it)->getValue())->getValue();
+					be->setMu(be->getLambda()*v);
+				}
+			}
+		}
 	}
 	virtual int visitGate(DFT::AST::ASTGate* astgate) {
 		DFT::Nodes::Gate* gate = buildGate(astgate);
@@ -137,7 +159,12 @@ public:
 		ASTVisitor<int>::visitPage(page);
 	}
 	virtual int visitAttribute(DFT::AST::ASTAttribute* attribute) {
+		//assert(buildingBE && "visitAttribute called, without a BE being built");
+
+		DFT::AST::ASTAttrib* value = attribute->getValue();
+
 		ASTVisitor<int>::visitAttribute(attribute);
+		return 0;
 	}
 	virtual int visitAttrib(DFT::AST::ASTAttrib* attrib) {
 		ASTVisitor<int>::visitAttrib(attrib);

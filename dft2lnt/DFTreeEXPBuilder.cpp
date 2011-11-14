@@ -20,7 +20,7 @@ std::string DFT::DFTreeEXPBuilder::getFileForNode(const DFT::Nodes::Node& node) 
 std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) const {
 	std::stringstream ss;
 	ss << "total rename ";
-	ss << "\"FRATE !1 !2\" -> \"rate 0.5\", \"FRATE !1 !1\" -> \"rate 0.15\" in \"";
+	ss << "\"FRATE !1 !2\" -> \"rate " << be.getLambda() << "\", \"FRATE !1 !1\" -> \"rate " << be.getMu() << "\" in \"";
 	ss << getFileForNode(be);
 	ss << ".bcg\" end rename";
 	return ss.str();
