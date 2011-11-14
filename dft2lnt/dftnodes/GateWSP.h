@@ -12,8 +12,8 @@ class GateWSP: public Gate {
 private:
 	
 public:
-	GateWSP(std::string name):
-		Gate(name,GateWSPType) {
+	GateWSP(Location loc, std::string name):
+		Gate(loc,name,GateWSPType) {
 	}
 	virtual ~GateWSP() {
 	}

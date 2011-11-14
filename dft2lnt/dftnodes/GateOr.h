@@ -12,7 +12,8 @@ class GateOr: public Gate {
 private:
 	
 public:
-	GateOr(std::string name): Gate(name,GateOrType) {
+	GateOr(Location loc, std::string name):
+		Gate(loc,name,GateOrType) {
 	}
 	virtual ~GateOr() {
 	}

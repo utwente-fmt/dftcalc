@@ -94,8 +94,8 @@ FILE* Parser::pushFile(std::string fileName) {
 	// Remember yylloc of last buffer and reset yylloc
 	assert((compilerContext->fileContexts)-2 >= 0);
 	compilerContext->fileContext[(compilerContext->fileContexts)-2].loc = *yyget_lloc(scanner);
-	LOCATION_RESET(*yyget_lloc(scanner));
-	yyget_lloc(scanner)->filename = compilerContext->fileContext[(compilerContext->fileContexts)-1].filename;
+	yyget_lloc(scanner)->reset();
+	yyget_lloc(scanner)->setFileName(compilerContext->fileContext[(compilerContext->fileContexts)-1].filename);
 
 	// Return the FILE*
 	return f;

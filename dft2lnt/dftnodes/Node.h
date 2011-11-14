@@ -96,7 +96,8 @@ public:
 		location(location),
 		type(type) {
 	}
-	Node(std::string name, NodeType type):
+	Node(Location location, std::string name, NodeType type):
+		location(location),
 		name(name),
 		type(type) {
 	}

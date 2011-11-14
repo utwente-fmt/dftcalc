@@ -216,8 +216,10 @@ private:
 	float lambda;
 	float mu;
 public:
-	BasicEvent(std::string name):
-		Node(name,BasicEventType) {
+	BasicEvent(Location loc, std::string name):
+		Node(loc,name,BasicEventType),
+		lambda(-1),
+		mu(-1) {
 	}
 	virtual ~BasicEvent() {
 	}

@@ -12,8 +12,8 @@ class GatePAnd: public Gate {
 private:
 	
 public:
-	GatePAnd(std::string name):
-		Gate(name,GatePAndType) {
+	GatePAnd(Location loc, std::string name):
+		Gate(loc,name,GatePAndType) {
 	}
 	virtual ~GatePAnd() {
 	}

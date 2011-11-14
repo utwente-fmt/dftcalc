@@ -124,7 +124,9 @@
 //%type <dft>       dft
 
 %initial-action{
-	@$.filename = currentParser->getCurrentFileName();
+	
+	// Likely this has no effect, as YYLLOC_DEFAULT() is called to init the first location
+	@$.setFileName(currentParser->getCurrentFileName());
 }
 
 %%
@@ -148,6 +150,7 @@ lines //{
 	:	/* empty */
 	{
 		$$ = new std::vector<DFT::AST::ASTNode*>();
+		@$.nullify();
 	}
 	|	lines line
 	{
@@ -173,6 +176,7 @@ names //{
 	:	/* empty */
 	{
 		$$ = new std::vector<DFT::AST::ASTIdentifier*>();
+		@$.nullify();
 	}
 	|	names nodeid
 	{
@@ -189,6 +193,7 @@ be_attribs //{
 	:	/* empty */
 	{
 		$$ = new std::vector<DFT::AST::ASTAttribute*>();
+		@$.nullify();
 	}
 	|	be_attribs be_attrib
 	{

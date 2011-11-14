@@ -13,8 +13,8 @@ private:
 	int threshold;
 	int total;
 public:
-	GateVoting(std::string name, int threshold, int total):
-		Gate(name,GateVotingType),
+	GateVoting(Location loc, std::string name, int threshold, int total):
+		Gate(loc,name,GateVotingType),
 		threshold(threshold), 
 		total(total) {
 	}

@@ -13,7 +13,7 @@ class Gate: public Node {
 private:
 	std::vector<Node*> children;
 protected:
-	Gate(std::string name, DFT::Nodes::NodeType nodeType): Node(name,nodeType) {
+	Gate(Location loc, std::string name, DFT::Nodes::NodeType nodeType): Node(loc,name,nodeType) {
 	}
 public:
 

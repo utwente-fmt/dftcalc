@@ -22,8 +22,8 @@
 	//#define __PARSER_Y_HPP
 	//#endif
 	#include <ctype.h>
-	#define YY_USER_ACTION  { Parser* currentParser = NULL; yylloc->last_column += yyleng; /*LOCATION_PRINT(stderr,yylloc); printf("\n");*/ }
-	#define YY_USER_INIT { LOCATION_RESET (*yylloc); }
+	#define YY_USER_ACTION  { Parser* currentParser = NULL; yylloc->advanceCharacters(yyleng); /*LOCATION_PRINT(stderr,yylloc); printf("\n");*/ }
+	#define YY_USER_INIT { yylloc->reset(); }
 	#define COMPILING_LEXER
 	#include "dft_types.h"
 	#include "dft_parser.h"
@@ -74,7 +74,7 @@ transfer      "accepts transfers from"
 	/* At each yylex invocation, mark the current position as the
 	 * start of the next token.
 	*/
-	/*LOCATION_STEP (*yylloc);*/
+	yylloc_param->step();
 %}
 
 {pp_line} {
@@ -105,7 +105,7 @@ transfer      "accepts transfers from"
 	}
 
 	//printf("found #line %i %s\n",line,buffer);
-	LOCATION_SET(*yylloc,line,std::string(buffer));
+	yylloc->set(std::string(buffer),line);
 }
 
 "/*" {
@@ -122,11 +122,11 @@ transfer      "accepts transfers from"
 				break;    /* found the end */
 		} else if(c == '\r') {
 			c = yyinput(yyscanner);
-			LOCATION_LINES(*yylloc,1);
+			yylloc->advanceLines(1);
 			if(c != '\n' && c != EOF)
 				unput(c);
 		} else if( c == '\n') {
-			LOCATION_LINES(*yylloc,1);
+			yylloc->advanceLines(1);
 		}
 
 		if(c == EOF) {
@@ -138,12 +138,12 @@ transfer      "accepts transfers from"
 	}
 }
 
-{comment_line}          LOCATION_LINES(*yylloc, 1); LOCATION_STEP (*yylloc); 
+{comment_line}          yylloc->advanceLines(1); /*yylloc->step();*/
 {float}                 sscanf(yytext,"%f",&yylval->f_number); return FLOAT;
  /*{hexnumber}             sscanf(yytext,"%X",&yylval.number); return HEXNUMBER;*/
  /*{address}               yylval.address = my_strdup(yytext+2); return ADDRESS;*/
-{newline}               LOCATION_LINES(*yylloc, 1); LOCATION_STEP (*yylloc);
-{whitespace}            LOCATION_STEP(*yylloc); /* ignore whitespace */;
+{newline}               yylloc->advanceLines(1); yylloc->step();
+{whitespace}            yylloc->step(); /* ignore whitespace */;
 
 {voting} {
 	char buffer[101];

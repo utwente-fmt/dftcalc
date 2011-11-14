@@ -43,26 +43,26 @@ public:
 		case DFT::Nodes::GatePhasedOrType:
 			break;
 		case DFT::Nodes::GateOrType:
-			gate = new DFT::Nodes::GateOr(astgate->getName()->getString());
+			gate = new DFT::Nodes::GateOr(astgate->getLocation(), astgate->getName()->getString());
 			break;
 		case DFT::Nodes::GateAndType:
-			gate = new DFT::Nodes::GateAnd(astgate->getName()->getString());
+			gate = new DFT::Nodes::GateAnd(astgate->getLocation(), astgate->getName()->getString());
 			break;
 		case DFT::Nodes::GateHSPType:
 			break;
 		case DFT::Nodes::GateWSPType:
-			gate = new DFT::Nodes::GateWSP(astgate->getName()->getString());
+			gate = new DFT::Nodes::GateWSP(astgate->getLocation(), astgate->getName()->getString());
 			break;
 		case DFT::Nodes::GateCSPType:
 			break;
 		case DFT::Nodes::GatePAndType:
-			gate = new DFT::Nodes::GatePAnd(astgate->getName()->getString());
+			gate = new DFT::Nodes::GatePAnd(astgate->getLocation(), astgate->getName()->getString());
 			break;
 		case DFT::Nodes::GateSeqType:
 			break;
 		case DFT::Nodes::GateVotingType: {
 			DFT::AST::ASTVotingGateType* vote = static_cast<DFT::AST::ASTVotingGateType*>(astgate->getGateType());
-			gate = new DFT::Nodes::GateVoting(astgate->getName()->getString(),vote->getThreshold(),vote->getTotal());
+			gate = new DFT::Nodes::GateVoting(astgate->getLocation(), astgate->getName()->getString(),vote->getThreshold(),vote->getTotal());
 			break;
 		}
 		case DFT::Nodes::GateFDEPType:
@@ -115,7 +115,7 @@ public:
 	}
 	virtual int visitBasicEvent(DFT::AST::ASTBasicEvent* basicEvent) {
 		
-		DFT::Nodes::BasicEvent* be = new DFT::Nodes::BasicEvent(basicEvent->getName()->getString());
+		DFT::Nodes::BasicEvent* be = new DFT::Nodes::BasicEvent(basicEvent->getLocation(), basicEvent->getName()->getString());
 		//nodeTable.insert( pair<std::string,DFT::Nodes::Node*>(basicEvent->getName()->getString(),be) );
 		dft->addNode(be);
 		ASTVisitor<int>::visitBasicEvent(basicEvent);
