@@ -80,22 +80,22 @@ public:
 			case DFT::AST::TopLevelType: {
 				DFT::AST::ASTTopLevel* t = static_cast<DFT::AST::ASTTopLevel*>(node);
 				//ret = visitTopLevel(t);
-				f_aggregate(ret,visitTopLevel(t));
+				aggregate(ret,visitTopLevel(t));
 				break;
 			}
 			case DFT::AST::BasicEventType: {
 				DFT::AST::ASTBasicEvent* be = static_cast<DFT::AST::ASTBasicEvent*>(node);
-				f_aggregate(ret,visitBasicEvent(be));
+				aggregate(ret,visitBasicEvent(be));
 				break;
 			}
 			case DFT::AST::GateType: {
 				DFT::AST::ASTGate* g = static_cast<DFT::AST::ASTGate*>(node);
-				f_aggregate(ret,visitGate(g));
+				aggregate(ret,visitGate(g));
 				break;
 			}
 			case DFT::AST::PageType: {
 				DFT::AST::ASTPage* p = static_cast<DFT::AST::ASTPage*>(node);
-				f_aggregate(ret,visitPage(p));
+				aggregate(ret,visitPage(p));
 				break;
 			}
 			default:
@@ -111,6 +111,10 @@ public:
 	}
 	virtual TReturn visitBasicEvent(DFT::AST::ASTBasicEvent* basicEvent) {
 		TReturn ret = TReturnInit;
+		std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+		for(; it!=basicEvent->getAttributes()->end(); ++it) {
+			aggregate(ret,visitAttribute(*it));
+		}
 		return ret;
 	}
 	virtual TReturn visitGate(DFT::AST::ASTGate* gate) {
