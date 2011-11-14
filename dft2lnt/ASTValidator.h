@@ -52,6 +52,7 @@ public:
 		// Go through all the AST nodes in a linear fashion
 		for(int i=0; i<ast->size(); ++i) {
 			DFT::AST::ASTNode* node = ast->at(i);
+			assert(node);
 			switch(node->getType()) {
 				
 			// TopLevel references a node
