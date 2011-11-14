@@ -105,6 +105,7 @@
 // Other
 %token ENDLINE
 %token EQUALS
+%token MINUS
 %token TOPLEVEL
 %token PAGE
 %token PHASE
@@ -120,6 +121,8 @@
 %type <attribute>  be_attrib
 %type <attribute>  be_attrib_name
 %type <attributeValue> be_attrib_value
+%type <number> number
+%type <f_number> floatingpoint
 
 //%type <dft>       dft
 
@@ -217,7 +220,7 @@ be_attrib // {
 		$$ = $1;
 		$$->setValue($3);
 	}
-//	:	be_attrib_name EQUALS FLOAT
+//	:	be_attrib_name EQUALS floatingpoint
 //	{
 //		$$ = $1;
 //		$$->setValue(new DFT::AST::ASTAttribFloat(@3,$3));
@@ -288,11 +291,11 @@ be_attrib_name //{
 //}
 
 be_attrib_value //{
-	:	FLOAT
+	:	floatingpoint
 	{
 		$$ = new DFT::AST::ASTAttribFloat(@1,$1);
 	}
-	|	NUMBER
+	|	number
 	{
 		$$ = new DFT::AST::ASTAttribNumber(@1,$1);
 	}
@@ -433,3 +436,22 @@ string // {
 		free($1);
 	}
 // }
+
+floatingpoint //{
+	:	FLOAT
+		{
+			$$ = $1;
+		}
+	|	MINUS FLOAT
+		{
+			$$ = -$2;
+		}
+//}
+
+number //{
+	:	NUMBER
+	|	MINUS NUMBER
+		{
+			$$ = -$2;
+		}
+//}
