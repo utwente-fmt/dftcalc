@@ -430,12 +430,12 @@ nodeid
 	: string
 	;
 
-string // {
+string //{
 	:	STRING {
 		$$ = new DFT::AST::ASTIdentifier(@1,std::string($1));
 		free($1);
 	}
-// }
+//}
 
 floatingpoint //{
 	:	FLOAT
