@@ -193,6 +193,65 @@ public:
 	
 	virtual int visitAttribute(DFT::AST::ASTAttribute* attribute) {
 		int valid = true;
+		DFT::AST::ASTAttrib* value = attribute->getValue();
+
+		switch(attribute->getLabel()) {
+			case DFT::Nodes::BE::AttrLabelLambda:
+				if(value->isFloat()) {
+					float v = static_cast<DFT::AST::ASTAttribFloat*>(value)->getValue();
+					if(v < 0) {
+						valid = false;
+						cc->reportErrorAt(attribute->getLocation(),"negative lambda");
+					}
+				} else if(value->isNumber()) {
+					int v = static_cast<DFT::AST::ASTAttribNumber*>(value)->getValue();
+					if(v < 0) {
+						valid = false;
+						cc->reportErrorAt(attribute->getLocation(),"negative lambda");
+					}
+				} else {
+					valid = false;
+					cc->reportErrorAt(attribute->getLocation(),"lambda label needs float value");
+				}
+				break;
+			case DFT::Nodes::BE::AttrLabelDorm:
+				if(value->isFloat()) {
+					float v = static_cast<DFT::AST::ASTAttribFloat*>(value)->getValue();
+					if(v < 0) {
+						valid = false;
+						cc->reportErrorAt(attribute->getLocation(),"negative dormancy factor");
+					}
+				} else if(value->isNumber()) {
+					int v = static_cast<DFT::AST::ASTAttribNumber*>(value)->getValue();
+					if(v < 0) {
+						valid = false;
+						cc->reportErrorAt(attribute->getLocation(),"negative dormancy factor");
+					}
+				} else {
+					valid = false;
+					cc->reportErrorAt(attribute->getLocation(),"dorm label needs float value");
+				}
+				break;
+			case DFT::Nodes::BE::AttrLabelAph:
+
+			case DFT::Nodes::BE::AttrLabelProb:
+
+			case DFT::Nodes::BE::AttrLabelRate:
+			case DFT::Nodes::BE::AttrLabelShape:
+			case DFT::Nodes::BE::AttrLabelMean:
+			case DFT::Nodes::BE::AttrLabelStddev:
+			case DFT::Nodes::BE::AttrLabelCov:
+			case DFT::Nodes::BE::AttrLabelRes:
+			case DFT::Nodes::BE::AttrLabelRepl:
+
+			case DFT::Nodes::BE::AttrLabelNone:
+			case DFT::Nodes::BE::AttrLabelOther:
+			default:
+				//valid = false;
+				cc->reportWarningAt(attribute->getLocation(),"unsupported label: `" + attribute->getString() + "', ignoring");
+				break;
+		}
+		
 		valid = ASTVisitor<int,true>::visitAttribute(attribute) ? valid : false;
 		return valid;
 	}
