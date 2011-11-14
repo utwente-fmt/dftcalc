@@ -391,11 +391,11 @@ public:
 	 * @param attributes The new list of attributes.
 	 */
 	void setAttributes(std::vector<DFT::AST::ASTAttribute*>* attributes) {
-		if(attributes) {
-			for(int i=attributes->size(); i--;) {
-				delete attributes->at(i);
+		if(this->attributes) {
+			for(int i=this->attributes->size(); i--;) {
+				delete this->attributes->at(i);
 			}
-			delete attributes;
+			delete this->attributes;
 		}
 		this->attributes = attributes;
 	}
