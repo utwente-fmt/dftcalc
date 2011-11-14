@@ -60,7 +60,7 @@ std::vector<DFT::AST::ASTNode*>* Parser::parse() {
 	//yylloc.filename = compilerContext->fileContext[0].filename;
 
 	// 0: valid grammer, 1: invalid grammar
-	std::vector<DFT::AST::ASTNode*>* result_nodes;
+	std::vector<DFT::AST::ASTNode*>* result_nodes = NULL;
 	yyparse(this,scanner,&result_nodes);
 	fflush(stdout);
 
