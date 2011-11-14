@@ -33,7 +33,6 @@
     <File Name="../dft2lnt/DFTreeValidator.cpp"/>
     <File Name="../dft2lnt/DFTreeValidator.h"/>
     <File Name="../dft2lnt/dft_ast.h"/>
-    <File Name="../dft2lnt/yyheader.h"/>
     <File Name="../dft2lnt/ASTDFTBuilder.h"/>
     <File Name="../dft2lnt/ASTValidator.h"/>
     <File Name="../dft2lnt/ASTVisitor.h"/>
