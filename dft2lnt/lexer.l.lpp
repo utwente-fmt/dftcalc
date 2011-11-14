@@ -45,6 +45,49 @@
 	#	pragma GCC diagnostic push
 	#	pragma GCC diagnostic ignored "-Wunused-variable"
 	#endif
+	
+	class StringLex {
+	private:
+		char* str;
+		int strlen;
+		int strmax;
+		
+	public:
+		StringLex(): str(NULL), strlen(0), strmax(0) {
+		}
+		void addChar(char c, int windowSize) {
+			assert(strlen <= strmax);
+			if(strlen>=strmax) {
+				strmax = strlen + windowSize;
+				str = (char*)realloc(str,strmax);
+			}
+			str[strlen++] = c;
+		}
+		
+		void addChar(char c) {
+			addChar(c,10);
+		}
+		
+		char* finalize() {
+			addChar('\0',1);
+			char* s = str;
+			resetNoFree();
+			return s;
+		}
+		
+		void resetNoFree() {
+			str = NULL;
+			strlen = 0;
+			strmax = 0;
+		}
+
+		void reset() {
+			if(str) free(str);
+			str = NULL;
+			strlen = 0;
+			strmax = 0;
+		}
+	};
 %}
 
 underscore    [_]
@@ -68,9 +111,13 @@ comment_block [\/][*][A][*][\/]
 string        [L]?["]
 float         {number}[.]{number}
 transfer      "accepts transfers from"
+
+%x IN_STRING
+
 %%
 %{
 	Parser* currentParser = (Parser*)yyextra;
+	StringLex strlex;
 	/* At each yylex invocation, mark the current position as the
 	 * start of the next token.
 	*/
@@ -197,32 +244,61 @@ transfer      "accepts transfers from"
 	}
 }
 
-{string} {
-	register int c;
-	char* s = NULL;
-	unsigned int s_len = 0;
-
-	for(;;) {
-		c = yyinput(yyscanner);
-
-		if(c == '\\') {
-			c = lex_char(yyscanner);
-		} else if(c == '"') {
-			break;
-		}
-
-		if(c == EOF) {
-			fprintf(stderr,"EOF in string!");
-			break;
-		}
-		s = (char*)realloc(s,s_len+1);
-		s[s_len++] = c;
-	}
-	s = (char*)realloc(s,s_len+1);
-	s[s_len++] = '\0';
-	yylval->c_string=s;
-	return STRING;
+<INITIAL>{string} {
+	BEGIN(IN_STRING);
+	strlex.reset();
 }
+
+<IN_STRING>{
+	{string} {
+		BEGIN(INITIAL);
+		yylval->c_string = strlex.finalize();
+		return STRING;
+	}
+	\n {
+	}
+
+	\\[0-7]{1,3} {
+		int result;
+		
+		// Get integer representation of octal number
+		sscanf( yytext + 1, "%o", &result );
+		
+		// Verify octal number is <256
+		if ( result > 0xff ) {
+			
+		}
+		
+		// Add character representation of octal number
+		strlex.addChar((char)result);
+	}
+
+	\\[0-9]+ {
+		// Unknown numerical escape sequence
+	}
+
+	\\n strlex.addChar('\n');
+	\\r strlex.addChar('\r');
+	\\b strlex.addChar('\b');
+	\\t strlex.addChar('\t');
+	\\f strlex.addChar('\f');
+	\\a strlex.addChar('\a');
+	\\v strlex.addChar('\v');
+	\\? strlex.addChar('\?');
+
+	\\(.|\n) {
+		strlex.addChar(yytext[1]);
+	}
+
+	[^\\\n\"]+ {
+		char *yptr = yytext;
+		
+		// Copy text
+		while ( *yptr ) {
+			strlex.addChar(*yptr++);
+		}
+	}
+} // Close scope: IN_STRING
 
 {char} {
 	int c = yyinput(yyscanner);
@@ -248,6 +324,7 @@ transfer      "accepts transfers from"
 
 ;                       return(SEMICOLON);
 =                       return(EQUALS);
+-                       return(MINUS);
 
 toplevel                return(TOPLEVEL);
 page                    return PAGE;
