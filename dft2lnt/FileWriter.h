@@ -27,10 +27,6 @@ protected:
 	string postfix;
 	std::stack<stringstream*> sss;
 	
-	virtual ostream& ss() {
-		return *sss.top();
-	}
-
 public:
 
 	class FileWriterOption {
@@ -75,6 +71,10 @@ public:
 		ss() << s;
 	}
 	
+	virtual ostream& ss() {
+		return *sss.top();
+	}
+
 	stringstream& getStringStream() {
 		return *sss.top();
 	}
