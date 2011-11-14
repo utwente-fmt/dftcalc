@@ -399,6 +399,11 @@ public:
 		}
 		this->attributes = attributes;
 	}
+	
+	std::vector<DFT::AST::ASTAttribute*>* getAttributes() {
+		return attributes;
+	}
+	
 	void setPhase(int phase) {
 
 	}
