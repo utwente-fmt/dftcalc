@@ -126,6 +126,9 @@ public:
 	ASTAttrib(NodeType type, Location location):
 		ASTNode(type,location) {
 	}
+	virtual bool isFloat()  { return getType() == BEAttributeFloatType;  }
+	virtual bool isString() { return getType() == BEAttributeStringType; }
+	virtual bool isNumber() { return getType() == BEAttributeNumberType; }
 };
 
 /**
@@ -155,6 +158,10 @@ public:
 	void setValue(float value) {
 		this->value = value;
 	}
+	
+	virtual bool isFloat()  { return true;  }
+	virtual bool isString() { return false; }
+	virtual bool isNumber() { return false; }
 };
 
 /**
@@ -185,6 +192,10 @@ public:
 	void setValue(int value) {
 		this->value = value;
 	}
+
+	virtual bool isFloat()  { return false;  }
+	virtual bool isString() { return true;  }
+	virtual bool isNumber() { return false; }
 };
 
 /**
@@ -215,6 +226,10 @@ public:
 	void setValue(ASTIdentifier* value) {
 		this->value = value;
 	}
+
+	virtual bool isFloat()  { return false;  }
+	virtual bool isString() { return false;  }
+	virtual bool isNumber() { return true;  }
 };
 
 /**
