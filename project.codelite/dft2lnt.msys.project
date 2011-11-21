@@ -50,6 +50,7 @@
     <File Name="../dft2lnt/FileWriter.cpp"/>
     <File Name="../dft2lnt/ConsoleWriter.cpp"/>
     <File Name="../dft2lnt/ConsoleWriter.h"/>
+    <File Name="../dft2lnt/ASTPrinter.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="CMake">
     <File Name="../dft2lnt/CMakeLists.txt"/>
