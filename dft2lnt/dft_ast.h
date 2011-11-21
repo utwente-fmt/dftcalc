@@ -194,8 +194,8 @@ public:
 	}
 
 	virtual bool isFloat()  { return false;  }
-	virtual bool isString() { return true;  }
-	virtual bool isNumber() { return false; }
+	virtual bool isNumber() { return true; }
+	virtual bool isString() { return false;  }
 };
 
 /**
@@ -228,8 +228,8 @@ public:
 	}
 
 	virtual bool isFloat()  { return false;  }
-	virtual bool isString() { return false;  }
-	virtual bool isNumber() { return true;  }
+	virtual bool isNumber() { return false;  }
+	virtual bool isString() { return true;  }
 };
 
 /**
