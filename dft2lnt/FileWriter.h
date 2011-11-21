@@ -172,6 +172,16 @@ public:
 		return *this;
 	}
 
+	virtual FileWriter& operator<<(float f) {
+		ss() << f;
+		return *this;
+	}
+
+	virtual FileWriter& operator<<(double d) {
+		ss() << d;
+		return *this;
+	}
+
 	virtual FileWriter& operator<<(const FileWriterOption& option) {
 		switch(option.option) {
 			case FileWriterOption::POP:
