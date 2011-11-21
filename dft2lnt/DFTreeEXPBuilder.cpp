@@ -8,8 +8,15 @@ std::string DFT::DFTreeEXPBuilder::getFileForNode(const DFT::Nodes::Node& node) 
 	ss << node.getTypeStr();
 	if(node.isBasicEvent()) {
 		const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
+		if(be.getMu()==0) {
+			ss << "_cold";
+		}
 	} else if(node.isGate()) {
 		const DFT::Nodes::Gate& gate = *static_cast<const DFT::Nodes::Gate*>(&node);
+		if(node.getType()==DFT::Nodes::GateVotingType) {
+			const DFT::Nodes::GateVoting& gateVoting = *static_cast<const DFT::Nodes::GateVoting*>(&node);
+			ss << "_" << gateVoting.getThreshold();
+		}
 		ss << "_" << gate.getChildren().size();
 	} else {
 		assert(0 && "getFileForNode(): Unknown node type");
@@ -20,7 +27,16 @@ std::string DFT::DFTreeEXPBuilder::getFileForNode(const DFT::Nodes::Node& node) 
 std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) const {
 	std::stringstream ss;
 	ss << "total rename ";
-	ss << "\"FRATE !1 !2\" -> \"rate " << be.getLambda() << "\", \"FRATE !1 !1\" -> \"rate " << be.getMu() << "\" in \"";
+	
+	// Insert lambda value
+	ss << "\"FRATE !1 !2\" -> \"rate " << be.getLambda() << "\"";
+	
+	// Insert mu value (only for non-cold BE's)
+	if(be.getMu()>0) {
+		ss << ", ";
+		ss << "\"FRATE !1 !1\" -> \"rate " << be.getMu()     << "\"";
+	}
+	ss << " in \"";
 	ss << getFileForNode(be);
 	ss << ".bcg\" end rename";
 	return ss.str();
