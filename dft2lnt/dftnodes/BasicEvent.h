@@ -230,7 +230,7 @@ public:
 	BasicEvent(Location loc, std::string name):
 		Node(loc,name,BasicEventType),
 		lambda(-1),
-		mu(-1) {
+		mu(0) {
 	}
 	virtual ~BasicEvent() {
 	}
