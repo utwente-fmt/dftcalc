@@ -9,6 +9,7 @@
 
 #include "dft_parser.h"
 #include "dft_ast.h"
+#include "ASTPrinter.h"
 #include "ASTValidator.h"
 #include "ASTDFTBuilder.h"
 #include "realpath.h"
@@ -284,6 +285,20 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
+	/* Print AST */
+	if(ast && outputASTFileSet) {
+		compilerContext->notify("Printing AST...");
+		compilerContext->flush();
+		DFT::ASTPrinter printer(ast,compilerContext);
+		if(outputASTFileName!="") {
+			std::ofstream astFile (outputASTFileName);
+			astFile << printer.print();
+		} else {
+			std::cerr << printer.print();
+		}
+	}
+	compilerContext->flush();
+	
 	/* Validate input */
 	compilerContext->notify("Validating input...");
 	int astValid = false;
@@ -296,18 +311,6 @@ int main(int argc, char** argv) {
 		printf(":error:AST invalid\n");
 		return 1;
 	}
-	
-	/* Print AST */
-	if(ast && outputASTFileSet) {
-//		DFT::ASTPrinter printer(ast,compilerContext);
-//		if(outputASTFileName!="") {
-//			std::ofstream astFile (outputASTFileName);
-//			printer.print(astFile);
-//		} else {
-//			printer.print(std::cout);
-//		}
-	}
-	compilerContext->flush();
 	
 	/* Create DFT */
 	DFT::DFTree* dft = NULL;
@@ -339,6 +342,7 @@ int main(int argc, char** argv) {
 	/* Printing DFT */
 	if(dft && outputDFTFileSet) {
 		compilerContext->notify("Printing DFT...");
+		compilerContext->flush();
 		DFT::DFTreePrinter printer(dft,compilerContext);
 		if(outputFileName!="") {
 			std::ofstream dftFile (outputDFTFileName);
@@ -351,14 +355,14 @@ int main(int argc, char** argv) {
 	compilerContext->flush();
 
 	/* Building SVL and LNT out of DFT */
-//	if(dft) {
+//	if(dftValid) {
 //		compilerContext->notify("Building SVL and LNT...");
 //		DFT::DFTreeSVLAndLNTBuilder builder("/home/studfmg/bergfi/dft2lnt/dft2lnt/build/Content",".","try",dft,compilerContext);
 //		builder.build();
 //	}
 
 	/* Building EXP out of DFT */
-	if(dft && outputFileSet) {
+	if(dftValid && outputFileSet) {
 		compilerContext->notify("Building EXP...");
 		DFT::DFTreeEXPBuilder builder("/home/studfmg/bergfi/dft2lnt/dft2lnt/build/Content",".",outputBCGFileName,outputEXPFileName,dft,compilerContext);
 		builder.build();
