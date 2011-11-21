@@ -384,7 +384,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 							// FIXME: Possibly this is actually never wanted,
 							// as it could allow multiple senders to synchronize
 							// with each other.
-							otherRuleA->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncActivate(n+1,true)) );
+							//otherRuleA->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncActivate(n+1,true)) );
 						}
 					}
 				}

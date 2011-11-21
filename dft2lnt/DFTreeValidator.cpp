@@ -121,7 +121,7 @@ int DFT::DFTreeValidator::validateGate(const DFT::Nodes::Gate& gate) {
 int DFT::DFTreeValidator::validate() {
 	int valid = true;
 	valid = validateReferences() ? valid : false;
-	valid = validateSingleParent() ? valid : false;
+	//valid = validateSingleParent() ? valid : false;
 	valid = validateNodes() ? valid : false;
 	return valid;
 }
