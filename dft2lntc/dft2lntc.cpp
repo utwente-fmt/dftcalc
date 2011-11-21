@@ -332,7 +332,7 @@ int main(int argc, char** argv) {
 		DFT::DFTreeValidator validator(dft,compilerContext);
 		dftValid = validator.validate();
 		if(!dftValid) {
-			printf(":: DFT determined invalid\n");
+			compilerContext->message("DFT determined invalid",DFT::CompilerContext::MessageType::Error);
 //		} else {
 //			printf(":: DFT determined valid\n");
 		}
