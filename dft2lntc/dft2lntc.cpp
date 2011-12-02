@@ -130,10 +130,10 @@ int main(int argc, char** argv) {
 	string outputBCGFileName = "";
 	int    outputBCGFileSet  = 0;
 
-	int         optimize           = 1;
-	int         execute            = 0;
-	int			stopAfterPreproc   = 0;
-	int			useColoredMessages = 0;
+	int optimize             = 1;
+	int execute              = 0;
+	int stopAfterPreproc     = 0;
+	int useColoredMessages   = 0;
 
 	/* Parse command line arguments */
 	char c;
@@ -357,6 +357,7 @@ int main(int argc, char** argv) {
 	compilerContext->flush();
 	if(!ast) {
 		compilerContext->reportError("could not build AST");
+		compilerContext->flush();
 		return 1;
 	}
 
@@ -376,6 +377,7 @@ int main(int argc, char** argv) {
 	
 	/* Validate input */
 	compilerContext->notify("Validating input...");
+	compilerContext->flush();
 	int astValid = false;
 	{
 		DFT::ASTValidator validator(ast,compilerContext);
@@ -391,6 +393,7 @@ int main(int argc, char** argv) {
 	DFT::DFTree* dft = NULL;
 	if(astValid) {
 		compilerContext->notify("Building DFT...");
+		compilerContext->flush();
 		DFT::ASTDFTBuilder builder(ast,compilerContext);
 		dft = builder.build();
 	}
@@ -404,6 +407,7 @@ int main(int argc, char** argv) {
 	int dftValid = false;
 	if(dft) {
 		compilerContext->notify("Validating DFT...");
+		compilerContext->flush();
 		DFT::DFTreeValidator validator(dft,compilerContext);
 		dftValid = validator.validate();
 		if(!dftValid) {
