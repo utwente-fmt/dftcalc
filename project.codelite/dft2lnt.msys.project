@@ -51,6 +51,8 @@
     <File Name="../dft2lnt/ConsoleWriter.cpp"/>
     <File Name="../dft2lnt/ConsoleWriter.h"/>
     <File Name="../dft2lnt/ASTPrinter.h"/>
+    <File Name="../dft2lnt/DFTreeBCGNodeBuilder.cpp"/>
+    <File Name="../dft2lnt/DFTreeBCGNodeBuilder.h"/>
     <File Name="../dft2lnt/compiler.cpp"/>
     <File Name="../dft2lnt/compiler.h"/>
   </VirtualDirectory>

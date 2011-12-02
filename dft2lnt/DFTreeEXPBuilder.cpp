@@ -1,28 +1,8 @@
+#include "DFTreeBCGNodeBuilder.h"
 #include "DFTreeEXPBuilder.h"
 #include "FileWriter.h"
 
 #include <map>
-
-std::string DFT::DFTreeEXPBuilder::getFileForNode(const DFT::Nodes::Node& node) const {
-	std::stringstream ss;
-	ss << node.getTypeStr();
-	if(node.isBasicEvent()) {
-		const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
-		if(be.getMu()==0) {
-			ss << "_cold";
-		}
-	} else if(node.isGate()) {
-		const DFT::Nodes::Gate& gate = *static_cast<const DFT::Nodes::Gate*>(&node);
-		if(node.getType()==DFT::Nodes::GateVotingType) {
-			const DFT::Nodes::GateVoting& gateVoting = *static_cast<const DFT::Nodes::GateVoting*>(&node);
-			ss << "_" << gateVoting.getThreshold();
-		}
-		ss << "_" << gate.getChildren().size();
-	} else {
-		assert(0 && "getFileForNode(): Unknown node type");
-	}
-	return ss.str();
-}
 
 std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) const {
 	std::stringstream ss;
@@ -37,7 +17,7 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		ss << "\"FRATE !1 !1\" -> \"rate " << be.getMu()     << "\"";
 	}
 	ss << " in \"";
-	ss << getFileForNode(be);
+	ss << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
 	ss << ".bcg\" end rename";
 	return ss.str();
 }
@@ -242,7 +222,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 						const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
 						exp_body << exp_body.applyprefix << getBEProc(be) << exp_body.applypostfix;
 					} else if(node.isGate()) {
-						exp_body << exp_body.applyprefix << "\"" << getFileForNode(node) << ".bcg\"" << exp_body.applypostfix;
+						exp_body << exp_body.applyprefix << "\"" << DFT::DFTreeBCGNodeBuilder::getFileForNode(node) << ".bcg\"" << exp_body.applypostfix;
 					} else {
 						assert(0 && "buildEXPBody(): Unknown node type");
 					}

@@ -34,6 +34,7 @@
 #include "DFTree.h"
 #include "DFTreeValidator.h"
 #include "DFTreePrinter.h"
+#include "DFTreeBCGNodeBuilder.h"
 #include "DFTreeSVLAndLNTBuilder.h"
 #include "DFTreeEXPBuilder.h"
 
@@ -434,6 +435,12 @@ int main(int argc, char** argv) {
 //		DFT::DFTreeSVLAndLNTBuilder builder(dft2lntRoot,".","try",dft,compilerContext);
 //		builder.build();
 //	}
+
+	/* Building needed BCG files for DFT */
+	if(rootValid && dftValid) {
+		DFT::DFTreeBCGNodeBuilder builder(dft2lntRoot,dft,compilerContext);
+		builder.generate();
+	}
 
 	/* Building EXP out of DFT */
 	if(rootValid && dftValid && outputFileSet) {

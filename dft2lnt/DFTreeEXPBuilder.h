@@ -187,12 +187,6 @@ public:
 	}
 
 	/**
-	 * Returns the Lotos NT File needed for the specified node.
-	 * @return he Lotos NT File needed for the specified node.
-	 */
-	std::string getFileForNode(const DFT::Nodes::Node& node) const;
-
-	/**
 	 * Returns an EXP formatted string reflecting the specified Basic Event.
 	 * Takes into account the renaming of failure rates.
 	 * @param be The Basic Event of which an EXP formatted strign is wanted.
