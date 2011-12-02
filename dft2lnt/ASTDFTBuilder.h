@@ -249,6 +249,7 @@ public:
 		std::vector<DFT::Nodes::Node*>& nodes = g->getChildren();
 		for(int i=0; i<gate->getChildren()->size(); ++i) {
 			DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(i)->getString());
+			node->getParents().push_back(n);
 			nodes.push_back(node);
 		}
 		ASTVisitor<int>::visitGate(gate);

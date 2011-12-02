@@ -94,6 +94,7 @@ private:
 	Location location;
 	string name;
 	NodeType type;
+	std::vector<Nodes::Node*> parents;
 public:
 	Node(Location location, NodeType type):
 		location(location),
@@ -143,6 +144,10 @@ public:
 	 * @return The type of this Node.
 	 */
 	const NodeType& getType() const {return type;}
+	
+	void setParents(std::vector<Nodes::Node*> parents) { this->parents = parents;}
+	std::vector<Node*>& getParents() {return parents;}
+	const std::vector<Node*>& getParents() const {return parents;}
 	
 	/**
 	 * Returns the type of this Node.
