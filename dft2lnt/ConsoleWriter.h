@@ -91,6 +91,11 @@ public:
 		return *this;
 	}
 
+	virtual ConsoleWriter& operator<<(const FileWriter& other) {
+		ss() << other.toString();
+		return *this;
+	}
+
 	virtual ConsoleWriter& appendPrefix() {
 		append(applyprefix);
 		return *this;

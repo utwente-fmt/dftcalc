@@ -194,6 +194,10 @@ public:
 		return *this;
 	}
 	
+	virtual FileWriter& operator<<(const FileWriter& other) {
+		ss() << other.toString();
+		return *this;
+	}
 
 //	FileWriter& operator<<(std::ios_base& base) {
 //		ss() << base;
@@ -259,7 +263,7 @@ public:
 	 * Returns the current contents of the buffer.
 	 * @return The current contents of the buffer.
 	 */
-	string toString() {
+	string toString() const {
 		return sss.top()->str();
 	}
 	
