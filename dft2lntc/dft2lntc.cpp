@@ -6,6 +6,23 @@
 #include <fstream>
 #include <libgen.h>
 #include <getopt.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#ifdef WIN32
+#include <io.h>
+#endif
+
+#ifdef WIN32
+	int dir_make(const char* path, int mode) {
+		(void)mode;
+		return mkdir(path);
+	}
+#else
+	int dir_make(const char* path, __mode_t mode) {
+		return mkdir(path,mode);
+	}
+#endif
 
 #include "dft_parser.h"
 #include "dft_ast.h"
@@ -38,6 +55,60 @@ void print_help() {
 "  -b FILE     Output of SVL to this BCG file.\n"
 "  --color     Use colored messages.\n"
 	);
+}
+
+std::string getRoot(CompilerContext* compilerContext) {
+	char* root = getenv((const char*)"DFT2LNTROOT");
+	std::string dft2lntRoot = root?string(root):"";
+
+	if(dft2lntRoot=="") {
+		compilerContext->reportError("Environment variable `DFT2LNTROOT' not set. Please set it to where lntnodes/ can be found.");
+		goto end;
+	}
+	
+	// \ to /
+	{
+		char buf[dft2lntRoot.length()+1];
+		for(int i=dft2lntRoot.length();i--;) {
+			if(dft2lntRoot[i]=='\\')
+				buf[i] = '/';
+			else
+				buf[i] = dft2lntRoot[i];
+		}
+		buf[dft2lntRoot.length()] = '\0';
+		if(buf[dft2lntRoot.length()-1]=='/') {
+			buf[dft2lntRoot.length()-1] = '\0';
+		}
+		dft2lntRoot = string(buf);
+	}
+	
+	struct stat rootStat;
+	if(stat((dft2lntRoot).c_str(),&rootStat)) {
+		// report error
+		compilerContext->reportError("Could not stat DFT2LNTROOT (`" + dft2lntRoot + "')");
+		dft2lntRoot = "";
+		goto end;
+	}
+	
+	if(stat((dft2lntRoot+DFT::DFTreeBCGNodeBuilder::LNTROOT).c_str(),&rootStat)) {
+		if(dir_make((dft2lntRoot+DFT::DFTreeBCGNodeBuilder::LNTROOT).c_str(),0755)) {
+			compilerContext->reportError("Could not create LNT Nodes directory (`" + dft2lntRoot+DFT::DFTreeBCGNodeBuilder::LNTROOT + "')");
+			dft2lntRoot = "";
+			goto end;
+		}
+	}
+
+	if(stat((dft2lntRoot+DFT::DFTreeBCGNodeBuilder::BCGROOT).c_str(),&rootStat)) {
+		if(dir_make((dft2lntRoot+DFT::DFTreeBCGNodeBuilder::BCGROOT).c_str(),0755)) {
+			compilerContext->reportError("Could not create BCG Nodes directory (`" + dft2lntRoot+DFT::DFTreeBCGNodeBuilder::BCGROOT + "')");
+			dft2lntRoot = "";
+			goto end;
+		}
+	}
+	
+	compilerContext->message("DFT2LNTROOT is: " + dft2lntRoot);
+end:
+	return dft2lntRoot;
 }
 
 int main(int argc, char** argv) {
@@ -275,6 +346,9 @@ int main(int argc, char** argv) {
 
 	std::string parserInputFileName(path_basename(inputFileName.c_str()));
 	
+	std::string dft2lntRoot = getRoot(compilerContext);
+	bool rootValid = dft2lntRoot!="";
+
 	/* Parse input file */
 	compilerContext->notify("Checking syntax...");
 	Parser* parser = new Parser(inputFile,parserInputFilePath,compilerContext);
@@ -357,14 +431,15 @@ int main(int argc, char** argv) {
 	/* Building SVL and LNT out of DFT */
 //	if(dftValid) {
 //		compilerContext->notify("Building SVL and LNT...");
-//		DFT::DFTreeSVLAndLNTBuilder builder("/home/studfmg/bergfi/dft2lnt/dft2lnt/build/Content",".","try",dft,compilerContext);
+//		DFT::DFTreeSVLAndLNTBuilder builder(dft2lntRoot,".","try",dft,compilerContext);
 //		builder.build();
 //	}
 
 	/* Building EXP out of DFT */
-	if(dftValid && outputFileSet) {
+	if(rootValid && dftValid && outputFileSet) {
 		compilerContext->notify("Building EXP...");
-		DFT::DFTreeEXPBuilder builder("/home/studfmg/bergfi/dft2lnt/dft2lnt/build/Content",".",outputBCGFileName,outputEXPFileName,dft,compilerContext);
+		compilerContext->flush();
+		DFT::DFTreeEXPBuilder builder(dft2lntRoot,".",outputBCGFileName,outputEXPFileName,dft,compilerContext);
 		builder.build();
 		
 		if(outputSVLFileName!="") {
