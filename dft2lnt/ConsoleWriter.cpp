@@ -7,6 +7,7 @@
 const ConsoleWriter::Color ConsoleWriter::Color::Error  (FOREGROUND_RED );
 const ConsoleWriter::Color ConsoleWriter::Color::Warning(FOREGROUND_RED  | FOREGROUND_GREEN);
 const ConsoleWriter::Color ConsoleWriter::Color::Notify (FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+const ConsoleWriter::Color ConsoleWriter::Color::Action (FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 const ConsoleWriter::Color ConsoleWriter::Color::Proper (FOREGROUND_GREEN | FOREGROUND_INTENSITY);
 const ConsoleWriter::Color ConsoleWriter::Color::Message(0);
 const ConsoleWriter::Color ConsoleWriter::Color::Reset  (0);
@@ -16,6 +17,7 @@ const ConsoleWriter::Color ConsoleWriter::Color::Reset  (0);
 const ConsoleWriter::Color ConsoleWriter::Color::Error  (31);
 const ConsoleWriter::Color ConsoleWriter::Color::Warning(33);
 const ConsoleWriter::Color ConsoleWriter::Color::Notify (134);
+const ConsoleWriter::Color ConsoleWriter::Color::Action (136);
 const ConsoleWriter::Color ConsoleWriter::Color::Proper (132);
 const ConsoleWriter::Color ConsoleWriter::Color::Message(0);
 const ConsoleWriter::Color ConsoleWriter::Color::Reset  (0);
