@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
 //	}
 
 	/* Create a new compiler context */
-	DFT::CompilerContext* compilerContext = new DFT::CompilerContext(std::cerr);
+	CompilerContext* compilerContext = new CompilerContext(std::cerr);
 	compilerContext->useColoredMessages(useColoredMessages);
 
 	/* Parse command line arguments without a -X.
@@ -406,7 +406,7 @@ int main(int argc, char** argv) {
 		DFT::DFTreeValidator validator(dft,compilerContext);
 		dftValid = validator.validate();
 		if(!dftValid) {
-			compilerContext->message("DFT determined invalid",DFT::CompilerContext::MessageType::Error);
+			compilerContext->message("DFT determined invalid",CompilerContext::MessageType::Error);
 //		} else {
 //			printf(":: DFT determined valid\n");
 		}

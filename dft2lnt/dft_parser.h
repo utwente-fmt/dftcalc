@@ -31,7 +31,7 @@ private:
 	FILE* file;
 	std::string fileName;
 
-	DFT::CompilerContext* compilerContext;
+	CompilerContext* compilerContext;
 public:
 	yyscan_t scanner;
 
@@ -41,7 +41,7 @@ public:
 	 * errors and warnings.
 	 * Call parser() to start parsing.
 	 */
-	Parser(FILE* file, std::string fileName, DFT::CompilerContext* compilerContext): file(file), fileName(fileName), compilerContext(compilerContext) {
+	Parser(FILE* file, std::string fileName, CompilerContext* compilerContext): file(file), fileName(fileName), compilerContext(compilerContext) {
 		assert(compilerContext);
 	}
 
@@ -85,7 +85,7 @@ public:
 	 * Returns the CompilerContext used by this Parser.
 	 * @return The CompilerContext used by this Parser.
 	 */
-	DFT::CompilerContext* getCC() { return compilerContext; }
+	CompilerContext* getCC() { return compilerContext; }
 };
 
 #endif // DFT_PARSER_H
