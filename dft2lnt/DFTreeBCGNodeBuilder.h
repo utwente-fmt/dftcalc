@@ -40,7 +40,7 @@ private:
 	int generateBE(FileWriter& out, const DFT::Nodes::BasicEvent& gate);
 
 	int generateSVLBuilder(FileWriter& out, std::string fileName);
-
+	int executeSVL(std::string root, std::string fileName);
 public:
 
 	static const std::string LNTROOT;
@@ -61,6 +61,7 @@ public:
 	 * @return he Lotos NT File needed for the specified node.
 	 */
 	static std::string getFileForNode(const DFT::Nodes::Node& node);
+	static int bcgIsValid(std::string bcgFilePath);
 
 	int generate(const DFT::Nodes::Node& node);
 	int generate();

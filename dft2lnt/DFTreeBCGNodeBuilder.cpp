@@ -13,6 +13,10 @@
 #include "FileWriter.h"
 #include "ConsoleWriter.h"
 
+//#ifdef WIN32
+//#include "utimes.h"
+//#endif
+
 const std::string DFT::DFTreeBCGNodeBuilder::LNTROOT          ("/lntnodes");
 const std::string DFT::DFTreeBCGNodeBuilder::BCGROOT          ("/bcgnodes");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_FAIL        ("FAIL");
@@ -41,6 +45,15 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		assert(0 && "getFileForNode(): Unknown node type");
 	}
 	return ss.str();
+}
+
+int DFT::DFTreeBCGNodeBuilder::bcgIsValid(std::string bcgFilePath) {
+#ifdef WIN32
+	int res = system( ("bcg_info \"" + bcgFilePath +"\" > NUL 2> NUL").c_str() );
+#else
+	int res = system( ("bcg_info \"" + bcgFilePath +"\"").c_str() );
+#endif
+	return res==0;
 }
 
 int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::GateAnd& gate) {
@@ -119,6 +132,9 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node) {
 	FileWriter lntOut;
 	FileWriter svlOut;
 	FileWriter bcgOut;
+	std::fstream lntFile;
+	std::fstream svlFile;
+	std::fstream bcgFile;
 	
 	//std::cerr << "Generating: " << node.getName() << std::endl;
 	
@@ -134,25 +150,34 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node) {
 	std::string bcgFilePath = bcgRoot + bcgFileName;
 	
 	{
-		std::ofstream lntFile (lntFilePath);
+		//std::ofstream lntFile;
+		lntFile.open(lntFilePath);
 		if(!lntFile.is_open()) {
 			{
-				std::ofstream fileO (lntFilePath);
-				fileO.flush();
-				fileO.close();
+				FILE* f = fopen(lntFilePath.c_str(),"wb");
+				if(f) {
+					fflush(f);
+					fclose(f);
+				}
 			}
+			lntFile.clear();
 			lntFile.open(lntFilePath);
 		}
-		std::ofstream svlFile (svlFilePath);
+		//std::ofstream svlFile (svlFilePath);
+		svlFile.open(svlFilePath);
 		if(!svlFile.is_open()) {
 			{
-				std::ofstream fileO (svlFilePath);
-				fileO.flush();
-				fileO.close();
+				FILE* f = fopen(svlFilePath.c_str(),"wb");
+				if(f) {
+					fflush(f);
+					fclose(f);
+				}
 			}
+			svlFile.clear();
 			svlFile.open(svlFilePath);
 		}
-		std::ofstream bcgFile (bcgFilePath);
+		//std::ofstream bcgFile (bcgFilePath);
+		bcgFile.open(bcgFilePath);
 		if(!bcgFile.is_open()) {
 			{
 				FILE* f = fopen(bcgFilePath.c_str(),"wb");
@@ -161,6 +186,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node) {
 					fclose(f);
 				}
 			}
+			bcgFile.clear();
 			bcgFile.open(bcgFilePath);
 		}
 
@@ -186,52 +212,99 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node) {
 
 	// Check if the LNT or BCG files need regeneration based on
 	// the modification times of the files
+	// Check the size of the BCG file as well
 	switch(0) default: {
 		struct stat lntFileStat;
 		struct stat bcgFileStat;
+		struct stat bcgValidFileStat;
 		
 		// Get the info if the BCG file, enable (re)generation on error
 		if(stat((lntFilePath).c_str(),&lntFileStat)) {
 			lntGenerationNeeded = true;
+			cc->reportAction("LNT file `" + getFileForNode(node) + ".lnt' not found");
 			break;
 		}
 
 		// Get the info if the BCG file, enable (re)generation on error
 		if(stat((bcgFilePath).c_str(),&bcgFileStat)) {
 			bcgGenerationNeeded = true;
+			cc->reportAction("BCG file `" + getFileForNode(node) + ".bcg' not found");
 			break;
 		}
+		
+		// Get the info if the BCG file, enable (re)generation on error
+		if(stat((bcgFilePath+".valid").c_str(),&bcgValidFileStat)) {
+			bcgGenerationNeeded = true;
+			cc->reportAction("BCG file `" + getFileForNode(node) + ".bcg' is invalid");
+			break;
+		}
+
+		//cerr << "lntFileStat.st_mtime: " << lntFileStat.st_mtime << endl;
+		//cerr << "bcgFileStat.st_mtime: " << bcgFileStat.st_mtime << endl;
 		
 		// If the LNT file is newer than the BCG file, regeneration is needed
 		if(lntFileStat.st_mtime > bcgFileStat.st_mtime) {
 			bcgGenerationNeeded = true;
+			cc->reportAction("BCG file `" + getFileForNode(node) + ".bcg' is out of date");
 			break;
+		}
+		
+		// If the BCG file is empty, regeneration is needed
+//		if(bcgFileStat.st_size<1) {
+//			bcgGenerationNeeded = true;
+//			cc->reportAction("BCG file `" + getFileForNode(node) + ".bcg' is empty");
+//			break;
+//		}
+		
+		// If the BCG file is newer than the BCG Valid file, validation is needed
+		if(bcgFileStat.st_mtime > bcgValidFileStat.st_mtime) {
+			// If the BCG file is valid
+			if(bcgIsValid(bcgFilePath)) {
+				
+				// Update the timestamp of the .valid file to the current time
+				//struct utimbuf newTimes = {bcgFileStat.st_atime,bcgFileStat.st_mtime};
+				utime( (bcgFilePath+".valid").c_str(), NULL );
+				
+			
+			} else {
+				bcgGenerationNeeded = true;
+				cc->reportAction("BCG file `" + getFileForNode(node) + ".bcg' is invalid");
+				break;
+			}
 		}
 	}
 	
 	// Check if the LNT file needs regeneration based on the version info in
 	// the LNT header
 	{
-		std::ifstream lntFile (lntFilePath);
+		//cerr << " at " << lntFile.tellg() << endl;
+		//cerr << "errflags: " << lntFile.rdstate() << endl;
+		
+		//if(lntFile.good()) cerr << "IT IS GOOD" << endl;
+		//if(lntFile.bad()) cerr << "IT IS BAD" << endl;
+		//cerr << "errflags: " << lntFile.rdstate() << endl;
 		if(lntFile.is_open()) {
 			char header_c[12];
 			lntFile.read(header_c,11);
+			header_c[11] = '\0';
+			//cerr << " at " << lntFile.tellg() << endl;
+			//cerr << "errflags: " << lntFile.rdstate() << endl;
 			
 			// If failed to read 11 characters from the LNT file
 			if(lntFile.rdstate()&ifstream::failbit) {
 				lntFile.clear();
-				cc->reportWarning("failed to read from file: " + lntFilePath);
 				lntGenerationNeeded = true;
+				cc->reportAction("LNT file `" + getFileForNode(node) + ".lnt' is invalid");
 				
 			// If successfully read 11 characters from the LNT file
 			} else {
-				header_c[11] = '\0';
 				std::string header(header_c);
 				//cc->message("LNT: `" + string(header_c) + "'");
 				
 				// If the header does not match
 				if(strncmp("(** V",header_c,5)) {
 					lntGenerationNeeded = true;
+					cc->reportAction("LNT file `" + getFileForNode(node) + ".lnt' has invalid header");
 				
 				// If the header matches, compare the versions
 				} else {
@@ -239,6 +312,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node) {
 					//std::cout << "File: " << version << ", mine: " << VERSION << endl;
 					if(version < VERSION) {
 						lntGenerationNeeded = true;
+						cc->reportAction("LNT file `" + getFileForNode(node) + ".lnt' out of date");
 					}
 				}
 			}
@@ -344,7 +418,24 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node) {
 			// call SVL
 			//cc->reportFile(svlOut.toString());
 			fancyFileWrite(svlFilePath,svlOut);
-			system( ("cd " + lntRoot + " && svl " + svlFileName + " && cd -").c_str() );
+			executeSVL(lntRoot,svlFileName);
+			
+			// Check if the generation resulted in a valid BCG file
+			if(bcgIsValid(bcgFilePath)) {
+				
+				// Open and close .valid file, making sure it exists
+				{
+					std::ofstream bcgValidFile(bcgFilePath+".valid");
+				}
+				
+				// Update the timestamp of the .valid file to the current time
+				utime( (bcgFilePath+".valid").c_str(), NULL );
+				
+			
+			} else {
+				cc->reportErrorAt(node.getLocation(),"Could not generate BCG file for node type `" + node.getTypeStr() + "'");
+				cc->reportErrorAt(node.getLocation(),"... for this node: `" + node.getName() + "'");
+			}
 		} else {
 			cc->reportErrorAt(node.getLocation(),"Could not generate LNT file for node type `" + node.getTypeStr() + "'");
 			cc->reportErrorAt(node.getLocation(),"... for this node: `" + node.getName() + "'");
@@ -429,4 +520,13 @@ int DFT::DFTreeBCGNodeBuilder::fancyFileWrite(const std::string& filePath, FileW
 		err = errno;
 	}
 	return err;
+}
+
+int DFT::DFTreeBCGNodeBuilder::executeSVL(std::string root, std::string fileName) {
+#ifdef WIN32
+	int res = system( ("cd " + root + " && svl " + fileName + " && cd - > NUL 2> NUL").c_str() );
+#else
+	int res = system( ("cd " + root + " && svl " + fileName + " && cd - > /dev/null 2> /dev/null").c_str() );
+#endif
+	return res;
 }
