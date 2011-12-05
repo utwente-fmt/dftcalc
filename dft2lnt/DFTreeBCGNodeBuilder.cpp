@@ -3,6 +3,8 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
+#include <utime.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -11,8 +13,13 @@
 #include "FileWriter.h"
 #include "ConsoleWriter.h"
 
-const std::string DFT::DFTreeBCGNodeBuilder::LNTROOT("/lntnodes");
-const std::string DFT::DFTreeBCGNodeBuilder::BCGROOT("/bcgnodes");
+const std::string DFT::DFTreeBCGNodeBuilder::LNTROOT          ("/lntnodes");
+const std::string DFT::DFTreeBCGNodeBuilder::BCGROOT          ("/bcgnodes");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_FAIL        ("FAIL");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE    ("ACTIVATE");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIR      ("REPAIR");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL   ("RATE_FAIL");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR ("RATE_REPAIR");
 
 std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& node) {
 	std::stringstream ss;
@@ -58,11 +65,11 @@ int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out, const DFT::Nodes:
 	out << out.applyprefix << "module " << getFileForNode(gate) << "(VOTING) is" << out.applypostfix;
 	out.indent();
 
-		out << out.applyprefix << "type BOOL_ARRAY is array[" << threshold << ".." << total << "] of BOOL end type" << out.applypostfix;
+		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
 
-		out << out.applyprefix << "process MAIN [F : NAT_CHANNEL, A : NAT_BOOL_CHANNEL] is" << out.applypostfix;
+		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
 		out.indent();
-			out << out.applyprefix << "VOTING [F,A] (" << threshold << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+			out << out.applyprefix << "VOTING [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << threshold << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	out.outdent();
@@ -95,9 +102,9 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 	out << ") is" << out.applypostfix;
 	out.appendLine("");
 	out.indent();
-		out << out.applyprefix << "process MAIN [F : NAT_CHANNEL, A : NAT_BOOL_CHANNEL, FRATE : NAT_NAT_CHANNEL] is" << out.applypostfix;
+		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
 		out.indent();
-			out << out.applyprefix << "BEproc [F,A,FRATE](" << nr_parents << " of NAT)" << out.applypostfix;
+			out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "](" << nr_parents << " of NAT)" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	out.outdent();

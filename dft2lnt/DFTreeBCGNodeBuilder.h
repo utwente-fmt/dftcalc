@@ -14,6 +14,12 @@ class DFTreePrinter;
 namespace DFT {
 
 class DFTreeBCGNodeBuilder {
+public:
+	static const std::string GATE_FAIL;
+	static const std::string GATE_ACTIVATE;
+	static const std::string GATE_REPAIR;
+	static const std::string GATE_RATE_FAIL;
+	static const std::string GATE_RATE_REPAIR;
 private:
 	static const unsigned int VERSION = 2;
 
