@@ -246,10 +246,11 @@ be_attrib // {
 		{
 			currentParser->getCC()->reportErrorAt(@1,"unexpected tokens, expected attribute name");
 		}
-	|	EQUALS be_attrib_value
-		{
-			currentParser->getCC()->reportErrorAt(@1.begin(),"expected attribute name");
-		}
+// Causes shift/reduce conflicts
+//	|	EQUALS be_attrib_value
+//		{
+//			currentParser->getCC()->reportErrorAt(@1.begin(),"expected attribute name");
+//		}
 	|	be_attrib_name EQUALS IDENTIFIER
 		{
 			if(!YYRECOVERING()) currentParser->getCC()->reportErrorAt(@$,"assigning identifiers not supported");
@@ -259,18 +260,21 @@ be_attrib // {
 		{
 			currentParser->getCC()->reportErrorAt(@3,"unexpected tokens, expected attribute value");
 		}
-	|	be_attrib_name EQUALS
-		{
-			currentParser->getCC()->reportErrorAt(@2.end(),"expected attribute value");
-		}
+// Causes shift/reduce conflicts
+//	|	be_attrib_name EQUALS
+//		{
+//			currentParser->getCC()->reportErrorAt(@2.end(),"expected attribute value");
+//		}
 	|	be_attrib_name
 		{
 			currentParser->getCC()->reportErrorAt(@1.end(),"name needs a value assigned");
 		}
-	|	be_attrib_value
-		{
-			currentParser->getCC()->reportErrorAt(@1.begin(),"value needs to be assigned to a name");
-		}
+		
+// Causes shift/reduce conflicts
+//	|	be_attrib_value
+//		{
+//			currentParser->getCC()->reportErrorAt(@1.begin(),"value needs to be assigned to a name");
+//		}
 	;
 //}
 
@@ -339,16 +343,17 @@ gate_line //{
 		}
 	
 	/** Error rules */
-	|	nodeid gate names be_attribs SEMICOLON
-		{
-			currentParser->getCC()->reportErrorAt(@4,"gate `" + $1->getString() + "':gates cannot have attributes");
-			$$ = NULL;
-		}
-	|	nodeid gate names error be_attribs SEMICOLON
-		{
-			currentParser->getCC()->reportErrorAt(@4,"gate `" + $1->getString() + "':gates cannot have attributes");
-			$$ = NULL;
-		}
+// Causes shift/reduce errors
+//	|	nodeid gate names be_attribs SEMICOLON
+//		{
+//			currentParser->getCC()->reportErrorAt(@4,"gate `" + $1->getString() + "':gates cannot have attributes");
+//			$$ = NULL;
+//		}
+//	|	nodeid gate names error be_attribs SEMICOLON
+//		{
+//			currentParser->getCC()->reportErrorAt(@4,"gate `" + $1->getString() + "':gates cannot have attributes");
+//			$$ = NULL;
+//		}
 	|	nodeid gate names error SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@4,"gate `" + $1->getString() + "':unexpected tokens, expected basic event attributes");
