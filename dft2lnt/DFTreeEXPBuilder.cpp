@@ -17,7 +17,7 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << be.getMu()     << "\"";
 	}
 	ss << " in \"";
-	ss << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
+	ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
 	ss << ".bcg\" end rename";
 	return ss.str();
 }
@@ -48,6 +48,7 @@ void DFT::DFTreeEXPBuilder::printSyncLine(const EXPSyncRule& rule, const vector<
 
 DFT::DFTreeEXPBuilder::DFTreeEXPBuilder(std::string root, std::string tmp, std::string nameBCG, std::string nameEXP, DFT::DFTree* dft, CompilerContext* cc):
 	root(root),
+	bcgRoot(root+DFT::DFTreeBCGNodeBuilder::BCGROOT+"/"),
 	tmp(tmp),
 	nameBCG(nameBCG),
 	nameEXP(nameEXP),
@@ -223,7 +224,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 						const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
 						exp_body << exp_body.applyprefix << getBEProc(be) << exp_body.applypostfix;
 					} else if(node.isGate()) {
-						exp_body << exp_body.applyprefix << "\"" << DFT::DFTreeBCGNodeBuilder::getFileForNode(node) << ".bcg\"" << exp_body.applypostfix;
+						exp_body << exp_body.applyprefix << "\"" << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(node) << ".bcg\"" << exp_body.applypostfix;
 					} else {
 						assert(0 && "buildEXPBody(): Unknown node type");
 					}

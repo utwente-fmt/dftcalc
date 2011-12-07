@@ -152,6 +152,7 @@ public:
 class DFTreeEXPBuilder {
 private:
 	std::string root;
+	std::string bcgRoot;
 	std::string tmp;
 	std::string nameBCG;
 	std::string nameEXP;
@@ -177,7 +178,7 @@ public:
 	/**
 	 * Constructs a new DFTreeEXPBuilder using the specified DFT and
 	 * CompilerContext.
-	 * @param tmp The root dft2lnt folder
+	 * @param root The root dft2lnt folder
 	 * @param tmp The folder in which temporary files will be put in.
 	 * @param The name of the SVL script to generate.
 	 * @param dft The DFT to be validated.
