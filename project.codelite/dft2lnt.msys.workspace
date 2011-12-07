@@ -2,6 +2,9 @@
 <CodeLite_Workspace Name="dft2lnt" Database="./dft2lnt.tags">
   <Project Name="dft2lntc" Path="dft2lntc.msys.project" Active="Yes"/>
   <Project Name="dft2lnt" Path="dft2lnt.msys.project" Active="No"/>
+  <Environment>
+    <![CDATA[]]>
+  </Environment>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Project Name="dft2lntc" ConfigName="Debug"/>
