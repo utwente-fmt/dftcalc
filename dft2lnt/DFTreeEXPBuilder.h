@@ -230,7 +230,7 @@ public:
 	 * @return A new EXPSyncItem instance.
 	 */
 	EXPSyncItem* syncActivate(unsigned int localNodeID, bool sending) {
-		return new EXPSyncItemIB("A",localNodeID,sending);
+		return new EXPSyncItemIB(DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE,localNodeID,sending);
 	}
 
 	/**
@@ -240,7 +240,7 @@ public:
 	 * @return A new EXPSyncItem instance.
 	 */
 	EXPSyncItem* syncFail(unsigned int localNodeID) {
-		return new EXPSyncItem("F",localNodeID);
+		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_FAIL,localNodeID);
 	}
 
 	int createSyncRuleBE(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::BasicEvent& node, unsigned int nodeID);

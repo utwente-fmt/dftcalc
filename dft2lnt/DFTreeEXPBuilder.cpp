@@ -9,12 +9,12 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 	ss << "total rename ";
 	
 	// Insert lambda value
-	ss << "\"FRATE !1 !2\" -> \"rate " << be.getLambda() << "\"";
+	ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !2\" -> \"rate " << be.getLambda() << "\"";
 	
 	// Insert mu value (only for non-cold BE's)
 	if(be.getMu()>0) {
 		ss << ", ";
-		ss << "\"FRATE !1 !1\" -> \"rate " << be.getMu()     << "\"";
+		ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << be.getMu()     << "\"";
 	}
 	ss << " in \"";
 	ss << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
@@ -264,13 +264,13 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 		assert( (it != nodeIDs.end()) );
 
 		// Generate the Top Node Activate rule
-		ss << "A_A";
+		ss << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE;
 		DFT::EXPSyncRule* ruleA = new EXPSyncRule(ss.str(),false);
 		ss.str("");
 		ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncActivate(0,false)) );
 		
 		// Generate the Top Node Fail rule
-		ss << "F_A";
+		ss << DFT::DFTreeBCGNodeBuilder::GATE_FAIL;
 		DFT::EXPSyncRule* ruleF = new EXPSyncRule(ss.str(),false);
 		ruleF->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncFail(0)) );
 		
