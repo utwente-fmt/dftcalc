@@ -10,6 +10,7 @@
 
 #include "DFTreeBCGNodeBuilder.h"
 #include "files.h"
+#include "FileSystem.h"
 #include "FileWriter.h"
 #include "ConsoleWriter.h"
 
@@ -57,11 +58,17 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 }
 
 int DFT::DFTreeBCGNodeBuilder::bcgIsValid(std::string bcgFilePath) {
+	std::string command("bcg_info \"" + bcgFilePath +"\"");
+	if(cc->getVerbosity()<VERBOSE_BCGISVALID) {
 #ifdef WIN32
-	int res = system( ("bcg_info \"" + bcgFilePath +"\" > NUL 2> NUL").c_str() );
+		command += " > NUL 2> NUL";
 #else
-	int res = system( ("bcg_info \"" + bcgFilePath +"\"").c_str() );
+		command += " > /dev/null 2> /dev/null";
 #endif
+	}
+	PushD dir(bcgRoot);
+	int res = system( command.c_str() );
+	dir.popd();
 	return res==0;
 }
 
@@ -532,10 +539,16 @@ int DFT::DFTreeBCGNodeBuilder::fancyFileWrite(const std::string& filePath, FileW
 }
 
 int DFT::DFTreeBCGNodeBuilder::executeSVL(std::string root, std::string fileName) {
+	std::string command("svl \"" + fileName + "\"");
+	if(cc->getVerbosity()<VERBOSE_BCGISVALID) {
 #ifdef WIN32
-	int res = system( ("cd " + root + " && svl " + fileName + " && cd - > NUL 2> NUL").c_str() );
+		command += " > NUL 2> NUL";
 #else
-	int res = system( ("cd " + root + " && svl " + fileName + " && cd - > /dev/null 2> /dev/null").c_str() );
+		command += " > /dev/null 2> /dev/null";
 #endif
-	return res;
+	}
+	PushD dir(root);
+	int res = system( command.c_str() );
+	dir.popd();
+	return res==0;
 }
