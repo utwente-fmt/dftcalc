@@ -26,7 +26,7 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIR      ("REPAIR");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL   ("RATE_FAIL");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR ("RATE_REPAIR");
 
-const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 2;
+const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 3;
 
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_LNTISVALID = 2;
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_BCGISVALID = 2;
