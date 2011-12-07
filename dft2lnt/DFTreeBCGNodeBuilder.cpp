@@ -72,6 +72,22 @@ int DFT::DFTreeBCGNodeBuilder::bcgIsValid(std::string bcgFilePath) {
 	return res==0;
 }
 
+int DFT::DFTreeBCGNodeBuilder::lntIsValid(std::string lntFilePath) {
+	std::string command("lnt.open \"" + lntFilePath +"\" -");
+	if(cc->getVerbosity()<VERBOSE_LNTISVALID) {
+#ifdef WIN32
+		command += " > NUL 2> NUL";
+#else
+		command += " > /dev/null 2> /dev/null";
+#endif
+	}
+	PushD dir(lntRoot);
+	int res = system( command.c_str() );
+	dir.popd();
+	return res==0;
+}
+
+
 int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::GateAnd& gate) {
 	//int nr_parents = gate.getParents().size();
 	//int total = gate.getChildren().size();

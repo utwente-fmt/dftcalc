@@ -67,10 +67,11 @@ public:
 	 * @return he Lotos NT File needed for the specified node.
 	 */
 	static std::string getFileForNode(const DFT::Nodes::Node& node);
-	static int bcgIsValid(std::string bcgFilePath);
 
 	int generate(const DFT::Nodes::Node& node);
 	int generate();
+	int bcgIsValid(std::string bcgFilePath);
+	int lntIsValid(std::string lntFilePath);
 
 	int fancyFileWrite(const std::string& filePath, FileWriter& fw);
 
