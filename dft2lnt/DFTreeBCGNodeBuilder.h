@@ -21,14 +21,20 @@ public:
 	static const std::string GATE_RATE_FAIL;
 	static const std::string GATE_RATE_REPAIR;
 private:
-	static const unsigned int VERSION = 2;
-
+	static const unsigned int VERSION;
+	static const int VERBOSE_LNTISVALID;
+	static const int VERBOSE_BCGISVALID;
+	static const int VERBOSE_SVLEXECUTE;
+	static const int VERBOSE_FILE_LNT;
+	static const int VERBOSE_FILE_SVL;
+	static const int VERBOSE_GENERATION;
+	
 	std::string root;
 	std::string lntRoot;
 	std::string bcgRoot;
 	DFT::DFTree* dft;
 	CompilerContext* cc;
-	
+
 	int generateHeader(FileWriter& out);
 	int generateHeaderClose(FileWriter& out);
 
