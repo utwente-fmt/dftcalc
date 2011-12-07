@@ -55,6 +55,7 @@
     <File Name="../dft2lnt/DFTreeBCGNodeBuilder.h"/>
     <File Name="../dft2lnt/compiler.cpp"/>
     <File Name="../dft2lnt/compiler.h"/>
+    <File Name="../dft2lnt/FileSystem.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="CMake">
     <File Name="../dft2lnt/CMakeLists.txt"/>
