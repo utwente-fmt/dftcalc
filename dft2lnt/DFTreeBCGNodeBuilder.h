@@ -68,7 +68,7 @@ public:
 	 */
 	static std::string getFileForNode(const DFT::Nodes::Node& node);
 
-	int generate(const DFT::Nodes::Node& node);
+	int generate(const DFT::Nodes::Node& node, set<string>& triedToGenerate);
 	int generate();
 	int bcgIsValid(std::string bcgFilePath);
 	int lntIsValid(std::string lntFilePath);

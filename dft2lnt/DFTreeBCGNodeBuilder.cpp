@@ -159,7 +159,14 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 	return 0;
 }
 
-int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node) {
+int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string>& triedToGenerate) {
+
+	// If the LNT file for the node was not generated before in this iteration
+	if(triedToGenerate.find(getFileForNode(node)) != triedToGenerate.end()) {
+		return 0;
+	}
+	triedToGenerate.insert(getFileForNode(node));
+
 	ConsoleWriter out(std::cout);
 	FileWriter lntOut;
 	FileWriter svlOut;
@@ -515,9 +522,18 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node) {
 }
 
 int DFT::DFTreeBCGNodeBuilder::generate() {
+	set<std::string> triedToGenerate;
 	std::vector<DFT::Nodes::Node*>::iterator it = dft->getNodes().begin();
 	for(;it!=dft->getNodes().end(); it++) {
-		generate(**it);
+		int bad = generate(**it,triedToGenerate);
+		if(bad) {
+			std::vector<DFT::Nodes::Node*>::iterator it2 = dft->getNodes().begin();
+			for(;it2!=dft->getNodes().end(); it2++) {
+				if(getFileForNode(**it)==getFileForNode(**it2)) {
+					cc->reportErrorAt((*it2)->getLocation(),"... for this node: `" + (*it2)->getName() + "'");
+				}
+			}
+		}
 	}
 	return 0;
 }
