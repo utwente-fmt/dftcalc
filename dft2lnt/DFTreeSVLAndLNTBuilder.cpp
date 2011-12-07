@@ -1,4 +1,5 @@
 #include "DFTreeSVLAndLNTBuilder.h"
+#include "DFTreeBCGNodeBuilder.h"
 #include "FileWriter.h"
 
 #include <iostream>
@@ -157,11 +158,11 @@ int DFT::DFTreeSVLAndLNTBuilder::buildBasicEvent(int& current, int& total, DFT::
 		//   FRATE !1 !1 -> active failure rate
 		//   FRATE !1 !2 -> dormant failure rate
 		svl_body << "total rename ";
-		svl_body << "\"F !1\" -> \"F_" << basicEvent->getName() << "\"";
+		svl_body << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !1\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << "_" << basicEvent->getName() << "\"";
 		svl_body << ", ";
-		svl_body << "\"A !1\" -> \"A_" << basicEvent->getName() << "\"";
+		svl_body << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE << " !1\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE << "_" << basicEvent->getName() << "\"";
 		svl_body << ", ";
-		svl_body << "\"FRATE !1 !2\" -> \"" << dorm << "\" in ";
+		svl_body << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !2\" -> \"" << dorm << "\" in ";
 		
 		// Specify the needed Lotos specification
 		svl_body << "\"" << getFileForNodeType(basicEvent->getType()) << ".lotos\"";
@@ -179,7 +180,7 @@ int DFT::DFTreeSVLAndLNTBuilder::buildBasicEvent(int& current, int& total, DFT::
 		svl_body.indent();
 		svl_body.appendPrefix();
 		svl_body << "|[";
-		svl_body << "F_" << basicEvent->getName();
+		svl_body << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << "_" << basicEvent->getName();
 		svl_body << "]|";
 		svl_body.appendPostfix();
 		svl_body.outdent();
@@ -199,9 +200,9 @@ int DFT::DFTreeSVLAndLNTBuilder::buildGate(int& current, int& total, DFT::Nodes:
 		// the node that x connects to. Needed for synchronization.
 		svl_body << "total rename ";
 		for(size_t i=0; i<gate->getChildren().size(); ++i) {
-			svl_body << "\"F !" << (i+1) << "\" -> \"F_" << gate->getChildren().at(i)->getName() << "\", ";
+			svl_body << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !" << (i+1) << "\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << "_" << gate->getChildren().at(i)->getName() << "\", ";
 		}
-		svl_body << "\"F !" << (gate->getChildren().size()+1) << "\" -> \"F_" << gate->getName() << "\" in ";
+		svl_body << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !" << (gate->getChildren().size()+1) << "\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << "_" << gate->getName() << "\" in ";
 		
 		// Specify the needed Lotos specification
 		svl_body << "\"" << getFileForNodeType(gate->getType()) << ".lotos\"";
@@ -219,7 +220,7 @@ int DFT::DFTreeSVLAndLNTBuilder::buildGate(int& current, int& total, DFT::Nodes:
 		svl_body.indent();
 		svl_body.appendPrefix();
 		svl_body << "|[";
-		svl_body << "F_" << gate->getName();
+		svl_body << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << "_" << gate->getName();
 		svl_body << "]|";
 		svl_body.appendPostfix();
 		svl_body.outdent();
@@ -313,9 +314,9 @@ void DFT::DFTreeSVLAndLNTBuilder::generateLNTAnd(FileWriter& out, DFT::Nodes::Ga
 
 	out.indent();
 		out << out.applyprefix << "type NAT_SET is array[1.." << children << "] of BOOL end type" << out.applypostfix;
-		out << out.applyprefix << "process MAIN [F : NAT_CHANNEL] is" << out.applypostfix;
+		out << out.applyprefix << "process MAIN [" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " : NAT_CHANNEL] is" << out.applypostfix;
 		out.indent();
-			out << out.applyprefix << "VOTING [F] (" << children << " of NAT, " << children << " of NAT, (NAT_SET(FALSE";
+			out << out.applyprefix << "VOTING [" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << "] (" << children << " of NAT, " << children << " of NAT, (NAT_SET(FALSE";
 			for(int i=1; i < children; ++i) {
 				out << ", FALSE";
 			}
