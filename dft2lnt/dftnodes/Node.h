@@ -17,9 +17,8 @@ namespace Nodes {
  * The supported DFT Node types
  */
 enum NodeType {
-	BasicEventType,
+	BasicEventType=1,
 
-	GateType,
 	GatePhasedOrType,
 	GateOrType,
 	GateAndType,
@@ -32,6 +31,7 @@ enum NodeType {
 	GateFDEPType,
 	GateTransferType,
 
+	GateType,
 	GATES_FIRST = GatePhasedOrType,
 	GATES_LAST  = GateTransferType,
 	
