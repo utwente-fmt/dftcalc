@@ -93,8 +93,13 @@ private:
 		MessageType type;
 		bool operator<(const MSG& other) const {
 			if(loc.getFileName().length()>0 && loc.getFileName() == other.loc.getFileName()) {
-				return loc.getFirstLine() <  other.loc.getFirstLine()
-					|| (loc.getFirstLine() == other.loc.getFirstLine() && loc.getFirstColumn() < other.loc.getFirstColumn());
+				if(loc.getFirstLine()   < other.loc.getFirstLine()  ) return true;
+				if(loc.getFirstLine()   > other.loc.getFirstLine()  ) return false;
+				if(loc.getFirstColumn() < other.loc.getFirstColumn()) return true;
+				if(loc.getFirstColumn() > other.loc.getFirstColumn()) return false;
+				if(id                   < other.id                  ) return true;
+				if(id                   > other.id                  ) return false;
+				return false;
 			} else {
 				return id < other.id;
 			}
