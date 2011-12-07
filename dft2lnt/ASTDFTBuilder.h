@@ -125,7 +125,7 @@ public:
 			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
 			for(; it!=basicEvent->getAttributes()->end(); ++it) {
 				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelLambda) {
-					float v = static_cast<DFT::AST::ASTAttribFloat*>((*it)->getValue())->getValue();
+					float v = (*it)->getValue()->getFloatValue();
 					be->setLambda(v);
 				}
 			}
@@ -136,7 +136,7 @@ public:
 			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
 			for(; it!=basicEvent->getAttributes()->end(); ++it) {
 				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelDorm) {
-					float v = static_cast<DFT::AST::ASTAttribFloat*>((*it)->getValue())->getValue();
+					float v = (*it)->getValue()->getFloatValue();
 					be->setMu(be->getLambda()*v);
 				}
 			}
