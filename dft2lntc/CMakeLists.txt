@@ -18,7 +18,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CM
 #link_directories(${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt)
 
 ## Specify the executable and its sources
-add_executable(dft2lntc dft2lntc.cpp realpath.c)
+add_executable(dft2lntc
+	dft2lntc.cpp
+	realpath.c
+	${CMAKE_CURRENT_BINARY_DIR}/compiletime.h
+)
 
 ## Depends on:
 ##   - dft2lnt (libdft2lnt.a)
@@ -41,3 +45,14 @@ ADD_CUSTOM_COMMAND(
 ## Installation
 install (TARGETS dft2lntc DESTINATION bin)
 
+# Generate compile time information
+add_custom_command(
+	OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/compiletime.h 
+#	TARGET dft2lntc
+#	PRE_BUILD
+	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
+	COMMAND ${CMAKE_COMMAND} -DCMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+	        -DCMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+	        -P ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
+            ../..
+)

@@ -16,6 +16,18 @@
     <File Name="../dft2lntc/CMakeLists.txt"/>
   </VirtualDirectory>
   <Dependencies Name="Release"/>
+  <Dependencies Name="Debug"/>
+  <VirtualDirectory Name="Content">
+    <File Name="../build/Content/simple.dft"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="generated">
+    <VirtualDirectory Name="Debug">
+      <File Name="../build/Debug/dft2lntc/compiletime.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="Release">
+      <File Name="../build/Release/dft2lntc/compiletime.h"/>
+    </VirtualDirectory>
+  </VirtualDirectory>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="" C_Options="">
@@ -116,8 +128,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <Dependencies Name="Debug"/>
-  <VirtualDirectory Name="Content">
-    <File Name="../build/Content/simple.dft"/>
-  </VirtualDirectory>
 </CodeLite_Project>
