@@ -37,6 +37,7 @@
 #include "DFTreeBCGNodeBuilder.h"
 #include "DFTreeSVLAndLNTBuilder.h"
 #include "DFTreeEXPBuilder.h"
+#include "compiletime.h"
 
 FILE* pp_outputFile = stdout;
 
@@ -56,6 +57,17 @@ void print_help() {
 "  -b FILE     Output of SVL to this BCG file.\n"
 "  --color     Use colored messages.\n"
 	);
+}
+
+void print_version() {
+	printf("dft2lntc");
+	printf("  built on %s\n",COMPILETIME_DATE);
+	printf("  git revision `%s'",COMPILETIME_GITREV);
+	if(COMPILETIME_GITCHANGED)
+		printf(" + uncommited changes\n");
+	else
+		printf("\n");
+	printf("Copyright statement.\n");
 }
 
 std::string getRoot(CompilerContext* compilerContext) {
@@ -215,6 +227,9 @@ int main(int argc, char** argv) {
 			case '-':
 				if(!strcmp("help",optarg)) {
 					print_help();
+					exit(0);
+				} else if(!strcmp("version",optarg)) {
+					print_version();
 					exit(0);
 				} else if(!strcmp("color",optarg)) {
 					useColoredMessages = true;
