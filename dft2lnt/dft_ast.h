@@ -129,6 +129,9 @@ public:
 	virtual bool isFloat()  { return getType() == BEAttributeFloatType;  }
 	virtual bool isString() { return getType() == BEAttributeStringType; }
 	virtual bool isNumber() { return getType() == BEAttributeNumberType; }
+	virtual float getFloatValue() { return 0.0f; }
+	virtual ASTIdentifier* getStringValue() { return NULL; }
+	virtual int getNumberValue() { return 0; }
 };
 
 /**
@@ -162,6 +165,12 @@ public:
 	virtual bool isFloat()  { return true;  }
 	virtual bool isString() { return false; }
 	virtual bool isNumber() { return false; }
+	virtual float getFloatValue() {
+		return value;
+	}
+	virtual int getNumberValue() {
+		return (int)value;
+	}
 };
 
 /**
@@ -174,7 +183,6 @@ public:
 	ASTAttribNumber(Location location, int value):
 		ASTAttrib(BEAttributeNumberType,location),
 		value(value) {
-
 	}
 
 	/**
@@ -196,6 +204,12 @@ public:
 	virtual bool isFloat()  { return false;  }
 	virtual bool isNumber() { return true; }
 	virtual bool isString() { return false;  }
+	virtual float getFloatValue() {
+		return (float)value;
+	}
+	virtual int getNumberValue() {
+		return value;
+	}
 };
 
 /**
@@ -208,7 +222,6 @@ public:
 	ASTAttribString(Location location, ASTIdentifier* value):
 		ASTAttrib(BEAttributeStringType,location),
 		value(value) {
-
 	}
 
 	/**
@@ -230,6 +243,9 @@ public:
 	virtual bool isFloat()  { return false;  }
 	virtual bool isNumber() { return false;  }
 	virtual bool isString() { return true;  }
+	virtual ASTIdentifier* getStringValue() {
+		return value;
+	}
 };
 
 /**
