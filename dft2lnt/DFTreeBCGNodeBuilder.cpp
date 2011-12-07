@@ -169,7 +169,7 @@ int DFT::DFTreeBCGNodeBuilder::generateSpare(FileWriter& out, const DFT::Nodes::
 
 int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::BasicEvent& be) {
 	int nr_parents = be.getParents().size();
-	bool cold = be.getMu()>0;
+	bool cold = be.getMu()==0;
 
 	out << out.applyprefix << " * Generating BE(parents=" << nr_parents << ")" << out.applypostfix;
 	generateHeaderClose(out);
