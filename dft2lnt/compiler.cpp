@@ -9,6 +9,8 @@ const CompilerContext::MessageType CompilerContext::MessageType::Warning(Message
 const CompilerContext::MessageType CompilerContext::MessageType::Error  (MessageType::ERR);
 const CompilerContext::MessageType CompilerContext::MessageType::File   (MessageType::FILE);
 
+const int CompilerContext::VERBOSITY_DEFAULT = 0;
+
 void CompilerContext::print(const Location& loc, const std::string& str, const MessageType& mType) {
 
 	if(mType.isError()) {
@@ -53,58 +55,72 @@ void CompilerContext::print(const Location& loc, const std::string& str, const M
 }
 
 
-void CompilerContext::reportErrorAt(Location loc, std::string str) {
-	messageAt(loc,str,MessageType::Error);
+void CompilerContext::reportErrorAt(Location loc, std::string str, const int& verbosityLevel) {
+	messageAt(loc,str,MessageType::Error,verbosityLevel);
 	errors++;
 }
 
-void CompilerContext::reportWarningAt(Location loc, std::string str) {
-	messageAt(loc,str,MessageType::Warning);
+void CompilerContext::reportWarningAt(Location loc, std::string str, const int& verbosityLevel) {
+	messageAt(loc,str,MessageType::Warning,verbosityLevel);
 	warnings++;
 }
 
-void CompilerContext::reportActionAt(Location loc, std::string str) {
-	messageAt(loc,str,MessageType::Action);
+void CompilerContext::reportActionAt(Location loc, std::string str, const int& verbosityLevel) {
+	messageAt(loc,str,MessageType::Action,verbosityLevel);
 }
 
-void CompilerContext::reportError(std::string str) {
-	message(str,MessageType::Error);
+void CompilerContext::reportError(std::string str, const int& verbosityLevel) {
+	message(str,MessageType::Error,verbosityLevel);
 	errors++;
 }
 
-void CompilerContext::reportWarning(std::string str) {
-	message(str,MessageType::Warning);
+void CompilerContext::reportWarning(std::string str, const int& verbosityLevel) {
+	message(str,MessageType::Warning,verbosityLevel);
 	warnings++;
 }
 
-void CompilerContext::reportAction(std::string str) {
-	message(str,MessageType::Action);
+void CompilerContext::reportAction(std::string str, const int& verbosityLevel) {
+	message(str,MessageType::Action,verbosityLevel);
 }
 
-void CompilerContext::reportFile(std::string str) {
-	message(str,MessageType::File);
+void CompilerContext::reportFile(std::string fileName, std::string contents, const int& verbosityLevel) {
+	message(fileName,MessageType::Title,verbosityLevel);
+	message(contents,MessageType::File,verbosityLevel);
 }
 
-void CompilerContext::notify(std::string str) {
-	message(str,MessageType::Notify);
+void CompilerContext::reportSuccess(std::string  str, const int& verbosityLevel) {
+	message(str,MessageType::Success,verbosityLevel);
 }
 
-void CompilerContext::message(std::string str) {
-	message(str,MessageType::Message);
+void CompilerContext::notify(std::string str, const int& verbosityLevel) {
+	message(str,MessageType::Notify,verbosityLevel);
 }
 
-void CompilerContext::message(std::string str, const MessageType& mType) {
-	messageAt(Location(),str,mType);
+void CompilerContext::message(std::string str, const int& verbosityLevel) {
+	message(str,MessageType::Message,verbosityLevel);
+}
+
+void CompilerContext::message(std::string str, const MessageType& mType, const int& verbosityLevel) {
+	messageAt(Location(),str,mType,verbosityLevel);
 }
 
 
-void CompilerContext::messageAt(Location loc, std::string str, const MessageType& mType) {
+void CompilerContext::messageAt(Location loc, std::string str, const MessageType& mType, const int& verbosityLevel) {
 	static int n=1;
+
+	if(verbosityLevel>verbosity) {
+		return;
+	}
+
 //	print(loc,"ADDED: " + str, mType);
 	messages.insert(CompilerContext::MSG(n++,loc,str,mType));
 }
 
-void CompilerContext::reportErrors() {
+void CompilerContext::reportErrors(const int& verbosityLevel) {
+	if(verbosityLevel>verbosity) {
+		return;
+	}
+
 	consoleWriter << consoleWriter.applyprefix;
 	consoleWriter << ConsoleWriter::Color::Notify << ":: ";
 	consoleWriter << ConsoleWriter::Color::Reset  << "Finished. " << errors << " errors and " << warnings << " warnings.";

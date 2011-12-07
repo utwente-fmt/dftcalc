@@ -81,6 +81,8 @@ public:
 		bool isFile()    const { return FILE_FIRST    <= type && type <= FILE_LAST; }
 	};
 
+	static const int VERBOSITY_DEFAULT;
+
 private:
 
 	class MSG {
@@ -115,6 +117,7 @@ private:
 	std::string name;
 	bool m_useColoredMessages;
 	std::set<MSG> messages;
+	int verbosity;
 	
 	void print(const Location& l, const std::string& str, const MessageType& mType);
 public:
@@ -125,7 +128,7 @@ public:
 	/**
 	 * Creates a new compiler context with a specific name.
 	 */
-	CompilerContext(std::ostream& out): consoleWriter(out), errors(0), warnings(0), name("") {
+	CompilerContext(std::ostream& out): consoleWriter(out), errors(0), warnings(0), name(""), verbosity(VERBOSITY_DEFAULT) {
 	}
 
 	~CompilerContext() {
@@ -183,7 +186,7 @@ public:
 	 *            originated from.
 	 * @param str The error string to report.
 	 */
-	void reportErrorAt(Location loc, std::string str);
+	void reportErrorAt(Location loc, std::string str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
 	/**
 	 * Report the specified warning string at the specified location.
@@ -192,7 +195,7 @@ public:
 	 *            originated from.
 	 * @param str The error string to report.
 	 */
-	void reportWarningAt(Location loc, std::string str);
+	void reportWarningAt(Location loc, std::string str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
 	/**
 	 * Report the specified error, without a location.
@@ -201,7 +204,7 @@ public:
 	 *            originated from.
 	 * @param str The error string to report.
 	 */
-	void reportError(std::string str);
+	void reportError(std::string str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
 	/**
 	 * Report the specified error, without a location.
@@ -210,12 +213,13 @@ public:
 	 *            originated from.
 	 * @param str The error string to report.
 	 */
-	void reportWarning(std::string str);
+	void reportWarning(std::string str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
-	void reportActionAt(Location loc, std::string);
-	void reportAction(std::string);
+	void reportActionAt(Location loc, std::string, const int& verbosityLevel = VERBOSITY_DEFAULT);
+	void reportAction(std::string, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
-	void reportFile(std::string);
+	void reportFile(std::string fileName, std::string contents, const int& verbosityLevel = VERBOSITY_DEFAULT);
+
 
 	/**
 	 * Returns the number of reported errors.
@@ -233,13 +237,13 @@ public:
 		return warnings;
 	}
 	
-	void notify(std::string str);
+	void notify(std::string str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
-	void message(std::string str);
+	void message(std::string str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 	
-	void message(std::string str, const MessageType& mType);
+	void message(std::string str, const MessageType& mType, const int& verbosityLevel = VERBOSITY_DEFAULT);
 	
-	void messageAt(Location loc, std::string str, const MessageType& mType);
+	void messageAt(Location loc, std::string str, const MessageType& mType, const int& verbosityLevel = VERBOSITY_DEFAULT);
 	
 	void flush();
 	
@@ -250,8 +254,15 @@ public:
 	}
 	const bool& usingColoredMessaged() const { return m_useColoredMessages; }
 
-	void reportErrors();
+	void reportErrors(const int& verbosityLevel = VERBOSITY_DEFAULT);
 
+	const int& getVerbosity() const {
+		return verbosity;
+	}
+	
+	void setVerbosity(const int& verbosity) {
+		this->verbosity = verbosity;
+	}
 };
 
 #endif // COMPILER_H
