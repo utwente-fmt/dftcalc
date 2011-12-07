@@ -51,6 +51,7 @@ DFT::DFTreeEXPBuilder::DFTreeEXPBuilder(std::string root, std::string tmp, std::
 	tmp(tmp),
 	nameBCG(nameBCG),
 	nameEXP(nameEXP),
+	nameTop(""),
 	dft(dft),
 	cc(cc) {
 	
@@ -265,12 +266,14 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 
 		// Generate the Top Node Activate rule
 		ss << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE;
+		if(!nameTop.empty()) ss << "_" << nameTop;
 		DFT::EXPSyncRule* ruleA = new EXPSyncRule(ss.str(),false);
 		ss.str("");
 		ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncActivate(0,false)) );
 		
 		// Generate the Top Node Fail rule
 		ss << DFT::DFTreeBCGNodeBuilder::GATE_FAIL;
+		if(!nameTop.empty()) ss << "_" << nameTop;
 		DFT::EXPSyncRule* ruleF = new EXPSyncRule(ss.str(),false);
 		ruleF->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncFail(0)) );
 		

@@ -155,6 +155,7 @@ private:
 	std::string tmp;
 	std::string nameBCG;
 	std::string nameEXP;
+	std::string nameTop;
 	DFT::DFTree* dft;
 	CompilerContext* cc;
 	
@@ -281,6 +282,14 @@ public:
 	 * @param out The generated SVL output will be streamed to this stream.
 	 */
 	void printSVL(std::ostream& out);
+	
+	void setTopName(std::string name) {
+		nameTop = name;
+	}
+	
+	const std::string& getTopName() const {
+		return nameTop;
+	}
 };
 
 } // Namespace: DFT
