@@ -41,6 +41,9 @@
 
 FILE* pp_outputFile = stdout;
 
+const int VERBOSITY_FLOW = 1;
+const int VERBOSITY_DATA = 1;
+
 void print_help() {
 	printf("dft2lnt [INPUTFILE.dft] [options]\n");
 	printf(
@@ -119,7 +122,7 @@ std::string getRoot(CompilerContext* compilerContext) {
 		}
 	}
 	
-	compilerContext->message("DFT2LNTROOT is: " + dft2lntRoot);
+	compilerContext->reportAction("DFT2LNTROOT is: " + dft2lntRoot,VERBOSITY_DATA);
 end:
 	return dft2lntRoot;
 }
@@ -146,10 +149,11 @@ int main(int argc, char** argv) {
 	int execute              = 0;
 	int stopAfterPreproc     = 0;
 	int useColoredMessages   = 0;
+	int verbosity            = 0;
 
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"o:a:t:s:x:h-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"o:a:t:s:x:hvq-:")) >= 0 ) {
 		switch(c) {
 
 			// -o FILE
@@ -222,6 +226,16 @@ int main(int argc, char** argv) {
 			case 'h':
 				print_help();
 				exit(0);
+			
+			// -v
+			case 'v':
+				++verbosity;
+				break;
+
+			// -q
+			case 'q':
+				--verbosity;
+				break;
 
 			// --
 			case '-':
@@ -233,6 +247,12 @@ int main(int argc, char** argv) {
 					exit(0);
 				} else if(!strcmp("color",optarg)) {
 					useColoredMessages = true;
+				} else if(!strcmp("verbose",optarg)) {
+					if(strlen(optarg)>8 && optarg[7]=='=') {
+						verbosity = atoi(optarg+8);
+					} else {
+						++verbosity;
+					}
 				} else if(!strcmp("no-color",optarg)) {
 					useColoredMessages = false;
 				}
@@ -247,6 +267,7 @@ int main(int argc, char** argv) {
 	/* Create a new compiler context */
 	CompilerContext* compilerContext = new CompilerContext(std::cerr);
 	compilerContext->useColoredMessages(useColoredMessages);
+	compilerContext->setVerbosity(verbosity);
 
 	/* Parse command line arguments without a -X.
 	 * These specify the input files. Currently it will only allow
@@ -355,6 +376,8 @@ int main(int argc, char** argv) {
 //	}
 //
 	
+	compilerContext->notify("Running dft2lntc...");
+
 	char* real_path = new char[PATH_MAX];
 	cwd_realpath(inputFileName.c_str(),real_path);
 	std::string parserInputFilePath(real_path);
@@ -366,83 +389,90 @@ int main(int argc, char** argv) {
 	bool rootValid = dft2lntRoot!="";
 
 	/* Parse input file */
-	compilerContext->notify("Checking syntax...");
+	compilerContext->notify("Checking syntax...",VERBOSITY_FLOW);
 	Parser* parser = new Parser(inputFile,parserInputFilePath,compilerContext);
 	std::vector<DFT::AST::ASTNode*>* ast = parser->parse();
 	compilerContext->flush();
 	if(!ast) {
-		compilerContext->reportError("could not build AST");
-		compilerContext->flush();
-		return 1;
+		compilerContext->reportError("Syntax is incorrect");
+	} else {
+		compilerContext->reportAction("Syntax is correct",VERBOSITY_FLOW);
 	}
+	compilerContext->flush();
 
 	/* Print AST */
 	if(ast && outputASTFileSet) {
-		compilerContext->notify("Printing AST...");
+		compilerContext->notify("Printing AST...",VERBOSITY_FLOW);
 		compilerContext->flush();
 		DFT::ASTPrinter printer(ast,compilerContext);
 		if(outputASTFileName!="") {
 			std::ofstream astFile (outputASTFileName);
 			astFile << printer.print();
 		} else {
-			std::cerr << printer.print();
+			FileWriter ast;
+			ast << printer.print();
+			compilerContext->reportFile("AST",ast.toString());
 		}
 	}
 	compilerContext->flush();
 	
 	/* Validate input */
-	compilerContext->notify("Validating input...");
+	compilerContext->notify("Validating AST...",VERBOSITY_FLOW);
 	compilerContext->flush();
 	int astValid = false;
 	{
 		DFT::ASTValidator validator(ast,compilerContext);
 		astValid = validator.validate();
+		if(!astValid) {
+			compilerContext->reportError("AST invalid");
+		} else {
+			compilerContext->reportAction("AST is valid",VERBOSITY_FLOW);
+		}
 	}
 	compilerContext->flush();
-	if(!astValid) {
-		printf(":error:AST invalid\n");
-		return 1;
-	}
 	
 	/* Create DFT */
 	DFT::DFTree* dft = NULL;
 	if(astValid) {
-		compilerContext->notify("Building DFT...");
+		compilerContext->notify("Building DFT...",VERBOSITY_FLOW);
 		compilerContext->flush();
 		DFT::ASTDFTBuilder builder(ast,compilerContext);
 		dft = builder.build();
+		if(!dft) {
+			compilerContext->reportError("Could not build DFT");
+		} else {
+			compilerContext->reportAction("DFT built successfully",VERBOSITY_FLOW);
+		}
 	}
 	compilerContext->flush();
-	if(!dft) {
-		printf(":error:DFT invalid\n");
-		return 1;
-	}
 
 	/* Validate DFT */
 	int dftValid = false;
 	if(dft) {
-		compilerContext->notify("Validating DFT...");
+		compilerContext->notify("Validating DFT...",VERBOSITY_FLOW);
 		compilerContext->flush();
 		DFT::DFTreeValidator validator(dft,compilerContext);
 		dftValid = validator.validate();
 		if(!dftValid) {
-			compilerContext->message("DFT determined invalid",CompilerContext::MessageType::Error);
-//		} else {
-//			printf(":: DFT determined valid\n");
+			compilerContext->reportError("DFT invalid");
+		} else {
+			compilerContext->reportAction("DFT is valid",VERBOSITY_FLOW);
 		}
 	}
 	compilerContext->flush();
 	
 	/* Printing DFT */
 	if(dft && outputDFTFileSet) {
-		compilerContext->notify("Printing DFT...");
+		compilerContext->notify("Printing DFT...",VERBOSITY_FLOW);
 		compilerContext->flush();
 		DFT::DFTreePrinter printer(dft,compilerContext);
 		if(outputFileName!="") {
 			std::ofstream dftFile (outputDFTFileName);
 			printer.print(dftFile);
 		} else {
-			printer.print(std::cout);
+			std::stringstream out;
+			printer.print(out);
+			compilerContext->reportFile("DFT",out.str());
 		}
 		
 	}
@@ -457,13 +487,15 @@ int main(int argc, char** argv) {
 
 	/* Building needed BCG files for DFT */
 	if(rootValid && dftValid) {
+		compilerContext->notify("Building needed BCG files...",VERBOSITY_FLOW);
+		compilerContext->flush();
 		DFT::DFTreeBCGNodeBuilder builder(dft2lntRoot,dft,compilerContext);
 		builder.generate();
 	}
 
 	/* Building EXP out of DFT */
 	if(rootValid && dftValid && outputFileSet) {
-		compilerContext->notify("Building EXP...");
+		compilerContext->notify("Building EXP...",VERBOSITY_FLOW);
 		compilerContext->flush();
 		DFT::DFTreeEXPBuilder builder(dft2lntRoot,".",outputBCGFileName,outputEXPFileName,dft,compilerContext);
 		builder.build();
@@ -472,23 +504,29 @@ int main(int argc, char** argv) {
 			std::ofstream svlFile (outputSVLFileName);
 			builder.printSVL(svlFile);
 		} else {
-			builder.printSVL(std::cout);
+			std::stringstream out;
+			builder.printSVL(out);
+			compilerContext->reportFile("SVL",out.str());
 		}
 		if(outputEXPFileName!="") {
 			std::ofstream expFile (outputEXPFileName);
 			builder.printEXP(expFile);
 		} else {
-			builder.printEXP(std::cout);
+			std::stringstream out;
+			builder.printEXP(out);
+			compilerContext->reportFile("EXP",out.str());
 		}
 		
 	}
 	compilerContext->flush();
 
-	if(compilerContext->getErrors() > 0 || compilerContext->getWarnings() > 0) {
-		compilerContext->reportErrors();
-	}
+	compilerContext->reportErrors();
 	compilerContext->flush();
 
 	delete dft;
 	
+	if(compilerContext->getVerbosity()>=3) {
+		compilerContext->notify("SUCCESS! Time for brandy!");
+		compilerContext->flush();
+	}
 }
