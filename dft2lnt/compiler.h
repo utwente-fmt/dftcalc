@@ -46,7 +46,9 @@ public:
 			ACTION,
 			WARNING,
 			ERR,
+			SUCCESS,
 			FILE,
+			TITLE,
 
 			MESSAGE_FIRST = MESSAGE,
 			MESSAGE_LAST  = MESSAGE,
@@ -58,8 +60,12 @@ public:
 			WARNING_LAST  = WARNING,
 			ERROR_FIRST   = ERR,
 			ERROR_LAST    = ERR,
+			SUCCESS_FIRST = SUCCESS,
+			SUCCESS_LAST  = SUCCESS,
 			FILE_FIRST    = FILE,
 			FILE_LAST     = FILE,
+			TITLE_FIRST   = TITLE,
+			TITLE_LAST    = TITLE,
 
 			NUMBEROF
 		};
@@ -72,13 +78,17 @@ public:
 		static const MessageType Action;
 		static const MessageType Warning;
 		static const MessageType Error;
+		static const MessageType Success;
 		static const MessageType File;
+		static const MessageType Title;
 		bool isMessage() const { return MESSAGE_FIRST <= type && type <= MESSAGE_LAST; }
 		bool isNotify()  const { return NOTIFY_FIRST  <= type && type <= NOTIFY_LAST; }
 		bool isAction()  const { return ACTION_FIRST  <= type && type <= ACTION_LAST; }
 		bool isWarning() const { return WARNING_FIRST <= type && type <= WARNING_LAST; }
 		bool isError()   const { return ERROR_FIRST   <= type && type <= ERROR_LAST; }
+		bool isSuccess() const { return SUCCESS_FIRST <= type && type <= SUCCESS_LAST; }
 		bool isFile()    const { return FILE_FIRST    <= type && type <= FILE_LAST; }
+		bool isTitle()   const { return TITLE_FIRST   <= type && type <= TITLE_LAST; }
 	};
 
 	static const int VERBOSITY_DEFAULT;
@@ -220,6 +230,7 @@ public:
 
 	void reportFile(std::string fileName, std::string contents, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
+	void reportSuccess(std::string  str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
 	/**
 	 * Returns the number of reported errors.
