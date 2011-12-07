@@ -366,7 +366,7 @@ gate_line //{
 //		}
 	|	nodeid gate names error SEMICOLON
 		{
-			currentParser->getCC()->reportErrorAt(@4,"gate `" + $1->getString() + "':unexpected tokens, expected basic event attributes");
+			currentParser->getCC()->reportErrorAt(@4,"gate `" + $1->getString() + "':unexpected tokens before semicolon");
 			$$ = NULL;
 		}
 	;
