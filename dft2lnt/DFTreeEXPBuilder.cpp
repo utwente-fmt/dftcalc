@@ -318,7 +318,6 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 					// we have come across a child with another parent.
 					if((*ita)->syncOnNode == &child) {
 						EXPSyncRule* otherRuleA = *ita;
-						std::cerr << "Found matching rule: " << otherRuleA->toLabel << std::endl;
 						
 						// The synchronization depends if THIS node uses
 						// dynamic activation or not. The prime example of
@@ -355,7 +354,6 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 							// new rule we create for the THIS node, specifying
 							// the other node wants to listen to activates of
 							// the THIS node.
-							std::cerr << "  Adding sync for: " << otherNodeID << std::endl;
 							assert( (otherNodeID < otherRuleA->label.size()) && "The other rule sync should have a sending process");
 							ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(otherNodeID,syncActivate(otherLocalNodeID,false)) );
 							
