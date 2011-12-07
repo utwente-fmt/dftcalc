@@ -241,39 +241,47 @@ be_attrib // {
 		{
 			currentParser->getCC()->reportErrorAt(@1,"unsupported attribute name: `" + string($1) + "'");
 			free($1);
+			$$ = NULL;
 		}
 	|	error EQUALS be_attrib_value
 		{
 			currentParser->getCC()->reportErrorAt(@1,"unexpected tokens, expected attribute name");
+			$$ = NULL;
 		}
 // Causes shift/reduce conflicts
 //	|	EQUALS be_attrib_value
 //		{
 //			currentParser->getCC()->reportErrorAt(@1.begin(),"expected attribute name");
+//			$$ = NULL;
 //		}
 	|	be_attrib_name EQUALS IDENTIFIER
 		{
 			if(!YYRECOVERING()) currentParser->getCC()->reportErrorAt(@$,"assigning identifiers not supported");
 			free($3);
+			$$ = NULL;
 		}
 	|	be_attrib_name EQUALS error
 		{
 			currentParser->getCC()->reportErrorAt(@3,"unexpected tokens, expected attribute value");
+			$$ = NULL;
 		}
 // Causes shift/reduce conflicts
 //	|	be_attrib_name EQUALS
 //		{
 //			currentParser->getCC()->reportErrorAt(@2.end(),"expected attribute value");
+//			$$ = NULL;
 //		}
 	|	be_attrib_name
 		{
 			currentParser->getCC()->reportErrorAt(@1.end(),"name needs a value assigned");
+			$$ = NULL;
 		}
 		
 // Causes shift/reduce conflicts
 //	|	be_attrib_value
 //		{
 //			currentParser->getCC()->reportErrorAt(@1.begin(),"value needs to be assigned to a name");
+//			$$ = NULL;
 //		}
 	;
 //}
@@ -322,11 +330,13 @@ toplevel_line //{
 	|	TOPLEVEL SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@1.end(),string("expected nodeid"));
+			$$ = NULL;
 		}
 
 	|	TOPLEVEL error SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@2,string("unexpected tokens, expected nodeid"));
+			$$ = NULL;
 		}
 	;
 //}
@@ -384,6 +394,7 @@ be_line //{
 	|	nodeid PHASE be_attribs SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@2.end(),string("basicevent `" + $1->getString() + "':phase number expected"));
+			$$ = NULL;
 		}
 	;
 //}
@@ -398,18 +409,22 @@ page_line //{
 	|	PAGE nodeid SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@1.end(),string("page number expected"));
+			$$ = NULL;
 		}
 	|	PAGE number SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@2.end(),string("nodeid expected"));
+			$$ = NULL;
 		}
 	|	PAGE error nodeid SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@1,string("unexpected token, page number expected"));
+			$$ = NULL;
 		}
 	|	PAGE number error SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@2.end(),string("unexpected token, nodeid expected"));
+			$$ = NULL;
 		}
 	;
 //}
