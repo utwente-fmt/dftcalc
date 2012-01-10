@@ -14,6 +14,7 @@ public:
 		static const ConsoleWriter::Color Warning;
 		static const ConsoleWriter::Color Notify;
 		static const ConsoleWriter::Color Notify2;
+		static const ConsoleWriter::Color NotifyH;
 		static const ConsoleWriter::Color Action;
 		static const ConsoleWriter::Color Proper;
 		static const ConsoleWriter::Color Message;
