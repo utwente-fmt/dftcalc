@@ -1,6 +1,7 @@
 #include "DFTreeBCGNodeBuilder.h"
 #include "DFTreeEXPBuilder.h"
 #include "FileWriter.h"
+#include "dft2lnt.h"
 
 #include <map>
 
@@ -48,7 +49,7 @@ void DFT::DFTreeEXPBuilder::printSyncLine(const EXPSyncRule& rule, const vector<
 
 DFT::DFTreeEXPBuilder::DFTreeEXPBuilder(std::string root, std::string tmp, std::string nameBCG, std::string nameEXP, DFT::DFTree* dft, CompilerContext* cc):
 	root(root),
-	bcgRoot(root+DFT::DFTreeBCGNodeBuilder::BCGROOT+"/"),
+	bcgRoot(root+DFT2LNT::BCGSUBROOT+"/"),
 	tmp(tmp),
 	nameBCG(nameBCG),
 	nameEXP(nameEXP),

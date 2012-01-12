@@ -25,6 +25,9 @@ public:
 		}
 		return dft;
 	}
+	static const std::string LNTSUBROOT;
+	static const std::string BCGSUBROOT;
+
 };
 
 } //Namespace: DFT

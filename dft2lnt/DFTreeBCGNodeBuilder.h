@@ -10,6 +10,7 @@ class DFTreePrinter;
 
 #include "DFTree.h"
 #include "dft_parser.h"
+#include "dft2lnt.h"
 
 namespace DFT {
 
@@ -49,13 +50,10 @@ private:
 	int executeSVL(std::string root, std::string fileName);
 public:
 
-	static const std::string LNTROOT;
-	static const std::string BCGROOT;
-
 	DFTreeBCGNodeBuilder(std::string root, DFT::DFTree* dft, CompilerContext* cc):
 		root(root),
-		lntRoot(root+LNTROOT+"/"),
-		bcgRoot(root+BCGROOT+"/"),
+		lntRoot(root+DFT2LNT::LNTSUBROOT+"/"),
+		bcgRoot(root+DFT2LNT::BCGSUBROOT+"/"),
 		dft(dft),
 		cc(cc) {
 	}
