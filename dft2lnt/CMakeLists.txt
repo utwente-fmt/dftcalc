@@ -43,6 +43,7 @@ add_library(dft2lnt
 	FileWriter.cpp
 	ConsoleWriter.cpp
 	compiler.cpp
+	mrmc.cpp
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
 )
 
