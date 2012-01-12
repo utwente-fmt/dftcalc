@@ -445,7 +445,7 @@ int main(int argc, char** argv) {
 	compilerContext->notify("Validating AST...",VERBOSITY_FLOW);
 	compilerContext->flush();
 	int astValid = false;
-	{
+	if(ast) {
 		DFT::ASTValidator validator(ast,compilerContext);
 		astValid = validator.validate();
 		if(!astValid) {
