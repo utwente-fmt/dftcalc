@@ -154,8 +154,21 @@ int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out, const DFT::Nodes:
 }
 
 int DFT::DFTreeBCGNodeBuilder::generatePAnd(FileWriter& out, const DFT::Nodes::GatePAnd& gate) {
-	//int nr_parents = gate.getParents().size();
-	//int total = gate.getChildren().size();
+	int nr_parents = gate.getParents().size();
+	int total = gate.getChildren().size();
+	out << out.applyprefix << " * Generating PAnd(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
+	generateHeaderClose(out);
+
+	out << out.applyprefix << "module " << getFileForNode(gate) << "(PAND) is" << out.applypostfix;
+	out.indent();
+		out << out.applyprefix << "type NAT_ARRAY is array[1.." << total << "] of NAT end type" << out.applypostfix;
+		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_CHANNEL] is" << out.applypostfix;
+		out.indent();
+			out << out.applyprefix << "PAND [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, (NAT_ARRAY(0 of NAT)))" << out.applypostfix;
+		out.outdent();
+		out << out.applyprefix << "end process" << out.applypostfix;
+	out.outdent();
+	out << out.applyprefix << "end module" << out.applypostfix;
 	return 0;
 }
 
