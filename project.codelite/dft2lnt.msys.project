@@ -56,6 +56,13 @@
     <File Name="../dft2lnt/compiler.cpp"/>
     <File Name="../dft2lnt/compiler.h"/>
     <File Name="../dft2lnt/FileSystem.h"/>
+    <File Name="../dft2lnt/FileSystem.cpp"/>
+    <File Name="../dft2lnt/Shell.cpp"/>
+    <File Name="../dft2lnt/Shell.h"/>
+    <File Name="../dft2lnt/MessageFormatter.cpp"/>
+    <File Name="../dft2lnt/MessageFormatter.h"/>
+    <File Name="../dft2lnt/mrmc.cpp"/>
+    <File Name="../dft2lnt/mrmc.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="CMake">
     <File Name="../dft2lnt/CMakeLists.txt"/>
