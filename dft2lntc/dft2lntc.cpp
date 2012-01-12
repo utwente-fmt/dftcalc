@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
 
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"o:a:t:s:x:hvq-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"o:a:b:t:s:x:hvq-:")) >= 0 ) {
 		switch(c) {
 
 			// -o FILE
