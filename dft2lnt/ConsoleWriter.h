@@ -24,12 +24,11 @@ public:
 		}
 		int getColorCode() const { return color; }
 	};
-
+private:
 	std::ostream& out;
-
 	int kindOfStream;
-
 	std::stack<Color> colorStack;
+	bool ignoreColors;
 public:
 
 	ConsoleWriter(std::ostream& out);
@@ -106,6 +105,10 @@ public:
 	virtual ConsoleWriter& appendPostfix() {
 		append(postfix);
 		return *this;
+	}
+	
+	virtual void setIgnoreColors(bool ignoreColors) {
+		this->ignoreColors = ignoreColors;
 	}
 };
 

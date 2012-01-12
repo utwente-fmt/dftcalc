@@ -29,7 +29,8 @@ const ConsoleWriter::Color ConsoleWriter::Color::Reset  (0);
 
 ConsoleWriter::ConsoleWriter(std::ostream& out):
 	FileWriter(),
-	out(out) {
+	out(out),
+	ignoreColors(false) {
 		
 	if(out==std::cout) {
 		kindOfStream = 1;
@@ -52,6 +53,7 @@ ConsoleWriter::ConsoleWriter(std::ostream& out):
 }
 
 ConsoleWriter& ConsoleWriter::operator<<(ConsoleWriter::Color color) {
+	if(ignoreColors) { return * this; }
 	#ifdef WIN32
 		if(sss.size() == 1 && kindOfStream > 0) {
 			HANDLE hConsole = GetStdHandle(kindOfStream==1?STD_OUTPUT_HANDLE:STD_ERROR_HANDLE);
