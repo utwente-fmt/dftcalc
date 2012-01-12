@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CodeLite_Project Name="dftcalc" InternalType="Console">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00030001N00000000000000000001N0005Debug0000000000000001N0007Release000000000000]]>
+    </Plugin>
+  </Plugins>
+  <Description/>
+  <Dependencies/>
+  <VirtualDirectory Name="src">
+    <File Name="../dftcalc/dftcalc.cpp"/>
+    <File Name="../dftcalc/dftcalc.h"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="CMake">
+    <File Name="../dftcalc/CMakeLists.txt"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="Content">
+    <File Name="../build/Content/simple.dft"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="generated">
+    <VirtualDirectory Name="Debug">
+      <File Name="../build/Debug/dftcalc/compiletime.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="Release">
+      <File Name="../build/Release/dftcalc/compiletime.h"/>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
+  <Settings Type="Executable">
+    <GlobalSettings>
+      <Compiler Options="" C_Options="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="">
+        <LibraryPath Value="."/>
+      </Linker>
+      <ResourceCompiler Options=""/>
+    </GlobalSettings>
+    <Configuration Name="Debug" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="-g" C_Options="-g" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="$(ProjectPath)/../Build/$(ConfigurationName)/bin" Command="$(IntermediateDirectory)/$(ProjectName).exe" CommandArguments="-vvv" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[DFT2LNTROOT=D:\dft2lntroot]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild>
+        <Command Enabled="no">#cd</Command>
+        <Command Enabled="no">#echo "lol: $(ProjectPath)"</Command>
+        <Command Enabled="no">#echo "$(IntermediateDirectory)"</Command>
+        <Command Enabled="yes">cmake -E make_directory "build/Debug"</Command>
+        <Command Enabled="yes">cd "build/Debug" &amp;&amp; cmake -DCMAKE_BUILD_TYPE=Debug ../../ -G "MSYS Makefiles"</Command>
+        <Command Enabled="no">#cmake -DCMAKE_BUILD_TYPE=Release ../../ -G "MSYS Makefiles"</Command>
+      </PreBuild>
+      <PostBuild/>
+      <CustomBuild Enabled="yes">
+        <RebuildCommand>cd "Build/$(ConfigurationName)" &amp;&amp; make clean &amp;&amp; make -f $(ProjectName)/Makefile $(ProjectName)</RebuildCommand>
+        <CleanCommand>cd "Build/$(ConfigurationName)" &amp;&amp; make clean</CleanCommand>
+        <BuildCommand>cd "Build/$(ConfigurationName)" &amp;&amp; make -f $(ProjectName)/Makefile $(ProjectName) VERBOSE=1</BuildCommand>
+        <PreprocessFileCommand/>
+        <SingleFileCommand>cd "Build/$(ConfigurationName)" &amp;&amp; make -f $(ProjectName)/Makefile $(CurrentFileName).obj</SingleFileCommand>
+        <MakefileGenerationCommand>cmake -E make_directory "Build/$(ConfigurationName)" &amp;&amp; cd "Build/$(ConfigurationName)" &amp;&amp; cmake -G "MSYS Makefiles" -DCMAKE_BUILD_TYPE=$(ConfigurationName) ../../</MakefileGenerationCommand>
+        <ThirdPartyToolName>Other</ThirdPartyToolName>
+        <WorkingDirectory>../</WorkingDirectory>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths>../dftcalc/
+../dft2lnt/dftnodes/
+../dft2lnt/</SearchPaths>
+      </Completion>
+    </Configuration>
+    <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="" C_Options="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="-O2" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName).exe" IntermediateDirectory="$(ProjectPath)/../Build/$(ConfigurationName)/bin" Command="$(IntermediateDirectory)/$(ProjectName).exe" CommandArguments="-a- ../../Content/simple.dft -o../../Content/a -x-" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[DFT2LNTROOT=D:\dft2lntroot]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild>
+        <Command Enabled="no">#cd</Command>
+        <Command Enabled="no">#echo "lol: $(ProjectPath)"</Command>
+        <Command Enabled="no">#echo "$(IntermediateDirectory)"</Command>
+        <Command Enabled="yes">cmake -E make_directory "build/Release"</Command>
+        <Command Enabled="yes">cd "build/Release" &amp;&amp; cmake -DCMAKE_BUILD_TYPE=Release ../../ -G "MSYS Makefiles"</Command>
+        <Command Enabled="no">#cmake -DCMAKE_BUILD_TYPE=Release ../../ -G "MSYS Makefiles"</Command>
+      </PreBuild>
+      <PostBuild/>
+      <CustomBuild Enabled="yes">
+        <RebuildCommand>cd "Build/$(ConfigurationName)" &amp;&amp; make clean &amp;&amp; make -f $(ProjectName)/Makefile $(ProjectName)</RebuildCommand>
+        <CleanCommand>cd "Build/$(ConfigurationName)" &amp;&amp; make clean</CleanCommand>
+        <BuildCommand>cd "Build/$(ConfigurationName)" &amp;&amp; make -f $(ProjectName)/Makefile $(ProjectName) VERBOSE=1</BuildCommand>
+        <PreprocessFileCommand/>
+        <SingleFileCommand>cd "Build/$(ConfigurationName)" &amp;&amp; make -f $(ProjectName)/Makefile $(CurrentFileName).obj</SingleFileCommand>
+        <MakefileGenerationCommand>cmake -E make_directory "Build/$(ConfigurationName)" &amp;&amp; cd "Build/$(ConfigurationName)" &amp;&amp; cmake -G "MSYS Makefiles" -DCMAKE_BUILD_TYPE=$(ConfigurationName) ../../</MakefileGenerationCommand>
+        <ThirdPartyToolName>Other</ThirdPartyToolName>
+        <WorkingDirectory>../</WorkingDirectory>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths>../dft2lnt
+../dftcalc</SearchPaths>
+      </Completion>
+    </Configuration>
+  </Settings>
+</CodeLite_Project>
