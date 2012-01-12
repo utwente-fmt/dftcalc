@@ -106,17 +106,17 @@ std::string getRoot(CompilerContext* compilerContext) {
 		goto end;
 	}
 	
-	if(stat((dft2lntRoot+DFT::DFTreeBCGNodeBuilder::LNTROOT).c_str(),&rootStat)) {
-		if(dir_make((dft2lntRoot+DFT::DFTreeBCGNodeBuilder::LNTROOT).c_str(),0755)) {
-			compilerContext->reportError("Could not create LNT Nodes directory (`" + dft2lntRoot+DFT::DFTreeBCGNodeBuilder::LNTROOT + "')");
+	if(stat((dft2lntRoot+DFT2LNT::LNTSUBROOT).c_str(),&rootStat)) {
+		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::LNTSUBROOT,0755)) {
+			compilerContext->reportError("Could not create LNT Nodes directory (`" + dft2lntRoot+DFT2LNT::LNTSUBROOT + "')");
 			dft2lntRoot = "";
 			goto end;
 		}
 	}
 
-	if(stat((dft2lntRoot+DFT::DFTreeBCGNodeBuilder::BCGROOT).c_str(),&rootStat)) {
-		if(dir_make((dft2lntRoot+DFT::DFTreeBCGNodeBuilder::BCGROOT).c_str(),0755)) {
-			compilerContext->reportError("Could not create BCG Nodes directory (`" + dft2lntRoot+DFT::DFTreeBCGNodeBuilder::BCGROOT + "')");
+	if(stat((dft2lntRoot+DFT2LNT::BCGSUBROOT).c_str(),&rootStat)) {
+		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::BCGSUBROOT,0755)) {
+			compilerContext->reportError("Could not create BCG Nodes directory (`" + dft2lntRoot+DFT2LNT::BCGSUBROOT + "')");
 			dft2lntRoot = "";
 			goto end;
 		}
