@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
 	int optimize             = 1;
 	int execute              = 0;
 	int stopAfterPreproc     = 0;
-	int useColoredMessages   = 0;
+	int useColoredMessages   = 1;
 	int verbosity            = 0;
 	int printHelp            = 0;
 	int printVersion         = 0;
