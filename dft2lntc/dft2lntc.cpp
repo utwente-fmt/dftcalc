@@ -13,23 +13,12 @@
 #include <io.h>
 #endif
 
-#ifdef WIN32
-	int dir_make(const char* path, int mode) {
-		(void)mode;
-		return mkdir(path);
-	}
-#else
-	int dir_make(const char* path, __mode_t mode) {
-		return mkdir(path,mode);
-	}
-#endif
-
 #include "dft_parser.h"
 #include "dft_ast.h"
 #include "ASTPrinter.h"
 #include "ASTValidator.h"
 #include "ASTDFTBuilder.h"
-#include "realpath.h"
+#include "FileSystem.h"
 #include "dft2lnt.h"
 #include "DFTree.h"
 #include "DFTreeValidator.h"
@@ -331,11 +320,25 @@ int main(int argc, char** argv) {
 		
 		// Test all the files that need to be written if they are writable
 		bool ok = true;
-		ok = outputSVLFileName=="" ? ok : compilerContext->testWritable(outputSVLFileName) ? ok : false;
-		ok = outputEXPFileName=="" ? ok : compilerContext->testWritable(outputEXPFileName) ? ok : false;
-		ok = outputDFTFileName=="" ? ok : compilerContext->testWritable(outputDFTFileName) ? ok : false;
-		ok = outputASTFileName=="" ? ok : compilerContext->testWritable(outputASTFileName) ? ok : false;
+		if(!outputSVLFileName.empty() && !compilerContext->testWritable(outputSVLFileName)) {
+			compilerContext->reportError("SVL output file is not writable: `" + outputSVLFileName + "'");
+			ok = false;
+		}
+		if(!outputEXPFileName.empty() && !compilerContext->testWritable(outputEXPFileName)) {
+			compilerContext->reportError("EXP output file is not writable: `" + outputEXPFileName + "'");
+			ok = false;
+		}
+		if(!outputDFTFileName.empty() && !compilerContext->testWritable(outputDFTFileName)) {
+			compilerContext->reportError("DFT output file is not writable: `" + outputDFTFileName + "'");
+			ok = false;
+		}
+		if(!outputASTFileName.empty() && !compilerContext->testWritable(outputASTFileName)) {
+			compilerContext->reportError("AST output file is not writable: `" + outputASTFileName + "'");
+			ok = false;
+		}
+		compilerContext->flush();
 		if(!ok) {
+			return 1;
 		}
 	}
 
