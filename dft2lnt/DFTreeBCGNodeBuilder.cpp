@@ -87,8 +87,24 @@ int DFT::DFTreeBCGNodeBuilder::lntIsValid(std::string lntFilePath) {
 
 
 int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::GateAnd& gate) {
-	//int nr_parents = gate.getParents().size();
-	//int total = gate.getChildren().size();
+	int nr_parents = gate.getParents().size();
+	int total = gate.getChildren().size();
+	out << out.applyprefix << " * Generating Or(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
+	generateHeaderClose(out);
+
+	out << out.applyprefix << "module " << getFileForNode(gate) << "(VOTING) is" << out.applypostfix;
+	out.indent();
+
+		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
+
+		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
+		out.indent();
+			out << out.applyprefix << "VOTING [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+		out.outdent();
+		out << out.applyprefix << "end process" << out.applypostfix;
+	out.outdent();
+	out << out.applyprefix << "end module" << out.applypostfix;
+
 	return 0;
 }
 
