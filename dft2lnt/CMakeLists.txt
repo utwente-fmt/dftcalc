@@ -44,6 +44,7 @@ add_library(dft2lnt
 	ConsoleWriter.cpp
 	compiler.cpp
 	MessageFormatter.cpp
+	Shell.cpp
 	FileSystem.cpp
 	mrmc.cpp
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
