@@ -44,33 +44,46 @@ FILE* pp_outputFile = stdout;
 const int VERBOSITY_FLOW = 1;
 const int VERBOSITY_DATA = 1;
 
-void print_help() {
-	printf("dft2lnt [INPUTFILE.dft] [options]\n");
-	printf(
-"Compiles the inputfile to EXP and SVL script. If no inputfile was specified, stdin is used.\n"
-"If no outputfile was specified, 'a.svl' and 'a.exp' are used.\n"
-"\n"
-"Options:\n"
-"  -a FILE     Output AST to file. '-' for stdout.\n"
-"  -t FILE     Output DFT to file. '-' for stdout.\n"
-"  -h, --help  Show this help.\n"
-"  -o FILE     Output EXP to <FILE>.exp and SVL to <FILE>.svl.\n"
-"  -s FILE     Output EXP to file. '-' for stdout. Overrules -o.\n"
-"  -x FILE     Output SVL to file. '-' for stdout. Overrules -o.\n"
-"  -b FILE     Output of SVL to this BCG file.\n"
-"  --color     Use colored messages.\n"
-	);
+void print_help(CompilerContext* compilerContext) {
+	
+	compilerContext->notify ("dft2lnt [INPUTFILE.dft] [options]");
+	compilerContext->message("  Compiles the inputfile to EXP and SVL script. If no inputfile was specified,");
+	compilerContext->message("  stdin is used. If no outputfile was specified, 'a.svl' and 'a.exp' are used.");
+	compilerContext->message("");
+	compilerContext->notify ("General Options:");
+	compilerContext->message("  -h, --help      Show this help.");
+	compilerContext->message("  --color         Use colored messages.");
+	compilerContext->message("  --no-color      Do not use colored messages.");
+	compilerContext->message("  --version       Print version info and quit.");
+	compilerContext->message("");
+	compilerContext->notify ("Debug Options:");
+	compilerContext->message("  -a FILE         Output AST to file. '-' for stdout.");
+	compilerContext->message("  -t FILE         Output DFT to file. '-' for stdout.");
+	compilerContext->message("  --verbose=x     Set verbosity to x, -1 <= x <= 5.");
+	compilerContext->message("  -v, --verbose   Increase verbosity. Up to 5 levels.");
+	compilerContext->message("  -q              Decrease verbosity.");
+	compilerContext->message("");
+	compilerContext->notify ("Output Options:");
+	compilerContext->message("  -o FILE         Output EXP to <FILE>.exp and SVL to <FILE>.svl.");
+	compilerContext->message("  -x FILE         Output EXP to file. '-' for stdout. Overrules -o.");
+	compilerContext->message("  -s FILE         Output SVL to file. '-' for stdout. Overrules -o.");
+	compilerContext->message("  -b FILE         Output of SVL to this BCG file. Overrules -o.");
+	compilerContext->flush();
 }
 
-void print_version() {
-	printf("dft2lntc");
-	printf("  built on %s\n",COMPILETIME_DATE);
-	printf("  git revision `%s'",COMPILETIME_GITREV);
-	if(COMPILETIME_GITCHANGED)
-		printf(" + uncommited changes\n");
-	else
-		printf("\n");
-	printf("Copyright statement.\n");
+void print_version(CompilerContext* compilerContext) {
+	
+	compilerContext->notify ("dft2lntc");
+	compilerContext->message(string("  built on ") + COMPILETIME_DATE);
+	{
+		FileWriter out;
+		out << string("  git revision `") + COMPILETIME_GITREV + "'";
+		if(COMPILETIME_GITCHANGED)
+			out << " + uncommited changes";
+		compilerContext->message(out.toString());
+	}
+	compilerContext->message("  ** Copyright statement. **");
+	compilerContext->flush();
 }
 
 std::string getRoot(CompilerContext* compilerContext) {
@@ -150,6 +163,8 @@ int main(int argc, char** argv) {
 	int stopAfterPreproc     = 0;
 	int useColoredMessages   = 0;
 	int verbosity            = 0;
+	int printHelp            = 0;
+	int printVersion         = 0;
 
 	/* Parse command line arguments */
 	char c;
@@ -224,8 +239,7 @@ int main(int argc, char** argv) {
 
 			// -h
 			case 'h':
-				print_help();
-				exit(0);
+				printHelp = true;
 			
 			// -v
 			case 'v':
@@ -240,11 +254,9 @@ int main(int argc, char** argv) {
 			// --
 			case '-':
 				if(!strcmp("help",optarg)) {
-					print_help();
-					exit(0);
+					printHelp = true;
 				} else if(!strcmp("version",optarg)) {
-					print_version();
-					exit(0);
+					printVersion = true;
 				} else if(!strcmp("color",optarg)) {
 					useColoredMessages = true;
 				} else if(!strcmp("verbose",optarg)) {
@@ -268,6 +280,16 @@ int main(int argc, char** argv) {
 	CompilerContext* compilerContext = new CompilerContext(std::cerr);
 	compilerContext->useColoredMessages(useColoredMessages);
 	compilerContext->setVerbosity(verbosity);
+
+	/* Print help / version if requested and quit */
+	if(printHelp) {
+		print_help(compilerContext);
+		exit(0);
+	}
+	if(printVersion) {
+		print_version(compilerContext);
+		exit(0);
+	}
 
 	/* Parse command line arguments without a -X.
 	 * These specify the input files. Currently it will only allow
