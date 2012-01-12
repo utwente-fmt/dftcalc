@@ -5,6 +5,7 @@
 #include "DFTree.h"
 #include "ConsoleWriter.h"
 #include "compiler.h"
+#include "mrmc.h"
 
 namespace DFT {
 
