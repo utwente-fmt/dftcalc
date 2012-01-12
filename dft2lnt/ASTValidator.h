@@ -45,6 +45,9 @@ public:
 	 * constructor. The definedNodes member will be overridden.
 	 */
 	void buildDefinedNodesList() {
+
+		// Bail if AST not set
+		if(!ast) return;
 		
 		// Clear the list
 		definedNodes.clear();
@@ -95,13 +98,16 @@ public:
 			}
 		}
 	}
-
+	
 	/**
 	 * Starts the validation process of the AST specified in the
 	 * constructor. Returns whether the AST is deemed valid or not.
 	 * Returns true if it is valid, false otherewise.
 	 */
 	int validate() {
+		
+		// Invalid if AST not set
+		if(!ast) return false;
 		
 		buildDefinedNodesList();
 		
