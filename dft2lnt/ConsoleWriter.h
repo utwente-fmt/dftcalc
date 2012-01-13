@@ -3,6 +3,10 @@
 
 #include "FileWriter.h"
 
+/**
+ * The ConsoleWriter is a FileWriter with support to colour the output if the
+ * specified output stream is std::cout or std::cerr.
+ */
 class ConsoleWriter: public FileWriter {
 public:
 	class Color {
@@ -31,13 +35,26 @@ private:
 	bool ignoreColors;
 public:
 
+	/**
+	 * Creates a new ConsoleWriter object.
+	 * @param out The stream to output to.
+	 */
 	ConsoleWriter(std::ostream& out);
 
+	/**
+	 * Returns the topmost stream on the stack stream.
+	 */
 	virtual ostream& ss() {
 		if(sss.size()==1) return out;
 		return *sss.top();
 	}
 
+	/**
+	 * Stream a Color object. The next object streamed will be of the specified
+	 * colour. Often followed by push().
+	 * @param color The Color the next streamed object will have.
+	 * @return The Conwo
+	 */
 	virtual ConsoleWriter& operator<<(ConsoleWriter::Color color);
 
 	virtual ConsoleWriter& appendLine(const string& s) {
