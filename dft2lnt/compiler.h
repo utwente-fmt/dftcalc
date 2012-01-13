@@ -21,10 +21,17 @@ typedef struct FileContext {
 	std::string filename;
 	Location loc;
 	
+	/**
+	 * Creates a new FileContext object.
+	 */
 	FileContext():
 		fileHandle(NULL),
 		filename("") {
 	}
+
+	/**
+	 * Creates a new FileContext object with the specified settings.
+	 */
 	FileContext(FILE* fileHandle, std::string& filename, Location& loc):
 		fileHandle(fileHandle),
 		filename(filename),
@@ -98,6 +105,12 @@ public:
 		return fileContext[i];
 	}
 	
+	/**
+	 * Tests if the specified file is allowed to be written to.
+	 * If using a relative path, take the working directory into account.
+	 * @param fileName The path+name of the file to test.
+	 * @returns true: writable, false: not writable.
+	 */
 	virtual bool testWritable(std::string fileName);
 
 };
