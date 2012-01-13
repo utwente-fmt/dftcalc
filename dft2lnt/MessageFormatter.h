@@ -146,14 +146,49 @@ public:
 	 */
 	virtual void reportWarning(const std::string& str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
-	virtual void reportActionAt(Location loc, const std::string&, const int& verbosityLevel = VERBOSITY_DEFAULT);
-	virtual void reportAction(const std::string&, const int& verbosityLevel = VERBOSITY_DEFAULT);
+	/**
+	 * Report the specified action at the specified location.
+	 * The output format is:  > <action>
+	 * @param loc The location (file, line number, etc) where the error
+	 *            originated from.
+	 * @param str The action string to report.
+	 */
+	virtual void reportActionAt(Location loc, const std::string& str, const int& verbosityLevel = VERBOSITY_DEFAULT);
+
+	/**
+	 * Report the specified action, without a location.
+	 * The output format is:  > <action>
+	 * @param str The action string to report.
+	 */
+	virtual void reportAction(const std::string& str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 	
+	/**
+	 * Report the specified filename and file contents, without a location.
+	 * The output format is:  > <filename>:\n<contents>\n
+	 * @param fileName The fileName to report.
+	 * @param contents The contents to report.
+	 */
 	virtual void reportFile(const std::string& fileName, const std::string& contents, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
+	/**
+	 * Report the specified success string, without a location.
+	 * The output format is:  o <success>
+	 * @param str The success string to report.
+	 */
 	virtual void reportSuccess(const std::string&  str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
+	/**
+	 * Report the specified notification string, without a location.
+	 * The output format is: :: <notification>
+	 * @param str The notification string to report.
+	 */
 	virtual void notify(const std::string& str, const int& verbosityLevel = VERBOSITY_DEFAULT);
+
+	/**
+	 * Report the specified notification string, without a location.
+	 * The output format is: :: <notification>
+	 * @param str The notification string to report.
+	 */
 	virtual void notifyHighlighted(const std::string& str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 
 	virtual void message(const std::string& str, const int& verbosityLevel = VERBOSITY_DEFAULT);
@@ -162,24 +197,55 @@ public:
 	
 	virtual void messageAt(Location loc, const std::string& str, const MessageType& mType, const int& verbosityLevel = VERBOSITY_DEFAULT);
 	
+	/**
+	 * Flush all pending messages to the output.
+	 */
 	virtual void flush();
 	
+	/**
+	 * Set whether or not to use coloured messages.
+	 * @param useColoredMessages true/false: whether or not to use coloured messages.
+	 */
 	virtual void useColoredMessages(bool useColoredMessages) {
 		m_useColoredMessages = useColoredMessages;
 		consoleWriter.setIgnoreColors(!useColoredMessages);
 	}
+	
+	/**
+	 * Returns whether or not this MessageFormatter is using coloured messages.
+	 * @return Whether or not this MessageFormatter is using coloured messages.
+	 */
 	virtual const bool& usingColoredMessaged() const { return m_useColoredMessages; }
 
+	/**
+	 * Displays the number of errors and warnings gathered until now.
+	 * Does not reset anything.
+	 */
 	virtual void reportErrors(const int& verbosityLevel = VERBOSITY_DEFAULT);
 
+	/**
+	 * Returns the set level of verbosity.
+	 * @return The set level of verbosity.
+	 */
 	virtual const int& getVerbosity() const {
 		return verbosity;
 	}
 	
+	/**
+	 * Sets the level of verbosity.
+	 * Messages following this call will NOT be printed if their specified
+	 * verbosity if higher than this level of verbosity.
+	 * @param verbosity The minimum verbosity level messages should have to be printed.
+	 */
 	virtual void setVerbosity(const int& verbosity) {
 		this->verbosity = verbosity;
 	}
 	
+	/**
+	 * Set whether or not to use auto flush.
+	 * When autoflush is enabled: a flush is performed after each message.
+	 * @param autoFlush: true/false: whether or not to use auto flush.
+	 */
 	virtual void setAutoFlush(bool autoFlush) {
 		m_autoFlush = autoFlush;
 	}
