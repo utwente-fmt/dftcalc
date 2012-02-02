@@ -396,7 +396,8 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 							// This is not enough, because the other way
 							// around also has to be added: the other node
 							// wants to listen to Activates of the THIS node
-							// as well.
+							// as well. But ONLY in the case that the other
+							// node uses dynamic activation as well.
 							
 							// First, we look up the sending Node of the
 							// current activation rule...
@@ -415,8 +416,10 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 							// new rule we create for the THIS node, specifying
 							// the other node wants to listen to activates of
 							// the THIS node.
-							assert( (otherNodeID < otherRuleA->label.size()) && "The other rule sync should have a sending process");
-							ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(otherNodeID,syncActivate(otherLocalNodeID,false)) );
+							if(getNodeWithID(otherNodeID)->usesDynamicActivation()) {
+								assert( (otherNodeID < otherRuleA->label.size()) && "The other rule sync should have a sending process");
+								ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(otherNodeID,syncActivate(otherLocalNodeID,false)) );
+							}
 							
 							// TODO: primary is a special case??????
 						} else {
