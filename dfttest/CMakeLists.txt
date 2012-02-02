@@ -1,7 +1,7 @@
 ## The DFT2LNT Compiler project
-project (dft2lntc)
-set (dft2lntc_VERSION_MAJOR 0)
-set (dft2lntc_VERSION_MINOR 5)
+project (dfttest)
+set (dfttest_VERSION_MAJOR 0)
+set (dfttest_VERSION_MINOR 5)
 
 ## Not sure if needed
 cmake_minimum_required (VERSION 2.6)
@@ -12,42 +12,50 @@ add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS )
 add_definitions(-std=gnu++0x)
 
 ## Include source directory, the build directory (for generated files) and the dft2lnt library path
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../dft2lnt)
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../dft2lnt ${CMAKE_CURRENT_SOURCE_DIR}/../yaml-cpp/include ${CMAKE_CURRENT_SOURCE_DIR}/../pcre ${CMAKE_CURRENT_BINARY_DIR}/../pcre/)
 
 ## Link directories
 #link_directories(${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt)
 
 ## Specify the executable and its sources
-add_executable(dft2lntc
-	dft2lntc.cpp
+add_executable(dfttest
+	dfttest.cpp
+	test.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/compiletime.h
 )
 
 ## Depends on:
 ##   - dft2lnt (libdft2lnt.a)
-add_dependencies(dft2lntc dft2lnt yaml-cpp)
-
+add_dependencies(dfttest dft2lntc yaml-cpp)
 
 ## Link with:
 ##   - libdft2lnt.a
-target_link_libraries(dft2lntc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a)
+target_link_libraries(dfttest
+	${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a
+	${CMAKE_CURRENT_BINARY_DIR}/../yaml-cpp/libyaml-cpp.a
+#	${CMAKE_CURRENT_BINARY_DIR}/../pcre/libpcrecpp.a
+	)
+
+if(UNIX AND NOT APPLE AND NOT WIN32)
+	target_link_libraries(dfttest rt)
+endif()
 
 ## POST_BUILD: copy the executable to the bin/ folder
-GET_TARGET_PROPERTY(BIN_LOCATION   dft2lntc LOCATION)
-SET(NEW_LIB_NAME ${CMAKE_CURRENT_BINARY_DIR}/../bin/dft2lntc${CMAKE_EXECUTABLE_SUFFIX})
+GET_TARGET_PROPERTY(BIN_LOCATION   dfttest LOCATION)
+SET(NEW_LIB_NAME ${CMAKE_CURRENT_BINARY_DIR}/../bin/dfttest${CMAKE_EXECUTABLE_SUFFIX})
 ADD_CUSTOM_COMMAND(
-  TARGET dft2lntc
+  TARGET dfttest
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy ${BIN_LOCATION} ${NEW_LIB_NAME}
 )
 
 ## Installation
-install (TARGETS dft2lntc DESTINATION bin)
+install (TARGETS dfttest DESTINATION bin)
 
 # Generate compile time information
 add_custom_command(
 	OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/compiletime.h 
-#	TARGET dft2lntc
+#	TARGET dfttest
 #	PRE_BUILD
 	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
 	COMMAND ${CMAKE_COMMAND} -DCMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}

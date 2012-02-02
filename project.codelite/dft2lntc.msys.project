@@ -9,8 +9,6 @@
   <Dependencies/>
   <VirtualDirectory Name="src">
     <File Name="../dft2lntc/dft2lntc.cpp"/>
-    <File Name="../dft2lntc/realpath.c"/>
-    <File Name="../dft2lntc/realpath.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="CMake">
     <File Name="../dft2lntc/CMakeLists.txt"/>
@@ -44,7 +42,7 @@
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="$(ProjectPath)/../Build/$(ConfigurationName)/bin" Command="$(IntermediateDirectory)/$(ProjectName).exe" CommandArguments="-a- ../../Content/simple.dft -o../../Content/a" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="$(ProjectPath)/../Build/$(ConfigurationName)/bin" Command="$(IntermediateDirectory)/$(ProjectName).exe" CommandArguments="-a- ../../Content/simple.dft -o../../Content/a -t-" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[DFT2LNTROOT=D:\dft2lntroot]]>
       </Environment>

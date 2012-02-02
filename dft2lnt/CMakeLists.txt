@@ -47,6 +47,7 @@ add_library(dft2lnt
 	MessageFormatter.cpp
 	Shell.cpp
 	FileSystem.cpp
+	System.cpp
 	mrmc.cpp
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
 )
@@ -56,5 +57,5 @@ if(UNIX AND NOT APPLE AND NOT WIN32)
 endif()
 
 ## Installation
-install (TARGETS dft2lnt DESTINATION bin)
-install (FILES compiler.h DESTINATION include)
+install (TARGETS dft2lnt DESTINATION lib)
+install (FILES dft2lnt.h DESTINATION include/dft2lnt)

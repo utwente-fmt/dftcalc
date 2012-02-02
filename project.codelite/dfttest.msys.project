@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<CodeLite_Project Name="dft2lnt" InternalType="Library">
+<CodeLite_Project Name="dfttest" InternalType="Console">
   <Plugins>
     <Plugin Name="qmake">
       <![CDATA[00030001N00000000000000000001N0005Debug0000000000000001N0007Release000000000000]]>
@@ -8,70 +8,25 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
-    <File Name="../dft2lnt/dft_parser.h"/>
-    <File Name="../dft2lnt/dft_types.h"/>
-    <File Name="../dft2lnt/lexer.l.lpp"/>
-    <File Name="../dft2lnt/dft2lnt.cpp"/>
-    <File Name="../dft2lnt/dft2lnt.h"/>
-    <File Name="../dft2lnt/parser.y.ypp"/>
-    <File Name="../dft2lnt/dft_parser.cpp"/>
-    <VirtualDirectory Name="dftnodes">
-      <File Name="../dft2lnt/dftnodes/Gate.h"/>
-      <File Name="../dft2lnt/dftnodes/GateAnd.h"/>
-      <File Name="../dft2lnt/dftnodes/Node.h"/>
-      <File Name="../dft2lnt/dftnodes/nodes.h"/>
-      <File Name="../dft2lnt/dftnodes/BasicEvent.h"/>
-      <File Name="../dft2lnt/dftnodes/BasicEvent.cpp"/>
-      <File Name="../dft2lnt/dftnodes/GateVoting.h"/>
-      <File Name="../dft2lnt/dftnodes/Node.cpp"/>
-      <File Name="../dft2lnt/dftnodes/GateWSP.h"/>
-      <File Name="../dft2lnt/dftnodes/GateOr.h"/>
-      <File Name="../dft2lnt/dftnodes/GatePAnd.h"/>
-      <File Name="../dft2lnt/dftnodes/GateFDEP.h"/>
-    </VirtualDirectory>
-    <File Name="../dft2lnt/DFTree.h"/>
-    <File Name="../dft2lnt/DFTree.cpp"/>
-    <File Name="../dft2lnt/DFTreeValidator.cpp"/>
-    <File Name="../dft2lnt/DFTreeValidator.h"/>
-    <File Name="../dft2lnt/dft_ast.h"/>
-    <File Name="../dft2lnt/ASTDFTBuilder.h"/>
-    <File Name="../dft2lnt/ASTValidator.h"/>
-    <File Name="../dft2lnt/ASTVisitor.h"/>
-    <File Name="../dft2lnt/ASTLNTBuilder.h"/>
-    <File Name="../dft2lnt/DFTreePrinter.cpp"/>
-    <File Name="../dft2lnt/DFTreePrinter.h"/>
-    <File Name="../dft2lnt/DFTreeSVLAndLNTBuilder.h"/>
-    <File Name="../dft2lnt/DFTreeSVLAndLNTBuilder.cpp"/>
-    <File Name="../dft2lnt/FileWriter.h"/>
-    <File Name="../dft2lnt/dft_parser_location.h"/>
-    <File Name="../dft2lnt/files.cpp"/>
-    <File Name="../dft2lnt/files.h"/>
-    <File Name="../dft2lnt/DFTreeEXPBuilder.cpp"/>
-    <File Name="../dft2lnt/DFTreeEXPBuilder.h"/>
-    <File Name="../dft2lnt/FileWriter.cpp"/>
-    <File Name="../dft2lnt/ConsoleWriter.cpp"/>
-    <File Name="../dft2lnt/ConsoleWriter.h"/>
-    <File Name="../dft2lnt/ASTPrinter.h"/>
-    <File Name="../dft2lnt/DFTreeBCGNodeBuilder.cpp"/>
-    <File Name="../dft2lnt/DFTreeBCGNodeBuilder.h"/>
-    <File Name="../dft2lnt/compiler.cpp"/>
-    <File Name="../dft2lnt/compiler.h"/>
-    <File Name="../dft2lnt/FileSystem.h"/>
-    <File Name="../dft2lnt/FileSystem.cpp"/>
-    <File Name="../dft2lnt/Shell.cpp"/>
-    <File Name="../dft2lnt/Shell.h"/>
-    <File Name="../dft2lnt/MessageFormatter.cpp"/>
-    <File Name="../dft2lnt/MessageFormatter.h"/>
-    <File Name="../dft2lnt/mrmc.cpp"/>
-    <File Name="../dft2lnt/mrmc.h"/>
-    <File Name="../dft2lnt/System.cpp"/>
-    <File Name="../dft2lnt/System.h"/>
-    <File Name="../dft2lnt/yyheader.h"/>
+    <File Name="../dfttest/dfttest.cpp"/>
+    <File Name="../dfttest/dfttest.h"/>
+    <File Name="../dfttest/test.cpp"/>
+    <File Name="../dfttest/test.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="CMake">
-    <File Name="../dft2lnt/CMakeLists.txt"/>
+    <File Name="../dfttest/CMakeLists.txt"/>
   </VirtualDirectory>
-  <Settings Type="Dynamic Library">
+  <Dependencies Name="Release"/>
+  <VirtualDirectory Name="generated">
+    <VirtualDirectory Name="Debug">
+      <File Name="../build/Debug/dfttest/compiletime.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="Release">
+      <File Name="../build/Release/dfttest/compiletime.h"/>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <Dependencies Name="Debug"/>
+  <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="" C_Options="">
         <IncludePath Value="."/>
@@ -81,15 +36,15 @@
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>
-    <Configuration Name="Debug" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Debug" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-g" C_Options="-g" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
         <IncludePath Value="."/>
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(IntermediateDirectory)/$(ProjectName).a" IntermediateDirectory="$(ProjectPath)/../Build/$(ConfigurationName)/bin" Command="$(IntermediateDirectory)/dft2lntc.exe" CommandArguments="../../Content/simple.dft" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="$(ProjectPath)/../Build/$(ConfigurationName)/bin" Command="$(IntermediateDirectory)/$(ProjectName).exe" CommandArguments="and.test" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(ProjectPath)/../Build/Content/tests" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
-        <![CDATA[]]>
+        <![CDATA[DFT2LNTROOT=D:\dft2lntroot]]>
       </Environment>
       <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
         <PostConnectCommands/>
@@ -121,20 +76,22 @@
       <Completion>
         <ClangCmpFlags/>
         <ClangPP/>
-        <SearchPaths>../dft2lntc/
+        <SearchPaths>../dfttest/
 ../dft2lnt/dftnodes/
-../dft2lnt/</SearchPaths>
+../dft2lnt/
+../yaml-cpp/include/
+../pcre/</SearchPaths>
       </Completion>
     </Configuration>
-    <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="" C_Options="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
         <IncludePath Value="."/>
       </Compiler>
       <Linker Options="-O2" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(IntermediateDirectory)/$(ProjectName).a" IntermediateDirectory="$(ProjectPath)/../Build/$(ConfigurationName)/bin" Command="$(IntermediateDirectory)/dft2lntc.exe" CommandArguments="../../Content/simple.dft" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName).exe" IntermediateDirectory="$(ProjectPath)/../Build/$(ConfigurationName)/bin" Command="$(IntermediateDirectory)/$(ProjectName).exe" CommandArguments="-a- ../../Content/simple.dft -o../../Content/a -x-" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
-        <![CDATA[]]>
+        <![CDATA[DFT2LNTROOT=D:\dft2lntroot]]>
       </Environment>
       <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
         <PostConnectCommands/>
@@ -167,18 +124,9 @@
         <ClangCmpFlags/>
         <ClangPP/>
         <SearchPaths>../dft2lnt
-../dft2lntc</SearchPaths>
+../dft2lntc
+../dfttest/</SearchPaths>
       </Completion>
     </Configuration>
   </Settings>
-  <Dependencies Name="Debug"/>
-  <VirtualDirectory Name="generated">
-    <VirtualDirectory Name="Release"/>
-    <VirtualDirectory Name="Debug">
-      <File Name="../build/Debug/dft2lnt/lexer.l.cpp"/>
-      <File Name="../build/Debug/dft2lnt/lexer.l.h"/>
-      <File Name="../build/Debug/dft2lnt/parser.y.cpp"/>
-      <File Name="../build/Debug/dft2lnt/parser.y.hpp"/>
-    </VirtualDirectory>
-  </VirtualDirectory>
 </CodeLite_Project>

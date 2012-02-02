@@ -3,6 +3,7 @@
   <Project Name="dft2lntc" Path="dft2lntc.msys.project" Active="Yes"/>
   <Project Name="dft2lnt" Path="dft2lnt.msys.project" Active="No"/>
   <Project Name="dftcalc" Path="dftcalc.msys.project" Active="No"/>
+  <Project Name="dfttest" Path="dfttest.msys.project" Active="No"/>
   <Environment>
     <![CDATA[]]>
   </Environment>
@@ -11,11 +12,13 @@
       <Project Name="dft2lntc" ConfigName="Debug"/>
       <Project Name="dft2lnt" ConfigName="Debug"/>
       <Project Name="dftcalc" ConfigName="Debug"/>
+      <Project Name="dfttest" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Release" Selected="no">
       <Project Name="dft2lntc" ConfigName="Release"/>
       <Project Name="dft2lnt" ConfigName="Release"/>
       <Project Name="dftcalc" ConfigName="Release"/>
+      <Project Name="dfttest" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>
