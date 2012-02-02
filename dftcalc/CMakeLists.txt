@@ -32,6 +32,10 @@ add_dependencies(dftcalc dft2lntc)
 ##   - libdft2lnt.a
 target_link_libraries(dftcalc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a)
 
+if(UNIX AND NOT APPLE AND NOT WIN32)
+	target_link_libraries(dftcalc rt)
+endif()
+
 ## POST_BUILD: copy the executable to the bin/ folder
 GET_TARGET_PROPERTY(BIN_LOCATION   dftcalc LOCATION)
 SET(NEW_LIB_NAME ${CMAKE_CURRENT_BINARY_DIR}/../bin/dftcalc${CMAKE_EXECUTABLE_SUFFIX})

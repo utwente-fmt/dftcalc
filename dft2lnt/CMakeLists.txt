@@ -51,6 +51,10 @@ add_library(dft2lnt
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
 )
 
+if(UNIX AND NOT APPLE AND NOT WIN32)
+	target_link_libraries(dft2lnt rt)
+endif()
+
 ## Installation
 install (TARGETS dft2lnt DESTINATION bin)
 install (FILES compiler.h DESTINATION include)
