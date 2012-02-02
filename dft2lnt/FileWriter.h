@@ -63,18 +63,8 @@ public:
 	FileWriter(int indentation = 0, std::string prefix = "\t", std::string postfix = "\n"): indentation(indentation), prefix(prefix), postfix(postfix), applyprefix(""), applypostfix(postfix) {
 		sss.push(new stringstream());
 	}
-
-	/**
-	 * Creates a new FileWriter object with the default settings:
-	 * - indentation = 0;
-	 * - prefix = "\t";
-	 * - postfix = "\n".
-	 */
-	FileWriter(): indentation(0), prefix("\t"), postfix("\n"), applyprefix(""), applypostfix(postfix) {
-		sss.push(new stringstream());
-	}
 	
-	~FileWriter() {
+	virtual ~FileWriter() {
 		while(sss.size()>0) {
 			delete sss.top();
 			sss.pop();
@@ -233,6 +223,16 @@ public:
 	 */
 	virtual FileWriter& operator<<(double d) {
 		ss() << d;
+		return *this;
+	}
+
+	/**
+	 * Add the specified long double to the stream converted to a string.
+	 * Nothing will be prefixed or postfixed.
+	 * @param ld The double to add.
+	 */
+	virtual FileWriter& operator<<(long double ld) {
+		ss() << ld;
 		return *this;
 	}
 
