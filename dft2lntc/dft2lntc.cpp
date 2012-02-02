@@ -229,7 +229,8 @@ int main(int argc, char** argv) {
 			// -h
 			case 'h':
 				printHelp = true;
-			
+				break;
+				
 			// -v
 			case 'v':
 				++verbosity;
@@ -242,7 +243,7 @@ int main(int argc, char** argv) {
 
 			// --
 			case '-':
-				if(!strcmp("help",optarg)) {
+				if(!strncmp("help",optarg,4)) {
 					printHelp = true;
 				} else if(!strcmp("version",optarg)) {
 					printVersion = true;
@@ -418,7 +419,7 @@ int main(int argc, char** argv) {
 	Parser* parser = new Parser(inputFile,parserInputFilePath,compilerContext);
 	DFT::AST::ASTNodes* ast = parser->parse();
 	compilerContext->flush();
-	if(!ast) {
+	if(!ast || compilerContext->getErrors()>0) {
 		compilerContext->reportError("Syntax is incorrect");
 	} else {
 		compilerContext->reportAction("Syntax is correct",VERBOSITY_FLOW);
@@ -491,7 +492,7 @@ int main(int argc, char** argv) {
 		compilerContext->notify("Printing DFT...",VERBOSITY_FLOW);
 		compilerContext->flush();
 		DFT::DFTreePrinter printer(dft,compilerContext);
-		if(outputFileName!="") {
+		if(outputDFTFileName!="") {
 			std::ofstream dftFile (outputDFTFileName);
 			printer.print(dftFile);
 		} else {
