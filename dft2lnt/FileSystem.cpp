@@ -429,19 +429,24 @@ std::string* FileSystem::load(const File& file) {
 //	fclose(fp);
 	std::string* str = new std::string();
 	size_t filesize;
-
+	
 	std::ifstream fileStream (file.getFileRealPath());
-	filesize=fileStream.tellg();
-
-	str->reserve(filesize);
-
-	fileStream.seekg(0);
-	while (!fileStream.eof()) {
-		int c = fileStream.get();
-		*str += c;
+	if(fileStream.is_open()) {
+		filesize=fileStream.tellg();
+		
+		str->reserve(filesize);
+		
+		fileStream.seekg(0);
+		while (!fileStream.eof()) {
+			int c = fileStream.get();
+			*str += c;
+		}
+		str->resize((str->size()-1));
+		return str;
+	} else {
+		delete str;
+		return NULL;
 	}
-	str->resize((str->size()-1));
-	return str;
 }
 
 // ----------------------------------------
