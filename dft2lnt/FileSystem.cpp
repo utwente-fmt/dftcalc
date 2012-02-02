@@ -233,9 +233,15 @@ std::string FileSystem::getFileBase(const std::string& filePath) {
 void FileSystem::getFileBaseAndExtension(std::string& fileBase, std::string& fileExtension, const std::string& filePath) {
 	char* fp = strdup(filePath.c_str());
 	if(!fp) return;
-	char* fileName = basename(fp);
+	char* result = fp;
+	char* fileName = fp;
+	while (*result) {
+		if (*result++ == '/') {
+			fileName = result;
+		}
+	}
 	char* extension = NULL;
-	char* result = fileName;
+	result = fileName;
 	while (*result) {
 		if (*result++ == '.') {
 			extension = result;
