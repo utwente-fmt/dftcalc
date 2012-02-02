@@ -49,11 +49,9 @@ public:
 			gate = new DFT::Nodes::GateAnd(astgate->getLocation(), astgate->getName()->getString());
 			break;
 		case DFT::Nodes::GateHSPType:
-			break;
 		case DFT::Nodes::GateWSPType:
-			gate = new DFT::Nodes::GateWSP(astgate->getLocation(), astgate->getName()->getString());
-			break;
 		case DFT::Nodes::GateCSPType:
+			gate = new DFT::Nodes::GateWSP(astgate->getLocation(), astgate->getName()->getString());
 			break;
 		case DFT::Nodes::GatePAndType:
 			gate = new DFT::Nodes::GatePAnd(astgate->getLocation(), astgate->getName()->getString());
