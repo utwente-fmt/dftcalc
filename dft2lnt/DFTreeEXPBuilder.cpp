@@ -516,6 +516,8 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 			break;
 		}
 		case DFT::Nodes::GateCSPType: {
+			cc->reportErrorAt(node.getLocation(),"DFTreeEXPBuilder: unsupported gate: " + node.getTypeStr());
+			break;
 		}
 		case DFT::Nodes::GatePAndType: {
 			const DFT::Nodes::GatePAnd* g = static_cast<const DFT::Nodes::GatePAnd*>(&node);
@@ -523,6 +525,8 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 			break;
 		}
 		case DFT::Nodes::GateSeqType: {
+			cc->reportErrorAt(node.getLocation(),"DFTreeEXPBuilder: unsupported gate: " + node.getTypeStr());
+			break;
 		}
 		case DFT::Nodes::GateVotingType: {
 			const DFT::Nodes::GateVoting* g = static_cast<const DFT::Nodes::GateVoting*>(&node);
@@ -530,6 +534,9 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 			break;
 		}
 		case DFT::Nodes::GateFDEPType: {
+			const DFT::Nodes::GateFDEP* g = static_cast<const DFT::Nodes::GateFDEP*>(&node);
+			createSyncRuleGateFDEP(activationRules,failRules,*g,nodeID);
+			break;
 		}
 		case DFT::Nodes::GateTransferType: {
 			cc->reportErrorAt(node.getLocation(),"DFTreeEXPBuilder: unsupported gate: " + node.getTypeStr());
