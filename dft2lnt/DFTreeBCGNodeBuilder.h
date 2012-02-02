@@ -44,6 +44,7 @@ private:
 	int generateVoting(FileWriter& out, const DFT::Nodes::GateVoting& gate);
 	int generatePAnd(FileWriter& out, const DFT::Nodes::GatePAnd& gate);
 	int generateSpare(FileWriter& out, const DFT::Nodes::GateWSP& gate);
+	int generateFDEP(FileWriter& out, const DFT::Nodes::GateFDEP& gate);
 	int generateBE(FileWriter& out, const DFT::Nodes::BasicEvent& gate);
 
 	int generateSVLBuilder(FileWriter& out, std::string fileName);

@@ -140,7 +140,8 @@ public:
 public:
 	EXPSyncRule(const std::string& toLabel, bool hideToLabel=true):
 		toLabel(toLabel),
-		hideToLabel(hideToLabel) {
+		hideToLabel(hideToLabel),
+		syncOnNode(NULL) {
 	}
 	~EXPSyncRule() {
 	}
@@ -223,6 +224,10 @@ public:
 	 */
 	unsigned int getIDOfNode(const DFT::Nodes::Node& node) const;
 
+	int getLocalIDOfNode(const DFT::Nodes::Node* parent, const DFT::Nodes::Node* child) const;
+
+	const DFT::Nodes::Node* getNodeWithID(unsigned int id);
+
 	/**
 	 * Create a new EXPSyncItem instance reflecting an Activate action
 	 * based on the specified localNodeID and if this is the sendign action
@@ -251,6 +256,7 @@ public:
 	int createSyncRuleGateWSP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateWSP& node, unsigned int nodeID);
 	int createSyncRuleGatePAnd(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GatePAnd& node, unsigned int nodeID);
 	int createSyncRuleGateVoting(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateVoting& node, unsigned int nodeID);
+	int createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateFDEP& node, unsigned int nodeID);
 
 	/**
 	 * Generate synchronization rules for the Top Node.

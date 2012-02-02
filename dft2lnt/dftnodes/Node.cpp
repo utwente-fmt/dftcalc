@@ -10,6 +10,7 @@ namespace Nodes {
 	const std::string Node::GateWSPStr("spare");
 	const std::string Node::GatePAndStr("pand");
 	const std::string Node::GateVotingStr("voting");
+	const std::string Node::GateFDEPStr("fdep");
 	const std::string Node::UnknownStr("XXX");
 
 }

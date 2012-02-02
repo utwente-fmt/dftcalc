@@ -124,6 +124,24 @@ unsigned int DFT::DFTreeEXPBuilder::getIDOfNode(const DFT::Nodes::Node& node) co
 //	}
 }
 
+int DFT::DFTreeEXPBuilder::getLocalIDOfNode(const DFT::Nodes::Node* parent, const DFT::Nodes::Node* child) const {
+	if(parent->isGate()) {
+		const DFT::Nodes::Gate* gate = static_cast<const DFT::Nodes::Gate*>(parent);
+		int i=(int)gate->getChildren().size(); 
+		for(;i--;) {
+			if(gate->getChildren()[i]==child) {
+				return i;
+			}
+		}
+	}
+	return -1;
+}
+
+const DFT::Nodes::Node* DFT::DFTreeEXPBuilder::getNodeWithID(unsigned int id) {
+	assert(0 <= id && id < dft->getNodes().size());
+	return dft->getNodes().at(id);
+}
+
 int DFT::DFTreeEXPBuilder::buildEXPHeader() {
 	return 0;
 }
@@ -256,6 +274,48 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 		return 0;
 	}
 	int DFT::DFTreeEXPBuilder::createSyncRuleGateVoting(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateVoting& node, unsigned int nodeID) {
+		return 0;
+	}
+	
+	/**
+	 * Add FDEP Specific syncRules
+	 * The FDEP needs to synchronize with multiple nodes: its source (trigger) and its dependers.
+	 * To synchronize with the source, the general parent-child relationship is used. But for the rest, we need
+	 * this method. This method will add a failSyncRule per depender to the list of rules, such that each
+	 * dependers' parents will be notified, in a nondeterministic fashion. Thus, if the source fails, the order
+	 * of failing dependers is nondeterministic.
+	 */
+	int DFT::DFTreeEXPBuilder::createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateFDEP& node, unsigned int nodeID) {
+		
+		// Loop over all the dependers
+		for(int dependerLocalID=0; dependerLocalID<(int)node.getDependers().size(); ++dependerLocalID) {
+			DFT::Nodes::Node* depender = node.getDependers()[dependerLocalID];
+			unsigned int dependerID = getIDOfNode(*depender);
+			
+			// Create a new failSyncRule
+			std::stringstream ss;
+			ss << "f_" << node.getTypeStr() << nodeID << "_" << depender->getTypeStr() << dependerID;
+			EXPSyncRule* ruleF = new EXPSyncRule(ss.str());
+			
+			// Add the depender to the synchronization (+2, because in LNT the depender list starts at 2)
+			ruleF->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncFail(dependerLocalID+2)) );
+			
+			// Loop over the parents of the depender
+			for(DFT::Nodes::Node* depParent: depender->getParents()) {
+				// Obtain the localChildID of the depender seen from this parent
+				unsigned int parentID = getIDOfNode(*depParent);
+				int localChildID = getLocalIDOfNode(depParent,depender);
+				assert(localChildID>=0 && "depender is not a child of its parent");
+				
+				// Add the parent to the synchronization rule, hooking into the FAIL of the depender,
+				// making it appear to the parent that the child failed (+1, because in LNT the child list starts at 1)
+				ruleF->label.insert( pair<unsigned int,EXPSyncItem*>(parentID,syncFail(localChildID+1)) );
+			}
+			
+			// Add it to the list of rules
+			failRules.push_back(ruleF);
+		}
+		
 		return 0;
 	}
 

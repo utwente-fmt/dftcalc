@@ -64,6 +64,7 @@ public:
 			break;
 		}
 		case DFT::Nodes::GateFDEPType:
+			gate = new DFT::Nodes::GateFDEP(astgate->getLocation(), astgate->getName()->getString());
 			break;
 		case DFT::Nodes::GateTransferType:
 			break;
@@ -223,6 +224,7 @@ public:
 		pass1->build();
 		ASTVisitor<int>::visit();
 		delete pass1;
+		//dft->transformFDEPNodes();
 		return dft;
 	}
 	
@@ -243,12 +245,33 @@ public:
 		DFT::Nodes::Node* n = dft->getNode(gate->getName()->getString());
 		assert(n);
 		assert(DFT::Nodes::Node::typeMatch(n->getType(),DFT::Nodes::GateType));
-		DFT::Nodes::Gate* g = static_cast<DFT::Nodes::Gate*>(n);
-		std::vector<DFT::Nodes::Node*>& nodes = g->getChildren();
-		for(int i=0; i<gate->getChildren()->size(); ++i) {
-			DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(i)->getString());
+		
+		DFT::Nodes::GateFDEP* g = static_cast<DFT::Nodes::GateFDEP*>(n);
+		if(DFT::Nodes::Node::typeMatch(n->getType(),DFT::Nodes::GateFDEPType)) {
+			
+			// Add the trigger as a child
+			DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(0)->getString());
 			node->getParents().push_back(n);
-			nodes.push_back(node);
+			g->getChildren().push_back(node);
+			
+			// Add the rest of the children as dependers
+			for(int i=1; i<gate->getChildren()->size(); ++i) {
+				DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(i)->getString());
+				g->getDependers().push_back(node);
+			}
+		} else {
+			// Fix the parent-child relationship for this Gate and its children
+			for(int i=0; i<gate->getChildren()->size(); ++i) {
+				
+				// Get a child of the Gate
+				DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(i)->getString());
+				
+				// Add the Gate to that child's list of parents
+				node->getParents().push_back(n);
+				
+				// Add the child to the Gate's list of children
+				g->getChildren().push_back(node);
+			}
 		}
 		ASTVisitor<int>::visitGate(gate);
 	}

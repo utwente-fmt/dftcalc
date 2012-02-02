@@ -194,6 +194,27 @@ int DFT::DFTreeBCGNodeBuilder::generateSpare(FileWriter& out, const DFT::Nodes::
 	return 0;
 }
 
+int DFT::DFTreeBCGNodeBuilder::generateFDEP(FileWriter& out, const DFT::Nodes::GateFDEP& gate) {
+	int nr_parents = gate.getParents().size();
+	int dependers = gate.getDependers().size();
+	out << out.applyprefix << " * Generating FDEP(dependers= " << dependers << ")" << out.applypostfix;
+	generateHeaderClose(out);
+
+	out << out.applyprefix << "module " << getFileForNode(gate) << "(FDEP) is" << out.applypostfix;
+	out.indent();
+
+		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << dependers << "] of BOOL end type" << out.applypostfix;
+		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
+		out.indent();
+			out << out.applyprefix << "FDEP [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << dependers << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+		out.outdent();
+		out << out.applyprefix << "end process" << out.applypostfix;
+	out.outdent();
+	out << out.applyprefix << "end module" << out.applypostfix;
+
+	return 0;
+}
+
 int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::BasicEvent& be) {
 	int nr_parents = be.getParents().size();
 	bool cold = be.getMu()==0;
@@ -492,6 +513,11 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 				break;
 			}
 			case DFT::Nodes::GateFDEPType: {
+				const DFT::Nodes::GateFDEP& gate = static_cast<const DFT::Nodes::GateFDEP&>(node);
+				FileWriter report;
+				report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+				cc->reportAction(report.toString(),VERBOSE_GENERATION);
+				generateFDEP(lntOut,gate);
 				break;
 			}
 			case DFT::Nodes::GateTransferType: {
