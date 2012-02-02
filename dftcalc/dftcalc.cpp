@@ -396,9 +396,11 @@ int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, FileW
 			printOutput(File(sysOps.errFile));
 			return 1;
 		}
-
+		
 	}
-
+	
+	delete fileHandler;
+	
 	return result;
 }
 
@@ -583,5 +585,8 @@ int main(int argc, char** argv) {
 	if(print || (resultFileSet && resultFileName=="")) {
 		std::cout << out.toString();
 	}
+	
+	delete messageFormatter;
+	
 	return 0;
 }
