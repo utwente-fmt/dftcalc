@@ -12,7 +12,7 @@ add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS )
 add_definitions(-std=gnu++0x)
 
 ## Include source directory, the build directory (for generated files) and the dft2lnt library path
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../dft2lnt)
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../dft2lnt ${CMAKE_CURRENT_SOURCE_DIR}/../yaml-cpp/include)
 
 ## Link directories
 #link_directories(${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt)
@@ -30,7 +30,7 @@ add_dependencies(dftcalc dft2lntc)
 
 ## Link with:
 ##   - libdft2lnt.a
-target_link_libraries(dftcalc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a)
+target_link_libraries(dftcalc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a ${CMAKE_CURRENT_BINARY_DIR}/../yaml-cpp/libyaml-cpp.a)
 
 if(UNIX AND NOT APPLE AND NOT WIN32)
 	target_link_libraries(dftcalc rt)
