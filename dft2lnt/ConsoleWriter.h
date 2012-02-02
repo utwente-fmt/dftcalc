@@ -24,6 +24,23 @@ public:
 		static const ConsoleWriter::Color Message;
 		static const ConsoleWriter::Color Reset;
 		
+		//static const ConsoleWriter::Color Black;
+		static const ConsoleWriter::Color Red;
+		static const ConsoleWriter::Color Green;
+		static const ConsoleWriter::Color Blue;
+		static const ConsoleWriter::Color Yellow;
+		static const ConsoleWriter::Color Magenta;
+		static const ConsoleWriter::Color Cyan;
+		static const ConsoleWriter::Color White;
+		//static const ConsoleWriter::Color BlackBright;
+		static const ConsoleWriter::Color RedBright;
+		static const ConsoleWriter::Color GreenBright;
+		static const ConsoleWriter::Color BlueBright;
+		static const ConsoleWriter::Color YellowBright;
+		static const ConsoleWriter::Color MagentaBright;
+		static const ConsoleWriter::Color CyanBright;
+		static const ConsoleWriter::Color WhiteBright;
+
 		Color(int color): color(color) {
 		}
 		int getColorCode() const { return color; }
