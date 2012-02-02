@@ -52,26 +52,37 @@ const int VERBOSITY_FLOW = 1;
 const int VERBOSITY_DATA = 1;
 const int VERBOSITY_EXECUTIONS = 2;
 
-void print_help(MessageFormatter* messageFormatter) {
-	messageFormatter->notify ("dftcalc [INPUTFILE.dft] [options]");
-	messageFormatter->message("  Calculates the failure probability for the specified DFT file, given the");
-	messageFormatter->message("  specified time constraints. Result is written to the specified output file.");
-	messageFormatter->message("  Check dftcalc --help=output for more details regarding the output.");
-	messageFormatter->message("");
-	messageFormatter->notify ("General Options:");
-	messageFormatter->message("  -h, --help      Show this help.");
-	messageFormatter->message("  --color         Use colored messages.");
-	messageFormatter->message("  --no-color      Do not use colored messages.");
-	messageFormatter->message("  --version       Print version info and quit.");
-	messageFormatter->message("");
-	messageFormatter->notify ("Debug Options:");
-	messageFormatter->message("  --verbose=x     Set verbosity to x, -1 <= x <= 5.");
-	messageFormatter->message("  -v, --verbose   Increase verbosity. Up to 5 levels.");
-	messageFormatter->message("  -q              Decrease verbosity.");
-	messageFormatter->message("");
-	messageFormatter->notify ("Output Options:");
-	messageFormatter->message("  -r FILE         Output result to this file. (see dftcalc --help=output)");
-	messageFormatter->flush();
+void print_help(MessageFormatter* messageFormatter, string topic="") {
+	if(topic.empty()) {
+		messageFormatter->notify ("dftcalc [INPUTFILE.dft] [options]");
+		messageFormatter->message("  Calculates the failure probability for the specified DFT file, given the");
+		messageFormatter->message("  specified time constraints. Result is written to the specified output file.");
+		messageFormatter->message("  Check dftcalc --help=output for more details regarding the output.");
+		messageFormatter->message("");
+		messageFormatter->notify ("General Options:");
+		messageFormatter->message("  -h, --help      Show this help.");
+		messageFormatter->message("  --color         Use colored messages.");
+		messageFormatter->message("  --no-color      Do not use colored messages.");
+		messageFormatter->message("  --version       Print version info and quit.");
+		messageFormatter->message("");
+		messageFormatter->notify ("Debug Options:");
+		messageFormatter->message("  --verbose=x     Set verbosity to x, -1 <= x <= 5.");
+		messageFormatter->message("  -v, --verbose   Increase verbosity. Up to 5 levels.");
+		messageFormatter->message("  -q              Decrease verbosity.");
+		messageFormatter->message("");
+		messageFormatter->notify ("Output Options:");
+		messageFormatter->message("  -r FILE         Output result to this file. (see dftcalc --help=output)");
+		messageFormatter->message("  -p              Print result to stdout.");
+		messageFormatter->flush();
+	} else if(topic=="output") {
+		messageFormatter->notify ("Output");
+		messageFormatter->message("  The output file specified with -r uses YAML syntax.");
+		messageFormatter->message("  The top node is a map, containing one element, an entry mapping the DFT");
+		messageFormatter->message("  filename to the calculated result. E.g. it looks like this:");
+		messageFormatter->message("    and.dft: 0.1548181");
+	} else {
+		messageFormatter->reportAction("Unknown help topic: " + topic);
+	}		
 }
 
 void print_help_output(MessageFormatter* messageFormatter) {
@@ -422,6 +433,7 @@ int main(int argc, char** argv) {
 	int print                = 0;
 	int useColoredMessages   = 1;
 	int printHelp            = 0;
+	string printHelpTopic       = "";
 	int printVersion         = 0;
 
 	/* Parse command line arguments */
@@ -459,6 +471,7 @@ int main(int argc, char** argv) {
 			// -h
 			case 'h':
 				printHelp = true;
+				break;
 			
 			// -v
 			case 'v':
@@ -472,8 +485,11 @@ int main(int argc, char** argv) {
 
 			// --
 			case '-':
-				if(!strcmp("help",optarg)) {
+				if(!strncmp("help",optarg,4)) {
 					printHelp = true;
+					if(strlen(optarg)>5 && optarg[4]=='=') {
+						printHelpTopic = string(optarg+5);
+					}
 				} else if(!strcmp("version",optarg)) {
 					printVersion = true;
 				} else if(!strcmp("color",optarg)) {
@@ -516,7 +532,7 @@ int main(int argc, char** argv) {
 
 	/* Print help / version if requested and quit */
 	if(printHelp) {
-		print_help(messageFormatter);
+		print_help(messageFormatter,printHelpTopic);
 		exit(0);
 	}
 	if(printVersion) {
