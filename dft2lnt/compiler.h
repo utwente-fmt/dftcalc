@@ -57,7 +57,7 @@ public:
 	CompilerContext(std::ostream& out): MessageFormatter(out), name("") {
 	}
 
-	~CompilerContext() {
+	virtual ~CompilerContext() {
 	}
 
 	/**

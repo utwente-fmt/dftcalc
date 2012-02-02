@@ -11,12 +11,12 @@ namespace DFT {
 
 class ASTLNTBuilder: public DFT::ASTVisitor<int> {
 private:
-	std::vector<DFT::AST::ASTNode*>* ast;
+	DFT::AST::ASTNodes* ast;
 	Parser* parser;
 	DFT::DFTree* dft;
 public:
 
-	ASTLNTBuilder(std::vector<DFT::AST::ASTNode*>* ast, Parser* parser): ast(ast), parser(parser), dft(NULL) {
+	ASTLNTBuilder(DFT::AST::ASTNodes* ast, Parser* parser): ast(ast), parser(parser), dft(NULL) {
 	}
 
 	DFT::DFTree* build() {

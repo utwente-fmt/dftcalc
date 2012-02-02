@@ -52,7 +52,7 @@ public:
 	 * The parser will build the AST along the way and return it.
 	 * @return The list of ASTNodes parsed from the source.
 	 */
-	std::vector<DFT::AST::ASTNode*>* parse();
+	DFT::AST::ASTNodes* parse();
 
 	/**
 	 * Start parsing at the specified file. After the parsing of this file is

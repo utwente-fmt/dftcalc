@@ -21,15 +21,15 @@ int yywrap(yyscan_t scanner) {
 	return yyget_extra(scanner)->popFile();
 }
 
-void yyerror(Location* location, Parser* parser, yyscan_t scanner, std::vector<DFT::AST::ASTNode*> **result_nodes, const char *str) {
-	fprintf(stderr,"PARSE ERROR: %s\n",str);
+void yyerror(Location* location, Parser* parser, yyscan_t scanner, DFT::AST::ASTNodes **result_nodes, const char *str) {
+//	fprintf(stderr,"PARSE ERROR: %s\n",str);
 //	switch(yychar) {
 //		case LACCOL:
 //			fprintf(stderr,"Expected curly brace!\n");
 //	}
 }
 
-std::vector<DFT::AST::ASTNode*>* Parser::parse() {
+DFT::AST::ASTNodes* Parser::parse() {
 
 #if defined(DEBUG) || !defined(NDEBUG)
 	yydebug = 1;
@@ -60,12 +60,15 @@ std::vector<DFT::AST::ASTNode*>* Parser::parse() {
 	//yylloc.filename = compilerContext->fileContext[0].filename;
 
 	// 0: valid grammer, 1: invalid grammar
-	std::vector<DFT::AST::ASTNode*>* result_nodes = NULL;
+	DFT::AST::ASTNodes* result_nodes = NULL;
 	yyparse(this,scanner,&result_nodes);
 	fflush(stdout);
 
 	//pp = NULL; // FIXME: THIS IS NEEDED!?
 	//cc = NULL;
+	
+	// Free the lexer
+	yylex_destroy(scanner);
 
 	return result_nodes;//new Program(ASTroot);
 }

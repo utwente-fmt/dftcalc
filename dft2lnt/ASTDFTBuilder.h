@@ -17,7 +17,7 @@ namespace DFT {
  */
 class ASTDFTBuilderPass1: public DFT::ASTVisitor<int> {
 private:
-	std::vector<DFT::AST::ASTNode*>* ast;
+	DFT::AST::ASTNodes* ast;
 	Parser* parser;
 	DFT::DFTree* dft;
 	std::string topNode;
@@ -94,7 +94,7 @@ public:
 	 * AST and CompilerContext. New nodes will be added to the specified DFTree.
 	 * Call build() to start the first AST pass of the DFT build process.
 	 */
-	ASTDFTBuilderPass1(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc, DFT::DFTree* dft):
+	ASTDFTBuilderPass1(DFT::AST::ASTNodes* ast, CompilerContext* cc, DFT::DFTree* dft):
 		ASTVisitor<int>(ast,cc,&f_aggregate),
 		dft(dft),
 		topNode("") {
@@ -188,7 +188,7 @@ public:
  */
 class ASTDFTBuilder: public DFT::ASTVisitor<int> {
 private:
-	std::vector<DFT::AST::ASTNode*>* ast;
+	DFT::AST::ASTNodes* ast;
 	Parser* parser;
 	DFT::DFTree* dft;
 	std::string topNode;
@@ -201,7 +201,7 @@ public:
 	 * AST and CompilerContext.
 	 * Call build() to start the DFT build process.
 	 */
-	ASTDFTBuilder(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc):
+	ASTDFTBuilder(DFT::AST::ASTNodes* ast, CompilerContext* cc):
 		ASTVisitor<int>(ast,cc,&f_aggregate),
 		ast(ast),
 		parser(parser),

@@ -5,7 +5,7 @@
 
 %parse-param{ Parser* currentParser}
 %parse-param{ yyscan_t scanner}
-%parse-param{std::vector<DFT::AST::ASTNode*>** result_nodes}
+%parse-param{ DFT::AST::ASTNodes** result_nodes}
 %lex-param { yyscan_t scanner }
 
 //%define api.pure
@@ -51,13 +51,13 @@
 		char* address;
 		NumberSuffix numbersuffix;
 		Voting voting;
-		std::vector<DFT::AST::ASTNode*>* nodes;
+		DFT::AST::ASTNodes* nodes;
 		DFT::AST::ASTNode* node;
 		DFT::DFTree* dft;
 		DFT::AST::ASTIdentifier* string;
-		std::vector<DFT::AST::ASTIdentifier*>* strings;
+		DFT::AST::ASTIdentifiers* strings;
 		DFT::AST::ASTAttribute* attribute;
-		std::vector<DFT::AST::ASTAttribute*>* attributes;
+		DFT::AST::ASTAttributes* attributes;
 		DFT::AST::ASTAttrib* attributeValue;
 		DFT::AST::ASTGateType* gateType;
 }
@@ -152,7 +152,7 @@ dft //{
 lines //{
 	:	/* empty */
 	{
-		$$ = new std::vector<DFT::AST::ASTNode*>();
+		$$ = new DFT::AST::ASTNodes();
 		@$.nullify();
 	}
 	|	lines line
@@ -180,7 +180,7 @@ line //{
 names //{
 	:	/* empty */
 	{
-		$$ = new std::vector<DFT::AST::ASTIdentifier*>();
+		$$ = new DFT::AST::ASTIdentifiers();
 		@$.nullify();
 	}
 	|	names nodeid
@@ -199,7 +199,7 @@ names //{
 be_attribs //{
 	:	/* empty */
 	{
-		$$ = new std::vector<DFT::AST::ASTAttribute*>();
+		$$ = new DFT::AST::ASTAttributes();
 		@$.nullify();
 	}
 	|	be_attribs be_attrib
@@ -367,6 +367,7 @@ gate_line //{
 	|	nodeid gate names error SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@4,"gate `" + $1->getString() + "':unexpected tokens before semicolon");
+			delete $1;
 			$$ = NULL;
 		}
 	;
@@ -394,6 +395,7 @@ be_line //{
 	|	nodeid PHASE be_attribs SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@2.end(),string("basicevent `" + $1->getString() + "':phase number expected"));
+			delete $1;
 			$$ = NULL;
 		}
 	;
@@ -409,6 +411,7 @@ page_line //{
 	|	PAGE nodeid SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@1.end(),string("page number expected"));
+			delete $2;
 			$$ = NULL;
 		}
 	|	PAGE number SEMICOLON
@@ -419,6 +422,7 @@ page_line //{
 	|	PAGE error nodeid SEMICOLON
 		{
 			currentParser->getCC()->reportErrorAt(@1,string("unexpected token, page number expected"));
+			delete $3;
 			$$ = NULL;
 		}
 	|	PAGE number error SEMICOLON

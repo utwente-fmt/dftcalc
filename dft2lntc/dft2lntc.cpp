@@ -416,7 +416,7 @@ int main(int argc, char** argv) {
 	/* Parse input file */
 	compilerContext->notify("Checking syntax...",VERBOSITY_FLOW);
 	Parser* parser = new Parser(inputFile,parserInputFilePath,compilerContext);
-	std::vector<DFT::AST::ASTNode*>* ast = parser->parse();
+	DFT::AST::ASTNodes* ast = parser->parse();
 	compilerContext->flush();
 	if(!ast) {
 		compilerContext->reportError("Syntax is incorrect");
@@ -544,14 +544,17 @@ int main(int argc, char** argv) {
 		
 	}
 	compilerContext->flush();
-
+	
 	compilerContext->reportErrors();
 	compilerContext->flush();
-
-	delete dft;
 	
 	if(compilerContext->getVerbosity()>=3) {
 		compilerContext->notify("SUCCESS! Time for brandy!");
 		compilerContext->flush();
 	}
+	
+	if(ast) delete ast;
+	if(dft) delete dft;
+	delete parser;
+	delete compilerContext;
 }

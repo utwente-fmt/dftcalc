@@ -30,6 +30,7 @@ set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_CURRENT_
 ## Specify the library and its sources
 add_library(dft2lnt
 	dft2lnt.cpp
+	dft_ast.cpp
 	dft_parser.cpp
 	dftnodes/BasicEvent.cpp
 	dftnodes/Node.cpp

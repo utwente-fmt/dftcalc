@@ -26,7 +26,7 @@ public:
 	 * AST and CompilerContext.
 	 * Call validate() to start the validation process.
 	 */
-	ASTPrinter(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc):
+	ASTPrinter(DFT::AST::ASTNodes* ast, CompilerContext* cc):
 		//ASTVisitor(ast,cc,[](int& ret, int val){ret = ret && val;}) {
 		ASTVisitor<int,true>(ast,cc,NULL) {
 	}

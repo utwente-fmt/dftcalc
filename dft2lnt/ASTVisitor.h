@@ -27,7 +27,7 @@ public:
 	typedef void (*AggregateFunction)(TReturn& result, TReturn value);
 
 protected:
-	std::vector<DFT::AST::ASTNode*>* ast;
+	DFT::AST::ASTNodes* ast;
 	CompilerContext* cc;
 	AggregateFunction f_aggregate;
 	virtual void aggregate(TReturn& result, const TReturn& value) {
@@ -60,7 +60,7 @@ public:
 	 * and call the overridden visit*() methods. To continue the parsing from
 	 * visitFoo(...), call ASTVisitor::visitFoo(...).
 	 */
-	ASTVisitor(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc, AggregateFunction f_aggregate):
+	ASTVisitor(DFT::AST::ASTNodes* ast, CompilerContext* cc, AggregateFunction f_aggregate):
 		ast(ast),
 		cc(cc),
 		f_aggregate(f_aggregate) {

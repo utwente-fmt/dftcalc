@@ -29,7 +29,7 @@ public:
 	 * AST and CompilerContext.
 	 * Call validate() to start the validation process.
 	 */
-	ASTValidator(std::vector<DFT::AST::ASTNode*>* ast, CompilerContext* cc):
+	ASTValidator(DFT::AST::ASTNodes* ast, CompilerContext* cc):
 		//ASTVisitor(ast,cc,[](int& ret, int val){ret = ret && val;}) {
 		ASTVisitor<int,true>(ast,cc,&f_aggregate) {
 	}
@@ -201,9 +201,14 @@ public:
 	virtual int visitAttribute(DFT::AST::ASTAttribute* attribute) {
 		int valid = true;
 		DFT::AST::ASTAttrib* value = attribute->getValue();
-
+		
 		switch(attribute->getLabel()) {
 			case DFT::Nodes::BE::AttrLabelLambda:
+				if(!value) {
+					valid = false;
+					cc->reportErrorAt(attribute->getLocation(),"lambda label without value");
+					break;
+				}
 				if(value->isFloat()) {
 					float v = static_cast<DFT::AST::ASTAttribFloat*>(value)->getValue();
 					if(v < 0) {
@@ -222,6 +227,11 @@ public:
 				}
 				break;
 			case DFT::Nodes::BE::AttrLabelDorm:
+				if(!value) {
+					valid = false;
+					cc->reportErrorAt(attribute->getLocation(),"dorm label without value");
+					break;
+				}
 				if(value->isFloat()) {
 					float v = static_cast<DFT::AST::ASTAttribFloat*>(value)->getValue();
 					if(v < 0) {
