@@ -25,7 +25,13 @@ private:
 	std::string getRoot(MessageFormatter* messageFormatter);
 	std::string getCADPRoot(MessageFormatter* messageFormatter);
 
+	map<std::string,double> results;
+
 public:
+	
+	const map<std::string,double> getResults() const {
+		return results;
+	}
 	
 	bool checkNeededTools() {
 		
@@ -197,6 +203,7 @@ public:
 
 	int printOutput(const File& file);
 	int calculateDFT(const std::string& cwd, const File& dft, FileWriter& out);
+	
 };
 
 #endif

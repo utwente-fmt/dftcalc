@@ -44,6 +44,7 @@ using namespace std;
 #include "DFTreeBCGNodeBuilder.h"
 #include "dftcalc.h"
 #include "compiletime.h"
+#include "yaml-cpp/yaml.h"
 
 const int DFTCalc::VERBOSITY_SEARCHING = 2;
 
@@ -355,7 +356,8 @@ int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, FileW
 		return 1;
 	} else {
 		std::stringstream out;
-		float res = fileHandler->getResult();
+		double res = fileHandler->getResult();
+		results.insert(pair<string,double>(dft.getFileName(),res));
 		out << "Result: " << res << std::endl;
 		messageFormatter->reportAction(out.str());
 	}
@@ -576,9 +578,14 @@ int main(int argc, char** argv) {
 
 	// Write result file
 	if(resultFileSet && resultFileName!="") {
-		std::fstream resultFile(resultFileName);
+		YAML::Emitter out;
+		out << calc.getResults();
+		std::ofstream resultFile(resultFileName);
 		if(resultFile.is_open()) {
-			resultFile << out.toString();
+			messageFormatter->notify("Printing result to file: " + resultFileName);
+			resultFile << string(out.c_str());
+		} else {
+			messageFormatter->reportErrorAt(Location(resultFileName),"could not open file for printing result");
 		}
 	}
 	// Print result file
