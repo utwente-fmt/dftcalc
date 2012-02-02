@@ -451,6 +451,37 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 					cc->reportAction("LNT file `" + getFileForNode(node) + ".lnt' out of date",VERBOSE_GENERATION);
 				}
 			}
+			char buffer[200];
+			vector<string> dependencies;
+			while(lntFile.getline(buffer,200)) {
+				//cerr << "Found line: " << string(buffer) << endl;
+				char* deps = buffer;
+				if(!strncasecmp("module",deps,6)) {
+					
+					// Skip 'module.*('
+					deps+=7;
+					while(*deps != '\0' && *deps != '(') ++deps;
+					deps++;
+					
+					// Read the list of dependencies until ')' is reached
+					while(*deps != '\0' && *deps != ')') {
+						while(isspace(*deps)) ++deps;
+						if(*deps==')' || deps == '\0') break;
+						char* enddep = deps;
+						while(!isspace(*enddep) && *enddep != ')' && *enddep != '\0') ++enddep;
+						dependencies.push_back(string(deps,enddep));
+						deps = enddep;
+					}
+					
+					// We have found the module list
+					break;
+				}
+			}
+//			cerr << "Found dependencies:";
+//			for(string s: dependencies) {
+//				cerr << " " << s;
+//			}
+//			cerr << endl;
 		}
 	}
 	
