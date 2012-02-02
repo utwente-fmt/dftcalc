@@ -9,74 +9,19 @@ DFT::DFTreePrinter::DFTreePrinter(DFT::DFTree* dft, CompilerContext* cc):
 
 int DFT::DFTreePrinter::print(std::ostream& out) {
 	assert(dft->getTopNode());
-	out << "Top Node: " << dft->getTopNode()->getName() << std::endl;
+	out << "toplevel \"" << dft->getTopNode()->getName() << "\";" << std::endl;
 
 	std::vector<Nodes::Node*>& nodes = dft->getNodes();
-	for(size_t i=0; i<nodes.size(); ++i) {
-		assert(nodes.at(i));
-		switch(nodes.at(i)->getType()) {
-		case DFT::Nodes::BasicEventType: {
-			DFT::Nodes::BasicEvent* be = static_cast<DFT::Nodes::BasicEvent*>(nodes.at(i));
+	for(DFT::Nodes::Node* node: nodes) {
+		assert(node);
+		if(node->isBasicEvent()) {
+			DFT::Nodes::BasicEvent* be = static_cast<DFT::Nodes::BasicEvent*>(node);
 			DFT::DFTreePrinter::printBasicEvent(out,be);
-			break;
-
-		}
-		case DFT::Nodes::GateType: {
-			DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*>(nodes.at(i));
+		} else if(node->isGate()) {
+			DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*>(node);
 			DFT::DFTreePrinter::printGate(out,gate);
-			break;
-		}
-		case DFT::Nodes::GatePhasedOrType: {
-			assert(0);
-			break;
-		}
-		case DFT::Nodes::GateOrType: {
-			DFT::Nodes::GateOr* gate = static_cast<DFT::Nodes::GateOr*>(nodes.at(i));
-			DFT::DFTreePrinter::printGateOr(out,gate);
-			break;
-		}
-		case DFT::Nodes::GateAndType: {
-			DFT::Nodes::GateAnd* gate = static_cast<DFT::Nodes::GateAnd*>(nodes.at(i));
-			DFT::DFTreePrinter::printGateAnd(out,gate);
-			break;
-		}
-		case DFT::Nodes::GateHSPType: {
-			assert(0);
-			break;
-		}
-		case DFT::Nodes::GateWSPType: {
-			assert(0);
-			break;
-		}
-		case DFT::Nodes::GateCSPType: {
-			assert(0);
-			break;
-		}
-		case DFT::Nodes::GatePAndType: {
-			assert(0);
-			break;
-		}
-		case DFT::Nodes::GateSeqType: {
-			assert(0);
-			break;
-		}
-		case DFT::Nodes::GateVotingType: {
-			DFT::Nodes::GateVoting* gate = static_cast<DFT::Nodes::GateVoting*>(nodes.at(i));
-			DFT::DFTreePrinter::printGateVoting(out,gate);
-			break;
-		}
-		case DFT::Nodes::GateFDEPType: {
-			assert(0);
-			break;
-		}
-		case DFT::Nodes::GateTransferType: {
-			assert(0);
-			break;
-		}
-		default: {
+		} else {
 			out << "UnknownNode";
-			break;
-		}
 		}
 		out << std::endl;
 	}
@@ -85,32 +30,38 @@ int DFT::DFTreePrinter::print(std::ostream& out) {
 
 int DFT::DFTreePrinter::printBasicEvent(std::ostream& out, const DFT::Nodes::BasicEvent* basicEvent) {
 	assert(basicEvent);
-	out << "BasicEvent[" << basicEvent->getName() << "]";
+	out << "\"" << basicEvent->getName() << "\"";
+	streamsize ss_old = out.precision();
+	out.precision(10);
+	out << " lambda=" << fixed << basicEvent->getLambda();
+	out << " dorm=" << basicEvent->getDorm();
+	out.precision(ss_old);
+	out << ";";
 	return 0;
 }
 
 int DFT::DFTreePrinter::printGate(std::ostream& out, const DFT::Nodes::Gate* gate) {
 	assert(gate);
-	out << "Gate[" << gate->getName() << "] ";
-	out << gate->getType();
+	out << "\"" << gate->getName() << "\"";
+	out << " " << gate->getTypeStr();
+	if(DFT::Nodes::Node::typeMatch(gate->getType(),DFT::Nodes::GateFDEPType)) {
+		const DFT::Nodes::GateFDEP* fdep = static_cast<const DFT::Nodes::GateFDEP*>(gate);
+		printGateFDEP(out,fdep);
+	} else {
+		for(DFT::Nodes::Node* node: gate->getChildren()) {
+			out << " \"" << node->getName() << "\"";
+		}
+		out << ";";
+	}
 	return 0;
 }
 
-int DFT::DFTreePrinter::printGateOr(std::ostream& out, const DFT::Nodes::GateOr* gate) {
+int DFT::DFTreePrinter::printGateFDEP(std::ostream& out, const DFT::Nodes::GateFDEP* gate) {
 	assert(gate);
-	out << "GateOr[" << gate->getName() << "] ";
-	return 0;
-}
-
-int DFT::DFTreePrinter::printGateAnd(std::ostream& out, const DFT::Nodes::GateAnd* gate) {
-	assert(gate);
-	out << "GateAnd[" << gate->getName() << "] ";
-	return 0;
-}
-
-int DFT::DFTreePrinter::printGateVoting(std::ostream& out, const DFT::Nodes::GateVoting* gate) {
-	assert(gate);
-	out << "GateVoting[" << gate->getName() << "] ";
-	out << "( " << gate->getThreshold() << " / " << gate->getTotal() << " )";
+	out << " \"" << gate->getEventSource()->getName() << "\"";
+	for(DFT::Nodes::Node* node: gate->getDependers()) {
+		out << " \"" << node->getName() << "\"";
+	}
+	out << ";";
 	return 0;
 }
