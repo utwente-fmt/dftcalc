@@ -93,8 +93,9 @@
 underscore    [_]
 digit         [0-9]
 letter        [A-Za-z]
-number        {digit}+
-numbersuffix  {number}({letter}|{underscore})*
+posnumber     {digit}+
+number        [-+]?{posnumber}
+number_exp    e|E
 voting        {number}of{number}
 hexdigit	  {digit}|[A-F]
 newline       \r?\n
@@ -108,11 +109,14 @@ pp_line       {preproc}line
 preproc       [#]
 comment_line  [\/][\/][^\n\r]*{newline}
 comment_block [\/][*][A][*][\/]
-string        [L]?["]
-float         {number}[.]{number}
+string_begin  [L]?["]
+string_end    ["]
+real          {number}([.]{posnumber})?
+real_exp      {real}({number_exp}{real})?
 transfer      "accepts transfers from"
 
 %x IN_STRING
+%x IN_NUMBER
 
 %%
 %{
@@ -122,6 +126,8 @@ transfer      "accepts transfers from"
 	 * start of the next token.
 	*/
 	yylloc_param->step();
+	int firstNumber = 0;
+	char firstNumber_c[301];
 %}
 
 {pp_line} {
@@ -186,7 +192,6 @@ transfer      "accepts transfers from"
 }
 
 {comment_line}          yylloc->advanceLines(1); /*yylloc->step();*/
-{float}                 sscanf(yytext,"%f",&yylval->f_number); return FLOAT;
  /*{hexnumber}             sscanf(yytext,"%X",&yylval.number); return HEXNUMBER;*/
  /*{address}               yylval.address = my_strdup(yytext+2); return ADDRESS;*/
 {newline}               yylloc->advanceLines(1); yylloc->step();
@@ -215,42 +220,20 @@ transfer      "accepts transfers from"
 
 	return VOTING;
 }
-{number} {
-	int c;
-	char buffer[101];
-	buffer[0] = 0;
-	unsigned int buflen = 0;
-
-	for(;(c=yyinput(yyscanner));) {
-		if(buflen>=100) {
-			compiler_lexer_report_error("suffix too long");
-			break;
-		}
-		if( isalpha(c) || c=='_') {
-			buffer[buflen++] = c;
-		} else {
-			break;
-		}
-	}
-	if(c && c!=EOF) {
-		unput(c);
-	}
-	if(buflen) {
-		buffer[buflen] = 0;
-		yylval->numbersuffix.suffix = my_strdup(buffer);
-		yylval->numbersuffix.number=atoi(yytext);return NUMBERSUFFIX;
-	} else {
-		yylval->number=atoi(yytext);return NUMBER;
-	}
+{real_exp} {
+	double in;
+	sscanf(yytext,"%lf",&in);
+	yylval->realnumber = (long double)in;
+	return REAL;
 }
 
-<INITIAL>{string} {
+<INITIAL>{string_begin} {
 	BEGIN(IN_STRING);
 	strlex.reset();
 }
 
 <IN_STRING>{
-	{string} {
+	{string_end} {
 		BEGIN(INITIAL);
 		yylval->c_string = strlex.finalize();
 		return STRING;

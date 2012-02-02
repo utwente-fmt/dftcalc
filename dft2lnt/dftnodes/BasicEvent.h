@@ -112,9 +112,9 @@ public:
 
 class AttribFloat: public Attrib {
 private:
-	float value;
+	double value;
 public:
-	AttribFloat(std::string name, float value):
+	AttribFloat(std::string name, double value):
 		Attrib(name),
 		value(value) {
 
@@ -124,7 +124,7 @@ public:
 	 * Returns the value of this attribute.
 	 * @return The value of this attribute.
 	 */
-	float getValue() {
+	double getValue() {
 		return value;
 	}
 
@@ -132,7 +132,7 @@ public:
 	 * Sets the value of this attribute.
 	 * @return The value to be set.
 	 */
-	void setValue(float value) {
+	void setValue(double value) {
 		this->value = value;
 	}
 };
@@ -213,19 +213,20 @@ public:
  */
 class BasicEvent: public Node {
 private:
-	float lambda;
-	float mu;
+	double lambda;
+	double mu;
+//	double dorm;
 public:
-	void setLambda(float lambda) {
+	void setLambda(double lambda) {
 		this->lambda = lambda;
 	}
-	void setMu(float mu) {
+	void setMu(double mu) {
 		this->mu = mu;
 	}
 	
-	float getLambda() const { return lambda; }
-	float getMu()     const { return mu; }
-	float getDorm()   const { return mu / lambda; }
+	double getLambda() const { return lambda; }
+	double getMu()     const { return mu; }
+	double getDorm()   const { return mu / lambda; }
 
 	BasicEvent(Location loc, std::string name):
 		Node(loc,name,BasicEventType),

@@ -146,19 +146,19 @@ public:
 	virtual bool isFloat()  { return getType() == BEAttributeFloatType;  }
 	virtual bool isString() { return getType() == BEAttributeStringType; }
 	virtual bool isNumber() { return getType() == BEAttributeNumberType; }
-	virtual float getFloatValue() { return 0.0f; }
+	virtual long double getFloatValue() { return 0.0f; }
 	virtual ASTIdentifier* getStringValue() { return NULL; }
 	virtual int getNumberValue() { return 0; }
 };
 
 /**
- * DFT Node float attribute.
+ * DFT Node long double attribute.
  */
 class ASTAttribFloat: public ASTAttrib {
 private:
-	float value;
+	long double value;
 public:
-	ASTAttribFloat(Location location, float value):
+	ASTAttribFloat(Location location, long double value):
 		ASTAttrib(BEAttributeFloatType,location),
 		value(value) {
 	
@@ -171,7 +171,7 @@ public:
 	 * Returns the value of this attribute.
 	 * @return The value of this attribute.
 	 */
-	float getValue() {
+	long double getValue() {
 		return value;
 	}
 	
@@ -179,14 +179,14 @@ public:
 	 * Sets the value of this attribute.
 	 * @param value The value to be set.
 	 */
-	void setValue(float value) {
+	void setValue(long double value) {
 		this->value = value;
 	}
 	
 	virtual bool isFloat()  { return true;  }
 	virtual bool isString() { return false; }
 	virtual bool isNumber() { return false; }
-	virtual float getFloatValue() {
+	virtual long double getFloatValue() {
 		return value;
 	}
 	virtual int getNumberValue() {
@@ -228,8 +228,8 @@ public:
 	virtual bool isFloat()  { return false;  }
 	virtual bool isNumber() { return true; }
 	virtual bool isString() { return false;  }
-	virtual float getFloatValue() {
-		return (float)value;
+	virtual long double getFloatValue() {
+		return (long double)value;
 	}
 	virtual int getNumberValue() {
 		return value;

@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-float MRMC::T_Chance_Default;
+MRMC::T_Chance MRMC::T_Chance_Default;
 
 int MRMC::FileHandler::generateInputFile(const File& file) {
 	FileWriter out;
@@ -71,12 +71,15 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 		results.clear();
 		const char* c = resultString;
 		while(*c && *c!=')') {
-			float res = atof(c);
+			//float res = atof(c);
+			double res = 0;
+			sscanf(c,"%lf",&res);
 			results.push_back(res);
 			//printf("found result: %f\n",res);
 
 			const char* ce = c;
 			while(*ce && *ce!=' ') ce++;
+			if(!*ce) break;
 			c = ce+1;
 		}
 

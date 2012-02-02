@@ -7,8 +7,8 @@
 class MRMC {
 public:
 
-	typedef float T_Chance;
-	static float T_Chance_Default;
+	typedef double T_Chance;
+	static double T_Chance_Default;
 
 	class FileHandler {
 	private:
@@ -16,7 +16,12 @@ public:
 		bool m_isCalculated;
 		T_Chance result;
 	public:
-	
+		
+		FileHandler():
+			m_isCalculated(false),
+			result(T_Chance_Default) {
+		}
+		
 		/**
 		 * Generate an MRMC input file according to the given specifications
 		 * @param file Generated contents will be written to this file.

@@ -45,7 +45,7 @@
 
 %union {
 		int number;
-		float f_number;
+		long double realnumber;
 		char character;
 		char* c_string;
 		char* address;
@@ -70,7 +70,7 @@
 
 %token <c_string> IDENTIFIER
 %token <c_string> STRING
-%token <f_number> FLOAT
+%token <realnumber> REAL
 %token <character> CHAR
 %token <number> NUMBER
 %token <numbersuffix> NUMBERSUFFIX
@@ -122,7 +122,7 @@
 %type <attribute>  be_attrib_name
 %type <attributeValue> be_attrib_value
 %type <number> number
-%type <f_number> floatingpoint
+%type <realnumber> floatingpoint
 
 //%type <dft>       dft
 
@@ -462,20 +462,20 @@ string //{
 //}
 
 floatingpoint //{
-	:	FLOAT
+	:	REAL
 		{
 			$$ = $1;
 		}
-	|	MINUS FLOAT
-		{
-			$$ = -$2;
-		}
+//	|	MINUS FLOAT
+//		{
+//			$$ = -$2;
+//		}
 //}
 
 number //{
 	:	NUMBER
-	|	MINUS NUMBER
-		{
-			$$ = -$2;
-		}
+//	|	MINUS NUMBER
+//		{
+//			$$ = -$2;
+//		}
 //}
