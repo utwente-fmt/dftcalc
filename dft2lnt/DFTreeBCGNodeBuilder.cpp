@@ -24,7 +24,7 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIR      ("REPAIR");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL   ("RATE_FAIL");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR ("RATE_REPAIR");
 
-const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 3;
+const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 4;
 
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_LNTISVALID = 2;
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_BCGISVALID = 2;
@@ -35,6 +35,12 @@ const int DFT::DFTreeBCGNodeBuilder::VERBOSE_GENERATION = 1;
 
 std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& node) {
 	std::stringstream ss;
+	
+	if(node.getType()==DFT::Nodes::GateVotingType) {
+		const DFT::Nodes::GateVoting& gateVoting = *static_cast<const DFT::Nodes::GateVoting*>(&node);
+		ss << "v";
+	}
+	
 	ss << node.getTypeStr();
 	ss << "_p" << (node.getParents().size()>0?node.getParents().size():1);
 	if(node.isBasicEvent()) {
@@ -48,6 +54,9 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		if(node.getType()==DFT::Nodes::GateVotingType) {
 			const DFT::Nodes::GateVoting& gateVoting = *static_cast<const DFT::Nodes::GateVoting*>(&node);
 			ss << "_t" << gateVoting.getThreshold();
+		} if(node.getType()==DFT::Nodes::GateFDEPType) {
+			const DFT::Nodes::GateFDEP& gateFDEP = *static_cast<const DFT::Nodes::GateFDEP*>(&node);
+			ss << "_d" << gateFDEP.getDependers().size();
 		}
 	} else {
 		assert(0 && "getFileForNode(): Unknown node type");

@@ -3,6 +3,7 @@ class GateVoting;
 #ifndef GATEVOTING_H
 #define GATEVOTING_H
 
+#include <string>
 #include "Gate.h"
 
 namespace DFT {
@@ -12,6 +13,7 @@ class GateVoting: public Gate {
 private:
 	int threshold;
 	int total;
+	mutable std::string cachedName;
 public:
 	GateVoting(Location loc, std::string name, int threshold, int total):
 		Gate(loc,name,GateVotingType),
@@ -23,6 +25,17 @@ public:
 	
 	int getThreshold() const {return threshold;}
 	int getTotal() const {return total;}
+
+	virtual const std::string& getTypeStr() const {
+		if(cachedName.empty()) {
+			std::stringstream ss;
+			ss << threshold;
+			ss << "of";
+			ss << total;
+			cachedName = ss.str();
+		}
+		return cachedName;
+	}
 };
 
 } // Namespace: Nodes

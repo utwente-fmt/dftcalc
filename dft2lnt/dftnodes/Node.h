@@ -156,7 +156,7 @@ public:
 	 * Returns the type of this Node.
 	 * @return The type of this Node.
 	 */
-	const std::string& getTypeStr() const { return getTypeName(getType()); }
+	virtual const std::string& getTypeStr() const { return getTypeName(getType()); }
 	
 	/**
 	 * Returns whether this Node is a BasicEvent, i.e. typeMatch(type,BasicEventType).
@@ -175,6 +175,8 @@ public:
 	}
 	
 	virtual bool usesDynamicActivation() const { return false; }
+	
+	virtual bool outputIsDumb() const { return false; }
 };
 
 class NodePlaceHolder: public Node {
