@@ -106,10 +106,17 @@ private:
 	void print(const Location& l, const std::string& str, const MessageType& mType);
 public:
 
+	ConsoleWriter& getConsoleWriter() {
+		return consoleWriter;
+	}
+	
 	MessageFormatter(std::ostream& out): consoleWriter(out), m_useColoredMessages(false), errors(0), warnings(0), m_autoFlush(false), verbosity(VERBOSITY_DEFAULT) {
 		
 	}
-
+	
+	virtual ~MessageFormatter() {
+	}
+	
 	/**
 	 * Report the specified error string at the specified location.
 	 * The output format is: <file>:<<line>:error:<error>
