@@ -47,6 +47,7 @@ using namespace std;
 
 const int VERBOSITY_FLOW = 1;
 const int VERBOSITY_DATA = 1;
+const int VERBOSITY_FILE_SEARCH = 2;
 
 void DFTTestResult::readYAMLNodeSpecific(const YAML::Node& node) {
 	if(const YAML::Node* itemNode = node.FindValue("failprob")) {
@@ -191,6 +192,24 @@ end:
 	return dft2lntRoot;
 }
 
+void conditionalAdd(vector<File>& tryOut, const File& file) {
+	for(File f: tryOut) {
+		if(f==file) return;
+	}
+	tryOut.push_back(file);
+}
+
+bool tryReadFile(MessageFormatter* messageFormatter, File& file, DFTTestSuite& suite) {
+	if(FileSystem::exists(file)) {
+		suite.readTestFile(file);
+		messageFormatter->reportAction("Using test file: " + file.getFileRealPath(),VERBOSITY_FLOW);
+		return true;
+	} else {
+		messageFormatter->reportWarning("Test file does not exist: " + file.getFileRealPath(),VERBOSITY_FILE_SEARCH);
+		return false;
+	}
+}
+
 int main(int argc, char** argv) {
 
 	/* Command line arguments and their default settings */
@@ -328,16 +347,26 @@ int main(int argc, char** argv) {
 	if(argc_current<argc) {
 		string testSuiteFile = string(argv[argc_current]);
 		
-		File file = File(testSuiteFile);
-		if(file.getFileExtension()=="") {
-			file.setFileExtension("test");
+		bool success = false;
+		
+		vector<File> tryOut;
+		
+		conditionalAdd(tryOut,File(testSuiteFile));
+		conditionalAdd(tryOut,File(".",testSuiteFile,"test"));
+		conditionalAdd(tryOut,File(dft2lntRoot+DFT2LNT::TESTSUBROOT,testSuiteFile));
+		conditionalAdd(tryOut,File(dft2lntRoot+DFT2LNT::TESTSUBROOT,testSuiteFile,"test"));
+		
+		for(File file: tryOut) {
+			success = tryReadFile(messageFormatter,file,suite);
+			if(success) break;
 		}
-		if(FileSystem::exists(file)) {
-			suite.readTestFile(file);
-		} else {
-			messageFormatter->reportWarningAt(Location(file.getFileRealPath()),"Test file does not exist");
+		
+		if(!success) {
+			if(verbosity<2) {
+				messageFormatter->reportWarning("No tests found, use -vv to show the tried paths");
+			}
 		}
-
+		
 		argc_current++;
 	}
 	
