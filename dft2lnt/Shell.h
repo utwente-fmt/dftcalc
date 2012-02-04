@@ -188,7 +188,6 @@ public:
 		string* contents = FileSystem::load(file);
 		
 		if(contents) {
-			cerr << "CONTENTS: " << *contents << endl;
 			// Format example: 0.00 user, 0.00 system, 0.10 elapsed -- Max VSize = 4024KB, Max RSS = 76KB
 			bool result = sscanf(contents->c_str(),"\nreal %f\nuser %f\nsys %f",
 				   &stats.time_user,
@@ -197,9 +196,6 @@ public:
 			);
 			stats.mem_virtual = 0;
 			stats.mem_resident = 0;
-			printf("stats.time_user = %f\n",stats.time_user);
-			printf("stats.time_system = %f\n",stats.time_system);
-			printf("stats.time_elapsed = %f\n",stats.time_elapsed);
 			delete contents;
 			return result==EOF;
 		} else {
