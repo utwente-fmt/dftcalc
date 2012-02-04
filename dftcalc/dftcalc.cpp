@@ -551,7 +551,7 @@ int main(int argc, char** argv) {
 				if(strlen(argv[i])==1) {
 				}
 			} else {
-				dfts.push_back(File(string(argv[i])));
+				dfts.push_back(File(string(argv[i])).fix());
 			}
 		}
 	}
