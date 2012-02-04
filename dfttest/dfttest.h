@@ -64,7 +64,10 @@ public:
 	
 	virtual void writeYAMLNodeSpecific(Test::Test* testGeneric, YAML::Emitter& out);
 	
+	virtual void originChanged(const File& from);
+	
 	void setMessageFormatter(MessageFormatter* messageFormatter);
+	
 };
 
 class DFTTestRun: public Test::TestRun {

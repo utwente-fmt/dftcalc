@@ -67,6 +67,21 @@ void TestSuite::writeTestFile(File file) {
 	std::ofstream resultFile(file.getFileRealPath());
 	if(resultFile.is_open()) {
 		resultFile << string(out.c_str());
+	} else {
+		bool done = false;
+		while(!done) {
+			messageFormatter->reportError("Test suite file is not writable, please enter new filename");
+			messageFormatter->getConsoleWriter() << " > New filename [ " << ConsoleWriter::Color::Cyan << file.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
+			char input[PATH_MAX+1];
+			std::cin.getline(input,PATH_MAX);
+			std::string inputStr = std::string(input);
+			if(inputStr.empty()) inputStr = file.getFileName();
+			std::ofstream resultFileInput(inputStr);
+			if(resultFileInput.is_open()) {
+				resultFileInput << string(out.c_str());
+				done = true;
+			}
+		}
 	}
 }
 
@@ -107,6 +122,31 @@ void TestSuite::readTestFile(File file) {
 		}
 	}
 	
+	{
+		std::ofstream resultFile(file.getFileRealPath());
+		if(!resultFile.is_open()) {
+			bool done = false;
+			while(!done) {
+				messageFormatter->reportAction("Test suite file is not writable, please enter new filename");
+				messageFormatter->getConsoleWriter() << " > New filename [ " << ConsoleWriter::Color::Cyan << file.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
+				char input[PATH_MAX+1];
+				std::cin.getline(input,PATH_MAX);
+				std::string inputStr = std::string(input);
+				if(inputStr.empty()) inputStr = file.getFileName();
+				std::ofstream resultFileInput(inputStr);
+				if(resultFileInput.is_open()) {
+					File oldOrigin = origin;
+					origin = File(inputStr);
+					originChanged(oldOrigin);
+					done = true;
+				}
+			}
+		}
+		
+		
+		
+		updateOrigin();
+	}
 }
 
 const YAML::Node& TestResult::readYAMLNode(const YAML::Node& node) {

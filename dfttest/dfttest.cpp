@@ -413,7 +413,7 @@ Test::Test* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& node) {
 		std::string dft;
 		try { *itemNode >> dft; }
 		catch(YAML::Exception& e) { if(messageFormatter) messageFormatter->reportErrorAt(Location(origin.getFileRealPath(),e.mark.line),e.msg); wentOK = false; }
-		test->setFile(File(dft));
+		test->setFile(getOrigin().newWithName(dft));
 	} else {
 		if(messageFormatter) messageFormatter->reportErrorAt(Location(getOrigin().getFileRealPath(),node.GetMark().line),"Test does not specify a DFT file");
 		wentOK = false;
@@ -492,6 +492,17 @@ void DFTTestSuite::writeYAMLNodeSpecific(Test::Test* testGeneric, YAML::Emitter&
 	}
 	out << YAML::EndSeq;
 }
+
+void DFTTestSuite::originChanged(const File& from) {
+	for(Test::Test* testGeneric: tests) {
+		DFTTest* test = static_cast<DFTTest*>(testGeneric);
+		File oldFile = test->getFile();
+		std::cerr << "Updating DFT file from " << test->getFile().getFileRealPath();
+		test->setFile(oldFile.newWithPathTo(from.getPathTo()));
+		std::cerr << " to " << test->getFile().getFileRealPath() << std::endl;
+	}
+}
+
 
 void DFTTestSuite::setMessageFormatter(MessageFormatter* messageFormatter) {
 	this->messageFormatter = messageFormatter;
