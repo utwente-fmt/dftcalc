@@ -125,6 +125,10 @@ public:
 		return !(*this == other);
 	}
 	
+	inline bool operator<(const File& other) const {
+		return this->getFileRealPath() < other.getFileRealPath();
+	}
+	
 	inline bool isModifiedLaterThan(const File& other) const {
 		return FileSystem::getLastModificationTime(*this) > FileSystem::getLastModificationTime(other);
 	}
