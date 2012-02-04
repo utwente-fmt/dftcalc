@@ -118,7 +118,7 @@ public:
 	File newWithPathTo(const std::string& filePath) const;
 	
 	inline bool operator==(const File& other) const {
-		return this->getFilePath() == other.getFilePath();
+		return this->getFileRealPath() == other.getFileRealPath();
 	}
 	
 	inline bool operator!=(const File& other) const {
