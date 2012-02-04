@@ -24,7 +24,7 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIR      ("REPAIR");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL   ("RATE_FAIL");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR ("RATE_REPAIR");
 
-const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 4;
+const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 5;
 
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_LNTISVALID = 2;
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_BCGISVALID = 2;
@@ -101,7 +101,7 @@ int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::Ga
 	out << out.applyprefix << " * Generating Or(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(VOTING) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING) is" << out.applypostfix;
 	out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
@@ -123,7 +123,7 @@ int DFT::DFTreeBCGNodeBuilder::generateOr(FileWriter& out, const DFT::Nodes::Gat
 	out << out.applyprefix << " * Generating Or(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(VOTING) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING) is" << out.applypostfix;
 	out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
@@ -146,7 +146,7 @@ int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out, const DFT::Nodes:
 	out << out.applyprefix << " * Generating Voting(parents=" << nr_parents << ", setting= " << threshold << "/" << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(VOTING) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING) is" << out.applypostfix;
 	out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
@@ -168,7 +168,7 @@ int DFT::DFTreeBCGNodeBuilder::generatePAnd(FileWriter& out, const DFT::Nodes::G
 	out << out.applyprefix << " * Generating PAnd(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(PAND) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_PAND) is" << out.applypostfix;
 	out.indent();
 		out << out.applyprefix << "type NAT_ARRAY is array[1.." << total << "] of NAT end type" << out.applypostfix;
 		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_CHANNEL] is" << out.applypostfix;
@@ -187,7 +187,7 @@ int DFT::DFTreeBCGNodeBuilder::generateSpare(FileWriter& out, const DFT::Nodes::
 	out << out.applyprefix << " * Generating Spare(parents=" << nr_parents << ", setting= " << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(SPARE) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_SPARE) is" << out.applypostfix;
 	out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
@@ -209,7 +209,7 @@ int DFT::DFTreeBCGNodeBuilder::generateFDEP(FileWriter& out, const DFT::Nodes::G
 	out << out.applyprefix << " * Generating FDEP(dependers= " << dependers << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(FDEP) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_FDEP) is" << out.applypostfix;
 	out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << dependers << "] of BOOL end type" << out.applypostfix;
@@ -231,7 +231,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 	out << out.applyprefix << " * Generating BE(parents=" << nr_parents << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(be) << "(BE";
+	out << out.applyprefix << "module " << getFileForNode(be) << "(TEMPLATE_BE";
 	if(cold) out << "_COLD";
 	out << ") is" << out.applypostfix;
 	out.appendLine("");

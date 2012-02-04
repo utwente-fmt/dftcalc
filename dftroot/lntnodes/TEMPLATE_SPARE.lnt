@@ -1,0 +1,66 @@
+module TEMPLATE_SPARE(TEMPLATE_COMMON) is
+
+	process SPARE [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (total : NAT, available : BOOL_ARRAY) is
+	var
+		nr_available : NAT,
+		done : BOOL,
+		nr : NAT,
+		using : NAT,
+		activated : BOOL
+	in
+		nr_available := total;
+		using := 0;
+		done := FALSE;
+		activated := FALSE;
+		loop
+			select
+				FAIL (?nr) where (0 < nr) and (nr <= total);
+				if (available[nr]) and (nr_available > 0) then
+					available[nr] := FALSE;
+					nr_available := nr_available - 1
+				end if;
+				if nr == using then
+					using := 0
+				end if;
+				nr := 0
+			[]
+				if (nr_available == 0) and not (done) then
+					FAIL (!0 of NAT); done := TRUE
+				end if
+			[]
+				ACTIVATE (?nr,FALSE) where (nr == (0 of NAT));
+				if not (done) then
+					activated := TRUE
+				end if;
+				nr := 0
+			[]
+				ACTIVATE (?nr,FALSE) where ((nr > 0) and (nr <= total) and (nr <> using));
+				if (available[nr]) and (nr_available > 0) then
+					available[nr] := FALSE;
+					nr_available := nr_available - 1
+				end if;
+				nr := 0
+			[]
+				if using == 0 and activated then
+					using := using + 1;
+					loop findav in
+						if available[using] then
+							ACTIVATE (!using,TRUE);
+							break findav
+						end if;
+						using := using + 1;
+						if using > total  then
+							break findav
+						end if
+					end loop;
+					nr := using
+				end if;
+				nr := 0
+			end select
+		end loop
+	end var
+	end process
+
+
+end module 
+

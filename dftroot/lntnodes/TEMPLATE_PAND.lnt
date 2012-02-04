@@ -1,0 +1,65 @@
+module TEMPLATE_PAND(TEMPLATE_COMMON) is
+
+	process PAND [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (total : NAT, failed : NAT_ARRAY) is
+	var
+		nr_failed : NAT,
+		done : BOOL,
+		nr : NAT,
+		last : NAT,
+		nr_act: NAT
+	in
+		done := FALSE;
+		nr_failed := 0 of NAT;
+		nr_act := 0 of NAT;
+		loop
+			select
+				FAIL (?nr) where (0 < nr) and (nr <= total);
+				last := 1 of NAT;
+				loop chkorder in
+					if failed[last] == nr then
+						break chkorder
+					end if;
+					last := last + 1;
+					if last > total  then
+						nr_failed := nr_failed + 1;
+						failed[nr_failed] := nr;
+						break chkorder
+					end if
+				end loop;
+				nr := 0
+			[]
+				nr := 1 of NAT;
+				loop chkorder in
+					last := failed[nr];
+					nr := nr + 1;
+					if nr > total  then
+						break chkorder
+					end if;
+					if last >= failed[nr] then
+						break chkorder
+					end if
+				end loop;
+				if (nr > total) and not (done) then
+					FAIL (!0 of NAT); done := TRUE
+				end if;
+				nr := 0
+			[]
+				ACTIVATE (?nr,FALSE) where (nr == (0 of NAT));
+				nr_act := 1 of NAT;
+			[]
+				if (nr_act > 0) then
+					ACTIVATE (!nr_act,TRUE);
+					if nr_act < total  then
+						nr_act := nr_act + 1
+					else
+						nr_act := 0
+					end if
+				end if
+			end select
+		end loop
+	end var
+	end process
+
+
+end module 
+

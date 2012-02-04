@@ -1,0 +1,46 @@
+module TEMPLATE_VOTING(TEMPLATE_COMMON) is
+
+	process VOTING [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (threshold : NAT, total : NAT, received : BOOL_ARRAY) is
+	var
+		nr : NAT,
+		done : BOOL,
+		nr_act : NAT
+	in
+		nr_act := 0;
+		done := FALSE;
+		loop
+			select	
+				FAIL (?nr) where (0 < nr) and (nr <= total);
+				if not (received[nr]) and (threshold > 0) then
+					received[nr] := TRUE;
+					threshold := threshold - 1
+				end if
+			[]
+				if (threshold == 0) and not (done) then
+					FAIL (!0 of NAT); done := TRUE
+				end if;
+				nr := 0
+			[]
+				ACTIVATE (?nr,FALSE) where nr == (0 of NAT);
+				if (nr_act == 0 of NAT) then
+					nr_act := 1 of NAT
+				end if
+			[]
+				if (nr_act > 0) then
+					if not (received[nr_act]) then
+						ACTIVATE (!nr_act,TRUE)
+					end if;
+					if nr_act < total  then
+						nr_act := nr_act + 1
+					else
+						nr_act := 0
+					end if
+				end if
+			end select
+		end loop
+	end var
+	end process
+
+
+end module 
+

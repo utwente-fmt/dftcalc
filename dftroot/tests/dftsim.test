@@ -1,0 +1,175 @@
+- fullname: Cascaded PAND system
+  shortdesc: Cascaded PAND system
+  longdesc: ""
+  dft: cps.dft
+  verified:
+    {}
+  results:
+    - 2012-02-01 02:45:01:
+        coral:
+          time_monraw: 95.4656
+          failprob: 0.0013567
+        dftcalc:
+          time_monraw: 78.2123
+          failprob: 0.0013567
+- fullname: Cardiac Arrest System
+  shortdesc: Cardiac Arrest System
+  longdesc: ""
+  dft: cas.dft
+  verified:
+    {}
+  results:
+    - 2012-02-01 02:47:55:
+        coral:
+          time_monraw: 151.414
+          failprob: 0.6579003
+        dftcalc:
+          time_monraw: 100.723
+          failprob: 0.6579003
+- fullname: The multi-processor distributed compting system
+  shortdesc: The multi-processor distributed compting system
+  longdesc: ""
+  dft: mdcs2.dft
+  verified:
+    {}
+  results:
+    - 2012-02-01 02:52:07:
+        coral:
+          time_monraw: 0.0392643
+          failprob: -1
+        dftcalc:
+          time_monraw: 88.375
+          failprob: 0.0666448
+    - 2012-02-01 16:12:29:
+        coral:
+          time_monraw: 0.0375018
+          failprob: -1
+        dftcalc:
+          time_monraw: 38.7302
+          failprob: -1
+    - 2012-02-01 16:53:48:
+        coral:
+          time_monraw: 0.648098
+          failprob: -1
+        dftcalc:
+          time_monraw: 73.1541
+          failprob: -1
+    - 2012-02-01 16:55:02:
+        coral:
+          time_monraw: 0.146457
+          failprob: -1
+        dftcalc:
+          time_monraw: 0.126178
+          failprob: -1
+    - 2012-02-01 16:55:03:
+        coral:
+          time_monraw: 0.230036
+          failprob: -1
+        dftcalc:
+          time_monraw: 0.124788
+          failprob: -1
+    - 2012-02-01 16:55:29:
+        coral:
+          time_monraw: 126.594
+          failprob: 0.0666448
+        dftcalc:
+          time_monraw: 88.1513
+          failprob: 0.0666448
+- fullname: Fault-tolerant parallel processor system (standard)
+  shortdesc: Fault-tolerant parallel processor system (standard)
+  longdesc: ""
+  dft: ftpp_standard.dft
+  verified:
+    {}
+  results:
+    - 2012-02-01 02:53:35:
+        coral:
+          time_monraw: 573.948
+          failprob: 0.0192186
+        dftcalc:
+          time_monraw: 633.764
+          failprob: 0.0192186
+- fullname: Fault-tolerant parallel processor system (large)
+  shortdesc: Fault-tolerant parallel processor system (large)
+  longdesc: ""
+  dft: ftpp_large.dft
+  verified:
+    {}
+  results:
+    - 2012-02-01 03:13:43:
+        coral:
+          time_monraw: 823.234
+          failprob: 0.0030616
+        dftcalc:
+          time_monraw: 853.396
+          failprob: -1
+    - 2012-02-01 16:13:08:
+        coral:
+          time_monraw: 0.134685
+          failprob: -1
+        dftcalc:
+          time_monraw: 0.525181
+          failprob: -1
+    - 2012-02-01 17:13:35:
+        coral:
+          time_monraw: 0.0560698
+          failprob: -1
+        dftcalc:
+          time_monraw: 4.42081
+          failprob: -1
+- fullname: Fault-tolerant parallel processor system (complex)
+  shortdesc: Fault-tolerant parallel processor system (complex)
+  longdesc: ""
+  dft: ftpp_complex.dft
+  verified:
+    {}
+  results:
+    - 2012-02-01 03:41:40:
+        coral:
+          time_monraw: 2875.31
+          failprob: -1
+        dftcalc:
+          time_monraw: 70.6132
+          failprob: -1
+    - 2012-02-01 16:13:08:
+        coral:
+          time_monraw: 0.629167
+          failprob: -1
+        dftcalc:
+          time_monraw: 0.676142
+          failprob: -1
+    - 2012-02-01 17:13:40:
+        coral:
+          time_monraw: 0.473174
+          failprob: -1
+        dftcalc:
+          time_monraw: 0.115981
+          failprob: -1
+- fullname: Fault-tolerant parallel processor system (weibull)
+  shortdesc: Fault-tolerant parallel processor system (weibull)
+  longdesc: ""
+  dft: ftpp_weibull.dft
+  verified:
+    {}
+  results:
+    - 2012-02-01 04:30:46:
+        coral:
+          time_monraw: 0.0648133
+          failprob: -1
+        dftcalc:
+          time_monraw: 10.5155
+          failprob: -1
+    - 2012-02-01 16:13:10:
+        coral:
+          time_monraw: 0.0387066
+          failprob: -1
+        dftcalc:
+          time_monraw: 0.109331
+          failprob: -1
+    - 2012-02-01 17:13:40:
+        coral:
+          time_monraw: 0.0386263
+          failprob: -1
+        dftcalc:
+          time_monraw: 0.098245
+          failprob: -1

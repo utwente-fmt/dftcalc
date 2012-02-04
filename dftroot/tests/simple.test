@@ -1,0 +1,28 @@
+- fullname: And
+  shortdesc: Simple And node test
+  longdesc: ""
+  dft: /opt/dft2lntroot/share/dft2lnt/tests/and.dft
+- fullname: Or
+  shortdesc: Simple Or node test
+  longdesc: ""
+  dft: or.dft
+- fullname: PAnd
+  shortdesc: Simple PAnd node test
+  longdesc: ""
+  dft: pand.dft
+- fullname: FDEP
+  shortdesc: Simple FDEP node test
+  longdesc: ""
+  dft: fdep.dft
+- fullname: Spare
+  shortdesc: Simple Spare node test
+  longdesc: ""
+  dft: spare.dft
+- fullname: 2 Spares with common spare
+  shortdesc: Simple Spare node test 2
+  longdesc: ""
+  dft: spare2.dft
+- fullname: 3 Spares with common spare
+  shortdesc: Simple Spare node test 3
+  longdesc: ""
+  dft: spare3.dft

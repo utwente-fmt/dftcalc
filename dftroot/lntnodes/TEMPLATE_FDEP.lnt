@@ -1,0 +1,55 @@
+module TEMPLATE_FDEP(TEMPLATE_COMMON) is
+
+	process FDEP [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (total : NAT, notified : BOOL_ARRAY) is
+	var
+		nr : NAT,
+		done : BOOL,
+		act : NAT,
+		failed : BOOL
+	in
+		failed := FALSE;
+		done := FALSE;
+		act := 0;
+		loop
+			select	
+				FAIL (?nr) where (nr == (1));
+				failed := TRUE
+			[]
+				if (failed) then
+					nr := 1 of NAT;
+					loop fail in
+						select
+							if( nr <= (total) ) then
+								if not (notified[nr]) then
+									FAIL (!(nr+1));
+									notified[nr] := TRUE;
+									break fail
+								end if
+							end if
+						[]
+							if nr < total  then
+								nr := nr + 1
+							else
+								break fail
+							end if
+						end select
+					end loop
+				end if
+			[]
+				ACTIVATE (?nr,FALSE) where nr == (0 of NAT);
+				if (act == 0 of NAT) then
+					act := 1 of NAT
+				end if
+			[]
+				if (act == 1 of NAT) then
+					ACTIVATE (!1 of NAT,TRUE);
+					act := 0 of NAT
+				end if
+			end select
+		end loop
+	end var
+	end process
+
+
+end module 
+
