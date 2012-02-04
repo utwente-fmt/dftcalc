@@ -468,9 +468,10 @@ File::File(const std::string& pathTo, const std::string& fileBase, const std::st
 	updateExtra();
 }
 
-void File::setFileExtension(const std::string& fileExtension ) {
+File& File::setFileExtension(const std::string& fileExtension ) {
 	this->fileExtension = fileExtension;
 	updateExtra();
+	return *this;
 }
 
 File File::newWithExtension(const std::string& fileExtension) const {
@@ -504,4 +505,10 @@ File File::newWithPathTo(const std::string& pathTo) const {
 	f.pathTo = pathTo;
 	f.updateExtra();
 	return f;
+}
+
+File& File::fix() {
+	pathTo = FileSystem::getRealPath(pathTo); 
+	updateExtra();
+	return *this;
 }

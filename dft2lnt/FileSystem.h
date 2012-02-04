@@ -110,7 +110,8 @@ public:
 	const std::string& getFilePath() const { return filePath; }
 	std::string getFileRealPath() const { return FileSystem::getRealPath(filePath); }
 	
-	void setFileExtension(const std::string& fileExtension );
+	File& setFileExtension(const std::string& fileExtension );
+	File& fix();
 
 	File newWithExtension(const std::string& fileExtension) const;
 	File newWithName(const std::string& fileBase, const std::string& fileExtension) const;
@@ -139,6 +140,7 @@ public:
 	inline bool isEmpty() {
 		return fileBase.empty() && fileExtension.empty();
 	}
+	
 };
 
 #endif // FILESYSTEM_H
