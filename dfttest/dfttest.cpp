@@ -450,7 +450,7 @@ error:
 void DFTTestSuite::writeYAMLNodeSpecific(Test::Test* testGeneric, YAML::Emitter& out) {
 	DFTTest* test = static_cast<DFTTest*>(testGeneric);
 	out << YAML::Key   << "dft";
-	out << YAML::Value << test->getFile().getFileName();
+	out << YAML::Value << test->getFile().getFilePath();
 	out << YAML::Key   << "verified";
 	out << YAML::Value << test->getVerifiedResults();
 	out << YAML::Key   << "results";
