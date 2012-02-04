@@ -197,6 +197,9 @@ void TestRun::run(Test* test) {
 void TestRun::reportTestStart(Test* test, string name, string verifiedDesc, ConsoleWriter::Color& verifiedColor, string verifiedResult) {
 	ConsoleWriter& consoleWriter = messageFormatter->getConsoleWriter();
 	
+	// Bail if output should not be displayed
+	if(hideOutput) return;
+	
 	// Notification prefix
 	consoleWriter << ConsoleWriter::Color::BlueBright << "::" << "  ";
 	
@@ -204,7 +207,7 @@ void TestRun::reportTestStart(Test* test, string name, string verifiedDesc, Cons
 	consoleWriter << "Test " << ConsoleWriter::Color::WhiteBright << name;
 	
 	consoleWriter << consoleWriter.applypostfix;
-
+	
 	if(!verifiedResult.empty() || !verifiedDesc.empty()) {
 		reportTest(test,
 				   ConsoleWriter::Color::WhiteBright,'>',
@@ -219,6 +222,11 @@ void TestRun::reportTestStart(Test* test, string name, string verifiedDesc, Cons
 
 void TestRun::reportTestEnd(Test* test, bool ok) {
 	ConsoleWriter& consoleWriter = messageFormatter->getConsoleWriter();
+	
+	// Bail if output should not be displayed
+	if(hideOutput) return;
+	
+	
 	consoleWriter << " " << ConsoleWriter::Color::WhiteBright << ">" << ConsoleWriter::Color::Reset << "  ";
 	consoleWriter << "Test ";
 	if(ok) {
@@ -236,6 +244,9 @@ void TestRun::reportTest(Test* test,
 				const ConsoleWriter::Color& resultColor, string result,
 				const ConsoleWriter::Color& timeColor, string time, bool cached) {
 	ConsoleWriter& consoleWriter = messageFormatter->getConsoleWriter();
+	
+	// Bail if output should not be displayed
+	if(hideOutput) return;
 	
 	// Prefix
 	consoleWriter << " " << itemColor << string(&item,1) << "  ";

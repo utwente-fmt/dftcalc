@@ -140,11 +140,16 @@ public:
 protected:
 	
 	MessageFormatter* messageFormatter;
+	bool hideOutput;
 public:
 	
 	TestRun(MessageFormatter* messageFormatter):
 		messageFormatter(messageFormatter) {
 	}
+	
+	
+	void setHideOutput(bool hideOutput) {this->hideOutput = hideOutput;}
+	bool getHideOutput() const {return hideOutput;}
 	
 	virtual void runSpecific(Test* test) = 0;
 	

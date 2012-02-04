@@ -371,12 +371,14 @@ int main(int argc, char** argv) {
 	}
 	
 	suite.applyLimitTests(limitTests);
-
+	
 	if(suite.getTestCount()>0) {
 		DFTTestRun run(messageFormatter,dft2lntRoot,coralRoot);
+		run.setHideOutput(verbosity<0);
 		run.run(suite);
+		messageFormatter->notify("Done.",VERBOSITY_FLOW);
 	} else {
-		messageFormatter->reportWarning("No tests performed");
+		messageFormatter->notify("Nothing done.");
 	}
 	
 	delete messageFormatter;
@@ -387,18 +389,12 @@ void DFTTestSuite::applyLimitTests(const vector<string>& limitTests) {
 	for(Test::Test* testGeneric: tests) {
 		DFTTest* test = static_cast<DFTTest*>(testGeneric);
 		bool addTest = false;
-		cerr << "test: " << test->getFile().getFileName() << endl;
 		for(string ltest: limitTests) {
-			cerr << "  ltest: " << ltest << endl;
 			if(test->getFile().getFileName() == ltest) {
-				cerr << "    BAM" << endl;
 				addTest = true;
 			}
 		}
 		if(addTest) this->limitTests.push_back(test);
-	}
-	for(Test::Test* testGeneric: this->limitTests) {
-		cerr << "Limit test: " << testGeneric->getFullname() << endl;
 	}
 }
 
