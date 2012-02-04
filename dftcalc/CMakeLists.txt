@@ -46,7 +46,7 @@ ADD_CUSTOM_COMMAND(
 )
 
 ## Installation
-#install (TARGETS dftcalc DESTINATION bin)
+install (TARGETS dftcalc DESTINATION bin)
 
 # Generate compile time information
 add_custom_command(
