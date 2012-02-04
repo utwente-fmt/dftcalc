@@ -1,24 +1,11 @@
 /*
-	testsuite <tests>
-	testsuite -t <test>
-	testsuite -s <suitefile>
-
-
-	testsuite <tests>
-	 -> loop over <tests>, performing them
-
-	testsuite -s <suitefile>
-	 -> read suitefile
-	 -> loop over tests in <suitefile>, performing them
-	 
-	testsuite -t <test>
-	 -> perform <test>
-
-	To perform a test:
-	- loop over all the commands
-	  - save intermediate results
-	  - verify intermediate results
-*/
+ * dftcalc.cpp
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
 
 #include <vector>
 #include <string>
@@ -234,7 +221,7 @@ std::string intToString(int i) {
 	return ss.str();
 }
 
-int DFTCalc::printOutput(const File& file) {
+void DFTCalc::printOutput(const File& file) {
 	std::string* outContents = FileSystem::load(file);
 	if(outContents) {
 		messageFormatter->notifyHighlighted("** OUTPUT of " + file.getFileName() + " **");
@@ -244,7 +231,7 @@ int DFTCalc::printOutput(const File& file) {
 	}
 }
 
-int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, FileWriter& out) {
+int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File exp    = dft.newWithExtension("exp");
@@ -414,7 +401,7 @@ int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, FileW
 	
 	delete fileHandler;
 	
-	return result;
+	return 0;
 }
 
 int main(int argc, char** argv) {
@@ -518,12 +505,7 @@ int main(int argc, char** argv) {
 				}
 		}
 	}
-
-//	printf("args:\n");
-//	for(unsigned int i=0; i<(unsigned int)argc; i++) {
-//		printf("  %s\n",argv[i]);
-//	}
-
+	
 	/* Create a new compiler context */
 	MessageFormatter* messageFormatter = new MessageFormatter(std::cerr);
 	messageFormatter->useColoredMessages(useColoredMessages);
@@ -556,43 +538,45 @@ int main(int argc, char** argv) {
 		}
 	}
 	
-	string cwd = FileSystem::getRealPath(".") + "/output";
-	
-	FileSystem::mkdir(File(cwd));
-	
+	/* Enable Shell messages */
 	Shell::messageFormatter = messageFormatter;
 	
+	/* Create the DFTCalc class */
 	DFTCalc calc;
 	calc.setMessageFormatter(messageFormatter);
 	if(dotToTypeSet) calc.setBuildDOT(dotToType);
 	
-	//std::cerr << "Yeah: " << dotToTypeSet << ", " << dotToType << std::endl;
-	
+	/* Check if all needed tools are available */
 	if(calc.checkNeededTools()) {
 		return -1;
 	}
 	
+	/* Result will be written to this FileWriter */
 	FileWriter out;
-	// Empty result file
 	
-	// Calculate DFTs
+	/* Change the CWD to ./output, creating the folder if not existent */
+	string cwd = FileSystem::getRealPath(".") + "/output";
+	FileSystem::mkdir(File(cwd));
 	PushD workdir(cwd);
+	
+	/* Calculate DFTs */
 	bool hasInput = false;
 	for(File dft: dfts) {
 		hasInput = true;
 		if(FileSystem::exists(dft)) {
-			calc.calculateDFT(cwd,dft,out);
+			calc.calculateDFT(cwd,dft);
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
 		}
 	}
 	workdir.popd();
-
+	
+	/* If there were no DFT calculations performed... */
 	if(!hasInput) {
 		messageFormatter->reportWarning("No calculations performed");
 	}
-
-	// Write result file
+	
+	/* Write result file */
 	if(resultFileSet && resultFileName!="") {
 		YAML::Emitter out;
 		out << calc.getResults();
@@ -604,11 +588,13 @@ int main(int argc, char** argv) {
 			messageFormatter->reportErrorAt(Location(resultFileName),"could not open file for printing result");
 		}
 	}
-	// Print result file
+	
+	/* Print result file */
 	if(print || (resultFileSet && resultFileName=="")) {
 		std::cout << out.toString();
 	}
 	
+	/* Free the messager */
 	delete messageFormatter;
 	
 	return 0;

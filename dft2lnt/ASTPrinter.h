@@ -1,3 +1,12 @@
+/*
+ * ASTPrinter.h
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
+
 #ifndef ASTPRINTER_H
 #define ASTPRINTER_H
 
@@ -27,7 +36,6 @@ public:
 	 * Call validate() to start the validation process.
 	 */
 	ASTPrinter(DFT::AST::ASTNodes* ast, CompilerContext* cc):
-		//ASTVisitor(ast,cc,[](int& ret, int val){ret = ret && val;}) {
 		ASTVisitor<int,true>(ast,cc,NULL) {
 	}
 
@@ -73,24 +81,11 @@ public:
 	virtual int visitGate(DFT::AST::ASTGate* gate) {
 		int valid = true;
 		
-//		if(!ASTDFTBuilderPass1::buildGateTest(gate)) {
-//			valid = false;
-//			cc->reportErrorAt(gate->getLocation(),"unsupported gate type: " + gate->getGateType()->getString());
-//		}
-		
 		out << out.applyprefix << "Gate[" << gate->getGateType()->getString() << "] \"" << gate->getName()->getString() << "\"" << out.applypostfix;
 		out.indent();
 		valid = ASTVisitor<int,true>::visitGate(gate) ? valid : false ;
 		out.outdent();
 		
-//		std::vector<DFT::AST::ASTIdentifier*>* children = gate->getChildren();
-//		for(int i=children->size();i--;) {
-//			std::vector<std::string>::iterator it = std::find(definedNodes.begin(),definedNodes.end(),children->at(i)->getString());
-//			if(it == definedNodes.end()) {
-//				valid = false;
-//				cc->reportErrorAt(children->at(i)->getLocation(),"undefined node referenced: " + children->at(i)->getString());
-//			}
-//		}
 		return valid;
 	}
 	virtual int visitPage(DFT::AST::ASTPage* page) {
@@ -100,11 +95,6 @@ public:
 		
 		valid = ASTVisitor<int,true>::visitPage(page) ? valid : false ;
 		
-//		std::vector<std::string>::iterator it = std::find(definedNodes.begin(),definedNodes.end(),page->getNodeName()->getString());
-//		if(it == definedNodes.end()) {
-//			valid = false;
-//			cc->reportErrorAt(page->getNodeName()->getLocation(),"undefined node referenced: " + page->getNodeName()->getString());
-//		}
 		return valid;
 	}
 	virtual int visitAttrib(DFT::AST::ASTAttrib* attr) {

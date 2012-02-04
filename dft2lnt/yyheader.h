@@ -1,3 +1,12 @@
+/*
+ * yyheader.h
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
+
 #ifndef YYHEADER_H
 #define YYHEADER_H
 

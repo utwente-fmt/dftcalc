@@ -1,3 +1,12 @@
+/*
+ * dftcalc.h
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
+
 #ifndef DFTCALC_H
 #define DFTCALC_H
 
@@ -8,7 +17,10 @@ public:
 	static const int VERBOSITY_SEARCHING;
 	
 private:
+	
+	/// The -T<buildDot> argument passed to dot
 	std::string buildDot;
+	
 	MessageFormatter* messageFormatter;
 	std::string dft2lntRoot;
 	std::string coralRoot;
@@ -20,35 +32,51 @@ private:
 	File bcgioExec;
 	File mrmcExec;
 	File dotExec;
-
+	
 	std::string getCoralRoot(MessageFormatter* messageFormatter);
 	std::string getRoot(MessageFormatter* messageFormatter);
 	std::string getCADPRoot(MessageFormatter* messageFormatter);
-
+	
+	/// A map containing the results of the calculation. <filename> --> <result>
 	map<std::string,double> results;
-
+	
 public:
 	
+	/**
+	 * Returns the result map. The result map contains the mapping:
+	 *   <filename> --> <result>
+	 * @return The result map.
+	 */
 	const map<std::string,double> getResults() const {
 		return results;
 	}
 	
+	/**
+	 * Verifies all the needed tools for calculation are installed.
+	 * Will report errors to the MessageFormatter specified with 
+	 * setMessageFormatter().
+	 * @return false: all tools found OK, true: error
+	 */
 	bool checkNeededTools() {
 		
 		bool ok = true;
 		
 		messageFormatter->notify("Checking tools...",VERBOSITY_SEARCHING);
 		
+		/* Obtain all needed root information from environment */
 		dft2lntRoot = getRoot(NULL);
 		coralRoot = getCoralRoot(NULL);
 		cadpRoot = getCADPRoot(NULL);
 		
+		/* These tools should be easy to find in the roots. Note that an added
+		 * bonus would be to locate them using PATH as well.
+		 */
 		dft2lntcExec = File(dft2lntRoot+"/bin/dft2lntc");
 		imc2ctmdpExec = File(coralRoot+"/bin/imc2ctmdp");
 		coralExec = File(coralRoot+"/coral");
 		svlExec = File(cadpRoot+"/com/svl");
 		
-		// Find dft2lntc executable (based on DFT2LNTROOT environment variable)
+		/* Find dft2lntc executable (based on DFT2LNTROOT environment variable) */
 		if(dft2lntRoot.empty()) {
 			messageFormatter->reportError("Environment variable `DFT2LNTROOT' not set. Please set it to where /bin/dft2lntc can be found.");
 			ok = false;
@@ -65,7 +93,7 @@ public:
 			messageFormatter->reportAction("Using dft2lntc [" + dft2lntcExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 		}
 		
-		// Find imc2ctmdpi and coral executables (based on CORAL environment variable)
+		/* Find imc2ctmdpi and coral executables (based on CORAL environment variable) */
 		if(coralRoot.empty()) {
 			messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
 			ok = false;
@@ -93,8 +121,7 @@ public:
 			}
 		}
 		
-		
-		// Find svl executable (based on CADP environment variable)
+		/* Find svl executable (based on CADP environment variable) */
 		if(cadpRoot.empty()) {
 			messageFormatter->reportError("Environment variable `CADP' not set. Please set it to where CADP can be found.");
 			ok = false;
@@ -112,8 +139,8 @@ public:
 				messageFormatter->reportAction("Using svl [" + svlExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 			}
 		}
-
-		// Find an mrmc executable (based on PATH environment variable)
+		
+		/* Find an mrmc executable (based on PATH environment variable) */
 		{
 			bool exists = false;
 			bool accessible = false;
@@ -139,7 +166,7 @@ public:
 			}
 		}
 		
-		// Find bcg_io executable (based on PATH environment variable)
+		/* Find bcg_io executable (based on PATH environment variable) */
 		{
 			bool exists = false;
 			bool accessible = false;
@@ -164,8 +191,8 @@ public:
 				messageFormatter->reportAction("Using bcg_io [" + bcgioExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 			}
 		}
-
-		// Find dot executable (based on PATH environment variable)
+		
+		/* Find dot executable (based on PATH environment variable) */
 		{
 			bool exists = false;
 			bool accessible = false;
@@ -194,15 +221,37 @@ public:
 		return !ok;
 	}
 	
+	/**
+	 * Sets the MessageFormatter to be used by this DFTCalc instance.
+	 * @param messageFormatter The MessageFormatter to be used by this DFTCalc instance
+	 */
 	void setMessageFormatter(MessageFormatter* messageFormatter) {
 		this->messageFormatter = messageFormatter;
 	}
+	
+	/**
+	 * Sets the image output format to be passed to dot as the -T argument.
+	 * Example: png
+	 * @param buildDot Image output format to be passed to dot.
+	 */
 	void setBuildDOT(const std::string& buildDot) {
 		this->buildDot = buildDot;
 	}
-
-	int printOutput(const File& file);
-	int calculateDFT(const std::string& cwd, const File& dft, FileWriter& out);
+	
+	/**
+	 * Prints the contents of the specified File to the messageFormatter specified
+	 * with setMessageFormatter().
+	 * @param file The file to print.
+	 */
+	void printOutput(const File& file);
+	
+	/**
+	 * Calculates the specified DFT file, using the specified working directory.
+	 * @param cwd The directory to work in.
+	 * @param dft The DFT to calculate
+	 * @return 0 if successful, non-zero otherwise
+	 */
+	int calculateDFT(const std::string& cwd, const File& dft);
 	
 };
 

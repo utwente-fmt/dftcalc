@@ -1,3 +1,12 @@
+/*
+ * compiler.h
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
+
 #ifndef COMPILER_H
 #define COMPILER_H
 
@@ -109,7 +118,7 @@ public:
 	 * Tests if the specified file is allowed to be written to.
 	 * If using a relative path, take the working directory into account.
 	 * @param fileName The path+name of the file to test.
-	 * @returns true: writable, false: not writable.
+	 * @return true: writable, false: not writable.
 	 */
 	virtual bool testWritable(std::string fileName);
 

@@ -1,3 +1,11 @@
+/*
+ * CompilerContext.h
+ * 
+ * Part of a general library.
+ * 
+ * @author Freark van der Berg
+ */
+
 #ifndef CONSOLEWRITER_H
 #define CONSOLEWRITER_H
 

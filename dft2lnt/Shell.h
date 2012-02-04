@@ -1,3 +1,11 @@
+/*
+ * Shell.h
+ * 
+ * Part of a general library.
+ * 
+ * @author Freark van der Berg
+ */
+
 #ifndef SHELL_H
 #define SHELL_H
 

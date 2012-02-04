@@ -1,3 +1,12 @@
+/*
+ * DFTreeBCGNodeBuilder.h
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
+
 namespace DFT {
 class DFTreePrinter;
 }
@@ -50,7 +59,7 @@ private:
 	int generateSVLBuilder(FileWriter& out, std::string fileName);
 	int executeSVL(std::string root, std::string fileName);
 public:
-
+	
 	DFTreeBCGNodeBuilder(std::string root, DFT::DFTree* dft, CompilerContext* cc):
 		root(root),
 		lntRoot(root+DFT2LNT::LNTSUBROOT+"/"),
@@ -60,20 +69,40 @@ public:
 	}
 	virtual ~DFTreeBCGNodeBuilder() {
 	}
-
+	
 	/**
 	 * Returns the Lotos NT File needed for the specified node.
 	 * @return he Lotos NT File needed for the specified node.
 	 */
 	static std::string getFileForNode(const DFT::Nodes::Node& node);
-
+	
 	int generate(const DFT::Nodes::Node& node, set<string>& triedToGenerate);
 	int generate();
+	
+	/**
+	 * Checks is the BCG file at the specified file is a valid BCG file.
+	 * Uses the return value of a call to bcg_info.
+	 * @param bcgFilePath The BCG file to check.
+	 */
 	int bcgIsValid(std::string bcgFilePath);
+
+	/**
+	 * Checks is the BCG file at the specified file is a valid BCG file.
+	 * Uses the return value of a call to bcg_info.
+	 * @param bcgFilePath The BCG file to check.
+	 */
 	int lntIsValid(std::string lntFilePath);
-
+	
+	/**
+	 * Writes the contents of the specified FileWriter to the file at the
+	 * specified path. It will report warnings to the CompilerContext known to
+	 * this instance.
+	 * @param filePath Path to the file to write to
+	 * @param fw FileWriter of which the contents will be written to the file.
+	 * @return 0 on success or error code of errno on failure.
+	 */
 	int fancyFileWrite(const std::string& filePath, FileWriter& fw);
-
+	
 };
 
 } // Namespace: DFT

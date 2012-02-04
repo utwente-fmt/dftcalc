@@ -1,3 +1,11 @@
+/*
+ * System.h
+ * 
+ * Part of a general library.
+ * 
+ * @author Freark van der Berg
+ */
+
 #ifndef SYSTEM_H
 #define SYSTEM_H
 

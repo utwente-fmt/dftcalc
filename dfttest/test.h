@@ -1,3 +1,11 @@
+/*
+ * test.h
+ * 
+ * Part of a general library.
+ * 
+ * @author Freark van der Berg
+ */
+
 namespace Test {
 	class Test;
 	class TestSuite;

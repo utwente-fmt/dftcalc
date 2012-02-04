@@ -1,3 +1,12 @@
+/*
+ * DFTree.h
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
+
 namespace DFT {
 class DFTree;
 }
@@ -23,16 +32,16 @@ namespace DFT {
  */
 class DFTree {
 private:
-
-	// The nodes of the DFT
+	
+	/// The nodes of the DFT
 	std::vector<Nodes::Node*> nodes;
 	
-	// The mapping from name (e.g. "A") to a Node
+	/// The mapping from name (e.g. "A") to a Node
 	std::map<std::string,DFT::Nodes::Node*> nodeTable;
 	
-	// The Top (root) Node of the DFT
+	/// The Top (root) Node of the DFT
 	Nodes::Node* topNode;
-
+	
 	/**
 	 * Sets the Top node without any checks
 	 */
@@ -40,17 +49,17 @@ private:
 		this->topNode = node;
 		return 0;
 	}
-
+	
 	DFTree(const DFTree& d) {
 	}
 	
 	DFTree& operator=(const DFTree& other) {
 		return *this;
 	}
-
+	
 public:
 	DFTree(): nodes(0), topNode(NULL) {
-
+	
 	}
 	virtual ~DFTree() {
 		for(int i=nodes.size(); i--;) {
@@ -58,8 +67,7 @@ public:
 			delete nodes.at(i);
 		}
 	}
-
-	// Claims ownership
+	
 	/**
 	 * Adds the specified node to this DFT.
 	 * NOTE: it claims ownership of the Node; do not delete
@@ -151,6 +159,10 @@ public:
 		return topNode;
 	}
 	
+	/**
+	 * Translates this DFTree so that all FDEP nodes are removed and Or nodes
+	 * are inserted, such that the meaning of the DFTree is unaltered.
+	 */
 	void transformFDEPNodes() {
 		size_t s_before = nodes.size();
 		size_t handled = 0;
@@ -201,7 +213,7 @@ public:
 						
 						// Create the child (depender) --> parent (OR-node) relationship
 						fdepChild->getParents().push_back(gate);
-
+						
 						// Create the child (depender) <-- parent (OR-node) relationship
 						gate->addChild(fdepChild);
 						
@@ -223,11 +235,11 @@ public:
 					
 					// Create the child (source) --> parent (OR-node) relationship
 					fdep->getEventSource()->getParents().push_back(gate);
-
+					
 					// Create the child (source) <-- parent (OR-node) relationship
 					gate->addChild(fdep->getEventSource());
 				}
-
+				
 				// Remove the original FDEP node
 				removeNode(node);
 			}

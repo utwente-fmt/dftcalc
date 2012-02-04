@@ -1,3 +1,11 @@
+/*
+ * MessageFormatter.cpp
+ * 
+ * Part of a general library.
+ * 
+ * @author Freark van der Berg
+ */
+
 #include "MessageFormatter.h"
 
 const MessageFormatter::MessageType MessageFormatter::MessageType::Message(MessageType::MESSAGE);

@@ -1,3 +1,11 @@
+/*
+ * test.cpp
+ * 
+ * Part of a general library.
+ * 
+ * @author Freark van der Berg
+ */
+
 #include "test.h"
 
 namespace Test {

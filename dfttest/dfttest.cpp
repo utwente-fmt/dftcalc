@@ -1,24 +1,11 @@
 /*
-	testsuite <tests>
-	testsuite -t <test>
-	testsuite -s <suitefile>
-
-
-	testsuite <tests>
-	 -> loop over <tests>, performing them
-
-	testsuite -s <suitefile>
-	 -> read suitefile
-	 -> loop over tests in <suitefile>, performing them
-	 
-	testsuite -t <test>
-	 -> perform <test>
-
-	To perform a test:
-	- loop over all the commands
-	  - save intermediate results
-	  - verify intermediate results
-*/
+ * dfttest.cpp
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
 
 #include <vector>
 #include <string>

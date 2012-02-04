@@ -1,3 +1,12 @@
+/*
+ * BasicEvent.h
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
+
 class BasicEvent;
 
 #ifndef BASICEVENT_H
@@ -224,10 +233,30 @@ public:
 		this->mu = mu;
 	}
 	
+	/**
+	 * Returns the lambda failure probability of this Basic Event.
+	 * @return The lambda failure probability of this Basic Event.
+	 */
 	double getLambda() const { return lambda; }
+	
+	/**
+	 * Returns the mu failure probability of this Basic Event.
+	 * @return The mu failure probability of this Basic Event.
+	 */
 	double getMu()     const { return mu; }
+	
+	/**
+	 * Returns the dormancy factor (mu/lambda) of this Basic Event.
+	 * @return The dormancy factor (mu/lambda) of this Basic Event.
+	 */
 	double getDorm()   const { return mu / lambda; }
-
+	
+	/**
+	 * Creates a new Basic Event instance, originating from the specified
+	 * location and with the specified name.
+	 * @param loc Source location of the Basic Event.
+	 * @param name The name of the Basic Event.
+	 */
 	BasicEvent(Location loc, std::string name):
 		Node(loc,name,BasicEventType),
 		lambda(-1),
@@ -235,6 +264,7 @@ public:
 	}
 	virtual ~BasicEvent() {
 	}
+	
 	virtual bool isBasicEvent() const { return true; }
 	virtual bool isGate() const { return false; }
 };

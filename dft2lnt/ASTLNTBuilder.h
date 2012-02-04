@@ -1,3 +1,12 @@
+/*
+ * ASTLNTBuilder.h
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
+
 #ifndef ASTLNTBUILDER_H
 #define ASTLNTBUILDER_H
 

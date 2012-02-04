@@ -1,3 +1,11 @@
+/*
+ * System.cpp
+ * 
+ * Part of a general library.
+ * 
+ * @author Freark van der Berg
+ */
+
 #include <unistd.h>
 #include <stdint.h>
 #include "System.h"

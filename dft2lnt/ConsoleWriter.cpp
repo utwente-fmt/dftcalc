@@ -1,3 +1,11 @@
+/*
+ * CompilerContext.cpp
+ * 
+ * Part of a general library.
+ * 
+ * @author Freark van der Berg
+ */
+
 #include "ConsoleWriter.h"
 
 #include <iostream>

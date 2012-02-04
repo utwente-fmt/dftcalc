@@ -1,3 +1,12 @@
+/*
+ * DFTreeEXPBuilder.h
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
+
 namespace DFT {
 class DFTreeEXPBuilder;
 }
@@ -136,6 +145,15 @@ public:
 	
 	/// The Node on which is synchronized
 	const DFT::Nodes::Node* syncOnNode;
+	
+//	EXPSyncRule* deepCopy() {
+//		EXPSyncRule* newRule = new EXPSyncRule(*this);
+//		newRule->label.clear();
+//		for(pair<unsigned int, EXPSyncItem*> thisItem: this->label) {
+//			newRule->label.insert(thisItem->first,new
+//		}
+//		return newRule;
+//	}
 	
 public:
 	EXPSyncRule(const std::string& toLabel, bool hideToLabel=true):

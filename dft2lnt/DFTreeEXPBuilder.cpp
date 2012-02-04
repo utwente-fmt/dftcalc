@@ -1,3 +1,12 @@
+/*
+ * DFTreeEXPBuilder.cpp
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
+
 #include "DFTreeBCGNodeBuilder.h"
 #include "DFTreeEXPBuilder.h"
 #include "FileWriter.h"
@@ -481,7 +490,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 		}
 		
 		/* Generate node-specific rules for the node */
-
+		
 		switch(node.getType()) {
 		case DFT::Nodes::BasicEventType: {
 //			const DFT::Nodes::BasicEvent* be = static_cast<const DFT::Nodes::BasicEvent*>(&node);

@@ -1,3 +1,12 @@
+/*
+ * Node.h
+ * 
+ * Part of dft2lnt library - a library containing read/write operations for DFT
+ * files in Galileo format and translating DFT specifications into Lotos NT.
+ * 
+ * @author Freark van der Berg
+ */
+
 class Node;
 
 #ifndef NODE_H
@@ -97,6 +106,8 @@ private:
 	Location location;
 	string name;
 	NodeType type;
+	
+	/// List of parents, instances are freed by DFTree instance.
 	std::vector<Nodes::Node*> parents;
 public:
 	Node(Location location, NodeType type):
@@ -174,12 +185,22 @@ public:
 		return typeMatch(type,GateType);
 	}
 	
+	/**
+	 * Returns whether or not this node uses dynamic activation.
+	 * Dynamic activation means the node listens to when one of its children
+	 * is activated by a different node.
+	 * @return true/false: whether this node uses dynamic activation.
+	 */
 	virtual bool usesDynamicActivation() const { return false; }
 	
+	
+	/**
+	 * Returns whether or not this node has a dummy output.
+	 * When a node has a dummy output, it means the node never triggers the fail
+	 * event to its parent.
+	 * @return true/false: whether this node has a dummy output.
+	 */
 	virtual bool outputIsDumb() const { return false; }
-};
-
-class NodePlaceHolder: public Node {
 };
 
 } // Namespace: Nodes

@@ -1,8 +1,10 @@
 /*
-realpath() Win32 implementation, supports non standard glibc extension
-This file has no copyright assigned and is placed in the Public Domain.
-Written by Nach M. S. September 8, 2005
-*/
+ * FileSystem.cpp
+ * 
+ * Part of a general library.
+ * 
+ * @author Freark van der Berg
+ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,6 +38,11 @@ Written by Nach M. S. September 8, 2005
 extern "C" {
 #endif
 
+/**
+ * realpath() Win32 implementation, supports non standard glibc extension
+ * This function has no copyright assigned and is placed in the Public Domain.
+ * Written by Nach M. S. September 8, 2005
+ */
 char *realpath(const char *path, char resolved_path[PATH_MAX]) {
 	char *return_path = 0;
 
