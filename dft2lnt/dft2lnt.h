@@ -11,6 +11,7 @@ class DFT2LNT {
 public:
 	static const std::string LNTSUBROOT;
 	static const std::string BCGSUBROOT;
+	static const std::string TESTSUBROOT;
 
 };
 
