@@ -182,6 +182,12 @@ line //{
 	|	gate_line
 	|	be_line
 	|	page_line
+	|	error {
+		currentParser->getCC()->reportErrorAt(@1,"unexpected tokens");
+		$$ = NULL;
+		yyclearin;
+		yyerrok;
+	}
 	;
 //}
 
