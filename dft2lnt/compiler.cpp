@@ -12,19 +12,6 @@
 #include "compiler.h"
 #include "FileSystem.h"
 
-
-
-
-
-	}
-
-
-
-
-
-
-}
-
 bool CompilerContext::testWritable(std::string fileName) {
 	File file(fileName);
 	File folder(file.getPathTo());
