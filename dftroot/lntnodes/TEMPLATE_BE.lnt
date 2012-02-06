@@ -2,33 +2,33 @@ module TEMPLATE_BE(TEMPLATE_COMMON) is
 
 	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL] (total: NAT) is
 	var
-		status : NAT,
+		status : STATUS,
 		nr : NAT
 	in
-		status := 0;
+		status := DORMANT;
 		nr := 0;
 		loop
 			select
 				(*ACTIVATE (?nr,FALSE) where (nr > 0 of NAT) and (nr <= total);*)
 				ACTIVATE (?nr,FALSE) where (nr==0 of NAT);
-				if (status == 0) then
-					status := 1
+				if (status == DORMANT) then
+					status := ACTIVE
 				end if;
 				nr := 0
 			[]
-				if (status == 0) then
+				if (status == DORMANT) then
 					RATE_FAIL (!1 of NAT,1 of NAT);
-					status := 2
+					status := FAILING
 				end if
 			[]
-				if (status == 1) then
+				if (status == ACTIVE) then
 					RATE_FAIL (!1 of NAT,2 of NAT);
-					status := 2
+					status := FAILING
 				end if
 			[]
-				if (status == 2) then
+				if (status == FAILING) then
 					FAIL (!0 of NAT);
-					status := 3
+					status := FAILED
 				end if
 			end select
 		end loop
