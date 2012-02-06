@@ -46,7 +46,6 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 	std::stringstream ss;
 	
 	if(node.getType()==DFT::Nodes::GateVotingType) {
-		const DFT::Nodes::GateVoting& gateVoting = *static_cast<const DFT::Nodes::GateVoting*>(&node);
 		ss << "v";
 	}
 	
@@ -213,7 +212,7 @@ int DFT::DFTreeBCGNodeBuilder::generateSpare(FileWriter& out, const DFT::Nodes::
 }
 
 int DFT::DFTreeBCGNodeBuilder::generateFDEP(FileWriter& out, const DFT::Nodes::GateFDEP& gate) {
-	int nr_parents = gate.getParents().size();
+	//int nr_parents = gate.getParents().size();
 	int dependers = gate.getDependers().size();
 	out << out.applyprefix << " * Generating FDEP(dependers= " << dependers << ")" << out.applypostfix;
 	generateHeaderClose(out);

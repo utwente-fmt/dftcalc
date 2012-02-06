@@ -164,15 +164,12 @@ public:
 	 * are inserted, such that the meaning of the DFTree is unaltered.
 	 */
 	void transformFDEPNodes() {
-		size_t s_before = nodes.size();
-		size_t handled = 0;
 		
 		// Copy the current list of nodes
 		const auto nodes = this->nodes;
 		
 		// Loop over all the nodes in the DFT
 		for(DFT::Nodes::Node* node: nodes) {
-			++handled;
 			
 			// If we find an FDEP Gate...
 			if(DFT::Nodes::Node::typeMatch(node->getType(),DFT::Nodes::GateFDEPType)) {
@@ -244,7 +241,6 @@ public:
 				removeNode(node);
 			}
 		}
-		assert(handled==s_before);
 	}
 };
 } // Namespace: DFT
