@@ -68,6 +68,10 @@ public:
 		coralRoot = getCoralRoot(NULL);
 		cadpRoot = getCADPRoot(NULL);
 		
+		if(dft2lntRoot.empty()) return 1;
+		if(coralRoot.empty()) return 1;
+		if(cadpRoot.empty()) return 1;
+		
 		/* These tools should be easy to find in the roots. Note that an added
 		 * bonus would be to locate them using PATH as well.
 		 */

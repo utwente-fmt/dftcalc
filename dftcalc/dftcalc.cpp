@@ -99,7 +99,7 @@ std::string DFTCalc::getCoralRoot(MessageFormatter* messageFormatter) {
 	std::string coralRoot = root?string(root):"";
 	
 	if(coralRoot=="") {
-		//if(messageFormatter) messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
+		if(messageFormatter) messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
 		goto end;
 	}
 	
@@ -132,7 +132,7 @@ std::string DFTCalc::getRoot(MessageFormatter* messageFormatter) {
 	std::string dft2lntRoot = root?string(root):"";
 	
 	if(dft2lntRoot=="") {
-		//if(messageFormatter) messageFormatter->reportError("Environment variable `DFT2LNTROOT' not set. Please set it to where lntnodes/ can be found.");
+		if(messageFormatter) messageFormatter->reportError("Environment variable `DFT2LNTROOT' not set. Please set it to where lntnodes/ can be found.");
 		goto end;
 	}
 	
@@ -191,7 +191,7 @@ std::string DFTCalc::getCADPRoot(MessageFormatter* messageFormatter) {
 	std::string cadp = root?string(root):"";
 	
 	if(cadp=="") {
-		//if(messageFormatter) messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
+		if(messageFormatter) messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
 		goto end;
 	}
 	

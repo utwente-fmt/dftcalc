@@ -101,7 +101,7 @@ std::string getCoralRoot(MessageFormatter* messageFormatter) {
 	std::string coralRoot = root?string(root):"";
 	
 	if(coralRoot=="") {
-		//if(messageFormatter) messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
+		if(messageFormatter) messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
 		goto end;
 	}
 	
@@ -130,7 +130,7 @@ std::string getRoot(MessageFormatter* messageFormatter) {
 	std::string dft2lntRoot = root?string(root):"";
 	
 	if(dft2lntRoot=="") {
-		//if(messageFormatter) messageFormatter->reportError("Environment variable `DFT2LNTROOT' not set. Please set it to where lntnodes/ can be found.");
+		if(messageFormatter) messageFormatter->reportError("Environment variable `DFT2LNTROOT' not set. Please set it to where lntnodes/ can be found.");
 		goto end;
 	}
 	
@@ -319,10 +319,13 @@ int main(int argc, char** argv) {
 		print_version(messageFormatter);
 		exit(0);
 	}
-
+	
 	string dft2lntRoot = getRoot(messageFormatter);
 	string coralRoot = getCoralRoot(messageFormatter);
-
+	
+	if(dft2lntRoot.empty()) return 1;
+	if(coralRoot.empty()) return 1;
+	
 	DFTTestSuite suite(messageFormatter);
 	suite.setUseCachedOnly(useCachedOnly);
 	suite.setForcedRunning(forcedRunning);
