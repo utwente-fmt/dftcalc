@@ -9,10 +9,14 @@
 #ifndef SHELL_H
 #define SHELL_H
 
+#include <functional>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <string.h>
 #include <string>
 #include <time.h>
+#include <signal.h>
 #include <sys/time.h>
 #include "MessageFormatter.h"
 #include "FileSystem.h"
@@ -20,6 +24,32 @@
 
 class Shell {
 public:
+	
+	static int handleSignal(int signal) {
+		if(messageFormatter) {
+			ConsoleWriter& cw = messageFormatter->getConsoleWriter();
+			messageFormatter->getConsoleWriter().appendPostfix();
+			stringstream ss;
+			ss << "Caught signal `" << signal << "', ";
+			cw << " " << ConsoleWriter::Color::CyanBright << ">" << ConsoleWriter::Color::WhiteBright << "  " << ss.str();
+			while(true) {
+				cw << "terminate " << ConsoleWriter::Color::MagentaBright << "j" << ConsoleWriter::Color::WhiteBright << "ob or " << ConsoleWriter::Color::MagentaBright << "p" << ConsoleWriter::Color::WhiteBright << "rogram?" << ConsoleWriter::Color::Reset;
+				char answer[10];
+				std::cin.getline(answer,9);
+				if(!strncmp("j",answer,1)) {
+					break;
+				} else if(!strncmp("p",answer,1)) {
+					exit(signal);
+				} else {
+					cw << " " << ConsoleWriter::Color::CyanBright << ">" << ConsoleWriter::Color::WhiteBright << "  ";
+				}
+			}
+			cw.appendPostfix();
+		}
+		return signal;
+	}
+	
+	typedef int (*SignalHandler)(int signal);
 	
 	class SystemOptions {
 	public:
@@ -31,6 +61,19 @@ public:
 		std::string statProgram;
 		std::string reportFile;
 		int verbosity;
+		std::function<int(int)> signalHandler;
+		
+		SystemOptions():
+			command(""),
+			cwd("."),
+			outFile(""),
+			errFile(""),
+			statFile(""),
+			statProgram(""),
+			reportFile(""),
+			verbosity(0),
+			signalHandler(&handleSignal) {
+		}
 	};
 	
 	class RunStatistics {
@@ -168,6 +211,14 @@ public:
 		if(useStatFile && removeTmpFile) {
 			FileSystem::remove(statFile);
 		}
+		
+		// Check if the command was killed, e.g. by ctrl-c
+#ifdef WIN32
+#else
+		if (options.signalHandler && WIFSIGNALED(result)) {
+			result = options.signalHandler(result);
+		}
+#endif
 		
 		// Return the result of the command
 		return result;

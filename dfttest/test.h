@@ -149,9 +149,13 @@ protected:
 	
 	MessageFormatter* messageFormatter;
 	bool hideOutput;
+	bool requestStopTest;
+	bool requestStopSuite;
 public:
 	
 	TestRun(MessageFormatter* messageFormatter):
+		requestStopTest(false),
+		requestStopSuite(false),
 		messageFormatter(messageFormatter) {
 	}
 	
@@ -179,6 +183,9 @@ public:
 	void reportTestUndecided(Test* test,string iteration, string result, string time, bool cached);
 	
 	void run(TestSuite& suite);
+	int betweenIterations() {
+		return requestStopTest;
+	}
 	
 };
 

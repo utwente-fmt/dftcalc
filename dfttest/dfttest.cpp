@@ -494,6 +494,38 @@ void DFTTestSuite::setMessageFormatter(MessageFormatter* messageFormatter) {
 	this->messageFormatter = messageFormatter;
 }
 
+int DFTTestRun::handleSignal(int signal) {
+	cout << "HELLO " << messageFormatter << endl;
+	if(messageFormatter) {
+		ConsoleWriter& cw = messageFormatter->getConsoleWriter();
+		messageFormatter->getConsoleWriter().appendPostfix();
+		stringstream ss;
+		ss << "Caught signal `" << signal << "', ";
+		cw << " " << ConsoleWriter::Color::CyanBright << ">" << ConsoleWriter::Color::WhiteBright << "  " << ss.str();
+		while(true) {
+			cw << "terminate " << ConsoleWriter::Color::MagentaBright << "i" << ConsoleWriter::Color::WhiteBright << "teration";
+			cw << ", "         << ConsoleWriter::Color::MagentaBright << "t" << ConsoleWriter::Color::WhiteBright << "est";
+			cw << " or "       << ConsoleWriter::Color::MagentaBright << "p" << ConsoleWriter::Color::WhiteBright << "rogram";
+			cw << "?" << ConsoleWriter::Color::Reset;
+			char answer[10];
+			std::cin.getline(answer,9);
+			if(!strncmp("i",answer,1)) {
+				return 0;
+			} else if(!strncmp("t",answer,1)) {
+				requestStopTest = true;
+				return SIGINT;
+			} else if(!strncmp("p",answer,1)) {
+				requestStopSuite = true;
+				return SIGQUIT;
+			} else {
+				cw << " " << ConsoleWriter::Color::CyanBright << ">" << ConsoleWriter::Color::WhiteBright << "  ";
+			}
+		}
+		cw.appendPostfix();
+	}
+	return signal;
+}
+
 DFTTestResult DFTTestRun::runDftcalc(DFTTest* test) {
 	// Result
 	DFTTestResult result;
@@ -504,8 +536,13 @@ DFTTestResult DFTTestRun::runDftcalc(DFTTest* test) {
 	string dftcalc = dft2lntRoot + "/bin/dftcalc '" + test->getFile().getFileRealPath() + "' " + test->getTimeDftcalc() + " -r " + dftcalcResultFile.getFileRealPath();
 	
 	//clock_t start = clock();
+	Shell::SystemOptions options;
+	options.command = dftcalc;
+	options.verbosity = VERBOSITY_EXECUTIONS;
+	options.signalHandler = [this](int signal) -> int { return this->handleSignal(signal); };
 	Shell::RunStatistics stats;
-	Shell::system(dftcalc,VERBOSITY_EXECUTIONS,&stats);
+	Shell::system(options,&stats);
+	
 	//clock_t end = clock();
 	result.time_user    = stats.time_user;
 	result.time_system  = stats.time_system;
@@ -717,6 +754,12 @@ void DFTTestRun::runSpecific(Test::Test* testGeneric) {
 			test->getParentSuite()->updateOrigin();
 		}
 		displayResult(test,timeStamp,"dftcalc",dftResult,verified,useCached);
+	}
+	
+	// Do the general between iteration steps
+	// Returns whether to stop this test or not
+	if(betweenIterations()) {
+		return;
 	}
 	
 	// Run Coral

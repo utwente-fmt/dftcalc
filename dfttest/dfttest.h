@@ -94,6 +94,8 @@ public:
 	DFTTestResult runDftcalc(DFTTest* test);
 	DFTTestResult runCoral(DFTTest* test);
 	
+	int handleSignal(int signal);
+	
 	void displayResult(DFTTest* test, string timeStamp, string iteration, DFTTestResult& result, double verified, bool cached);
 	DFTTestResult getLastResult(DFTTest* test, string iteration);
 	

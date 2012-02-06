@@ -351,6 +351,10 @@ void TestRun::run(TestSuite& suite) {
 			run(test);
 			suite.updateOrigin();
 		}
+		if(requestStopSuite) {
+			requestStopSuite = false;
+			break;
+		}
 	}
 }
 
