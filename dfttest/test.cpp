@@ -63,6 +63,12 @@ void TestSuite::writeYAMLNode(Test* test, YAML::Emitter& out) {
 	out << YAML::EndMap;
 }
 
+void TestSuite::reportYAMLException(YAML::Exception& e) {
+	if(messageFormatter) {
+		messageFormatter->reportErrorAt(Location(origin.getFileRealPath(),e.mark.line),e.msg);
+	}
+}
+
 void TestSuite::writeTestFile(File file) {
 	YAML::Emitter out;
 	

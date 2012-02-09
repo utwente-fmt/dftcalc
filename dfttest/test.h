@@ -102,6 +102,8 @@ public:
 	
 	void writeYAMLNode(Test* test, YAML::Emitter& out);
 	
+	void reportYAMLException(YAML::Exception& e);
+	
 	void writeTestFile(File file);
 	
 	void readTestFile(File file);
