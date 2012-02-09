@@ -310,6 +310,8 @@ int main(int argc, char** argv) {
 
 	Shell::messageFormatter = messageFormatter;
 
+	messageFormatter->notify("Initializing...",VERBOSITY_FLOW);
+
 	/* Print help / version if requested and quit */
 	if(printHelp) {
 		print_help(messageFormatter,printHelpTopic);
@@ -333,33 +335,64 @@ int main(int argc, char** argv) {
 	/* Parse command line arguments without a -X.
 	 * These specify the input files.
 	 */
-	int argc_current = optind;
-	if(argc_current<argc) {
-		string testSuiteFile = string(argv[argc_current]);
-		
+	 {
+		int argc_current = optind;
 		bool success = false;
-		
-		vector<File> tryOut;
-		
-		conditionalAdd(tryOut,File(testSuiteFile));
-		conditionalAdd(tryOut,File(".",testSuiteFile,"test"));
-		conditionalAdd(tryOut,File(dft2lntRoot+DFT2LNT::TESTSUBROOT,testSuiteFile));
-		conditionalAdd(tryOut,File(dft2lntRoot+DFT2LNT::TESTSUBROOT,testSuiteFile,"test"));
-		
-		for(File file: tryOut) {
-			success = tryReadFile(messageFormatter,file,suite);
-			if(success) break;
+		if(argc_current<argc) {
+			string testSuiteFile = string(argv[argc_current]);
+			
+			vector<File> tryOut;
+			
+			conditionalAdd(tryOut,File(testSuiteFile));
+			conditionalAdd(tryOut,File(".",testSuiteFile,Test::fileExtension));
+			conditionalAdd(tryOut,File(dft2lntRoot+DFT2LNT::TESTSUBROOT,testSuiteFile));
+			conditionalAdd(tryOut,File(dft2lntRoot+DFT2LNT::TESTSUBROOT,testSuiteFile,Test::fileExtension));
+			
+			for(File file: tryOut) {
+				success = tryReadFile(messageFormatter,file,suite);
+				if(success) break;
+			}
+			
+			if(!success) {
+				if(verbosity<2) {
+					messageFormatter->reportWarning("No test suite found, use -vv to show the tried paths");
+				}
+			}
+			
+			argc_current++;
 		}
 		
-		if(!success) {
-			if(verbosity<2) {
-				messageFormatter->reportWarning("No tests found, use -vv to show the tried paths");
+		if(!success && limitTests.size()>0) {
+			File suiteFile(limitTests[0]);
+			suiteFile.setPathTo(".").setFileExtension(Test::fileExtension).fix();
+			suite.createTestFile(suiteFile);
+			success = true;
+		}
+	 }
+	
+	// Add DFT tests from file if not in the suite
+	for(string loadTest: limitTests) {
+		// Initially mark the file as to load
+		bool load = true;
+		File loadTestFile = File(loadTest).fix();
+		
+		// Check if the file is already in the suite, if so, mark as don't load
+		for(auto it=suite.getTests().begin(); it!=suite.getTests().end(); it++) {
+			DFTTest* test = static_cast<DFTTest*>(*it);
+			if(loadTestFile == test->getFile()) {
+				load = false;
 			}
 		}
 		
-		argc_current++;
+		// If still marked to load, load
+		if(load) {
+			DFTTest* test = new DFTTest(loadTestFile);
+			suite.getTests().push_back(test);
+			test->setParentSuite(&suite);
+		}
 	}
 	
+	// Apply limits
 	suite.applyLimitTests(limitTests);
 	
 	if(suite.getTestCount()>0) {

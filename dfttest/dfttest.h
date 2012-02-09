@@ -47,6 +47,11 @@ public:
 	std::map<std::string,std::map<std::string,DFTTestResult>>& getResults() {return results;}
 	const std::map<std::string,std::map<std::string,DFTTestResult>>& getResults() const {return results;}
 	
+	DFTTest() {
+	}
+	DFTTest(File file):
+		file(file) {
+	}
 	virtual ~DFTTest() {
 	}
 	
