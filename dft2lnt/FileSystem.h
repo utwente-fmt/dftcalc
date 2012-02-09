@@ -118,6 +118,7 @@ public:
 	const std::string& getFilePath() const { return filePath; }
 	std::string getFileRealPath() const { return FileSystem::getRealPath(filePath); }
 	
+	File& setPathTo(const std::string& pathTo);
 	File& setFileExtension(const std::string& fileExtension );
 	File& fix();
 

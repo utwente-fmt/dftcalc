@@ -475,6 +475,12 @@ File::File(const std::string& pathTo, const std::string& fileBase, const std::st
 	updateExtra();
 }
 
+File& File::setPathTo(const std::string& pathTo) {
+	this->pathTo = pathTo;
+	updateExtra();
+	return *this;
+}
+
 File& File::setFileExtension(const std::string& fileExtension ) {
 	this->fileExtension = fileExtension;
 	updateExtra();
