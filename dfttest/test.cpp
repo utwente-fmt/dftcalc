@@ -6,9 +6,14 @@
  * @author Freark van der Berg
  */
 
+#include "yaml-cpp/yaml.h"
 #include "test.h"
 
 namespace Test {
+
+const std::string fileExtension = "test";
+
+const int VERBOSITY_DATA = 1;
 
 bool TestSuite::isInLimitTests(Test* test) {
 	for(auto it=limitTests.begin();it!=limitTests.end(); ++it) {
@@ -33,19 +38,19 @@ Test* TestSuite::readYAMLNode(const YAML::Node& node) {
 	if(const YAML::Node* itemNode = node.FindValue("fullname")) {
 		std::string fullname;
 		try { *itemNode >> fullname; }
-		catch(YAML::Exception& e) { if(messageFormatter) messageFormatter->reportErrorAt(Location(origin.getFileRealPath(),e.mark.line),e.msg); }
+		catch(YAML::Exception& e) { reportYAMLException(e); }
 		test->setFullname(fullname);
 	}
 	if(const YAML::Node* itemNode = node.FindValue("shortdesc")) {
 		std::string sdesc;
 		try { *itemNode >> sdesc; }
-		catch(YAML::Exception& e) { if(messageFormatter) messageFormatter->reportErrorAt(Location(origin.getFileRealPath(),e.mark.line),e.msg); }
+		catch(YAML::Exception& e) { reportYAMLException(e); }
 		test->setShortDescription(sdesc);
 	}
 	if(const YAML::Node* itemNode = node.FindValue("longdesc")) {
 		std::string ldesc;
 		try { *itemNode >> ldesc; }
-		catch(YAML::Exception& e) { if(messageFormatter) messageFormatter->reportErrorAt(Location(origin.getFileRealPath(),e.mark.line),e.msg); }
+		catch(YAML::Exception& e) { reportYAMLException(e); }
 		test->setLongDescription(ldesc);
 	}
 	return test;
@@ -109,58 +114,78 @@ void TestSuite::readTestFile(File file) {
 		return;
 	}
 	std::ifstream fin(file.getFileRealPath());
-	YAML::Parser parser(fin);
-	YAML::Node doc;
-	
-	while(parser.GetNextDocument(doc)) {
-	
-		if(doc.Type()==YAML::NodeType::Sequence) {
-			for(YAML::Iterator it = doc.begin(); it!=doc.end(); ++it) {
-				string key;
-				string value;
-				if(it->Type()==YAML::NodeType::Map) {
-					Test* t = readYAMLNode(*it);
-					if(t) {
-						tests.push_back(t);
-						t->setParentSuite(this);
+	try {
+		YAML::Parser parser(fin);
+		YAML::Node doc;
+		while(parser.GetNextDocument(doc)) {
+		
+			if(doc.Type()==YAML::NodeType::Sequence) {
+				for(YAML::Iterator it = doc.begin(); it!=doc.end(); ++it) {
+					string key;
+					string value;
+					if(it->Type()==YAML::NodeType::Map) {
+						Test* t = readYAMLNode(*it);
+						if(t) {
+							tests.push_back(t);
+							t->setParentSuite(this);
+						}
+						
 					}
-					
+				}
+			} else if(doc.Type()==YAML::NodeType::Map) {
+				Test* t = readYAMLNode(doc);
+				if(t) {
+					tests.push_back(t);
+					t->setParentSuite(this);
 				}
 			}
-		} else if(doc.Type()==YAML::NodeType::Map) {
-			Test* t = readYAMLNode(doc);
-			if(t) {
-				tests.push_back(t);
-				t->setParentSuite(this);
-			}
 		}
+		messageFormatter->reportAction("Test suite file loaded",VERBOSITY_DATA);
+	} catch(YAML::Exception e) {
+		reportYAMLException(e);
 	}
-	
+	testWritability();
+}
+
+void TestSuite::createTestFile(File file) {
 	{
-		std::ofstream resultFile(file.getFileRealPath());
-		if(!resultFile.is_open()) {
-			bool done = false;
-			while(!done) {
-				messageFormatter->reportAction("Test suite file is not writable, please enter new filename");
-				messageFormatter->getConsoleWriter() << " > New filename [ " << ConsoleWriter::Color::Cyan << file.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
-				char input[PATH_MAX+1];
-				std::cin.getline(input,PATH_MAX);
-				std::string inputStr = std::string(input);
-				if(inputStr.empty()) inputStr = file.getFileName();
-				std::ofstream resultFileInput(inputStr);
-				if(resultFileInput.is_open()) {
-					File oldOrigin = origin;
-					origin = File(inputStr);
-					originChanged(oldOrigin);
-					done = true;
-				}
+		messageFormatter->reportAction("No test suite file specified");
+		messageFormatter->getConsoleWriter() << " > Append to suite file [ " << ConsoleWriter::Color::Cyan << file.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
+		char input[PATH_MAX+1];
+		std::cin.getline(input,PATH_MAX);
+		std::string inputStr = std::string(input);
+		if(!inputStr.empty()) file = File(inputStr);
+	}
+	if(FileSystem::exists(file)) {
+		readTestFile(file);
+	} else {
+		tests.clear();
+		origin = file;
+		testWritability();
+	}
+}
+
+void TestSuite::testWritability() {
+	std::ofstream resultFile(origin.getFileRealPath());
+	if(!resultFile.is_open()) {
+		bool done = false;
+		while(!done) {
+			messageFormatter->reportAction("Test suite file is not writable, please enter new filename to save results");
+			messageFormatter->getConsoleWriter() << " > New filename [ " << ConsoleWriter::Color::Cyan << origin.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
+			char input[PATH_MAX+1];
+			std::cin.getline(input,PATH_MAX);
+			std::string inputStr = std::string(input);
+			if(inputStr.empty()) inputStr = origin.getFileName();
+			std::ofstream resultFileInput(inputStr);
+			if(resultFileInput.is_open()) {
+				File oldOrigin = origin;
+				origin = File(inputStr);
+				originChanged(oldOrigin);
+				done = true;
 			}
 		}
-		
-		
-		
-		updateOrigin();
 	}
+	updateOrigin();
 }
 
 const YAML::Node& TestResult::readYAMLNode(const YAML::Node& node) {

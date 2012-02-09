@@ -30,6 +30,9 @@ using namespace std;
 
 namespace Test {
 
+extern const std::string fileExtension;
+extern const int VERBOSITY_DATA;
+
 class Test {
 protected:
 	std::string fullname;
@@ -38,13 +41,17 @@ protected:
 	TestSuite* suite;
 public:
 	Test():
+		fullname(""),
 		shortDescription(""),
-		longDescription ("") {
+		longDescription (""),
+		suite (NULL) {
 	}
 	
-	Test(File file):
+	Test(std::string fullname):
+		fullname(fullname),
 		shortDescription(""),
-		longDescription ("") {
+		longDescription (""),
+		suite (NULL) {
 	}
 	
 	virtual ~Test() {
@@ -107,6 +114,8 @@ public:
 	void writeTestFile(File file);
 	
 	void readTestFile(File file);
+	void createTestFile(File file);
+	void testWritability();
 	
 	void updateOrigin() {
 		writeTestFile(getOrigin());
