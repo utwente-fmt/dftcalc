@@ -483,9 +483,9 @@ void DFTTestSuite::originChanged(const File& from) {
 	for(Test::Test* testGeneric: tests) {
 		DFTTest* test = static_cast<DFTTest*>(testGeneric);
 		File oldFile = test->getFile();
-		std::cerr << "Updating DFT file from " << test->getFile().getFileRealPath();
+		//std::cerr << "Updating DFT file from " << test->getFile().getFileRealPath() << " ( " << test->getFile().getFilePath() << " ) ";
 		test->setFile(oldFile.newWithPathTo(from.getPathTo()));
-		std::cerr << " to " << test->getFile().getFileRealPath() << std::endl;
+		//std::cerr << " to " << test->getFile().getFileRealPath() << " ( " << test->getFile().getFilePath() << " ) " << std::endl;
 	}
 }
 
@@ -495,7 +495,7 @@ void DFTTestSuite::setMessageFormatter(MessageFormatter* messageFormatter) {
 }
 
 int DFTTestRun::handleSignal(int signal) {
-	cout << "HELLO " << messageFormatter << endl;
+	//cout << "HELLO " << messageFormatter << endl;
 	if(messageFormatter) {
 		ConsoleWriter& cw = messageFormatter->getConsoleWriter();
 		messageFormatter->getConsoleWriter().appendPostfix();
