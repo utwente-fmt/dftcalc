@@ -398,7 +398,7 @@ Test::Test* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& node) {
 	if(const YAML::Node* itemNode = node.FindValue("dft")) {
 		std::string dft;
 		try { *itemNode >> dft; }
-		catch(YAML::Exception& e) { if(messageFormatter) messageFormatter->reportErrorAt(Location(origin.getFileRealPath(),e.mark.line),e.msg); wentOK = false; }
+		catch(YAML::Exception& e) { reportYAMLException(e); wentOK = false; }
 		test->setFile(getOrigin().newWithName(dft));
 	} else {
 		if(messageFormatter) messageFormatter->reportErrorAt(Location(getOrigin().getFileRealPath(),node.GetMark().line),"Test does not specify a DFT file");
@@ -416,7 +416,7 @@ Test::Test* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& node) {
 					//cerr << "Found verified result: " << key << " -> " << value << endl;
 					test->getVerifiedResults().insert(pair<std::string,double>(key,value));
 				} catch(YAML::Exception& e) {
-					if(messageFormatter) messageFormatter->reportErrorAt(Location(origin.getFileRealPath(),e.mark.line),e.msg);
+					reportYAMLException(e);
 					wentOK = false;
 				}
 			}
@@ -431,24 +431,28 @@ Test::Test* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& node) {
 				// 
 				for(YAML::Iterator it = itR->begin(); it!=itR->end(); ++it) {
 					string resultTime;
-					it.first() >> resultTime;
-					//cerr << "Found result: " << resultTime << it.second().Type() << endl;
-					std::map<std::string,DFTTestResult>& results = test->getResults()[resultTime];
-					if(it.second().Type()==YAML::NodeType::Map) {
-						
-						// Iterate over individual results of a testrun
-						for(YAML::Iterator it2 = it.second().begin(); it2!=it.second().end(); ++it2) {
-							string iteration;
-							DFTTestResult iterationResults;
-							try {
-								it2.first() >> iteration;
-								it2.second() >> iterationResults;
-								results.insert(pair<std::string,DFTTestResult>(iteration,iterationResults));
-							} catch(YAML::Exception& e) {
-								if(messageFormatter) messageFormatter->reportErrorAt(Location(origin.getFileRealPath(),e.mark.line),e.msg);
-								wentOK = false;
+					try {
+						it.first() >> resultTime;
+						//cerr << "Found result: " << resultTime << it.second().Type() << endl;
+						std::map<std::string,DFTTestResult>& results = test->getResults()[resultTime];
+						if(it.second().Type()==YAML::NodeType::Map) {
+							
+							// Iterate over individual results of a testrun
+							for(YAML::Iterator it2 = it.second().begin(); it2!=it.second().end(); ++it2) {
+								string iteration;
+								DFTTestResult iterationResults;
+								try {
+									it2.first() >> iteration;
+									it2.second() >> iterationResults;
+									results.insert(pair<std::string,DFTTestResult>(iteration,iterationResults));
+								} catch(YAML::Exception& e) {
+									reportYAMLException(e);
+									wentOK = false;
+								}
 							}
 						}
+					} catch(YAML::Exception& e) {
+						reportYAMLException(e);
 					}
 				}
 			}
