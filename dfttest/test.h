@@ -111,7 +111,7 @@ public:
 	}
 	
 	const File& getOrigin() const {return origin;}
-	vector<Test*> getTests() { return tests; }
+	vector<Test*>& getTests() { return tests; }
 	size_t getTestCount() { return tests.size(); }
 	
 	virtual void originChanged(const File& from) = 0;
