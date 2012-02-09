@@ -2,7 +2,7 @@ module TEMPLATE_BE_COLD(TEMPLATE_COMMON) is
 
 	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL] (total: NAT) is
 	var
-		status : NAT,
+		status : STATUS,
 		nr : NAT
 	in
 		status := DORMANT;
