@@ -656,7 +656,9 @@ void DFTTestRun::getLastResults(DFTTest* test, map<string,double>& results) {
 		auto it2 = it->second.begin();
 		for(;it2!=it->second.end(); ++it2) {
 			//results.insert(pair<string,double>(it2->first,it2->second));
-			results[it2->first] = it2->second.failprob;
+			if(it2->second.failprob>=0) {
+				results[it2->first] = it2->second.failprob;
+			}
 		}
 		
 //			if(it2 != it->second.end()) {
