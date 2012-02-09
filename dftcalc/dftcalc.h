@@ -61,16 +61,12 @@ public:
 		
 		bool ok = true;
 		
-		messageFormatter->notify("Checking tools...",VERBOSITY_SEARCHING);
+		messageFormatter->notify("Checking environment...",VERBOSITY_SEARCHING);
 		
 		/* Obtain all needed root information from environment */
 		dft2lntRoot = getRoot(NULL);
 		coralRoot = getCoralRoot(NULL);
 		cadpRoot = getCADPRoot(NULL);
-		
-		if(dft2lntRoot.empty()) return 1;
-		if(coralRoot.empty()) return 1;
-		if(cadpRoot.empty()) return 1;
 		
 		/* These tools should be easy to find in the roots. Note that an added
 		 * bonus would be to locate them using PATH as well.

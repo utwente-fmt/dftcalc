@@ -548,6 +548,7 @@ int main(int argc, char** argv) {
 	
 	/* Check if all needed tools are available */
 	if(calc.checkNeededTools()) {
+		messageFormatter->reportError("There was an error with the environment");
 		return -1;
 	}
 	
