@@ -14,25 +14,60 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 		activated := FALSE;
 		loop
 			select
+			(*
+			 * Listen for any child to be triggered.
+			 * If this happens, we remember this by setting the boolean
+			 * in the available array to FALSE. We also decrement the
+			 * nr_available (the number of available children).
+			 * If the failing node was the one we were currently 'using',
+			 * initiate the search to find another node to use.
+			 *)
 				FAIL (?nr) where (0 < nr) and (nr <= total);
 				if (available[nr]) and (nr_available > 0) then
 					available[nr] := FALSE;
 					nr_available := nr_available - 1
 				end if;
+				
+				(* If the failing node was the one we were currently 'using',
+				 * initiate the search to find another node to use.
+				 *)
 				if nr == using then
 					using := 0
 				end if;
 				nr := 0
+			
+			(*
+			 * If the number of available nodes reaches 0, this means there
+			 * are no children left to use.
+			 * Thus, the Voting node fails and notifies its parents.
+			 *)
 			[]
 				if (nr_available == 0) and not (done) then
 					FAIL (!0 of NAT); done := TRUE
 				end if
+			
+			(*
+			 * If this node is activated, enable the activation procedure.
+			 *)
 			[]
 				ACTIVATE (?nr,FALSE) where (nr == (0 of NAT));
 				if not (done) then
 					activated := TRUE
 				end if;
 				nr := 0
+			
+			(*
+			 * Listen to activation commands coming from OTHER nodes, given to
+			 * one of the children of THIS node. If this happens, we must
+			 * remember that that child was activated.
+			 * Skip the node we are currently using, because that one should
+			 * NOT be listed as unavailable, as this Spare node is currently
+			 * using that node.
+			 * NOTE: the second argument to the ACTIVATE gate enables the
+			 * ability for a node to have two Spare parents. The SENDER of an
+			 * ACTIVATE command has the argument set to TRUE, while the
+			 * RECEIVER has the argument set to FALSE.
+			 *)
 			[]
 				ACTIVATE (?nr,FALSE) where ((nr > 0) and (nr <= total) and (nr <> using));
 				if (available[nr]) and (nr_available > 0) then
@@ -40,6 +75,13 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 					nr_available := nr_available - 1
 				end if;
 				nr := 0
+			
+			(*
+			 * If we are currently not using a node, but we are in the middle
+			 * of the activation procedure, try to find another node.
+			 * We do this from left to right; when we find an available node,
+			 * we activate it and remember that we use this node (using).
+			 *)
 			[]
 				if using == 0 and activated then
 					using := using + 1;
@@ -50,6 +92,7 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 						end if;
 						using := using + 1;
 						if using > total  then
+							(* FIXME: should there be using:=0; here?*)
 							break findav
 						end if
 					end loop;

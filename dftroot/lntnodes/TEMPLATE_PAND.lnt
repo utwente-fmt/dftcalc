@@ -13,6 +13,19 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 		nr_act := 0 of NAT;
 		loop
 			select
+			
+			(*
+			 * Listen for any child to be triggered.
+			 * If this happens, we add the localNodeID of the failing node to
+			 * the list of failed nodes.
+			 * The PAnd children should all fail from left to right. Note that
+			 * for a PAnd with two children supporting repair, the following
+			 * sequence would cause the PAnd to fail:
+			 *   - Fail B
+			 *   - Fail A
+			 *   - Repair B
+			 *   - Fail B
+			 *)
 				FAIL (?nr) where (0 < nr) and (nr <= total);
 				last := 1 of NAT;
 				loop chkorder in
@@ -27,8 +40,18 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 					end if
 				end loop;
 				nr := 0
+			
+			(*
+			 * Checks if all the children have failed and if they failed in
+			 * the right order. If this is the case, the PAnd fails and
+			 * notifies its parents.
+			 *)
 			[]
 				nr := 1 of NAT;
+				
+				(* Loop through the list of failed nodes.
+				 * Break as soon as one is out of order.
+				 *)
 				loop chkorder in
 					last := failed[nr];
 					nr := nr + 1;
@@ -39,15 +62,29 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 						break chkorder
 					end if
 				end loop;
+				
+				(* If we went through the entire list without breaking, this
+				 * means all the children have failed in order, thus the PAnd
+				 * should notify the failure.
+				 *)
 				if (nr > total) and not (done) then
 					FAIL (!0 of NAT); done := TRUE
 				end if;
 				nr := 0
+			
+			(*
+			 * If this node is activated, enable the activation of the source.
+			 *)
 			[]
 				ACTIVATE (?nr,FALSE) where (nr == (0 of NAT));
 				if (nr_act == 0 of NAT) then
 					nr_act := 1 of NAT
 				end if
+			
+			(*
+			 * If the children should be activated, do so, one by one,
+			 * from left to right.
+			 *)
 			[]
 				if (nr_act > 0) then
 					ACTIVATE (!nr_act,TRUE);
