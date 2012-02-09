@@ -122,6 +122,7 @@ public:
 	File& setFileExtension(const std::string& fileExtension );
 	File& fix();
 
+	File newFixed() const;
 	File newWithExtension(const std::string& fileExtension) const;
 	File newWithName(const std::string& fileBase, const std::string& fileExtension) const;
 	File newWithName(const std::string& fileName) const;

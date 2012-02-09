@@ -525,3 +525,8 @@ File& File::fix() {
 	updateExtra();
 	return *this;
 }
+
+File File::newFixed() const {
+	File file = *this;
+	return file.fix();
+}
