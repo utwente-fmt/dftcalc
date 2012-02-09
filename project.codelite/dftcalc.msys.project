@@ -79,7 +79,8 @@
         <ClangPP/>
         <SearchPaths>../dftcalc/
 ../dft2lnt/dftnodes/
-../dft2lnt/</SearchPaths>
+../dft2lnt/
+../yaml-cpp/include/</SearchPaths>
       </Completion>
     </Configuration>
     <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
