@@ -45,7 +45,9 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 				nr := 0
 			[]
 				ACTIVATE (?nr,FALSE) where (nr == (0 of NAT));
-				nr_act := 1 of NAT;
+				if (nr_act == 0 of NAT) then
+					nr_act := 1 of NAT
+				end if
 			[]
 				if (nr_act > 0) then
 					ACTIVATE (!nr_act,TRUE);
