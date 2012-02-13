@@ -33,7 +33,7 @@ using namespace std;
 #include "compiletime.h"
 
 const int VERBOSITY_FLOW = 1;
-const int VERBOSITY_DATA = 1;
+const int VERBOSITY_DATA = 2;
 const int VERBOSITY_FILE_SEARCH = 2;
 
 void DFTTestResult::readYAMLNodeSpecific(const YAML::Node& node) {
@@ -50,10 +50,21 @@ void print_help(MessageFormatter* messageFormatter, string topic) {
 		messageFormatter->notify ("dfttest [options] [suite.test]");
 		messageFormatter->message("  Calculates the failure probability for the DFT files in the specified test");
 		messageFormatter->message("  file. Result is written to stdout and saved in the test file.");
+		messageFormatter->message("  Check dfttest --help=input for more details regarding the suite file format.");
 		messageFormatter->message("  Check dfttest --help=output for more details regarding the output.");
+		messageFormatter->message("");
+		messageFormatter->message("  If the specified suite file does not exist, it will be created. If the suite");
+		messageFormatter->message("  file is not writable, you will be asked to specify a suite file to save to.");
+		messageFormatter->message("  If that suite file already exists, the suites will be merged in such a way");
+		messageFormatter->message("  that nothing is overwritten.");
+		messageFormatter->message("");
+		messageFormatter->notify ("Common usage:");
+		messageFormatter->message("  dfttest <suite.test> -t <tree.dft>   Run only <tree.dft>, adds <tree.dft>");
+		messageFormatter->message("  dfttest <suite.test> -ct <tree.dft>  Adds <tree.dft>, no test is performed");
 		messageFormatter->message("");
 		messageFormatter->notify ("General Options:");
 		messageFormatter->message("  -h, --help      Show this help.");
+		messageFormatter->message("  --help=x        Show help about topic x.");
 		messageFormatter->message("  --color         Use colored messages.");
 		messageFormatter->message("  --no-color      Do not use colored messages.");
 		messageFormatter->message("  --version       Print version info and quit.");
@@ -66,7 +77,9 @@ void print_help(MessageFormatter* messageFormatter, string topic) {
 		messageFormatter->notify ("Test Options:");
 		messageFormatter->message("  -c              Do not run tests, only show cached results.");
 		messageFormatter->message("  -f              Force running all tests, regardless of cached results");
-		messageFormatter->message("  -t DFTFILE      Limit testing to this DFT. Multiple allowed.");
+		messageFormatter->message("  -t DFTFILE      Add/Limit testing to this DFT. Multiple allowed.");
+		messageFormatter->message("");
+		print_help(messageFormatter,"topics");
 		messageFormatter->flush();
 	} else if(topic=="output") {
 		messageFormatter->notify ("Timing Output");
@@ -76,8 +89,47 @@ void print_help(MessageFormatter* messageFormatter, string topic) {
 		messageFormatter->message("  Both implementations aim to assure there is no influence from other");
 		messageFormatter->message("  programs such as NTP. The measurement is as accurate as the clock of ");
 		messageFormatter->message("  the hardware is.");
+	} else if(topic=="input") {
+		messageFormatter->notify ("Suite Input");
+		messageFormatter->message("  A test suite file is a file in YAML format. It contains a list of tests, where");
+		messageFormatter->message("  each test is a map with settings. Supported keys in this map:");
+		messageFormatter->message("    - <key>    : <value>");
+		messageFormatter->message("    - fullname : a descriptive name of the test");
+		messageFormatter->message("    - longdesc : a longer description of the test");
+		messageFormatter->message("    - uuid     : a unique identifier for the test");
+		messageFormatter->message("    - dft      : relative or absolute path to the DFT file");
+		messageFormatter->message("    - timeunits: result will reflect P(\"dft fails within timeunits\")");
+		messageFormatter->message("    - verified : a map containing verified results as key and motives as key");
+		messageFormatter->message("    - results  : a list of maps containing resultmaps");
+		messageFormatter->message("                 a resultmap's key is the time the test was started");
+		messageFormatter->message("                 a resultmap's value is again a map with the obtained results as");
+		messageFormatter->message("                 value and the origin of the results as key");
+		messageFormatter->message("");
+		messageFormatter->message("  A complete example:");
+		messageFormatter->message("  - fullname: Tripple And Comparison");
+		messageFormatter->message("    uuid: 90381A40B69FDAD3050F1F0243BBA4C4028DD67FECEBCCD685BA51DDEA80EAC7");
+		messageFormatter->message("    longdesc: \"\"");
+		messageFormatter->message("    dft: tripple_and_c.dft");
+		messageFormatter->message("    timeunits: 1");
+		messageFormatter->message("    verified:");
+		messageFormatter->message("      comparison: 0.0239687");
+		messageFormatter->message("    results:");
+		messageFormatter->message("      - 2012-02-11 03:15:41:");
+		messageFormatter->message("          coral:");
+		messageFormatter->message("            time_monraw: 23.2737");
+		messageFormatter->message("            failprob: 0.0239687");
+		messageFormatter->message("          dftcalc:");
+		messageFormatter->message("            time_monraw: 7.98578");
+		messageFormatter->message("            failprob: 0.0239687");
+	} else if(topic=="topics") {
+		messageFormatter->notify ("Help topics:");
+		messageFormatter->message("  input           Displays the input format of a suite file");
+		messageFormatter->message("  output          Shows some considerations about the output (timing)");
+		messageFormatter->message("  To view topics: dfttest --help=<topic>");
+		messageFormatter->message("");
 	} else {
 		messageFormatter->reportAction("Unknown help topic: " + topic);
+		print_help(messageFormatter,"topics");
 	}		
 }
 
@@ -86,6 +138,7 @@ void print_version(MessageFormatter* messageFormatter) {
 	messageFormatter->message(string("  built on ") + COMPILETIME_DATE);
 	{
 		FileWriter out;
+		out << string("  git version: v") + string(COMPILETIME_GITVERSION) + " (nearest)" << out.applypostfix;
 		out << string("  git revision `") + COMPILETIME_GITREV + "'";
 		if(COMPILETIME_GITCHANGED)
 			out << " + uncommited changes";
@@ -189,7 +242,7 @@ void conditionalAdd(vector<File>& tryOut, const File& file) {
 bool tryReadFile(MessageFormatter* messageFormatter, File& file, DFTTestSuite& suite) {
 	if(FileSystem::exists(file)) {
 		suite.readTestFile(file);
-		messageFormatter->reportAction("Using test file: " + file.getFileRealPath(),VERBOSITY_FLOW);
+		messageFormatter->reportAction("Using test file: " + suite.getOrigin().getFileRealPath(),VERBOSITY_FLOW);
 		return true;
 	} else {
 		messageFormatter->reportWarning("Test file does not exist: " + file.getFileRealPath(),VERBOSITY_FILE_SEARCH);
@@ -399,6 +452,14 @@ int main(int argc, char** argv) {
 	
 	// Apply limits
 	suite.applyLimitTests(limitTests);
+	
+	if(verbosity>=VERBOSITY_DATA) {
+		messageFormatter->notify("Going to perform these tests:",VERBOSITY_DATA);
+		for(auto it=suite.getTests().begin(); it!=suite.getTests().end(); it++) {
+			DFTTest* test = static_cast<DFTTest*>(*it);
+			messageFormatter->reportAction(test->getFile().getFilePath(),VERBOSITY_DATA);
+		}
+	}
 	
 	if(suite.getTestCount()>0) {
 		DFTTestRun run(messageFormatter,dft2lntRoot,coralRoot);
