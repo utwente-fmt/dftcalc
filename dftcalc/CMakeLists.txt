@@ -49,13 +49,16 @@ ADD_CUSTOM_COMMAND(
 install (TARGETS dftcalc DESTINATION bin)
 
 # Generate compile time information
-add_custom_command(
-	OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/compiletime.h 
-#	TARGET dftcalc
-#	PRE_BUILD
-	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
-	COMMAND ${CMAKE_COMMAND} -DCMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
-	        -DCMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
-	        -P ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
-            ../..
-)
+	set(GENINFOFILE ${CMAKE_CURRENT_BINARY_DIR}/compiletime.h)
+	get_property(gendepSOURCES TARGET dftcalc PROPERTY SOURCES)
+	LIST(REMOVE_ITEM gendepSOURCES ${GENINFOFILE})
+	add_custom_command(
+		OUTPUT ${GENINFOFILE}
+	#	TARGET dftcalc
+	#	PRE_BUILD
+		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake ${gendepSOURCES}
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+				-DCMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+				-P ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
+				../..
+	)
