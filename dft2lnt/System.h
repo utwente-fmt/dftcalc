@@ -14,6 +14,8 @@
 #define SYSTEM_TIMER_BACKEND_WINDOWS       3
 
 #include <time.h>
+#include <string>
+#include <random>
 #ifdef WIN32
 #	include <windows.h>
 #	define SYSTEM_TIMER_BACKEND SYSTEM_TIMER_BACKEND_WINDOWS
@@ -40,6 +42,8 @@ public:
 	};
 
 	static void sleep(uint64_t ms);
+	
+	static void generateUUID(size_t bytes,std::string& uuid);
 };
 
 #endif

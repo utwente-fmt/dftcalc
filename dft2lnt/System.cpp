@@ -49,3 +49,18 @@ void System::sleep(uint64_t ms) {
 	usleep(ms*1000);
 #endif
 }
+
+void System::generateUUID(size_t bytes,std::string& uuid) {
+	static std::uniform_int_distribution<int> hex {0,15};  // distribution that maps to the ints 1..6
+	static std::default_random_engine re {};                     // the default engine	uuid.empty;
+	timespec t;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &t);
+	re.seed(t.tv_sec*1000000000+t.tv_nsec);
+	uuid.clear();
+	uuid.reserve(bytes*2);
+	for(unsigned int i=0; i<bytes*2; ++i) {
+		int x = hex(re);
+		if(x<10) uuid += ('0'+x);
+		else     uuid += ('A'+x-10);
+	}
+}
