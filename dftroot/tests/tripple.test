@@ -1,0 +1,52 @@
+- fullname: Tripple And
+  longdesc: ""
+  dft: tripple_and.dft
+  verified:
+    comparison: 0.0239687
+- fullname: Tripple And Comparison
+  longdesc: ""
+  dft: tripple_and_c.dft
+- fullname: Tripple And (merging branches)
+  longdesc: ""
+  dft: tripple_and2.dft
+  verified:
+    comparison: 0.0609162
+- fullname: Tripple And (merging branches Comparison)
+  longdesc: ""
+  dft: tripple_and2_c.dft
+- fullname: Tripple Or
+  longdesc: ""
+  dft: tripple_or.dft
+  verified:
+    comparison: 0.8646647
+- fullname: Tripple Or Comparison
+  longdesc: ""
+  dft: tripple_or_c.dft
+- fullname: Tripple Or (merging branches)
+  longdesc: ""
+  dft: tripple_or2.dft
+  verified:
+    comparison: 0.7768698
+- fullname: Tripple Or (merging branches Comparison)
+  longdesc: ""
+  dft: tripple_or2_c.dft
+- fullname: Tripple PAnd
+  longdesc: ""
+  dft: tripple_pand.dft
+  verified:
+    manual: 0.0009987
+- fullname: Tripple PAnd Comparison
+  longdesc: ""
+  dft: tripple_pand_c.dft
+  verified:
+    manual: 0.0009987
+- fullname: Tripple PAnd (merging branches)
+  longdesc: ""
+  dft: tripple_pand2.dft
+  verified:
+    manual: 0.0101527
+- fullname: Tripple PAnd (merging branches Comparison)
+  longdesc: ""
+  dft: tripple_pand2_c.dft
+  verified:
+    manual: 0.0101527

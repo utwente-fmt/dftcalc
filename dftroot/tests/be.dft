@@ -1,0 +1,3 @@
+toplevel "A";
+"A" lambda=0.5 dorm=3;
+
