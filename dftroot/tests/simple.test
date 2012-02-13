@@ -1,28 +1,52 @@
-- fullname: And
-  shortdesc: Simple And node test
+- fullname: Basic Event, 1 time unit
   longdesc: ""
-  dft: /opt/dft2lntroot/share/dft2lnt/tests/and.dft
+  dft: be.dft
+  verified:
+    manual: 0.3934693
+- fullname: Basic Event, 2 time units
+  longdesc: ""
+  dft: be.dft
+  timeunits: 2
+  verified:
+    manual: 0.6321206
+- fullname: Basic Event, 10 time units
+  longdesc: ""
+  dft: be.dft
+  timeunits: 10
+  verified:
+    manual: 0.9932621
+- fullname: And
+  longdesc: ""
+  dft: and.dft
+  verified:
+    manual: 0.1548181
 - fullname: Or
-  shortdesc: Simple Or node test
   longdesc: ""
   dft: or.dft
+  verified:
+    manual: 0.6321206
 - fullname: PAnd
-  shortdesc: Simple PAnd node test
   longdesc: ""
   dft: pand.dft
+  verified:
+    manual: 0.0774091
 - fullname: FDEP
-  shortdesc: Simple FDEP node test
   longdesc: ""
   dft: fdep.dft
+  verified:
+    manual: 0.7768698
 - fullname: Spare
-  shortdesc: Simple Spare node test
   longdesc: ""
   dft: spare.dft
+  verified:
+    manual: 0.1118531
 - fullname: 2 Spares with common spare
-  shortdesc: Simple Spare node test 2
   longdesc: ""
   dft: spare2.dft
+  verified:
+    manual: 0.2905027
 - fullname: 3 Spares with common spare
-  shortdesc: Simple Spare node test 3
   longdesc: ""
   dft: spare3.dft
+  verified:
+    manual: 0.4660673
