@@ -49,6 +49,8 @@ public:
 	static time_t getLastAccessTime(const File& file);
 	static time_t getLastModificationTime(const File& file);
 	static time_t getLastStatusChangeTime(const File& file);
+	
+	static bool canCreateOrModify(const File& file);
 	static bool hasAccessTo(const File& file, int mode);
 	static int findInPath(std::vector<File>& result, const File& file);
 	static int findInPath(std::vector<File>& result, const File& file, const char* path);

@@ -364,6 +364,12 @@ time_t FileSystem::getLastStatusChangeTime(const File& file) {
 	return fileStat.st_ctime;
 }
 
+bool FileSystem::canCreateOrModify(const File& file) {
+	if(hasAccessTo(file,W_OK)) return true;
+	if(!exists(file) && hasAccessTo(File(file.getPathTo()),W_OK|X_OK)) return true;
+	return false;
+}
+
 bool FileSystem::hasAccessTo(const File& file, int mode) {
 	return !access(file.getFileRealPath().c_str(),mode);
 }
