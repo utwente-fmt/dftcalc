@@ -60,6 +60,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->notify ("Output Options:");
 		messageFormatter->message("  -r FILE         Output result to this file. (see dftcalc --help=output)");
 		messageFormatter->message("  -p              Print result to stdout.");
+		messageFormatter->message("  -t x            Calculate P(DFT fails in x time units), default is 1");
+		messageFormatter->message("  -m <command>    Raw MRMC Calculation command. Overrules -t.");
 		messageFormatter->flush();
 	} else if(topic=="output") {
 		messageFormatter->notify ("Output");
@@ -67,6 +69,14 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  The top node is a map, containing one element, an entry mapping the DFT");
 		messageFormatter->message("  filename to the calculated result. E.g. it looks like this:");
 		messageFormatter->message("    and.dft: 0.1548181");
+		messageFormatter->message("  The MRMC Calculation command can be manually set using -m. The default is:");
+		messageFormatter->message("    P{>1} [ tt U[0,x] reach ]");
+		messageFormatter->message("  where x is the specified number of time units using -t, default is 1.");
+	} else if(topic=="topics") {
+		messageFormatter->notify ("Help topics:");
+		messageFormatter->message("  output          Displays the specification of the output format");
+		messageFormatter->message("  To view topics: dftcalc --help=<topic>");
+		messageFormatter->message("");
 	} else {
 		messageFormatter->reportAction("Unknown help topic: " + topic);
 	}		
@@ -80,6 +90,7 @@ void print_version(MessageFormatter* messageFormatter) {
 	messageFormatter->message(string("  built on ") + COMPILETIME_DATE);
 	{
 		FileWriter out;
+		out << string("  git version: v") + string(COMPILETIME_GITVERSION) + " (nearest)" << out.applypostfix;
 		out << string("  git revision `") + COMPILETIME_GITREV + "'";
 		if(COMPILETIME_GITCHANGED)
 			out << " + uncommited changes";
