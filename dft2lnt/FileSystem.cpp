@@ -526,7 +526,22 @@ File& File::fix() {
 	return *this;
 }
 
+File& File::fixWithOrigin(const std::string& pathTo) {
+	File absolute = this->newFixed();
+	if(this->getFilePath()!=absolute.getFilePath()) {
+		this->pathTo = pathTo + "/" + this->pathTo;
+		fix();
+	}
+	return *this;
+}
+
 File File::newFixed() const {
 	File file = *this;
 	return file.fix();
 }
+
+File File::newFixedWithOrigin(const std::string& pathTo) const {
+	File file = *this;
+	return file.fixWithOrigin(pathTo);
+}
+

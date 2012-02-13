@@ -121,8 +121,10 @@ public:
 	File& setPathTo(const std::string& pathTo);
 	File& setFileExtension(const std::string& fileExtension );
 	File& fix();
-
+	File& fixWithOrigin(const std::string& path);
+	
 	File newFixed() const;
+	File newFixedWithOrigin(const std::string& pathTo) const;
 	File newWithExtension(const std::string& fileExtension) const;
 	File newWithName(const std::string& fileBase, const std::string& fileExtension) const;
 	File newWithName(const std::string& fileName) const;
