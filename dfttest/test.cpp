@@ -41,11 +41,14 @@ Test* TestSuite::readYAMLNode(const YAML::Node& node) {
 		catch(YAML::Exception& e) { reportYAMLException(e); }
 		test->setFullname(fullname);
 	}
-	if(const YAML::Node* itemNode = node.FindValue("shortdesc")) {
+	if(const YAML::Node* itemNode = node.FindValue("uuid")) {
 		std::string sdesc;
 		try { *itemNode >> sdesc; }
 		catch(YAML::Exception& e) { reportYAMLException(e); }
-		test->setShortDescription(sdesc);
+		test->setUUID(sdesc);
+		test->setHadUUIDOnLoad(true);
+	} else {
+		test->setHadUUIDOnLoad(false);
 	}
 	if(const YAML::Node* itemNode = node.FindValue("longdesc")) {
 		std::string ldesc;
@@ -60,8 +63,8 @@ void TestSuite::writeYAMLNode(Test* test, YAML::Emitter& out) {
 	out << YAML::BeginMap;
 	out << YAML::Key   << "fullname";
 	out << YAML::Value << test->getFullname();
-	out << YAML::Key   << "shortdesc";
-	out << YAML::Value << test->getShortDescription();
+	out << YAML::Key   << "uuid";
+	out << YAML::Value << test->getUUID();
 	out << YAML::Key   << "longdesc";
 	out << YAML::Value << test->getLongDescription();
 	writeYAMLNodeSpecific(test,out);

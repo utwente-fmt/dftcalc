@@ -31,27 +31,33 @@ using namespace std;
 namespace Test {
 
 extern const std::string fileExtension;
+extern const int VERBOSITY_FLOW;
 extern const int VERBOSITY_DATA;
 
 class Test {
 protected:
 	std::string fullname;
-	std::string shortDescription;
+	std::string uuid;
+	bool hadUUIDOnLoad;
 	std::string longDescription;
 	TestSuite* suite;
 public:
 	Test():
 		fullname(""),
-		shortDescription(""),
+		uuid(""),
+		hadUUIDOnLoad(false),
 		longDescription (""),
 		suite (NULL) {
+		System::generateUUID(32,uuid);
 	}
 	
 	Test(std::string fullname):
 		fullname(fullname),
-		shortDescription(""),
+		uuid(""),
+		hadUUIDOnLoad(false),
 		longDescription (""),
 		suite (NULL) {
+		System::generateUUID(32,uuid);
 	}
 	
 	virtual ~Test() {
@@ -60,8 +66,10 @@ public:
 	void setFullname(const std::string& fullname) {this->fullname = fullname;}
 	const std::string& getFullname() const {return fullname;}
 	void setLongDescription(const std::string& longDescription) {this->longDescription = longDescription;}
-	void setShortDescription(const std::string& shortDescription) {this->shortDescription = shortDescription;}
-	const std::string& getShortDescription() const {return shortDescription;}
+	void setUUID(const std::string& uuid) {this->uuid = uuid;}
+	const std::string& getUUID() const {return uuid;}
+	void setHadUUIDOnLoad(bool hadUUIDOnLoad) {this->hadUUIDOnLoad = hadUUIDOnLoad;}
+	bool getHadUUIDOnLoad() const {return hadUUIDOnLoad;}
 	const std::string& getLongDescription() const {return longDescription;}
 	
 	void setParentSuite(TestSuite* suite) { this->suite = suite; }
