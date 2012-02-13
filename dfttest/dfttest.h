@@ -73,6 +73,7 @@ public:
 		return out.str();
 	}
 	
+	virtual void appendSpecific(const Test& other);
 };
 
 class DFTTestSuite: public Test::TestSuite {

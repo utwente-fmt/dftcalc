@@ -474,6 +474,21 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+
+
+
+
+
+void DFTTest::appendSpecific(const Test& otherGeneric) {
+	const DFTTest& other = static_cast<const DFTTest&>(otherGeneric);
+	for(auto result: other.results) {
+		this->results.insert(result);
+	}
+	for(auto verifiedResult: other.verifiedResults) {
+		this->verifiedResults.insert(verifiedResult);
+	}
+}
+
 void DFTTestSuite::applyLimitTests(const vector<string>& limitTests) {
 	for(Test::Test* testGeneric: tests) {
 		DFTTest* test = static_cast<DFTTest*>(testGeneric);
