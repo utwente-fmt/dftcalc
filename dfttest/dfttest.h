@@ -10,6 +10,7 @@
 #ifndef DFTTEST_H
 #define DFTTEST_H
 
+#include <sstream>
 #include "test.h"
 
 class DFTTestResult: public Test::TestResult {
@@ -34,10 +35,13 @@ YAML::Emitter& operator<<(YAML::Emitter& out, const DFTTestResult& result) {
 
 class DFTTest: public Test::Test {
 protected:
+	unsigned int timeUnits;
 	File file;
 	std::map<std::string,double> verifiedResults;
 	std::map<std::string,std::map<std::string,DFTTestResult>> results;
 public:
+	void setTimeUnits(unsigned int timeUnits) {this->timeUnits = timeUnits;}
+	unsigned int getTimeUnits() const {return timeUnits;}
 	void setFile(const File& file) {this->file = file;}
 	const File& getFile() const {return file;}
 	void setVerifiedResults(std::map<std::string,double> verifiedResults) {this->verifiedResults = verifiedResults;}
@@ -47,20 +51,26 @@ public:
 	std::map<std::string,std::map<std::string,DFTTestResult>>& getResults() {return results;}
 	const std::map<std::string,std::map<std::string,DFTTestResult>>& getResults() const {return results;}
 	
-	DFTTest() {
+	DFTTest():
+		timeUnits(1) {
 	}
 	DFTTest(File file):
+		timeUnits(1),
 		file(file) {
 	}
 	virtual ~DFTTest() {
 	}
 	
 	std::string getTimeCoral() {
-		return "-t 1";
+		std::stringstream out;
+		out << "-t " << timeUnits;
+		return out.str();
 	}
 	
 	std::string getTimeDftcalc() {
-		return "";
+		std::stringstream out;
+		out << "-t " << timeUnits;
+		return out.str();
 	}
 	
 };

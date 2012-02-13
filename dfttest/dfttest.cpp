@@ -494,6 +494,12 @@ Test::Test* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& node) {
 	
 	//node << YAML::
 	
+	if(const YAML::Node* itemNode = node.FindValue("timeunits")) {
+		unsigned int value;
+		try { *itemNode >> value; }
+		catch(YAML::Exception& e) { reportYAMLException(e); wentOK = false; }
+		test->setTimeUnits(value);
+	}
 	if(const YAML::Node* itemNode = node.FindValue("dft")) {
 		std::string dft;
 		try { *itemNode >> dft; }
@@ -567,6 +573,8 @@ error:
 
 void DFTTestSuite::writeYAMLNodeSpecific(Test::Test* testGeneric, YAML::Emitter& out) {
 	DFTTest* test = static_cast<DFTTest*>(testGeneric);
+	out << YAML::Key   << "timeunits";
+	out << YAML::Value << test->getTimeUnits();
 	out << YAML::Key   << "dft";
 	out << YAML::Value << test->getFile().getFilePath();
 	out << YAML::Key   << "verified";
