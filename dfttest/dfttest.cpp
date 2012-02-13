@@ -376,11 +376,16 @@ int main(int argc, char** argv) {
 		bool load = true;
 		File loadTestFile = File(loadTest).fix();
 		
+		if(!FileSystem::exists(loadTestFile)) load = false;
+		
 		// Check if the file is already in the suite, if so, mark as don't load
-		for(auto it=suite.getTests().begin(); it!=suite.getTests().end(); it++) {
-			DFTTest* test = static_cast<DFTTest*>(*it);
-			if(loadTestFile == test->getFile()) {
-				load = false;
+		if(load) {
+			for(auto it=suite.getTests().begin(); it!=suite.getTests().end(); it++) {
+				DFTTest* test = static_cast<DFTTest*>(*it);
+				if(loadTestFile == test->getFile()) {
+					load = false;
+					break;
+				}
 			}
 		}
 		
