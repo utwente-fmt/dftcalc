@@ -13,7 +13,13 @@ namespace Test {
 
 const std::string fileExtension = "test";
 
-const int VERBOSITY_DATA = 1;
+const int VERBOSITY_FLOW = 1;
+const int VERBOSITY_DATA = 2;
+
+void Test::append(const Test& other) {
+	appendSpecific(other);
+}
+
 
 bool TestSuite::isInLimitTests(Test* test) {
 	for(auto it=limitTests.begin();it!=limitTests.end(); ++it) {
@@ -86,68 +92,151 @@ void TestSuite::writeTestFile(File file) {
 	}
 	out << YAML::EndSeq;
 	
-	std::ofstream resultFile(file.getFileRealPath());
-	if(resultFile.is_open()) {
-		resultFile << string(out.c_str());
-	} else {
-		bool done = false;
-		while(!done) {
-			messageFormatter->reportError("Test suite file is not writable, please enter new filename");
-			messageFormatter->getConsoleWriter() << " > New filename [ " << ConsoleWriter::Color::Cyan << file.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
+	File outFile = file;
+	while(true) {
+		if(FileSystem::canCreateOrModify(outFile)) {
+			break;
+		} else {
+			messageFormatter->reportAction("Test suite file is not writable, please enter new filename");
+			messageFormatter->getConsoleWriter() << " > Append to suite file [ " << ConsoleWriter::Color::Cyan << file.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
 			char input[PATH_MAX+1];
 			std::cin.getline(input,PATH_MAX);
 			std::string inputStr = std::string(input);
 			if(inputStr.empty()) inputStr = file.getFileName();
-			std::ofstream resultFileInput(inputStr);
-			if(resultFileInput.is_open()) {
-				resultFileInput << string(out.c_str());
-				done = true;
-			}
+			outFile = File(inputStr);
 		}
 	}
+	std::ofstream resultFile(file.getFileRealPath());
+	if(resultFile.is_open()) {
+		resultFile << string(out.c_str());
+	} else {
+		messageFormatter->reportError("Could not write to `" + outFile.getFileRealPath() + "'");
+	}
+	resultFile.close();
+	
 }
 
 void TestSuite::readTestFile(File file) {
-	
 	tests.clear();
 	origin = file;
+	if(FileSystem::exists(file)) {
+		readAndAppendTestFile(origin);
+	} else {
+		if(messageFormatter) messageFormatter->reportWarningAt(Location(file.getFileRealPath()),"file does not exist");
+	}
+	testWritability();
+}
+
+void TestSuite::readAndAppendTestFile(File file) {
+	
+	vector<Test*> loadedTests;
 	
 	if(!FileSystem::exists(file)) {
 		if(messageFormatter) messageFormatter->reportErrorAt(Location(file.getFileRealPath()),"file does not exist");
 		return;
 	}
+	messageFormatter->reportAction("Loading test suite file `" + file.getFileRealPath() + "'",VERBOSITY_DATA);
 	std::ifstream fin(file.getFileRealPath());
-	try {
-		YAML::Parser parser(fin);
-		YAML::Node doc;
-		while(parser.GetNextDocument(doc)) {
+	if(fin.is_open()) {
+		fin.seekg(0);
+		try {
+			YAML::Parser parser(fin);
+			loadTests(parser,loadedTests);
+		} catch(YAML::Exception e) {
+			reportYAMLException(e);
+		}
+	} else {
+		messageFormatter->reportError("could open suite file for reading");
+	}
+	
+	// Merge current list of tests with the list of tests we just loaded
+	mergeTestLists(tests,loadedTests);
+}
+
+void TestSuite::readAndAppendToTestFile(File file) {
+	
+	vector<Test*> loadedTests;
+	
+	if(!FileSystem::exists(file)) {
+		if(messageFormatter) messageFormatter->reportErrorAt(Location(file.getFileRealPath()),"file does not exist");
+		return;
+	}
+	messageFormatter->reportAction("Loading test suite file `" + file.getFileRealPath() + "'",VERBOSITY_DATA);
+	std::ifstream fin(file.getFileRealPath());
+	if(fin.is_open()) {
+		fin.seekg(0);
+		try {
+			YAML::Parser parser(fin);
+			loadTests(parser,loadedTests);
+		} catch(YAML::Exception e) {
+			reportYAMLException(e);
+		}
+		// Merge current list of tests with the list of tests we just loaded
+		mergeTestLists(loadedTests,tests);
+		tests = loadedTests;
+	} else {
+		messageFormatter->reportError("could open suite file for reading");
+	}
+	
+}
+
+void TestSuite::mergeTestLists(vector<Test*>& main, vector<Test*>& tba) {
+	for(Test* tbaTest: tba) {
 		
-			if(doc.Type()==YAML::NodeType::Sequence) {
-				for(YAML::Iterator it = doc.begin(); it!=doc.end(); ++it) {
-					string key;
-					string value;
-					if(it->Type()==YAML::NodeType::Map) {
-						Test* t = readYAMLNode(*it);
-						if(t) {
-							tests.push_back(t);
-							t->setParentSuite(this);
-						}
-						
-					}
-				}
-			} else if(doc.Type()==YAML::NodeType::Map) {
-				Test* t = readYAMLNode(doc);
-				if(t) {
-					tests.push_back(t);
-					t->setParentSuite(this);
-				}
+		// check if exists already, based on uuid
+		Test* old = NULL;
+		for(Test* test: main) {
+			if(*tbaTest == *test) {
+				old = test;
+				break;
 			}
 		}
-		messageFormatter->reportAction("Test suite file loaded",VERBOSITY_DATA);
-	} catch(YAML::Exception e) {
-		reportYAMLException(e);
+		
+		// If it's new, add it
+		if(!old) {
+			main.push_back(tbaTest);
+			messageFormatter->reportAction("  Added test: " + tbaTest->getFullname(),VERBOSITY_DATA);
+		
+		// If it already exists, merge (overwrite)
+		} else {
+			old->append(*tbaTest);
+			messageFormatter->reportAction("  Appended test: " + old->getFullname(),VERBOSITY_DATA);
+			delete tbaTest;
+		}
+		
 	}
-	testWritability();
+	messageFormatter->reportAction("Test suite file loaded",VERBOSITY_FLOW);
+	
+}
+
+void TestSuite::loadTests(YAML::Parser& parser, vector<Test*>& tests) {
+	YAML::Node doc;
+	messageFormatter->reportAction("  - Loading tests ...",VERBOSITY_DATA);
+	while(parser.GetNextDocument(doc)) {
+	messageFormatter->reportAction("  - Loading tests ...",VERBOSITY_DATA);
+		if(doc.Type()==YAML::NodeType::Sequence) {
+			for(YAML::Iterator it = doc.begin(); it!=doc.end(); ++it) {
+					messageFormatter->reportAction("  - Loading test",VERBOSITY_DATA);
+				string key;
+				string value;
+				if(it->Type()==YAML::NodeType::Map) {
+					Test* t = readYAMLNode(*it);
+					if(t) {
+						messageFormatter->reportAction("    - Loaded test: " + t->getFullname(),VERBOSITY_DATA);
+						tests.push_back(t);
+						t->setParentSuite(this);
+					}
+					
+				}
+			}
+		} else if(doc.Type()==YAML::NodeType::Map) {
+			Test* t = readYAMLNode(doc);
+			if(t) {
+				tests.push_back(t);
+				t->setParentSuite(this);
+			}
+		}
+	}
 }
 
 void TestSuite::createTestFile(File file) {
@@ -169,24 +258,26 @@ void TestSuite::createTestFile(File file) {
 }
 
 void TestSuite::testWritability() {
-	std::ofstream resultFile(origin.getFileRealPath());
-	if(!resultFile.is_open()) {
-		bool done = false;
-		while(!done) {
-			messageFormatter->reportAction("Test suite file is not writable, please enter new filename to save results");
-			messageFormatter->getConsoleWriter() << " > New filename [ " << ConsoleWriter::Color::Cyan << origin.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
+	File outFile = origin;
+	while(true) {
+		if(FileSystem::canCreateOrModify(outFile)) {
+			break;
+		} else {
+			messageFormatter->reportAction("Test suite file is not writable, please enter new filename");
+			messageFormatter->getConsoleWriter() << " > Append to suite file [ " << ConsoleWriter::Color::Cyan << origin.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
 			char input[PATH_MAX+1];
 			std::cin.getline(input,PATH_MAX);
 			std::string inputStr = std::string(input);
 			if(inputStr.empty()) inputStr = origin.getFileName();
-			std::ofstream resultFileInput(inputStr);
-			if(resultFileInput.is_open()) {
-				File oldOrigin = origin;
-				origin = File(inputStr);
-				originChanged(oldOrigin);
-				done = true;
-			}
+			outFile = File(inputStr);
 		}
+	}
+	File oldOrigin = origin;
+	origin = outFile;
+	originChanged(oldOrigin);
+
+	if(FileSystem::exists(origin)) {
+		readAndAppendToTestFile(origin);
 	}
 	updateOrigin();
 }
@@ -262,7 +353,7 @@ void TestRun::reportTestStart(Test* test, string name, string verifiedDesc, Cons
 	
 }
 
-void TestRun::reportTestEnd(Test* test, bool ok) {
+void TestRun::reportTestEnd(Test* test, vector<string>& successes, vector<string>& failures) {
 	ConsoleWriter& consoleWriter = messageFormatter->getConsoleWriter();
 	
 	// Bail if output should not be displayed
@@ -271,10 +362,25 @@ void TestRun::reportTestEnd(Test* test, bool ok) {
 	
 	consoleWriter << " " << ConsoleWriter::Color::WhiteBright << ">" << ConsoleWriter::Color::Reset << "  ";
 	consoleWriter << "Test ";
-	if(ok) {
+	if(failures.empty()) {
 		consoleWriter << ConsoleWriter::Color::GreenBright << "OK";
-	} else {
+	} else if(successes.empty()) {
 		consoleWriter << ConsoleWriter::Color::RedBright << "FAILED";
+	} else {
+		bool hadFirst = false;
+		consoleWriter << ConsoleWriter::Color::Yellow << "MIXED";
+		consoleWriter << ConsoleWriter::Color::Reset << " [";
+		for(string s: successes) {
+			if(hadFirst) consoleWriter << ConsoleWriter::Color::Reset << ",";
+			consoleWriter << ConsoleWriter::Color::GreenBright << s;
+			hadFirst = true;
+		}
+		for(string s: failures) {
+			if(hadFirst) consoleWriter << ConsoleWriter::Color::Reset << ",";
+			consoleWriter << ConsoleWriter::Color::RedBright << s;
+			hadFirst = true;
+		}
+		consoleWriter << ConsoleWriter::Color::Reset << "]";
 	}
 	consoleWriter << ConsoleWriter::Color::Reset;
 	consoleWriter.appendPostfix();

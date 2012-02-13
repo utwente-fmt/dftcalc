@@ -849,6 +849,9 @@ void DFTTestRun::runSpecific(Test::Test* testGeneric) {
 		reportTestStart(test,test->getFullname() + " (" + test->getFile().getFileName()+ ")",verifiedDesc,verifiedColor,ss.str());
 	}
 	
+	vector<string> successes;
+	vector<string> failures;
+	
 	// Run DFTCalc
 	DFTTestResult dftResult;
 	{
@@ -859,6 +862,11 @@ void DFTTestRun::runSpecific(Test::Test* testGeneric) {
 			test->getParentSuite()->updateOrigin();
 		}
 		displayResult(test,timeStamp,"dftcalc",dftResult,verified,useCached);
+		if(dftResult.failprob>=0 && (verified<0 || verified==dftResult.failprob)) {
+			successes.push_back("dftcalc");
+		} else {
+			failures.push_back("dftcalc");
+		}
 	}
 	
 	// Do the general between iteration steps
@@ -877,8 +885,13 @@ void DFTTestRun::runSpecific(Test::Test* testGeneric) {
 			test->getParentSuite()->updateOrigin();
 		}
 		displayResult(test,timeStamp,"coral",coralResult,verified,useCached);
+		if(coralResult.failprob>=0 && (verified<0 || verified==coralResult.failprob)) {
+			successes.push_back("coral");
+		} else {
+			failures.push_back("coral");
+		}
 	}
 	
 	// Check
-	reportTestEnd(test,dftResult.failprob>=0 && dftResult.failprob==coralResult.failprob);
+	reportTestEnd(test,successes,failures);
 }

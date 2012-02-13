@@ -74,6 +74,16 @@ public:
 	
 	void setParentSuite(TestSuite* suite) { this->suite = suite; }
 	TestSuite* getParentSuite() { return suite; }
+	
+	bool operator==(const Test& other) {
+		if((!hadUUIDOnLoad || !other.hadUUIDOnLoad) && fullname != "" && fullname == other.fullname) {
+			return true;
+		}
+		return uuid == other.uuid;
+	}
+	
+	void append(const Test& other);
+	virtual void appendSpecific(const Test& other) {};
 };
 
 class TestSuite {
@@ -84,6 +94,8 @@ protected:
 	bool forcedRunning;
 	bool useCachedOnly;
 	vector<Test*> limitTests;
+	void loadTests(YAML::Parser& parser, vector<Test*>& tests);
+	void mergeTestLists(vector<Test*>& main, vector<Test*>& tba);
 public:
 	
 	TestSuite(MessageFormatter* messageFormatter = NULL):
@@ -122,6 +134,8 @@ public:
 	void writeTestFile(File file);
 	
 	void readTestFile(File file);
+	void readAndAppendTestFile(File file);
+	void readAndAppendToTestFile(File file);
 	void createTestFile(File file);
 	void testWritability();
 	
@@ -188,7 +202,7 @@ public:
 	
 	void reportTestStart(Test* test, string name, string verifiedDesc, ConsoleWriter::Color& verifiedColor, string verifiedResult);
 	
-	void reportTestEnd(Test* test, bool ok);
+	void reportTestEnd(Test* test, vector<string>& successes, vector<string>& failures);
 	
 	void reportTest(Test* test,
 	                const ConsoleWriter::Color& itemColor, char item,
