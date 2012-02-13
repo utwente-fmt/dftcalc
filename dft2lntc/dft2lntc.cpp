@@ -42,46 +42,55 @@ FILE* pp_outputFile = stdout;
 const int VERBOSITY_FLOW = 1;
 const int VERBOSITY_DATA = 1;
 
-void print_help(CompilerContext* compilerContext) {
-	
-	compilerContext->notify ("dft2lnt [INPUTFILE.dft] [options]");
-	compilerContext->message("  Compiles the inputfile to EXP and SVL script. If no inputfile was specified,");
-	compilerContext->message("  stdin is used. If no outputfile was specified, 'a.svl' and 'a.exp' are used.");
-	compilerContext->message("");
-	compilerContext->notify ("General Options:");
-	compilerContext->message("  -h, --help      Show this help.");
-	compilerContext->message("  --color         Use colored messages.");
-	compilerContext->message("  --no-color      Do not use colored messages.");
-	compilerContext->message("  --version       Print version info and quit.");
-	compilerContext->message("");
-	compilerContext->notify ("Debug Options:");
-	compilerContext->message("  -a FILE         Output AST to file. '-' for stdout.");
-	compilerContext->message("  -t FILE         Output DFT to file. '-' for stdout.");
-	compilerContext->message("  --verbose=x     Set verbosity to x, -1 <= x <= 5.");
-	compilerContext->message("  -v, --verbose   Increase verbosity. Up to 5 levels.");
-	compilerContext->message("  -q              Decrease verbosity.");
-	compilerContext->message("");
-	compilerContext->notify ("Output Options:");
-	compilerContext->message("  -o FILE         Output EXP to <FILE>.exp and SVL to <FILE>.svl.");
-	compilerContext->message("  -x FILE         Output EXP to file. '-' for stdout. Overrules -o.");
-	compilerContext->message("  -s FILE         Output SVL to file. '-' for stdout. Overrules -o.");
-	compilerContext->message("  -b FILE         Output of SVL to this BCG file. Overrules -o.");
-	compilerContext->flush();
+void print_help(MessageFormatter* messageFormatter, string topic="") {
+	if(topic.empty()) {
+		messageFormatter->notify ("dft2lntc [INPUTFILE.dft] [options]");
+		messageFormatter->message("  Compiles the inputfile to EXP and SVL script. If no inputfile was specified,");
+		messageFormatter->message("  stdin is used. If no outputfile was specified, 'a.svl' and 'a.exp' are used.");
+		messageFormatter->message("");
+		messageFormatter->notify ("General Options:");
+		messageFormatter->message("  -h, --help      Show this help.");
+		messageFormatter->message("  --color         Use colored messages.");
+		messageFormatter->message("  --no-color      Do not use colored messages.");
+		messageFormatter->message("  --version       Print version info and quit.");
+		messageFormatter->message("");
+		messageFormatter->notify ("Debug Options:");
+		messageFormatter->message("  -a FILE         Output AST to file. '-' for stdout.");
+		messageFormatter->message("  -t FILE         Output DFT to file. '-' for stdout.");
+		messageFormatter->message("  --verbose=x     Set verbosity to x, -1 <= x <= 5.");
+		messageFormatter->message("  -v, --verbose   Increase verbosity. Up to 5 levels.");
+		messageFormatter->message("  -q              Decrease verbosity.");
+		messageFormatter->message("");
+		messageFormatter->notify ("Output Options:");
+		messageFormatter->message("  -o FILE         Output EXP to <FILE>.exp and SVL to <FILE>.svl.");
+		messageFormatter->message("  -x FILE         Output EXP to file. '-' for stdout. Overrules -o.");
+		messageFormatter->message("  -s FILE         Output SVL to file. '-' for stdout. Overrules -o.");
+		messageFormatter->message("  -b FILE         Output of SVL to this BCG file. Overrules -o.");
+		messageFormatter->flush();
+	} else if(topic=="topics") {
+		messageFormatter->notify ("Help topics:");
+		messageFormatter->message("  output          Displays the specification of the output format");
+		messageFormatter->message("  To view topics: dft2lntc --help=<topic>");
+		messageFormatter->message("");
+	} else {
+		messageFormatter->reportAction("Unknown help topic: " + topic);
+	}		
 }
 
-void print_version(CompilerContext* compilerContext) {
+void print_version(MessageFormatter* messageFormatter) {
 	
-	compilerContext->notify ("dft2lntc");
-	compilerContext->message(string("  built on ") + COMPILETIME_DATE);
+	messageFormatter->notify ("dft2lntc");
+	messageFormatter->message(string("  built on ") + COMPILETIME_DATE);
 	{
 		FileWriter out;
+		out << string("  git version: v") + string(COMPILETIME_GITVERSION) + " (nearest)" << out.applypostfix;
 		out << string("  git revision `") + COMPILETIME_GITREV + "'";
 		if(COMPILETIME_GITCHANGED)
 			out << " + uncommited changes";
-		compilerContext->message(out.toString());
+		messageFormatter->message(out.toString());
 	}
-	compilerContext->message("  ** Copyright statement. **");
-	compilerContext->flush();
+	messageFormatter->message("  ** Copyright statement. **");
+	messageFormatter->flush();
 }
 
 std::string getRoot(CompilerContext* compilerContext) {
