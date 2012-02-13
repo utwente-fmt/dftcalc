@@ -498,7 +498,7 @@ Test::Test* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& node) {
 		std::string dft;
 		try { *itemNode >> dft; }
 		catch(YAML::Exception& e) { reportYAMLException(e); wentOK = false; }
-		test->setFile(getOrigin().newWithName(dft));
+		test->setFile(File(dft).fixWithOrigin(getOrigin().getPathTo()));
 	} else {
 		if(messageFormatter) messageFormatter->reportErrorAt(Location(getOrigin().getFileRealPath(),node.GetMark().line),"Test does not specify a DFT file");
 		wentOK = false;
