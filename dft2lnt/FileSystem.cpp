@@ -551,3 +551,7 @@ File File::newFixedWithOrigin(const std::string& pathTo) const {
 	return file.fixWithOrigin(pathTo);
 }
 
+std::ostream& operator<<(std::ostream& stream, const File& file) {
+	stream << file.getFilePath();
+	return stream;
+}

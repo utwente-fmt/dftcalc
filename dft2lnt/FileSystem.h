@@ -157,4 +157,6 @@ public:
 	
 };
 
+std::ostream& operator<<(std::ostream& stream, const File& file);
+
 #endif // FILESYSTEM_H
