@@ -242,7 +242,7 @@ void DFTCalc::printOutput(const File& file) {
 	}
 }
 
-int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal) {
+int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::string mrmcCalcCommand) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File exp    = dft.newWithExtension("exp");
@@ -334,7 +334,7 @@ int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal) {
 	}
 
 	// -> mrmcinput
-	MRMC::FileHandler* fileHandler = new MRMC::FileHandler();
+	MRMC::FileHandler* fileHandler = new MRMC::FileHandler(mrmcCalcCommand);
 	fileHandler->generateInputFile(input);
 	if(!FileSystem::exists(input)) {
 		messageFormatter->reportError("Error generating MRMC input file `" + input.getFileRealPath() + "'");
@@ -364,11 +364,8 @@ int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal) {
 		messageFormatter->reportError("Could not calculate");
 		return 1;
 	} else {
-		std::stringstream out;
 		double res = fileHandler->getResult();
 		results.insert(pair<string,double>(dft.getFileName(),res));
-		out << "Result: " << res << std::endl;
-		messageFormatter->reportAction(out.str());
 	}
 
 
@@ -418,25 +415,25 @@ int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal) {
 int main(int argc, char** argv) {
 
 	/* Command line arguments and their default settings */
-	string times           = "";
-	int    timesSet        = 0;
-	string timeFileName    = "";
-	int    timeFileSet     = 0;
-	string resultFileName  = "";
-	int    resultFileSet   = 0;
-	string dotToType       = "png";
-	int    dotToTypeSet    = 0;
+	string timeSpec           = "1";
+	int    timeSpecSet        = 0;
+	string resultFileName     = "";
+	int    resultFileSet      = 0;
+	string dotToType          = "png";
+	int    dotToTypeSet       = 0;
+	string mrmcCalcCommand    = "";
+	int    mrmcCalcCommandSet = 0;
 
 	int verbosity            = 0;
 	int print                = 0;
 	int useColoredMessages   = 1;
 	int printHelp            = 0;
-	string printHelpTopic       = "";
+	string printHelpTopic    = "";
 	int printVersion         = 0;
-
+	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"h:pqr:t:v-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"h:m:pqr:t:v-:")) >= 0 ) {
 		switch(c) {
 			
 			// -r FILE
@@ -455,15 +452,16 @@ int main(int argc, char** argv) {
 				print = 1;
 				break;
 			
+			// -m MRMCCommand
+			case 'm':
+				mrmcCalcCommand = string(optarg);
+				mrmcCalcCommandSet = true;
+				break;
+			
 			// -t FILE
 			case 't':
-				if(strlen(optarg)==1 && optarg[0]=='-') {
-					timeFileName = "";
-					timeFileSet = 1;
-				} else {
-					timeFileName = string(optarg);
-					timeFileSet = 1;
-				}
+				timeSpec = string(optarg);
+				timeSpecSet = 1;
 				break;
 			
 			// -h
@@ -493,9 +491,7 @@ int main(int argc, char** argv) {
 				} else if(!strcmp("color",optarg)) {
 					useColoredMessages = true;
 				} else if(!strcmp("times",optarg)) {
-					timesSet = true;
 					if(strlen(optarg)>6 && optarg[5]=='=') {
-						times = string(optarg+6);
 					} else {
 						printf("%s: --times needs argument\n\n",argv[0]);
 						printHelp = true;
@@ -504,6 +500,7 @@ int main(int argc, char** argv) {
 					dotToTypeSet = true;
 					if(strlen(optarg)>4 && optarg[3]=='=') {
 						dotToType = string(optarg+4);
+						cerr << "DOT: " << dotToType << endl;
 					}
 				} else if(!strcmp("verbose",optarg)) {
 					if(strlen(optarg)>8 && optarg[7]=='=') {
@@ -532,7 +529,14 @@ int main(int argc, char** argv) {
 		print_version(messageFormatter);
 		exit(0);
 	}
-
+	
+	{
+		int t = atoi(timeSpec.c_str());
+		if(t<=0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-t requires a positive integer as argument");
+		}
+	}
+	
 	/* Parse command line arguments without a -X.
 	 * These specify the input files.
 	 */
@@ -563,8 +567,10 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 	
-	/* Result will be written to this FileWriter */
-	FileWriter out;
+	/* Check if all went OK so far */
+	if(messageFormatter->getErrors()>0) {
+		return -1;
+	}
 	
 	/* Change the CWD to ./output, creating the folder if not existent */
 	string cwd = FileSystem::getRealPath(".") + "/output";
@@ -576,7 +582,8 @@ int main(int argc, char** argv) {
 	for(File dft: dfts) {
 		hasInput = true;
 		if(FileSystem::exists(dft)) {
-			calc.calculateDFT(cwd,dft);
+			string mrmcCommand = mrmcCalcCommandSet ? mrmcCalcCommand : "P{>1} [ tt U[0," + timeSpec + "] reach ]";
+			calc.calculateDFT(cwd,dft,mrmcCommand);
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
 		}
@@ -588,22 +595,35 @@ int main(int argc, char** argv) {
 		messageFormatter->reportWarning("No calculations performed");
 	}
 	
-	/* Write result file */
-	if(resultFileSet && resultFileName!="") {
-		YAML::Emitter out;
-		out << calc.getResults();
-		std::ofstream resultFile(resultFileName);
-		if(resultFile.is_open()) {
-			messageFormatter->notify("Printing result to file: " + resultFileName);
-			resultFile << string(out.c_str());
+	/* Print result file */
+	if(verbosity>=0 || print || (resultFileSet && resultFileName=="")) {
+		if(mrmcCalcCommandSet) {
+			messageFormatter->notify("Using: " + mrmcCalcCommand);
 		} else {
-			messageFormatter->reportErrorAt(Location(resultFileName),"could not open file for printing result");
+			messageFormatter->notify("Within time units: " + timeSpec);
+		}
+		for(auto it: calc.getResults()) {
+			std::stringstream out;
+			out << "P(`" << it.first << "' fails)=" << it.second;
+			messageFormatter->reportAction(out.str());
 		}
 	}
 	
-	/* Print result file */
-	if(print || (resultFileSet && resultFileName=="")) {
-		std::cout << out.toString();
+	/* Write result file */
+	if(resultFileSet) {
+		YAML::Emitter out;
+		out << calc.getResults();
+		if(resultFileName=="") {
+			std::cout << string(out.c_str()) << std::endl;
+		} else {
+			std::ofstream resultFile(resultFileName);
+			if(resultFile.is_open()) {
+				messageFormatter->notify("Printing result to file: " + resultFileName);
+				resultFile << string(out.c_str()) << std::endl;
+			} else {
+				messageFormatter->reportErrorAt(Location(resultFileName),"could not open file for printing result");
+			}
+		}
 	}
 	
 	/* Free the messager */

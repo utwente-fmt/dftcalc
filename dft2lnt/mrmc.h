@@ -23,11 +23,13 @@ public:
 	private:
 		std::vector<T_Chance> results;
 		bool m_isCalculated;
+		std::string m_calcCommand;
 		T_Chance result;
 	public:
 		
-		FileHandler():
+		FileHandler(std::string calcCommand):
 			m_isCalculated(false),
+			m_calcCommand(calcCommand),
 			result(T_Chance_Default) {
 		}
 		

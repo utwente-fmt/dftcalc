@@ -21,7 +21,7 @@ MRMC::T_Chance MRMC::T_Chance_Default;
 
 int MRMC::FileHandler::generateInputFile(const File& file) {
 	FileWriter out;
-	out << out.applyprefix << "P{>1} [ tt U[0,1] reach ]" << out.applypostfix;
+	out << out.applyprefix << m_calcCommand << out.applypostfix;
 	out << out.applyprefix << "$RESULT[1]" << out.applypostfix;
 	out << out.applyprefix << "quit" << out.applypostfix;
 	std::ofstream resultFile(file.getFileRealPath());

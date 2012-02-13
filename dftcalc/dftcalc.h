@@ -251,7 +251,7 @@ public:
 	 * @param dft The DFT to calculate
 	 * @return 0 if successful, non-zero otherwise
 	 */
-	int calculateDFT(const std::string& cwd, const File& dft);
+	int calculateDFT(const std::string& cwd, const File& dft, std::string timeSpec);
 	
 };
 
