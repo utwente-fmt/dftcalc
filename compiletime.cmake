@@ -13,7 +13,7 @@ execute_process(
 set(git_version "*.*.*")
 execute_process(
 	COMMAND git log --tags=*[.]*[.]* --pretty=format:%d -n1
-	COMMAND grep -m1 -oe "[[:digit:]][.][[:digit:]][.][[:digit:]]"
+	COMMAND grep -m1 -oe "[[:digit:]]*[.][[:digit:]]*[.][^,]*"
 	OUTPUT_VARIABLE git_version OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 execute_process(
