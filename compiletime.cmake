@@ -28,6 +28,6 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/compiletime.h
  */
 #define COMPILETIME_DATE \"${date_output}\"
 #define COMPILETIME_GITREV \"${git_output}\"
-#define COMPILETIME_GITCHANGED \"${git_changed}\"
+#define COMPILETIME_GITCHANGED ${git_changed}
 #define COMPILETIME_GITVERSION \"${git_version}\"
 ")
