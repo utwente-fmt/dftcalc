@@ -7,8 +7,10 @@ execute_process(
 	OUTPUT_VARIABLE git_output OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 execute_process(
-	COMMAND git diff --exit-code > /dev/null
-	RESULT_VARIABLE git_changed OUTPUT_STRIP_TRAILING_WHITESPACE
+	COMMAND git diff --exit-code
+	OUTPUT_QUIET
+	ERROR_QUIET
+	RESULT_VARIABLE git_changed
 )
 set(git_version "*.*.*")
 execute_process(
