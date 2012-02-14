@@ -90,7 +90,7 @@ void print_version(MessageFormatter* messageFormatter) {
 	messageFormatter->message(string("  built on ") + COMPILETIME_DATE);
 	{
 		FileWriter out;
-		out << string("  git version: v") + string(COMPILETIME_GITVERSION) + " (nearest)" << out.applypostfix;
+		out << string("  git version: ") + string(COMPILETIME_GITVERSION) + " (nearest)" << out.applypostfix;
 		out << string("  git revision `") + COMPILETIME_GITREV + "'";
 		if(COMPILETIME_GITCHANGED)
 			out << " + uncommited changes";
