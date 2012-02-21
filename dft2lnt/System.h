@@ -44,6 +44,8 @@ public:
 	static void sleep(uint64_t ms);
 	
 	static void generateUUID(size_t bytes,std::string& uuid);
+	
+	static uint64_t getCurrentTimeMillis();
 };
 
 #endif

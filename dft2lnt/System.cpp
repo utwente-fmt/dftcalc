@@ -8,6 +8,7 @@
 
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 #include "System.h"
 
 System::Timer::Timer() {
@@ -63,4 +64,10 @@ void System::generateUUID(size_t bytes,std::string& uuid) {
 		if(x<10) uuid += ('0'+x);
 		else     uuid += ('A'+x-10);
 	}
+}
+
+uint64_t System::getCurrentTimeMillis() {
+	timeval now;
+	gettimeofday(&now, NULL);
+	return now.tv_sec*1000 + now.tv_usec/1000;
 }
