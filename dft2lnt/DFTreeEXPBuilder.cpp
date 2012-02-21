@@ -411,8 +411,8 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 							// First, we look up the sending Node of the
 							// current activation rule...
 							std::map<unsigned int,EXPSyncItem*>::const_iterator it = otherRuleA->label.begin();
-							unsigned int otherNodeID = 0;
-							unsigned int otherLocalNodeID = 0;
+							int otherNodeID = -1;
+							int otherLocalNodeID = -1;
 							for(;it != otherRuleA->label.end(); ++it) {
 								if(it->second->getArg(1)) {
 									otherNodeID = it->first;
@@ -425,9 +425,15 @@ int DFT::DFTreeEXPBuilder::buildEXPBody() {
 							// new rule we create for the THIS node, specifying
 							// the other node wants to listen to activates of
 							// the THIS node.
-							if(getNodeWithID(otherNodeID)->usesDynamicActivation()) {
-								assert( (otherNodeID < otherRuleA->label.size()) && "The other rule sync should have a sending process");
-								ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(otherNodeID,syncActivate(otherLocalNodeID,false)) );
+							if(otherNodeID<0) {
+								cc->reportError("Could not find sender of the other rule, bailing...");
+								return 1;
+							} else {
+								const DFT::Nodes::Node* otherNode = getNodeWithID(otherNodeID);
+								if(otherNode->usesDynamicActivation()) {
+									ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(otherNodeID,syncActivate(otherLocalNodeID,false)) );
+									cc->reportAction("- Detected (other) dynamic activator `" + otherNode->getName() + "', added to sync rule",VERBOSITY_DATA);
+								}
 							}
 							
 							// TODO: primary is a special case??????
