@@ -74,11 +74,9 @@ int DFT::DFTreeEXPBuilder::build() {
 	// adding them to neededFiles.
 	basicEvents.clear();
 	gates.clear();
-	neededFiles.clear();
 	nodeIDs.clear();
 	for(size_t i=0; i<dft->getNodes().size(); ++i) {
 		DFT::Nodes::Node* node = dft->getNodes().at(i);
-		neededFiles.insert( (node->getType()) );
 		if(DFT::Nodes::Node::typeMatch(node->getType(),DFT::Nodes::BasicEventType)) {
 			DFT::Nodes::BasicEvent* be = static_cast<DFT::Nodes::BasicEvent*>(node);
 			basicEvents.push_back(be);

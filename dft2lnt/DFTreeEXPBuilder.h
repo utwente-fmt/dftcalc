@@ -186,7 +186,6 @@ private:
 
 	std::vector<DFT::Nodes::BasicEvent*> basicEvents;
 	std::vector<DFT::Nodes::Gate*> gates;
-	std::set<DFT::Nodes::NodeType> neededFiles;
 	std::map<const DFT::Nodes::Node*, unsigned int> nodeIDs;
 	
 	int validateReferences();
