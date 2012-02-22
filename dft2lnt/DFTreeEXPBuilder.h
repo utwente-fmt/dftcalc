@@ -31,7 +31,7 @@ namespace DFT {
  * It consists of a gate name and a list of arguments.
  */
 class EXPSyncItem {
-protected:
+public:
 	std::string name;
 	vector<int> args;
 public:
@@ -163,6 +163,7 @@ public:
 	}
 	~EXPSyncRule() {
 	}
+	
 };
 
 /**
@@ -190,6 +191,7 @@ private:
 	
 	int validateReferences();
 	void printSyncLine(const EXPSyncRule& rule, const vector<unsigned int>& columnWidths);
+	void printSyncLineShort(std::ostream& stream, const EXPSyncRule& rule);
 
 public:
 
@@ -224,14 +226,21 @@ public:
 	 * Affects FileWriters: exp_header
 	 * @return UNDECIDED
 	 */
-	int buildEXPHeader();
+	int buildEXPHeader(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules);
 
 	/**
 	 * Builds the actual composition script from the DFT specification
 	 * Affects FileWriters: exp_body
 	 * @return UNDECIDED
 	 */
-	int buildEXPBody();
+	int buildEXPBody(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules);
+
+	/**
+	 * Builds the rule system for the to be generated EXP file. 
+	 * Calls to buildEXPBody() and buildEXPHeader() should be valid after this.
+	 * @return UNDECIDED
+	 */
+	int parseDFT(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules);
 	
 	/**
 	 * Return the Node ID (index in the dft->getNodes() vector) of the
@@ -317,5 +326,7 @@ public:
 };
 
 } // Namespace: DFT
+
+std::ostream& operator<<(std::ostream& stream, const DFT::EXPSyncItem& item);
 
 #endif // DFTREEEXPBUILDER_H
