@@ -1,7 +1,8 @@
 ## The DFT2LNT Compiler project
 project (dfttest)
-set (dfttest_VERSION_MAJOR 0)
-set (dfttest_VERSION_MINOR 5)
+set (dfttest_VERSION_MAJOR 1)
+set (dfttest_VERSION_MINOR 0)
+set (dfttest_VERSION_PATCH 2)
 
 ## Not sure if needed
 cmake_minimum_required (VERSION 2.6)
