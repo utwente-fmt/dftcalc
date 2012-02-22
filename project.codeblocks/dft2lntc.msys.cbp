@@ -7,7 +7,7 @@
 		<Option execution_dir="." />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="CMake\;Content\;" />
+		<Option virtualFolders="CMake\;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="..\build\$(TARGET_NAME)\bin\dft2lntc" prefix_auto="1" extension_auto="1" />
@@ -59,17 +59,11 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="..\build\Content\simple.dft">
-			<Option virtualFolder="Content\" />
-		</Unit>
+		<Unit filename="..\build\Content\simple.dft" />
 		<Unit filename="..\dft2lntc\CMakeLists.txt">
 			<Option virtualFolder="CMake\" />
 		</Unit>
 		<Unit filename="..\dft2lntc\dft2lntc.cpp" />
-		<Unit filename="..\dft2lntc\realpath.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\dft2lntc\realpath.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

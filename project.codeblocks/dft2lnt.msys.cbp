@@ -59,6 +59,7 @@
 		</Compiler>
 		<Unit filename="..\dft2lnt\ASTDFTBuilder.h" />
 		<Unit filename="..\dft2lnt\ASTLNTBuilder.h" />
+		<Unit filename="..\dft2lnt\ASTPrinter.h" />
 		<Unit filename="..\dft2lnt\ASTValidator.h" />
 		<Unit filename="..\dft2lnt\ASTVisitor.h" />
 		<Unit filename="..\dft2lnt\CMakeLists.txt">
@@ -68,6 +69,8 @@
 		<Unit filename="..\dft2lnt\ConsoleWriter.h" />
 		<Unit filename="..\dft2lnt\DFTree.cpp" />
 		<Unit filename="..\dft2lnt\DFTree.h" />
+		<Unit filename="..\dft2lnt\DFTreeBCGNodeBuilder.cpp" />
+		<Unit filename="..\dft2lnt\DFTreeBCGNodeBuilder.h" />
 		<Unit filename="..\dft2lnt\DFTreeEXPBuilder.cpp" />
 		<Unit filename="..\dft2lnt\DFTreeEXPBuilder.h" />
 		<Unit filename="..\dft2lnt\DFTreePrinter.cpp" />
@@ -76,10 +79,21 @@
 		<Unit filename="..\dft2lnt\DFTreeSVLAndLNTBuilder.h" />
 		<Unit filename="..\dft2lnt\DFTreeValidator.cpp" />
 		<Unit filename="..\dft2lnt\DFTreeValidator.h" />
+		<Unit filename="..\dft2lnt\FileSystem.cpp" />
+		<Unit filename="..\dft2lnt\FileSystem.h" />
 		<Unit filename="..\dft2lnt\FileWriter.cpp" />
 		<Unit filename="..\dft2lnt\FileWriter.h" />
+		<Unit filename="..\dft2lnt\MessageFormatter.cpp" />
+		<Unit filename="..\dft2lnt\MessageFormatter.h" />
+		<Unit filename="..\dft2lnt\Shell.cpp" />
+		<Unit filename="..\dft2lnt\Shell.h" />
+		<Unit filename="..\dft2lnt\System.cpp" />
+		<Unit filename="..\dft2lnt\System.h" />
+		<Unit filename="..\dft2lnt\compiler.cpp" />
+		<Unit filename="..\dft2lnt\compiler.h" />
 		<Unit filename="..\dft2lnt\dft2lnt.cpp" />
 		<Unit filename="..\dft2lnt\dft2lnt.h" />
+		<Unit filename="..\dft2lnt\dft_ast.cpp" />
 		<Unit filename="..\dft2lnt\dft_ast.h" />
 		<Unit filename="..\dft2lnt\dft_parser.cpp" />
 		<Unit filename="..\dft2lnt\dft_parser.h" />
@@ -89,6 +103,7 @@
 		<Unit filename="..\dft2lnt\dftnodes\BasicEvent.h" />
 		<Unit filename="..\dft2lnt\dftnodes\Gate.h" />
 		<Unit filename="..\dft2lnt\dftnodes\GateAnd.h" />
+		<Unit filename="..\dft2lnt\dftnodes\GateFDEP.h" />
 		<Unit filename="..\dft2lnt\dftnodes\GateOr.h" />
 		<Unit filename="..\dft2lnt\dftnodes\GatePAnd.h" />
 		<Unit filename="..\dft2lnt\dftnodes\GateVoting.h" />
@@ -99,7 +114,10 @@
 		<Unit filename="..\dft2lnt\files.cpp" />
 		<Unit filename="..\dft2lnt\files.h" />
 		<Unit filename="..\dft2lnt\lexer.l.lpp" />
+		<Unit filename="..\dft2lnt\mrmc.cpp" />
+		<Unit filename="..\dft2lnt\mrmc.h" />
 		<Unit filename="..\dft2lnt\parser.y.ypp" />
+		<Unit filename="..\dft2lnt\yyheader.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
