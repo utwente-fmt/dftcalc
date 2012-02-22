@@ -23,6 +23,8 @@ public:
 			NOTIFY,
 			NOTIFYH,
 			ACTION,
+			ACTION2,
+			ACTION3,
 			WARNING,
 			ERR,
 			SUCCESS,
@@ -32,11 +34,9 @@ public:
 			MESSAGE_FIRST = MESSAGE,
 			MESSAGE_LAST  = MESSAGE,
 			NOTIFY_FIRST  = NOTIFY,
-			NOTIFY_LAST   = NOTIFY,
-			NOTIFYH_FIRST = NOTIFYH,
-			NOTIFYH_LAST  = NOTIFYH,
+			NOTIFY_LAST   = NOTIFYH,
 			ACTION_FIRST  = ACTION,
-			ACTION_LAST   = ACTION,
+			ACTION_LAST   = ACTION3,
 			WARNING_FIRST = WARNING,
 			WARNING_LAST  = WARNING,
 			ERROR_FIRST   = ERR,
@@ -52,12 +52,14 @@ public:
 		};
 	private:
 		MType type;
-	public:
 		MessageType(MType type): type(type) {}
+	public:
 		static const MessageType Message;
 		static const MessageType Notify;
 		static const MessageType NotifyH;
 		static const MessageType Action;
+		static const MessageType Action2;
+		static const MessageType Action3;
 		static const MessageType Warning;
 		static const MessageType Error;
 		static const MessageType Success;
@@ -65,13 +67,16 @@ public:
 		static const MessageType Title;
 		bool isMessage() const { return MESSAGE_FIRST <= type && type <= MESSAGE_LAST; }
 		bool isNotify()  const { return NOTIFY_FIRST  <= type && type <= NOTIFY_LAST; }
-		bool isNotifyH() const { return NOTIFYH_FIRST <= type && type <= NOTIFYH_LAST; }
 		bool isAction()  const { return ACTION_FIRST  <= type && type <= ACTION_LAST; }
 		bool isWarning() const { return WARNING_FIRST <= type && type <= WARNING_LAST; }
 		bool isError()   const { return ERROR_FIRST   <= type && type <= ERROR_LAST; }
 		bool isSuccess() const { return SUCCESS_FIRST <= type && type <= SUCCESS_LAST; }
 		bool isFile()    const { return FILE_FIRST    <= type && type <= FILE_LAST; }
 		bool isTitle()   const { return TITLE_FIRST   <= type && type <= TITLE_LAST; }
+		const MType& getType() const {return type;}
+		bool operator==(const MessageType& other) const {
+			return this->type == other.type;
+		}
 	};
 
 	static const int VERBOSITY_DEFAULT;
@@ -176,6 +181,40 @@ public:
 	 * @param str The action string to report.
 	 */
 	virtual void reportAction(const std::string& str, const int& verbosityLevel = VERBOSITY_DEFAULT);
+
+	/**
+	 * Report the specified action at the specified location.
+	 * The output format is:    > <action>
+	 * @param loc The location (file, line number, etc) where the error
+	 *            originated from.
+	 * @param str The action string to report.
+	 */
+	virtual void reportAction2At(Location loc, const std::string& str, const int& verbosityLevel = VERBOSITY_DEFAULT);
+
+	/**
+	 * Report the specified action, without a location.
+	 * The output format is:    > <action>
+	 * @param str The action string to report.
+	 */
+	virtual void reportAction2(const std::string& str, const int& verbosityLevel = VERBOSITY_DEFAULT);
+	
+	/**
+	 * Report the specified action at the specified location.
+	 * The output format is:    - <action>
+	 * The action is in the default colour instead of white.
+	 * @param loc The location (file, line number, etc) where the error
+	 *            originated from.
+	 * @param str The action string to report.
+	 */
+	virtual void reportAction3At(Location loc, const std::string& str, const int& verbosityLevel = VERBOSITY_DEFAULT);
+
+	/**
+	 * Report the specified action, without a location.
+	 * The output format is:    - <action>
+	 * The action is in the default colour instead of white.
+	 * @param str The action string to report.
+	 */
+	virtual void reportAction3(const std::string& str, const int& verbosityLevel = VERBOSITY_DEFAULT);
 	
 	/**
 	 * Report the specified filename and file contents, without a location.

@@ -12,6 +12,8 @@ const MessageFormatter::MessageType MessageFormatter::MessageType::Message(Messa
 const MessageFormatter::MessageType MessageFormatter::MessageType::Notify (MessageType::NOTIFY);
 const MessageFormatter::MessageType MessageFormatter::MessageType::NotifyH(MessageType::NOTIFYH);
 const MessageFormatter::MessageType MessageFormatter::MessageType::Action (MessageType::ACTION);
+const MessageFormatter::MessageType MessageFormatter::MessageType::Action2(MessageType::ACTION2);
+const MessageFormatter::MessageType MessageFormatter::MessageType::Action3(MessageType::ACTION3);
 const MessageFormatter::MessageType MessageFormatter::MessageType::Warning(MessageType::WARNING);
 const MessageFormatter::MessageType MessageFormatter::MessageType::Success(MessageType::SUCCESS);
 const MessageFormatter::MessageType MessageFormatter::MessageType::Error  (MessageType::ERR);
@@ -27,8 +29,6 @@ void MessageFormatter::print(const Location& loc, const std::string& str, const 
 	} else if (mType.isWarning()) {
 		consoleWriter << ConsoleWriter::Color::Warning;
 	} else if (mType.isNotify()) {
-		consoleWriter << ConsoleWriter::Color::Notify;
-	} else if (mType.isNotifyH()) {
 		consoleWriter << ConsoleWriter::Color::Notify;
 	} else if (mType.isAction() || mType.isTitle()) {
 		consoleWriter << ConsoleWriter::Color::Action;
@@ -50,13 +50,21 @@ void MessageFormatter::print(const Location& loc, const std::string& str, const 
 		consoleWriter << ":warning:";
 	} else if (mType.isNotify()) {
 		consoleWriter << ":: ";
-		consoleWriter << ConsoleWriter::Color::Notify2;
-	} else if (mType.isNotifyH()) {
-		consoleWriter << ":: ";
-		consoleWriter << ConsoleWriter::Color::NotifyH;
+		if(mType==MessageFormatter::MessageType::Notify)
+			consoleWriter << ConsoleWriter::Color::Notify2;
+		else
+			consoleWriter << ConsoleWriter::Color::NotifyH;
 	} else if (mType.isAction() || mType.isTitle()) {
-		consoleWriter << " > ";
-		consoleWriter << ConsoleWriter::Color::Notify2;
+		if(mType==MessageFormatter::MessageType::Action) {
+			consoleWriter << " > ";
+			consoleWriter << ConsoleWriter::Color::Notify2;
+		} else if(mType==MessageFormatter::MessageType::Action2) {
+			consoleWriter << "   > ";
+			consoleWriter << ConsoleWriter::Color::Notify2;
+		} else {
+			consoleWriter << "   - ";
+			consoleWriter << ConsoleWriter::Color::Reset;
+		}
 	} else if (mType.isMessage()) {
 	} else if (mType.isSuccess()) {
 		consoleWriter << " o ";
@@ -93,6 +101,14 @@ void MessageFormatter::reportActionAt(Location loc, const std::string& str, cons
 	messageAt(loc,str,MessageType::Action,verbosityLevel);
 }
 
+void MessageFormatter::reportAction2At(Location loc, const std::string& str, const int& verbosityLevel) {
+	messageAt(loc,str,MessageType::Action2,verbosityLevel);
+}
+
+void MessageFormatter::reportAction3At(Location loc, const std::string& str, const int& verbosityLevel) {
+	messageAt(loc,str,MessageType::Action3,verbosityLevel);
+}
+
 void MessageFormatter::reportError(const std::string& str, const int& verbosityLevel) {
 	message(str,MessageType::Error,verbosityLevel);
 	errors++;
@@ -105,6 +121,14 @@ void MessageFormatter::reportWarning(const std::string& str, const int& verbosit
 
 void MessageFormatter::reportAction(const std::string& str, const int& verbosityLevel) {
 	message(str,MessageType::Action,verbosityLevel);
+}
+
+void MessageFormatter::reportAction2(const std::string& str, const int& verbosityLevel) {
+	message(str,MessageType::Action2,verbosityLevel);
+}
+
+void MessageFormatter::reportAction3(const std::string& str, const int& verbosityLevel) {
+	message(str,MessageType::Action3,verbosityLevel);
 }
 
 void MessageFormatter::reportFile(const std::string& fileName, const std::string& contents, const int& verbosityLevel) {
