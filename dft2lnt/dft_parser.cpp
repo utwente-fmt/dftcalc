@@ -41,7 +41,7 @@ void yyerror(Location* location, Parser* parser, yyscan_t scanner, DFT::AST::AST
 DFT::AST::ASTNodes* Parser::parse() {
 
 #if defined(DEBUG) || !defined(NDEBUG)
-	yydebug = 1;
+//	yydebug = 1;
 #endif
 
 	if(pp) {
