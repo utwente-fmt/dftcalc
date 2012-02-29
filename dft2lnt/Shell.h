@@ -84,6 +84,28 @@ public:
 		float time_monraw;
 		float mem_virtual;
 		float mem_resident;
+		
+		RunStatistics():
+			time_user(0.0f),
+			time_system(0.0f),
+			time_elapsed(0.0f),
+			mem_virtual(0.0f),
+			mem_resident(0.0f) {
+		}
+		
+		
+		void addTimeMaxMem(const RunStatistics& other) {
+			time_user    += other.time_user;
+			time_system  += other.time_system;
+			time_elapsed += other.time_elapsed;
+			mem_virtual   = mem_virtual  > other.mem_virtual  ? mem_virtual  : other.mem_virtual;
+			mem_resident  = mem_resident > other.mem_resident ? mem_resident : other.mem_resident;
+		}
+		
+		void maxMem(const RunStatistics& other) {
+			mem_virtual   = mem_virtual  > other.mem_virtual  ? mem_virtual  : other.mem_virtual;
+			mem_resident  = mem_resident > other.mem_resident ? mem_resident : other.mem_resident;
+		}
 	};
 	
 	static MessageFormatter* messageFormatter;
@@ -226,21 +248,29 @@ public:
 	
 	static bool readMemtimeStatistics(File file, RunStatistics& stats) {
 		string* contents = FileSystem::load(file);
-		
 		if(contents) {
-			// Format example: 0.00 user, 0.00 system, 0.10 elapsed -- Max VSize = 4024KB, Max RSS = 76KB
-			bool result = sscanf(contents->c_str(),"%f user, %f system, %f elapsed -- Max VSize = %fKB, Max RSS = %fKB",
-				   &stats.time_user,
-				   &stats.time_system,
-				   &stats.time_elapsed,
-				   &stats.mem_virtual,
-				   &stats.mem_resident
-			);
+			bool result = readMemtimeStatistics(*contents,stats);
 			delete contents;
-			return result==EOF;
+			return result;
 		} else {
 			return true;
 		}
+	}
+		
+	static bool readMemtimeStatistics(const string& contents, RunStatistics& stats) {
+		return readMemtimeStatistics(contents.c_str(),stats);
+	}
+
+	static bool readMemtimeStatistics(const char* contents, RunStatistics& stats) {
+		// Format example: 0.00 user, 0.00 system, 0.10 elapsed -- Max VSize = 4024KB, Max RSS = 76KB
+		int result = sscanf(contents,"%f user, %f system, %f elapsed -- Max VSize = %fKB, Max RSS = %fKB",
+			   &stats.time_user,
+			   &stats.time_system,
+			   &stats.time_elapsed,
+			   &stats.mem_virtual,
+			   &stats.mem_resident
+		);
+		return result != 5;
 	}
 
 	static bool readTimeStatistics(File file, RunStatistics& stats) {
@@ -248,15 +278,19 @@ public:
 		
 		if(contents) {
 			// Format example: 0.00 user, 0.00 system, 0.10 elapsed -- Max VSize = 4024KB, Max RSS = 76KB
-			bool result = sscanf(contents->c_str(),"\nreal %f\nuser %f\nsys %f",
+			int result = sscanf(contents->c_str(),"\nreal %f\nuser %f\nsys %f",
 				   &stats.time_user,
 				   &stats.time_system,
 				   &stats.time_elapsed
 			);
-			stats.mem_virtual = 0;
-			stats.mem_resident = 0;
 			delete contents;
-			return result==EOF;
+			if(result == 3) {
+				stats.mem_virtual = 0;
+				stats.mem_resident = 0;
+				return false;
+			} else {
+				return true;
+			}
 		} else {
 			return true;
 		}
