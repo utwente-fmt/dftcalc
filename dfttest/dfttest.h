@@ -12,17 +12,31 @@
 
 #include <sstream>
 #include "test.h"
+#include "DFTCalculationResult.h"
+#include "CADP.h"
 
 class DFTTestResult: public Test::TestResult {
 public:
 	double failprob;
+	DFT::CADP::BCGInfo bcgInfo;
 
 	DFTTestResult():
 		failprob(-1.0f) {
 	}
-
+	
+	Test::ResultStatus getResultStatus(Test::TestSpecification* testGeneric);
+	
 	void readYAMLNodeSpecific(const YAML::Node& node);
 	void writeYAMLNodeSpecific(YAML::Emitter& out) const;
+	
+	virtual bool isValid() {
+		return failprob>=0;
+	}
+	
+	virtual bool isEqual(TestResult* other) {
+		DFTTestResult* otherDFT = static_cast<DFTTestResult*>(other);
+		return failprob == otherDFT->failprob;
+	}
 };
 
 const YAML::Node& operator>>(const YAML::Node& node, DFTTestResult& result) {
@@ -33,23 +47,19 @@ YAML::Emitter& operator<<(YAML::Emitter& out, const DFTTestResult& result) {
 	return result.writeYAMLNode(out);
 }
 
-class DFTTest: public Test::Test {
+class DFTTest: public Test::TestSpecification {
 protected:
 	unsigned int timeUnits;
 	File file;
-	std::map<std::string,double> verifiedResults;
-	std::map<std::string,std::map<std::string,DFTTestResult>> results;
+	std::map<std::string,double> verifiedDFTResults;
 public:
 	void setTimeUnits(unsigned int timeUnits) {this->timeUnits = timeUnits;}
 	unsigned int getTimeUnits() const {return timeUnits;}
 	void setFile(const File& file) {this->file = file;}
 	const File& getFile() const {return file;}
-	void setVerifiedResults(std::map<std::string,double> verifiedResults) {this->verifiedResults = verifiedResults;}
-	std::map<std::string,double>& getVerifiedResults() {return verifiedResults;}
-	const std::map<std::string,double>& getVerifiedResults() const {return verifiedResults;}
-	void setResults(std::map<std::string,std::map<std::string,DFTTestResult>> results) {this->results = results;}
-	std::map<std::string,std::map<std::string,DFTTestResult>>& getResults() {return results;}
-	const std::map<std::string,std::map<std::string,DFTTestResult>>& getResults() const {return results;}
+	void setVerifiedDFTResults(std::map<std::string,double> verifiedDFTResults) {this->verifiedDFTResults = verifiedDFTResults;}
+	std::map<std::string,double>& getVerifiedDFTResults() {return verifiedDFTResults;}
+	const std::map<std::string,double>& getVerifiedDFTResults() const {return verifiedDFTResults;}
 	
 	DFTTest():
 		timeUnits(1) {
@@ -73,7 +83,41 @@ public:
 		return out.str();
 	}
 	
-	virtual void appendSpecific(const Test& other);
+	void getLastResults(map<string,double>& results);
+	
+	virtual void appendSpecific(const TestSpecification& other);
+	
+	double getVerifiedValue() {
+		std::string reason;
+		return getVerifiedValue(reason);
+	}
+	double getVerifiedValue(std::string& reason) {
+		double verified = -1;
+		std::map<string,::Test::TestResult*>::iterator it = getVerifiedResults().begin();
+		if(it!=getVerifiedResults().end()) {
+			DFTTestResult* verifiedResult = static_cast<DFTTestResult*>(it->second);
+			verified = verifiedResult->failprob;
+		} else {
+			map<string,double> results;
+			getLastResults(results);
+			bool allSameAndUseful = true;
+			auto it2 = results.begin();
+			if(it2!=results.end()) {
+				verified = it2->second;
+				for(;it2!=results.end();++it2) {
+					if(it2->second!=verified) allSameAndUseful = false;
+				}
+			} else {
+				allSameAndUseful = false;
+			}
+			if(!allSameAndUseful) {
+				verified = -1;
+			}
+		}
+		return verified;
+	}
+	
+	virtual ::Test::ResultStatus verify(::Test::TestResult* result);
 };
 
 class DFTTestSuite: public Test::TestSuite {
@@ -85,14 +129,17 @@ public:
 	
 	void applyLimitTests(const vector<string>& limitTests);
 	
-	virtual Test::Test* readYAMLNodeSpecific(const YAML::Node& node);
+	virtual Test::TestSpecification* readYAMLNodeSpecific(const YAML::Node& node);
 	
-	virtual void writeYAMLNodeSpecific(Test::Test* testGeneric, YAML::Emitter& out);
+	virtual void writeYAMLNodeSpecific(Test::TestSpecification* testGeneric, YAML::Emitter& out);
 	
 	virtual void originChanged(const File& from);
 	
 	void setMessageFormatter(MessageFormatter* messageFormatter);
 	
+	virtual Test::TestResult* newTestResult() {
+		return new DFTTestResult();
+	}
 };
 
 class DFTTestRun: public Test::TestRun {
@@ -105,21 +152,23 @@ public:
 		TestRun(messageFormatter),
 		dft2lntRoot(dft2lntRoot),
 		coralRoot(coralRoot) {
+			iterations.push_back("dftcalc");
+			iterations.push_back("coral");
+			reportColumns.push_back(Test::TestResultColumn("failprob"   , "P(fail)"    , false));
+			reportColumns.push_back(Test::TestResultColumn("states"     , "States"     , true ));
+			reportColumns.push_back(Test::TestResultColumn("transitions", "Transitions", true ));
 	}
 	
-	DFTTestResult runDftcalc(DFTTest* test);
-	DFTTestResult runCoral(DFTTest* test);
+	DFTTestResult* runDftcalc(DFTTest* test);
+	DFTTestResult* runCoral(DFTTest* test);
 	
 	int handleSignal(int signal);
 	
-	void displayResult(DFTTest* test, string timeStamp, string iteration, DFTTestResult& result, double verified, bool cached);
-	DFTTestResult getLastResult(DFTTest* test, string iteration);
-	
-	void getLastResults(DFTTest* test, map<string,double>& results);
+	virtual void fillDisplayMap(Test::TestSpecification* test, string timeStamp, string iteration, Test::TestResult* result, bool cached, std::map<std::string,std::string>& content, std::map<std::string,ConsoleWriter::Color>& colors);
 	
 	bool checkCached(DFTTest* test, string iteration, double verified, DFTTestResult& result);
 	
-	virtual void runSpecific(Test::Test* testGeneric);
+	virtual Test::TestResult* runSpecific(Test::TestSpecification* testGeneric, const string& timeStamp, const string& iteration);
 };
 
 #endif

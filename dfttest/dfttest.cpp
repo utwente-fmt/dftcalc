@@ -31,6 +31,8 @@ using namespace std;
 #include "MessageFormatter.h"
 #include "DFTreeBCGNodeBuilder.h"
 #include "compiletime.h"
+#include "dftcalc.h"
+#include "CADP.h"
 
 const int VERBOSITY_FLOW = 1;
 const int VERBOSITY_DATA = 2;
@@ -40,9 +42,26 @@ void DFTTestResult::readYAMLNodeSpecific(const YAML::Node& node) {
 	if(const YAML::Node* itemNode = node.FindValue("failprob")) {
 		*itemNode >> failprob;
 	}
+	if(const YAML::Node* itemNode = node.FindValue("bcginfo")) {
+		*itemNode >> bcgInfo;
+	}
 }
 void DFTTestResult::writeYAMLNodeSpecific(YAML::Emitter& out) const {
 	out << YAML::Key << "failprob" << YAML::Value << failprob;
+	out << YAML::Key << "bcginfo" << YAML::Value << bcgInfo;
+}
+
+Test::ResultStatus DFTTestResult::getResultStatus(Test::TestSpecification* testGeneric) {
+	DFTTest* test = static_cast<DFTTest*>(testGeneric);
+	
+	double verified = test->getVerifiedValue();
+	
+	//std::cerr << "Comparing2 " << failprob << ", and " << verified;
+	if(failprob>=0 && (verified<0 || verified==failprob)) {
+		return Test::OK;
+	} else {
+		return Test::FAILED;
+	}
 }
 
 void print_help(MessageFormatter* messageFormatter, string topic) {
@@ -257,7 +276,7 @@ int main(int argc, char** argv) {
 	int    testSuiteFileSet   = 0;
 //	string testFileName       = "";
 //	int    testFileSet        = 0;
-	vector<Test::Test*> inputTests;
+	vector<Test::TestSpecification*> inputTests;
 
 	int verbosity = 0;
 	int useColoredMessages   = 1;
@@ -474,23 +493,15 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-
-
-
-
-
-void DFTTest::appendSpecific(const Test& otherGeneric) {
+void DFTTest::appendSpecific(const TestSpecification& otherGeneric) {
 	const DFTTest& other = static_cast<const DFTTest&>(otherGeneric);
-	for(auto result: other.results) {
-		this->results.insert(result);
-	}
-	for(auto verifiedResult: other.verifiedResults) {
-		this->verifiedResults.insert(verifiedResult);
+	for(auto verifiedDFTResult: other.verifiedDFTResults) {
+		this->verifiedDFTResults.insert(verifiedDFTResult);
 	}
 }
 
 void DFTTestSuite::applyLimitTests(const vector<string>& limitTests) {
-	for(Test::Test* testGeneric: tests) {
+	for(Test::TestSpecification* testGeneric: tests) {
 		DFTTest* test = static_cast<DFTTest*>(testGeneric);
 		bool addTest = false;
 		for(string ltest: limitTests) {
@@ -502,7 +513,7 @@ void DFTTestSuite::applyLimitTests(const vector<string>& limitTests) {
 	}
 }
 
-Test::Test* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& node) {
+Test::TestSpecification* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& node) {
 	bool wentOK = true;
 	
 	DFTTest* test = new DFTTest();
@@ -525,59 +536,6 @@ Test::Test* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& node) {
 		wentOK = false;
 		goto error;
 	}
-	if(const YAML::Node* itemNode = node.FindValue("verified")) {
-		if(itemNode->Type()==YAML::NodeType::Map) {
-			for(YAML::Iterator it = itemNode->begin(); it!=itemNode->end(); ++it) {
-				string key;
-				double value;
-				try {
-					it.first() >> key;
-					it.second() >> value;
-					//cerr << "Found verified result: " << key << " -> " << value << endl;
-					test->getVerifiedResults().insert(pair<std::string,double>(key,value));
-				} catch(YAML::Exception& e) {
-					reportYAMLException(e);
-					wentOK = false;
-				}
-			}
-		}
-	}
-	if(const YAML::Node* itemNode = node.FindValue("results")) {
-		if(itemNode->Type()==YAML::NodeType::Sequence) {
-			
-			// Iterate over the testruns
-			for(YAML::Iterator itR = itemNode->begin(); itR!=itemNode->end(); ++itR) {
-				
-				// 
-				for(YAML::Iterator it = itR->begin(); it!=itR->end(); ++it) {
-					string resultTime;
-					try {
-						it.first() >> resultTime;
-						//cerr << "Found result: " << resultTime << it.second().Type() << endl;
-						std::map<std::string,DFTTestResult>& results = test->getResults()[resultTime];
-						if(it.second().Type()==YAML::NodeType::Map) {
-							
-							// Iterate over individual results of a testrun
-							for(YAML::Iterator it2 = it.second().begin(); it2!=it.second().end(); ++it2) {
-								string iteration;
-								DFTTestResult iterationResults;
-								try {
-									it2.first() >> iteration;
-									it2.second() >> iterationResults;
-									results.insert(pair<std::string,DFTTestResult>(iteration,iterationResults));
-								} catch(YAML::Exception& e) {
-									reportYAMLException(e);
-									wentOK = false;
-								}
-							}
-						}
-					} catch(YAML::Exception& e) {
-						reportYAMLException(e);
-					}
-				}
-			}
-		}
-	}
 	
 	if(wentOK) return test;
 error:
@@ -586,27 +544,16 @@ error:
 		
 }
 
-void DFTTestSuite::writeYAMLNodeSpecific(Test::Test* testGeneric, YAML::Emitter& out) {
+void DFTTestSuite::writeYAMLNodeSpecific(Test::TestSpecification* testGeneric, YAML::Emitter& out) {
 	DFTTest* test = static_cast<DFTTest*>(testGeneric);
 	out << YAML::Key   << "timeunits";
 	out << YAML::Value << test->getTimeUnits();
 	out << YAML::Key   << "dft";
 	out << YAML::Value << test->getFile().getFilePath();
-	out << YAML::Key   << "verified";
-	out << YAML::Value << test->getVerifiedResults();
-	out << YAML::Key   << "results";
-	out << YAML::Value << YAML::BeginSeq;
-	for(auto it=test->getResults().begin(); it!=test->getResults().end(); ++it) {
-		out << YAML::BeginMap;
-		out << YAML::Key   << it->first;
-		out << YAML::Value << it->second;
-		out << YAML::EndMap;
-	}
-	out << YAML::EndSeq;
 }
 
 void DFTTestSuite::originChanged(const File& from) {
-	for(Test::Test* testGeneric: tests) {
+	for(Test::TestSpecification* testGeneric: tests) {
 		DFTTest* test = static_cast<DFTTest*>(testGeneric);
 		File oldFile = test->getFile();
 		//std::cerr << "Updating DFT file from " << test->getFile().getFileRealPath() << " ( " << test->getFile().getFilePath() << " ) ";
@@ -652,14 +599,22 @@ int DFTTestRun::handleSignal(int signal) {
 	return signal;
 }
 
-DFTTestResult DFTTestRun::runDftcalc(DFTTest* test) {
+DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 	// Result
-	DFTTestResult result;
+	DFTTestResult* result = new DFTTestResult();
 	
 	// Run dftcalc
-	File dftcalcResultFile = File("output",test->getFile().getFileBase(),"result.dftcalc");
+	File outputDir("output_dftcalc");
+	outputDir.fix();
+	FileSystem::mkdir(outputDir);
+	File dftcalcResultFile = File(outputDir.getFilePath(),test->getFile().getFileBase(),"result.dftcalc");
+	File bcgFile = File(outputDir.getFilePath(),test->getFile().getFileBase(),"bcg");
 	FileSystem::remove(dftcalcResultFile);
-	string dftcalc = dft2lntRoot + "/bin/dftcalc '" + test->getFile().getFileRealPath() + "' " + test->getTimeDftcalc() + " -r " + dftcalcResultFile.getFileRealPath();
+	string dftcalc = dft2lntRoot + "/bin/dftcalc '" + test->getFile().getFileRealPath() + "'"
+	                                                + " "    + test->getTimeDftcalc()
+	                                                + " -C " + outputDir.getFilePath()
+	                                                + " -r " + dftcalcResultFile.getFileRealPath()
+	                                                ;
 	
 	//clock_t start = clock();
 	Shell::SystemOptions options;
@@ -670,15 +625,10 @@ DFTTestResult DFTTestRun::runDftcalc(DFTTest* test) {
 	Shell::system(options,&stats);
 	
 	//clock_t end = clock();
-	result.time_user    = stats.time_user;
-	result.time_system  = stats.time_system;
-	result.time_elapsed = stats.time_elapsed;
-	result.time_monraw  = stats.time_monraw;
-	result.mem_virtual  = stats.mem_virtual;
-	result.mem_resident = stats.mem_resident;
+	result->stats = stats;
 	
 	// Obtain dftcalc result
-	std::map<string,double> dftcalcResults;
+	std::map<string,DFT::DFTCalculationResult> dftcalcResults;
 	{
 		std::ifstream fin(dftcalcResultFile.getFileRealPath());
 		YAML::Parser parser(fin);
@@ -687,36 +637,50 @@ DFTTestResult DFTTestRun::runDftcalc(DFTTest* test) {
 			doc >> dftcalcResults;
 		}
 	}
-	map<string,double>::iterator res = dftcalcResults.find(test->getFile().getFileName());
+	map<string,DFT::DFTCalculationResult>::iterator res = dftcalcResults.find(test->getFile().getFileName());
 	if(res != dftcalcResults.end()) {
-		result.failprob = res->second;
+		result->stats.maxMem(res->second.stats);
+		result->failprob = res->second.failprob;
 	} else {
-		result.failprob = -1;
+		result->failprob = -1;
 	}
+	
+	// Read statistics of BCG file
+	DFT::CADP::BCGInfo bcgInfo;
+	if(DFT::CADP::BCG_Info(bcgFile,bcgInfo)) {
+		messageFormatter->reportWarning("Could not read from BCG file `" + bcgFile.getFileRealPath() + "'");
+	}
+	result->bcgInfo = bcgInfo;
+	
 	return result;
 }
 
-DFTTestResult DFTTestRun::runCoral(DFTTest* test) {
+DFTTestResult* DFTTestRun::runCoral(DFTTest* test) {
 	// Result
-	DFTTestResult result;
+	DFTTestResult* result = new DFTTestResult();
 	
-	File coralResultFile = File("output",test->getFile().getFileBase(),"result.coral");
+	File outputDir("output_coral");
+	outputDir.fix();
+	FileSystem::mkdir(outputDir);
+	File coralResultFile = File(outputDir.getFilePath(),test->getFile().getFileBase(),"result.coral");
+	File bcgFile = File(outputDir.getFilePath(),test->getFile().getFileBase()+".coral","bcg");
+	File svlLogFile = File(outputDir.getFilePath(),"uniformizer_error","log");
+	
 	FileSystem::remove(coralResultFile);
-	string coral = coralRoot + "/coral -f '" + test->getFile().getFileRealPath() + "' -C output " + test->getTimeCoral() + " -O " + coralResultFile.getFileRealPath();;
+	string coral = coralRoot + "/coral -f '" + test->getFile().getFileRealPath() + "'"
+	                                         + " "   + test->getTimeCoral()
+	                                         + " -C " + bcgFile.getPathTo() + "/" + bcgFile.getFileBase()
+	                                         + " -M " + outputDir.getFilePath()
+	                                         + " -l " + outputDir.getFilePath()
+	                                         + " -O " + coralResultFile.getFileRealPath()
+	                                         ;
 	
 	Shell::RunStatistics stats;
 	Shell::system(coral,VERBOSITY_EXECUTIONS,&stats);//,".",coralResultFile.getFileRealPath());
 	
-	result.time_user    = stats.time_user;
-	result.time_system  = stats.time_system;
-	result.time_elapsed = stats.time_elapsed;
-	result.time_monraw  = stats.time_monraw;
-	result.mem_virtual  = stats.mem_virtual;
-	result.mem_resident = stats.mem_resident;
-	
 	std::ifstream fin(coralResultFile.getFileRealPath());
 	char buffer[1000];
-	result.failprob = -1;
+	result->failprob = -1;
 	switch(0) default: {
 		// Skip the header
 		fin.getline(buffer,1000);
@@ -733,188 +697,97 @@ DFTTestResult DFTTestRun::runCoral(DFTTest* test) {
 		if(*c==',') {
 			c+=2;
 			//cerr << "SCANNING" << string(c) << endl;
-			sscanf(c,"%lf",&result.failprob);
+			sscanf(c,"%lf",&result->failprob);
 			break;
 		}
 	}
+	
+	// Read memory usage from SVL log file
+	// FIXME: this is the wrong SVL log file... where do find one for coral?
+//	Shell::RunStatistics svlStats;
+//	if(DFT::CADP::readStatsFromSVLLog(svlLogFile,svlStats)) {
+//		messageFormatter->reportWarning("Could not read from svl log file `" + svlLogFile.getFileRealPath() + "'");
+//	}
+//	stats.maxMem(svlStats);
+	
+	result->stats = stats;
+	
+	// Read statistics of BCG file
+	DFT::CADP::BCGInfo bcgInfo;
+	if(DFT::CADP::BCG_Info(bcgFile,bcgInfo)) {
+		messageFormatter->reportWarning("Could not read from BCG file `" + bcgFile.getFileRealPath() + "'");
+	}
+	result->bcgInfo = bcgInfo;
+	
 	return result;
 }
 
-void DFTTestRun::displayResult(DFTTest* test, string timeStamp, string iteration, DFTTestResult& result, double verified, bool cached) {
-	stringstream ss;
-	stringstream ss_time;
-	ss.precision(10);
-	ss_time.precision(10);
-	ss << result.failprob;
-	ss_time << result.time_monraw;
-	if(result.failprob<0) {
-		reportTestFailure(test,iteration,"n/a","",cached);
-	} else {
-		if(verified<0) {
-			reportTestUndecided(test,iteration,ss.str(),ss_time.str(),cached);
-		} else {
-			if(verified==result.failprob) {
-				reportTestSuccess(test,iteration,ss.str(),ss_time.str(),cached);
-			} else {
-				reportTestFailure(test,iteration,ss.str(),ss_time.str(),cached);
-			}
-		}
-	}
-}
-
-DFTTestResult DFTTestRun::getLastResult(DFTTest* test, string iteration) {
-	auto it = test->getResults().rbegin();
-	for(;it!=test->getResults().rend(); ++it) {
-		std::map<string,DFTTestResult>::iterator it2 = it->second.find(iteration);
-		if(it2 != it->second.end()) {
-			//if(it2!=test->getVerifiedResults().end()) { // FIXME: what does this if do?
-			if(it2->second.failprob>=0) {
-				return it2->second;
-			}
-		}
-	}
-	return DFTTestResult();
-}
-
-void DFTTestRun::getLastResults(DFTTest* test, map<string,double>& results) {
-	auto it = test->getResults().begin();
-	for(;it!=test->getResults().end(); ++it) {
+void DFTTest::getLastResults(map<string,double>& results) {
+	
+	// Loop over all the results, starting with the first
+	auto it = getResults().begin();
+	for(;it!=getResults().end(); ++it) {
+		
+		// Loop over all the iterations of the current result
 		auto it2 = it->second.begin();
 		for(;it2!=it->second.end(); ++it2) {
-			//results.insert(pair<string,double>(it2->first,it2->second));
-			if(it2->second.failprob>=0) {
-				results[it2->first] = it2->second.failprob;
+			
+			// If the result is valid...
+			DFTTestResult* result = static_cast<DFTTestResult*>(it2->second);
+			if(result->failprob>=0) {
+				
+				// insert the result in the output map
+				results[it2->first] = result->failprob;
 			}
 		}
 		
-//			if(it2 != it->second.end()) {
-//				if(it2!=test->getVerifiedResults().end()) {
-//					return it2->second;
-//				}
-//			}
 	}
 }
 
-bool DFTTestRun::checkCached(DFTTest* test, string iteration, double verified, DFTTestResult& result) {
-	DFTTestResult resultCached = getLastResult(test,iteration);
-	
-	// If forced running all tests is enabled, do so
-	if(test->getParentSuite()->getForcedRunning()) {
-		return false;
+::Test::ResultStatus DFTTest::verify(::Test::TestResult* resultGeneric) {
+	DFTTestResult* result = static_cast<DFTTestResult*>(resultGeneric);
+	double verified = getVerifiedValue();
+	//std::cerr << "Comparing " << result->failprob << ", and " << verified;
+	if(result->failprob>=0 && (verified<0 || verified==result->failprob)) {
+		return ::Test::OK;
+	} else {
+		return ::Test::FAILED;
 	}
-	
-	// If using only cache is enabled, do so
-	if(test->getParentSuite()->getUseCachedOnly()) {
-		result = resultCached;
-		return true;
-	}
-	
-	// In the normal case, use cache if it is a proper result
-	if(verified>=0 && resultCached.failprob==verified) {
-		result = resultCached;
-		return true;
-	}
-	return false;
 }
 
-void DFTTestRun::runSpecific(Test::Test* testGeneric) {
+void DFTTestRun::fillDisplayMap(Test::TestSpecification* testGeneric, string timeStamp, string iteration, Test::TestResult* resultGeneric, bool cached, std::map<std::string,std::string>& content, std::map<std::string,ConsoleWriter::Color>& colors) {
+	DFTTest* test = static_cast<DFTTest*>(testGeneric);
+	DFTTestResult* result = static_cast<DFTTestResult*>(resultGeneric);
+	if(result->failprob>=0) {
+		std::stringstream ss;
+		ss << result->failprob;
+		content["failprob"] = ss.str();
+	} else {
+		content["failprob"] = "-";
+	}
+	if(result->bcgInfo.states>0) {
+		std::stringstream ss;
+		ss << result->bcgInfo.states;
+		content["states"] = ss.str();
+	} else {
+		content["states"] = "-";
+	}
+	if(result->bcgInfo.transitions>0) {
+		std::stringstream ss;
+		ss << result->bcgInfo.transitions;
+		content["transitions"] = ss.str();
+	} else {
+		content["transitions"] = "-";
+	}
+}
+
+Test::TestResult* DFTTestRun::runSpecific(Test::TestSpecification* testGeneric, const string& timeStamp, const string& iteration) {
 	DFTTest* test = static_cast<DFTTest*>(testGeneric);
 	
-	time_t rawtime;
-	struct tm * timeinfo;
-	time ( &rawtime );
-	timeinfo = localtime ( &rawtime );
-	char buffer[100];
-	strftime(buffer,100,"%Y-%m-%d %H:%M:%S",timeinfo);
-	string timeStamp = string(buffer);
-	
-	double verified = -1;
-	string verifiedDesc = "";
-	ConsoleWriter::Color verifiedColor = ConsoleWriter::Color::Reset;
-	//std::map<string,double>::iterator it = test->getVerifiedResults().find("manual");
-	std::map<string,double>::iterator it = test->getVerifiedResults().begin();
-	if(it!=test->getVerifiedResults().end()) {
-		verified = it->second;
-		verifiedDesc = it->first;
-		verifiedColor = ConsoleWriter::Color::GreenBright;
+	if(iteration=="dftcalc") {
+		return runDftcalc(test);
 	} else {
-		map<string,double> results;
-		getLastResults(test,results);
-		bool allSameAndUseful = true;
-		auto it2 = results.begin();
-		if(it2!=results.end()) {
-			verified = it2->second;
-			for(;it2!=results.end();++it2) {
-				if(it2->second!=verified) allSameAndUseful = false;
-			}
-		} else {
-			allSameAndUseful = false;
-		}
-		if(allSameAndUseful) {
-			verifiedDesc = "agreement";
-			verifiedColor = ConsoleWriter::Color::Green;
-		} else {
-			verified = -1;
-		}
+		return runCoral(test);
 	}
 	
-	if(verified<0) {
-		verifiedColor = ConsoleWriter::Color::Yellow;
-		verifiedDesc = "no verification";
-	}
-	
-	{
-		stringstream ss;
-		if(verified>=0) {
-			ss.precision(10);
-			ss << verified;
-		}
-		reportTestStart(test,test->getFullname() + " (" + test->getFile().getFileName()+ ")",verifiedDesc,verifiedColor,ss.str());
-	}
-	
-	vector<string> successes;
-	vector<string> failures;
-	
-	// Run DFTCalc
-	DFTTestResult dftResult;
-	{
-		bool useCached = checkCached(test,"dftcalc",verified,dftResult);
-		if(!useCached) {
-			dftResult = runDftcalc(test);
-			test->getResults()[timeStamp]["dftcalc"] = dftResult;
-			test->getParentSuite()->updateOrigin();
-		}
-		displayResult(test,timeStamp,"dftcalc",dftResult,verified,useCached);
-		if(dftResult.failprob>=0 && (verified<0 || verified==dftResult.failprob)) {
-			successes.push_back("dftcalc");
-		} else {
-			failures.push_back("dftcalc");
-		}
-	}
-	
-	// Do the general between iteration steps
-	// Returns whether to stop this test or not
-	if(betweenIterations()) {
-		return;
-	}
-	
-	// Run Coral
-	DFTTestResult coralResult;
-	{
-		bool useCached = checkCached(test,"coral",verified,coralResult);
-		if(!useCached) {
-			coralResult = runCoral(test);
-			test->getResults()[timeStamp]["coral"] = coralResult;
-			test->getParentSuite()->updateOrigin();
-		}
-		displayResult(test,timeStamp,"coral",coralResult,verified,useCached);
-		if(coralResult.failprob>=0 && (verified<0 || verified==coralResult.failprob)) {
-			successes.push_back("coral");
-		} else {
-			failures.push_back("coral");
-		}
-	}
-	
-	// Check
-	reportTestEnd(test,successes,failures);
 }
