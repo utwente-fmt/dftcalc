@@ -13,10 +13,17 @@ add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS )
 add_definitions(-std=gnu++0x)
 
 ## Include source directory, the build directory (for generated files) and the dft2lnt library path
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../dft2lnt ${CMAKE_CURRENT_SOURCE_DIR}/../yaml-cpp/include)
+include_directories(
+	${CMAKE_CURRENT_BINARY_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}/../dft2lnt
+	${CMAKE_CURRENT_SOURCE_DIR}/../yaml-cpp/include
+)
 
 ## Link directories
-#link_directories(${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt)
+#link_directories(
+#	${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt
+#)
 
 ## Specify the executable and its sources
 add_executable(dftcalc
