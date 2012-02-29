@@ -464,6 +464,47 @@ std::string* FileSystem::load(const File& file) {
 
 // ----------------------------------------
 
+PushD::PushD() {
+}
+PushD::PushD(const std::string& path) {
+	pushd(path);
+}
+PushD::PushD(const File& path) {
+	pushd(path.getFileRealPath());
+}
+
+PushD::~PushD() {
+	popd();
+}
+
+int PushD::pushd(const std::string& dir) {
+	char buffer[PATH_MAX];
+	char* res = getcwd(buffer,PATH_MAX);
+	if(res) {
+		dirStack.push_back( std::string(buffer) );
+		chdir(dir.c_str());
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+int PushD::pushd(const File& dir) {
+	return pushd(dir.getFileRealPath());
+}
+
+int PushD::popd() {
+	if(dirStack.size()>0) {
+		chdir(dirStack.back().c_str());
+		dirStack.pop_back();
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+// ----------------------------------------
+
 File::File(const std::string& filePath) {
 	this->pathTo = FileSystem::getDirName(filePath);
 	FileSystem::getFileBaseAndExtension(fileBase,fileExtension,filePath);

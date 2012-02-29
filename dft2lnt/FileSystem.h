@@ -62,36 +62,16 @@ class PushD {
 private:
 	std::vector<std::string> dirStack;
 public:
-	PushD() {
-	}
-	PushD(std::string path) {
-		pushd(path);
-	}
+	PushD();
+	PushD(const std::string& path);
+	PushD(const File& path);
 	
-	virtual ~PushD() {
-		popd();
-	}
+	virtual ~PushD();
 	
-	int pushd(std::string dir) {
-		char buffer[PATH_MAX];
-		char* res = getcwd(buffer,PATH_MAX);
-		if(res) {
-			dirStack.push_back( std::string(buffer) );
-			chdir(dir.c_str());
-			return 0;
-		} else {
-			return 1;
-		}
-	}
-	int popd() {
-		if(dirStack.size()>0) {
-			chdir(dirStack.back().c_str());
-			dirStack.pop_back();
-			return 0;
-		} else {
-			return 1;
-		}
-	}
+	int pushd(const std::string& dir);
+	int pushd(const File& dir);
+	
+	int popd();
 };
 
 class File {
