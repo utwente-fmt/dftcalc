@@ -51,6 +51,8 @@ public:
 
 		Color(int color): color(color) {
 		}
+		Color(): color(0) {
+		}
 		int getColorCode() const { return color; }
 	};
 private:
