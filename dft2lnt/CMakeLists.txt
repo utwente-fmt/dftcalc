@@ -17,7 +17,11 @@ add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS )
 add_definitions(-std=gnu++0x -Wall)
 
 ## Include source directory and the build directory (for generated files)
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(
+	${CMAKE_CURRENT_BINARY_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}/../yaml-cpp/include
+)
 
 ## Generate parser and lexer files to the target directory, because they depend on the selected Build (Debug/Release)
 ## We need to explicitely state that we want a lexer header file
@@ -50,6 +54,7 @@ add_library(dft2lnt
 	FileSystem.cpp
 	System.cpp
 	mrmc.cpp
+	CADP.cpp
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
 )
 
