@@ -18,6 +18,7 @@
 #include <iostream>
 #include <fstream>
 #include <limits.h>
+#include <CADP.h>
 
 #ifdef WIN32
 #include <io.h>
@@ -33,7 +34,7 @@ using namespace std;
 #include "compiletime.h"
 #include "yaml-cpp/yaml.h"
 
-const int DFTCalc::VERBOSITY_SEARCHING = 2;
+const int DFT::DFTCalc::VERBOSITY_SEARCHING = 2;
 
 const int VERBOSITY_FLOW = 1;
 const int VERBOSITY_DATA = 1;
@@ -62,6 +63,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -p              Print result to stdout.");
 		messageFormatter->message("  -t x            Calculate P(DFT fails in x time units), default is 1");
 		messageFormatter->message("  -m <command>    Raw MRMC Calculation command. Overrules -t.");
+		messageFormatter->message("  -C DIR          Temporary output files will be in this directory");
 		messageFormatter->flush();
 	} else if(topic=="output") {
 		messageFormatter->notify ("Output");
@@ -100,7 +102,7 @@ void print_version(MessageFormatter* messageFormatter) {
 	messageFormatter->flush();
 }
 
-std::string DFTCalc::getCoralRoot(MessageFormatter* messageFormatter) {
+std::string DFT::DFTCalc::getCoralRoot(MessageFormatter* messageFormatter) {
 	
 	if(!coralRoot.empty()) {
 		return coralRoot;
@@ -133,7 +135,7 @@ end:
 	return coralRoot;
 }
 
-std::string DFTCalc::getRoot(MessageFormatter* messageFormatter) {
+std::string DFT::DFTCalc::getRoot(MessageFormatter* messageFormatter) {
 	
 	if(!dft2lntRoot.empty()) {
 		return dft2lntRoot;
@@ -192,7 +194,7 @@ end:
 	return dft2lntRoot;
 }
 
-std::string DFTCalc::getCADPRoot(MessageFormatter* messageFormatter) {
+std::string DFT::DFTCalc::getCADPRoot(MessageFormatter* messageFormatter) {
 	
 	if(!cadpRoot.empty()) {
 		return cadpRoot;
@@ -232,7 +234,7 @@ std::string intToString(int i) {
 	return ss.str();
 }
 
-void DFTCalc::printOutput(const File& file) {
+void DFT::DFTCalc::printOutput(const File& file) {
 	std::string* outContents = FileSystem::load(file);
 	if(outContents) {
 		messageFormatter->notifyHighlighted("** OUTPUT of " + file.getFileName() + " **");
@@ -242,9 +244,10 @@ void DFTCalc::printOutput(const File& file) {
 	}
 }
 
-int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::string mrmcCalcCommand) {
+int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::string mrmcCalcCommand) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
+	File svlLog = dft.newWithExtension("log");
 	File exp    = dft.newWithExtension("exp");
 	File bcg    = dft.newWithExtension("bcg");
 	File imc    = dft.newWithExtension("imc");
@@ -254,10 +257,13 @@ int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::
 	File png    = dot.newWithExtension("png");
 	File input  = dft.newWithExtension("input");
 
+	Shell::RunStatistics stats;
+
 	FileSystem::mkdir(File(cwd));
 
 	if(FileSystem::exists(dft))    FileSystem::remove(dft);
 	if(FileSystem::exists(svl))    FileSystem::remove(svl);
+	if(FileSystem::exists(svlLog)) FileSystem::remove(svlLog);
 	if(FileSystem::exists(exp))    FileSystem::remove(exp);
 	if(FileSystem::exists(bcg))    FileSystem::remove(bcg);
 	if(FileSystem::exists(imc))    FileSystem::remove(imc);
@@ -314,7 +320,12 @@ int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::
 		printOutput(File(sysOps.errFile));
 		return 1;
 	}
-
+	
+	// obtain memtime result from svl
+	if(DFT::CADP::readStatsFromSVLLog(svlLog,stats)) {
+		messageFormatter->reportWarning("Could not read from svl log file `" + svlLog.getFileRealPath() + "'");
+	}
+	
 	// bcg -> ctmdpi, lab
 	messageFormatter->reportAction("Translating IMC to CTMDPI...",VERBOSITY_FLOW);
 	sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imc2ctmdpi.report";
@@ -365,7 +376,11 @@ int DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::
 		return 1;
 	} else {
 		double res = fileHandler->getResult();
-		results.insert(pair<string,double>(dft.getFileName(),res));
+		DFT::DFTCalculationResult calcResult;
+		calcResult.dftFile = dft.getFilePath();
+		calcResult.failprob = res;
+		calcResult.stats = stats;
+		results.insert(pair<string,DFT::DFTCalculationResult>(dft.getFileName(),calcResult));
 	}
 
 
@@ -421,6 +436,8 @@ int main(int argc, char** argv) {
 	int    resultFileSet      = 0;
 	string dotToType          = "png";
 	int    dotToTypeSet       = 0;
+	string outputFolder       = "output";
+	int    outputFolderSet    = 0;
 	string mrmcCalcCommand    = "";
 	int    mrmcCalcCommandSet = 0;
 
@@ -433,8 +450,14 @@ int main(int argc, char** argv) {
 	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"h:m:pqr:t:v-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:h:m:pqr:t:v-:")) >= 0 ) {
 		switch(c) {
+			
+			// -C FILE
+			case 'C':
+				outputFolder = string(optarg);
+				outputFolderSet = 1;
+				break;
 			
 			// -r FILE
 			case 'r':
@@ -557,7 +580,7 @@ int main(int argc, char** argv) {
 	Shell::messageFormatter = messageFormatter;
 	
 	/* Create the DFTCalc class */
-	DFTCalc calc;
+	DFT::DFTCalc calc;
 	calc.setMessageFormatter(messageFormatter);
 	if(dotToTypeSet) calc.setBuildDOT(dotToType);
 	
@@ -573,9 +596,9 @@ int main(int argc, char** argv) {
 	}
 	
 	/* Change the CWD to ./output, creating the folder if not existent */
-	string cwd = FileSystem::getRealPath(".") + "/output";
-	FileSystem::mkdir(File(cwd));
-	PushD workdir(cwd);
+	File outputFolderFile = File(outputFolder).fix();
+	FileSystem::mkdir(outputFolderFile);
+	PushD workdir(outputFolderFile);
 	
 	/* Calculate DFTs */
 	bool hasInput = false;
@@ -583,7 +606,7 @@ int main(int argc, char** argv) {
 		hasInput = true;
 		if(FileSystem::exists(dft)) {
 			string mrmcCommand = mrmcCalcCommandSet ? mrmcCalcCommand : "P{>1} [ tt U[0," + timeSpec + "] reach ]";
-			calc.calculateDFT(cwd,dft,mrmcCommand);
+			calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,mrmcCommand);
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
 		}
@@ -604,7 +627,7 @@ int main(int argc, char** argv) {
 		}
 		for(auto it: calc.getResults()) {
 			std::stringstream out;
-			out << "P(`" << it.first << "' fails)=" << it.second;
+			out << "P(`" << it.first << "' fails)=" << it.second.failprob;
 			messageFormatter->reportAction(out.str());
 		}
 	}
