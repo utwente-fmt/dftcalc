@@ -68,6 +68,8 @@
     <File Name="../dft2lnt/System.h"/>
     <File Name="../dft2lnt/yyheader.h"/>
     <File Name="../dft2lnt/CADP.h"/>
+    <File Name="../dft2lnt/DFTCalculationResult.cpp"/>
+    <File Name="../dft2lnt/DFTCalculationResult.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="CMake">
     <File Name="../dft2lnt/CMakeLists.txt"/>

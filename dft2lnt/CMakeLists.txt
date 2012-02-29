@@ -45,6 +45,7 @@ add_library(dft2lnt
 	DFTreePrinter.cpp
 	DFTreeSVLAndLNTBuilder.cpp
 	DFTreeEXPBuilder.cpp
+	DFTCalculationResult.cpp
 	files.cpp
 	FileWriter.cpp
 	ConsoleWriter.cpp
