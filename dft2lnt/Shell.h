@@ -21,6 +21,7 @@
 #include "MessageFormatter.h"
 #include "FileSystem.h"
 #include "System.h"
+#include "yaml-cpp/yaml.h"
 
 class Shell {
 public:
@@ -296,5 +297,8 @@ public:
 		}
 	}
 };
+
+const YAML::Node& operator>>(const YAML::Node& node, Shell::RunStatistics& stats);
+YAML::Emitter& operator<<(YAML::Emitter& out, const Shell::RunStatistics& stats);
 
 #endif // SHELL_H
