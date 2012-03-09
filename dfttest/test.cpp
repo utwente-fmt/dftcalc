@@ -438,6 +438,7 @@ void TestSuite::createTestFile(File file) {
 
 void TestSuite::testWritability() {
 	File outFile = origin;
+	bool changed = false;
 	while(true) {
 		if(FileSystem::canCreateOrModify(outFile)) {
 			break;
@@ -449,16 +450,19 @@ void TestSuite::testWritability() {
 			std::string inputStr = std::string(input);
 			if(inputStr.empty()) inputStr = origin.getFileName();
 			outFile = File(inputStr);
+			bool changed = true;
 		}
 	}
-	File oldOrigin = origin;
-	origin = outFile;
-	originChanged(oldOrigin);
-
-	if(FileSystem::exists(origin)) {
-		readAndAppendToTestFile(origin);
+	if(changed) {
+		File oldOrigin = origin;
+		origin = outFile;
+		originChanged(oldOrigin);
+		
+		if(FileSystem::exists(origin)) {
+			readAndAppendToTestFile(origin);
+		}
+		updateOrigin();
 	}
-	updateOrigin();
 }
 
 TestResult* TestSuite::newTestResult() {
