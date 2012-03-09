@@ -19,6 +19,13 @@ public:
 			states(0),
 			transitions(0) {
 		}
+		
+		bool willWriteSomething() const {
+			return states>0
+				|| transitions>0
+				;
+		}
+		
 	};
 	
 	static bool readStatsFromSVLLog(File logFile, Shell::RunStatistics& stats) {

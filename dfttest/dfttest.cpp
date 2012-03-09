@@ -48,7 +48,7 @@ void DFTTestResult::readYAMLNodeSpecific(const YAML::Node& node) {
 }
 void DFTTestResult::writeYAMLNodeSpecific(YAML::Emitter& out) const {
 	out << YAML::Key << "failprob" << YAML::Value << failprob;
-	out << YAML::Key << "bcginfo" << YAML::Value << bcgInfo;
+	if(bcgInfo.willWriteSomething()) out << YAML::Key << "bcginfo" << YAML::Value << bcgInfo;
 }
 
 Test::ResultStatus DFTTestResult::getResultStatus(Test::TestSpecification* testGeneric) {
