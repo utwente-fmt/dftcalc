@@ -12,8 +12,8 @@ const YAML::Node& operator>>(const YAML::Node& node, DFT::CADP::BCGInfo& bcgInfo
 
 YAML::Emitter& operator<<(YAML::Emitter& out, const DFT::CADP::BCGInfo& bcgInfo) {
 	out << YAML::BeginMap;
-	out << YAML::Key << "states"  << YAML::Value << bcgInfo.states;
-	out << YAML::Key << "transitions"  << YAML::Value << bcgInfo.transitions;
+	if(bcgInfo.states>0) out << YAML::Key << "states"  << YAML::Value << bcgInfo.states;
+	if(bcgInfo.transitions>0) out << YAML::Key << "transitions"  << YAML::Value << bcgInfo.transitions;
 	out << YAML::EndMap;
 	return out;
 }
