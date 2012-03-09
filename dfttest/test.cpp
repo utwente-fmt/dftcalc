@@ -297,24 +297,28 @@ void TestSuite::writeTestFile(File file) {
 	
 }
 
-void TestSuite::readTestFile(File file) {
+bool TestSuite::readTestFile(File file) {
+	bool error = false;
 	tests.clear();
 	origin = file;
 	if(FileSystem::exists(file)) {
-		readAndAppendTestFile(origin);
+		error = readAndAppendTestFile(origin) ? true : error ;
 	} else {
+		error = true;
 		if(messageFormatter) messageFormatter->reportWarningAt(Location(file.getFileRealPath()),"file does not exist");
 	}
 	testWritability();
+	return error;
 }
 
-void TestSuite::readAndAppendTestFile(File file) {
+bool TestSuite::readAndAppendTestFile(File file) {
+	bool error = false;
 	
 	vector<TestSpecification*> loadedTests;
 	
 	if(!FileSystem::exists(file)) {
 		if(messageFormatter) messageFormatter->reportErrorAt(Location(file.getFileRealPath()),"file does not exist");
-		return;
+		return true;
 	}
 	messageFormatter->reportAction("Loading test suite file `" + file.getFileRealPath() + "'",VERBOSITY_FLOW);
 	std::ifstream fin(file.getFileRealPath());
@@ -322,25 +326,29 @@ void TestSuite::readAndAppendTestFile(File file) {
 		fin.seekg(0);
 		try {
 			YAML::Parser parser(fin);
-			loadTests(parser,loadedTests);
+			error = loadTests(parser,loadedTests) ? true : error ;
 		} catch(YAML::Exception e) {
+			error = true;
 			reportYAMLException(e);
 		}
 	} else {
+		error = true;
 		messageFormatter->reportError("could open suite file for reading");
 	}
 	
 	// Merge current list of tests with the list of tests we just loaded
-	mergeTestLists(tests,loadedTests);
+	error = mergeTestLists(tests,loadedTests) ? true : error ;
+	return error;
 }
 
-void TestSuite::readAndAppendToTestFile(File file) {
+bool TestSuite::readAndAppendToTestFile(File file) {
+	bool error = false;
 	
 	vector<TestSpecification*> loadedTests;
 	
 	if(!FileSystem::exists(file)) {
 		if(messageFormatter) messageFormatter->reportErrorAt(Location(file.getFileRealPath()),"file does not exist");
-		return;
+		return true;
 	}
 	messageFormatter->reportAction("Loading test suite file `" + file.getFileRealPath() + "'",VERBOSITY_FLOW);
 	std::ifstream fin(file.getFileRealPath());
@@ -348,20 +356,22 @@ void TestSuite::readAndAppendToTestFile(File file) {
 		fin.seekg(0);
 		try {
 			YAML::Parser parser(fin);
-			loadTests(parser,loadedTests);
+			error = loadTests(parser,loadedTests) ? true : error ;
 		} catch(YAML::Exception e) {
+			error = true;
 			reportYAMLException(e);
 		}
 		// Merge current list of tests with the list of tests we just loaded
-		mergeTestLists(loadedTests,tests);
+		error = mergeTestLists(loadedTests,tests) ? true : error ;
 		tests = loadedTests;
 	} else {
+		error = true;
 		messageFormatter->reportError("could open suite file for reading");
 	}
-	
+	return error;
 }
 
-void TestSuite::mergeTestLists(vector<TestSpecification*>& main, vector<TestSpecification*>& tba) {
+bool TestSuite::mergeTestLists(vector<TestSpecification*>& main, vector<TestSpecification*>& tba) {
 	for(TestSpecification* tbaTest: tba) {
 		
 		// check if exists already, based on uuid
@@ -387,11 +397,12 @@ void TestSuite::mergeTestLists(vector<TestSpecification*>& main, vector<TestSpec
 		
 	}
 	messageFormatter->reportAction("Test suite file loaded",VERBOSITY_FLOW);
-	
+	return false;
 }
 
-void TestSuite::loadTests(YAML::Parser& parser, vector<TestSpecification*>& tests) {
+bool TestSuite::loadTests(YAML::Parser& parser, vector<TestSpecification*>& tests) {
 	YAML::Node doc;
+	bool error = false;
 	while(parser.GetNextDocument(doc)) {
 		if(doc.Type()==YAML::NodeType::Sequence) {
 			for(YAML::Iterator it = doc.begin(); it!=doc.end(); ++it) {
@@ -404,6 +415,9 @@ void TestSuite::loadTests(YAML::Parser& parser, vector<TestSpecification*>& test
 						messageFormatter->reportAction3("Loaded test: " + t->getFullname(),VERBOSITY_EXTRA);
 						tests.push_back(t);
 						t->setParentSuite(this);
+					} else {
+						error = true;
+						messageFormatter->reportAction3("FAILED to load test: " + t->getFullname());
 					}
 					
 				}
@@ -411,11 +425,16 @@ void TestSuite::loadTests(YAML::Parser& parser, vector<TestSpecification*>& test
 		} else if(doc.Type()==YAML::NodeType::Map) {
 			TestSpecification* t = readYAMLNode(doc);
 			if(t) {
+				messageFormatter->reportAction3("Loaded test: " + t->getFullname(),VERBOSITY_EXTRA);
 				tests.push_back(t);
 				t->setParentSuite(this);
+			} else {
+				error = true;
+				messageFormatter->reportAction3("FAILED to load test: " + t->getFullname());
 			}
 		}
 	}
+	return error;
 }
 
 void TestSuite::createTestFile(File file) {

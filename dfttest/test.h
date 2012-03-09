@@ -119,8 +119,8 @@ protected:
 	bool forcedRunning;
 	bool useCachedOnly;
 	vector<TestSpecification*> limitTests;
-	void loadTests(YAML::Parser& parser, vector<TestSpecification*>& tests);
-	void mergeTestLists(vector<TestSpecification*>& main, vector<TestSpecification*>& tba);
+	bool loadTests(YAML::Parser& parser, vector<TestSpecification*>& tests);
+	bool mergeTestLists(vector<TestSpecification*>& main, vector<TestSpecification*>& tba);
 public:
 	
 	TestSuite(MessageFormatter* messageFormatter = NULL):
@@ -161,9 +161,9 @@ public:
 	
 	void writeTestFile(File file);
 	
-	void readTestFile(File file);
-	void readAndAppendTestFile(File file);
-	void readAndAppendToTestFile(File file);
+	bool readTestFile(File file);
+	bool readAndAppendTestFile(File file);
+	bool readAndAppendToTestFile(File file);
 	void createTestFile(File file);
 	void testWritability();
 	
