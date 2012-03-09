@@ -28,6 +28,28 @@ public:
 		
 	};
 	
+	static std::string getRoot() {
+		char* root = getenv((const char*)"CADP");
+		std::string cadp = root?string(root):"";
+		
+		// \ to /
+		{
+			char buf[cadp.length()+1];
+			for(int i=cadp.length();i--;) {
+				if(cadp[i]=='\\')
+					buf[i] = '/';
+				else
+					buf[i] = cadp[i];
+			}
+			buf[cadp.length()] = '\0';
+			if(buf[cadp.length()-1]=='/') {
+				buf[cadp.length()-1] = '\0';
+			}
+			cadp = string(buf);
+		}
+		return cadp;
+	}
+	
 	static bool readStatsFromSVLLog(File logFile, Shell::RunStatistics& stats) {
 		if(!FileSystem::exists(logFile)) {
 			return true;

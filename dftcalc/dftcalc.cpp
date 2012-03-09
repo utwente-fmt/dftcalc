@@ -196,34 +196,13 @@ end:
 
 std::string DFT::DFTCalc::getCADPRoot(MessageFormatter* messageFormatter) {
 	
-	if(!cadpRoot.empty()) {
-		return cadpRoot;
-	}
 	
-	char* root = getenv((const char*)"CADP");
-	std::string cadp = root?string(root):"";
+	string cadp = CADP::getRoot();
 	
 	if(cadp=="") {
 		if(messageFormatter) messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
-		goto end;
 	}
 	
-	// \ to /
-	{
-		char buf[cadp.length()+1];
-		for(int i=cadp.length();i--;) {
-			if(cadp[i]=='\\')
-				buf[i] = '/';
-			else
-				buf[i] = cadp[i];
-		}
-		buf[cadp.length()] = '\0';
-		if(buf[cadp.length()-1]=='/') {
-			buf[cadp.length()-1] = '\0';
-		}
-		cadp = string(buf);
-	}
-end:
 	return cadp;
 }
 
