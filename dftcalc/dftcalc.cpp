@@ -68,9 +68,17 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 	} else if(topic=="output") {
 		messageFormatter->notify ("Output");
 		messageFormatter->message("  The output file specified with -r uses YAML syntax.");
-		messageFormatter->message("  The top node is a map, containing one element, an entry mapping the DFT");
-		messageFormatter->message("  filename to the calculated result. E.g. it looks like this:");
-		messageFormatter->message("    and.dft: 0.1548181");
+		messageFormatter->message("  The top node is a map, containing one element, a mapping containing various");
+		messageFormatter->message("  information regarding the DFT. E.g. it looks like this:");
+		messageFormatter->message("  b.dft:");
+		messageFormatter->message("    dft: b.dft");
+		messageFormatter->message("    failprob: 0.3934693");
+		messageFormatter->message("    stats:");
+		messageFormatter->message("      time_user: 0.54");
+		messageFormatter->message("      time_system: 0.21");
+		messageFormatter->message("      time_elapsed: 1.8");
+		messageFormatter->message("      mem_virtual: 13668");
+		messageFormatter->message("      mem_resident: 1752");
 		messageFormatter->message("  The MRMC Calculation command can be manually set using -m. The default is:");
 		messageFormatter->message("    P{>1} [ tt U[0,x] reach ]");
 		messageFormatter->message("  where x is the specified number of time units using -t, default is 1.");
