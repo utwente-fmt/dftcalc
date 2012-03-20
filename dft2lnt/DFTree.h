@@ -242,6 +242,33 @@ public:
 			}
 		}
 	}
+	
+	/**
+	 * Apply evidence to the DFT. This means that the basic events, specified
+	 * by the list of names, will be marked as failed. This means that they
+	 * will fail immediately (at t=0).
+	 * @param evidence List of names of basic events that will fail at t=0
+	 * @throw std::vector<std::string> List of error messages
+	 */
+	void applyEvidence(std::vector<std::string>& evidence) throw(std::vector<std::string>) {
+		std::vector<std::string> errors;
+		for(std::string& nodeName: evidence) {
+			DFT::Nodes::Node* node = getNode(nodeName);
+			if(node) {
+				if(node->isBasicEvent()) {
+					DFT::Nodes::BasicEvent* be = static_cast<DFT::Nodes::BasicEvent*>(node);
+					be->setFailed(true);
+				} else {
+					errors.push_back("Not a basic event: `" + nodeName + "'");
+				}
+			} else {
+				errors.push_back("Not a node: `" + nodeName + "'");
+			}
+		}
+		if(!errors.empty()) {
+			throw errors;
+		}
+	}
 };
 } // Namespace: DFT
 

@@ -33,7 +33,7 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIR      ("REPAIR");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL   ("RATE_FAIL");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR ("RATE_REPAIR");
 
-const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 5;
+const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 6;
 
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_LNTISVALID = 2;
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_BCGISVALID = 2;
@@ -55,6 +55,9 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
 		if(be.getMu()==0) {
 			ss << "_cold";
+		}
+		if(be.getFailed()) {
+			ss << "_failed";
 		}
 	} else if(node.isGate()) {
 		const DFT::Nodes::Gate& gate = *static_cast<const DFT::Nodes::Gate*>(&node);
@@ -235,18 +238,23 @@ int DFT::DFTreeBCGNodeBuilder::generateFDEP(FileWriter& out, const DFT::Nodes::G
 int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::BasicEvent& be) {
 	int nr_parents = be.getParents().size();
 	bool cold = be.getMu()==0;
+	std::string initialState;
+	if(be.getFailed()) initialState = "FAILING";
+	else initialState = "DORMANT";
 
 	out << out.applyprefix << " * Generating BE(parents=" << nr_parents << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
 	out << out.applyprefix << "module " << getFileForNode(be) << "(TEMPLATE_BE";
-	if(cold) out << "_COLD";
 	out << ") is" << out.applypostfix;
 	out.appendLine("");
 	out.indent();
 		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
 		out.indent();
-			out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "](" << nr_parents << " of NAT)" << out.applypostfix;
+			out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "](" << nr_parents << " of NAT";
+			out << ", " << (cold?"TRUE":"FALSE");
+			out << ", " << initialState;
+			out << ")" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	out.outdent();

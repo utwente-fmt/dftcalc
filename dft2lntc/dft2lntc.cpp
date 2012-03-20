@@ -66,6 +66,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -x FILE         Output EXP to file. '-' for stdout. Overrules -o.");
 		messageFormatter->message("  -s FILE         Output SVL to file. '-' for stdout. Overrules -o.");
 		messageFormatter->message("  -b FILE         Output of SVL to this BCG file. Overrules -o.");
+		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup");
 		messageFormatter->flush();
 	} else if(topic=="topics") {
 		messageFormatter->notify ("Help topics:");
@@ -172,10 +173,12 @@ int main(int argc, char** argv) {
 	int verbosity            = 0;
 	int printHelp            = 0;
 	int printVersion         = 0;
-
+	
+	std::vector<std::string> failedBEs;
+	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"o:a:b:t:s:x:hvq-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"o:a:b:e:t:s:x:hvq-:")) >= 0 ) {
 		switch(c) {
 
 			// -o FILE
@@ -243,7 +246,7 @@ int main(int argc, char** argv) {
 					outputBCGFileSet = 1;
 				}
 				break;
-
+			
 			// -h
 			case 'h':
 				printHelp = true;
@@ -253,12 +256,27 @@ int main(int argc, char** argv) {
 			case 'v':
 				++verbosity;
 				break;
-
+			
 			// -q
 			case 'q':
 				--verbosity;
 				break;
-
+			
+			// -e
+			case 'e': {
+				const char* begin = optarg;
+				const char* end = begin;
+				while(*begin) {
+					end = begin;
+					while(*end && *end!=',') ++end;
+					if(begin<end) {
+						failedBEs.push_back(std::string(begin,end));
+					}
+					if(!*end) break;
+					begin = end + 1;
+				}
+				
+			}
 			// --
 			case '-':
 				if(!strncmp("help",optarg,4)) {
@@ -504,6 +522,18 @@ int main(int argc, char** argv) {
 		}
 	}
 	compilerContext->flush();
+	
+	/* Apply evidence to DFT */
+	if(dftValid && !failedBEs.empty()) {
+		compilerContext->reportAction("Appling evidence to DFT...",VERBOSITY_FLOW);
+		try {
+			dft->applyEvidence(failedBEs);
+		} catch(std::vector<std::string>& errors) {
+			for(std::string e: errors) {
+				compilerContext->reportError(e);
+			}
+		}
+	}
 	
 	/* Printing DFT */
 	if(dft && outputDFTFileSet) {

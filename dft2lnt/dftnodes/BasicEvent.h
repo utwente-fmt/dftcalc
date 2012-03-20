@@ -225,6 +225,7 @@ private:
 	double lambda;
 	double mu;
 //	double dorm;
+	bool failed;
 public:
 	void setLambda(double lambda) {
 		this->lambda = lambda;
@@ -260,9 +261,28 @@ public:
 	BasicEvent(Location loc, std::string name):
 		Node(loc,name,BasicEventType),
 		lambda(-1),
-		mu(0) {
+		mu(0),
+		failed(false) {
 	}
 	virtual ~BasicEvent() {
+	}
+	
+	/**
+	 * Mark this Basic Event as failed or not. Being marked as failed means the
+	 * Basic Event will fail at t=0, the moment the system starts. Otherwise
+	 * the Basic Event will fail according to its mu and lambda.
+	 * @param failed true/false: whether or not this BE is marked as failed.
+	 */
+	void setFailed(bool failed) {
+		this->failed = failed;
+	}
+	
+	/**
+	 * Returns whether or not this Basic Event is marked as being failed.
+	 * @return Whether or not this Basic Event is marked as being failed.
+	 */
+	bool getFailed() const {
+		return failed;
 	}
 	
 	virtual bool isBasicEvent() const { return true; }
