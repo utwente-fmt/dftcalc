@@ -148,8 +148,8 @@ private:
 	string coralRoot;
 	std::map<std::string,double> results;
 public:
-	DFTTestRun(MessageFormatter* messageFormatter, string dft2lntRoot, string coralRoot):
-		TestRun(messageFormatter),
+	DFTTestRun(Test::OutputFormatter* outputFormatter, MessageFormatter* messageFormatter, string dft2lntRoot, string coralRoot):
+		TestRun(outputFormatter,messageFormatter),
 		dft2lntRoot(dft2lntRoot),
 		coralRoot(coralRoot) {
 			iterations.push_back("dftcalc");

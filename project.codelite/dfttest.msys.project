@@ -12,6 +12,12 @@
     <File Name="../dfttest/dfttest.h"/>
     <File Name="../dfttest/test.cpp"/>
     <File Name="../dfttest/test.h"/>
+    <File Name="../dfttest/TestOutput.cpp"/>
+    <File Name="../dfttest/TestOutput.h"/>
+    <File Name="../dfttest/TestResult.cpp"/>
+    <File Name="../dfttest/TestResult.h"/>
+    <File Name="../dfttest/TestRun.cpp"/>
+    <File Name="../dfttest/TestRun.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="CMake">
     <File Name="../dfttest/CMakeLists.txt"/>

@@ -506,7 +506,6 @@ int main(int argc, char** argv) {
 	suite.applyLimitTests(limitTests);
 	
 	if(suite.getTestCount()>0) {
-		DFTTestRun run(messageFormatter,dft2lntRoot,coralRoot);
 		if(verbosity>=VERBOSITY_DATA) {
 			messageFormatter->notify("Going to perform these tests:",VERBOSITY_DATA);
 			for(auto it=suite.getTests().begin(); it!=suite.getTests().end(); it++) {
@@ -514,6 +513,9 @@ int main(int argc, char** argv) {
 				messageFormatter->reportAction(test->getFile().getFilePath(),VERBOSITY_DATA);
 			}
 		}
+		
+		Test::OutputFormatter* outputFormatter = new Test::OutputFormatterNice();
+		DFTTestRun run(outputFormatter,messageFormatter,dft2lntRoot,coralRoot);
 		run.setHideOutput(verbosity<0);
 		run.run(suite);
 		messageFormatter->notify("Done.",VERBOSITY_FLOW);

@@ -9,7 +9,6 @@
 namespace Test {
 	class TestSpecification;
 	class TestSuite;
-	class TestResult;
 }
 
 #ifndef TEST_H
@@ -26,6 +25,9 @@ namespace Test {
 #include "Shell.h"
 #include "MessageFormatter.h"
 #include "mrmc.h"
+#include "TestResult.h"
+#include "TestOutput.h"
+#include "TestRun.h"
 
 using namespace std;
 
@@ -34,14 +36,6 @@ namespace Test {
 extern const std::string fileExtension;
 extern const int VERBOSITY_FLOW;
 extern const int VERBOSITY_DATA;
-
-enum ResultStatus {
-	UNKNOWN = 0,
-	OK = 1,
-	FAILED,
-	VERIFIEDOK,
-	NUMBER_OF
-};
 
 class TestSpecification {
 protected:
@@ -178,98 +172,6 @@ public:
 	virtual void originChanged(const File& from) = 0;
 	
 	virtual TestResult* newTestResult();
-};
-
-class TestResult {
-public:
-	Shell::RunStatistics stats;
-
-	TestResult() {
-	}
-	
-	virtual void readYAMLNodeSpecific(const YAML::Node& node) {}
-	virtual void writeYAMLNodeSpecific(YAML::Emitter& out) const {}
-	
-	const YAML::Node& readYAMLNode(const YAML::Node& node);
-	
-	YAML::Emitter& writeYAMLNode(YAML::Emitter& out) const;
-	
-	virtual bool isValid() { return true; }
-	virtual bool isEqual(TestResult* other) { return true; }
-};
-
-class TestResultColumn {
-public:
-	std::string id;
-	std::string name;
-	bool alignRight;
-	TestResultColumn():
-		id(""),
-		name(""),
-		alignRight(false) {
-	}
-	TestResultColumn(const std::string id, const std::string name, bool alignRight):
-		id(id),
-		name(name),
-		alignRight(alignRight) {
-	}
-};
-
-class TestRun {
-public:
-	static const int VERBOSITY_EXECUTIONS = 1;
-protected:
-	
-	MessageFormatter* messageFormatter;
-	bool hideOutput;
-	bool requestStopTest;
-	bool requestStopSuite;
-	std::vector<std::string> iterations;
-	std::vector<TestResultColumn> reportColumns;
-	std::vector<std::string> successes;
-	std::vector<std::string> failures;
-public:
-	
-	TestRun(MessageFormatter* messageFormatter):
-		requestStopTest(false),
-		requestStopSuite(false),
-		messageFormatter(messageFormatter) {
-			//reportColumns.push_back(TestResultColumn("iteration", "Iteration", false));
-			reportColumns.push_back(TestResultColumn("time"     , "Time"     , true ));
-			reportColumns.push_back(TestResultColumn("memory"   , "Memory"   , true ));
-	}
-	
-	
-	void setHideOutput(bool hideOutput) {this->hideOutput = hideOutput;}
-	bool getHideOutput() const {return hideOutput;}
-	
-	virtual Test::TestResult* runSpecific(TestSpecification* test, const std::string& timeStamp, const std::string& iteration) = 0;
-	
-	/**
-	 * Run this test on the specified test.
-	 * @param test The test to run.
-	 */
-	void run(TestSpecification* test);
-	
-	void reportTestStart(TestSpecification* test);
-	void reportTestEnd(TestSpecification* test);
-	void reportTestResult(TestSpecification* test, const std::string& iteration, const std::string& timeStamp, TestResult* testResult, bool cached);
-	
-	/**
-	 * Run this test on all the tests in the specified test suite.
-	 * If the test suite has a limiting list of tests, only those tests will be
-	 * performed.
-	 * @param suite The tests in this suite will be run.
-	 */
-	void run(TestSuite& suite);
-	
-	int betweenIterations() {
-		return requestStopTest;
-	}
-	
-	void fillDisplayMapBase(TestSpecification* test, string timeStamp, string iteration, TestResult* result, bool cached, std::map<std::string,std::string>& content, std::map<std::string,ConsoleWriter::Color>& colors);
-	virtual void fillDisplayMap(TestSpecification* test, string timeStamp, string iteration, TestResult* result, bool cached, std::map<std::string,std::string>& content, std::map<std::string,ConsoleWriter::Color>& colors) {}
-	virtual void displayResult(TestSpecification* test, string timeStamp, string iteration, TestResult* result, bool cached, const Test::ResultStatus& resultStatus);
 };
 
 } // Namespace: Test

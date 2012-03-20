@@ -8,6 +8,7 @@
 
 #include "yaml-cpp/yaml.h"
 #include "test.h"
+#include "TestOutput.h"
 
 namespace Test {
 
@@ -458,6 +459,8 @@ void TestSuite::createTestFile(File file) {
 void TestSuite::testWritability() {
 	File outFile = origin;
 	bool changed = false;
+	
+	// Loop until the user enters a filename we can create or modify
 	while(true) {
 		if(FileSystem::canCreateOrModify(outFile)) {
 			break;
@@ -472,6 +475,8 @@ void TestSuite::testWritability() {
 			bool changed = true;
 		}
 	}
+	
+	// If the filename is a new filename, notify subclass
 	if(changed) {
 		File oldOrigin = origin;
 		origin = outFile;
@@ -487,255 +492,5 @@ void TestSuite::testWritability() {
 TestResult* TestSuite::newTestResult() {
 	return new TestResult();
 }
-
-const YAML::Node& TestResult::readYAMLNode(const YAML::Node& node) {
-	readYAMLNodeSpecific(node);
-	if(const YAML::Node* itemNode = node.FindValue("stats")) {
-		*itemNode >> stats;
-	}
-	return node;
-}
-
-YAML::Emitter& TestResult::writeYAMLNode(YAML::Emitter& out) const {
-	out << YAML::BeginMap;
-	out << YAML::Key << "stats" << YAML::Value << stats;
-	writeYAMLNodeSpecific(out);
-	out << YAML::EndMap;
-	return out;
-}
-
-void TestRun::run(TestSpecification* test) {
-	
-	// Running test '...'
-	
-	string timeStamp;
-	TestResult* result;
-	
-	time_t rawtime;
-	struct tm * timeinfo;
-	time ( &rawtime );
-	timeinfo = localtime ( &rawtime );
-	char buffer[100];
-	strftime(buffer,100,"%Y-%m-%d %H:%M:%S",timeinfo);
-	string timeStampStart = string(buffer);
-	
-	reportTestStart(test);
-	for(string iteration: iterations) {
-		bool cached = false;
-		std::pair<std::string,TestResult*> cachedResult = test->getLastResult(iteration);
-		if(!test->getParentSuite()->getForcedRunning() && cachedResult.second && cachedResult.second->isValid()) {
-			cached = true;
-			result = cachedResult.second;
-			timeStamp = cachedResult.first;
-		} else if(test->getParentSuite()->getUseCachedOnly()) {
-			cached = true;
-			result = NULL;
-			timeStamp = "";
-		} else {
-			timeStamp = timeStampStart;
-			result = runSpecific(test,timeStamp,iteration);
-			test->addResult(timeStamp,iteration,result);
-			test->getParentSuite()->updateOrigin();
-		}
-		reportTestResult(test,iteration,timeStamp,result,cached);
-	}
-	reportTestEnd(test);
-	
-	// Compare results
-}
-
-void TestRun::reportTestStart(TestSpecification* test) {
-	ConsoleWriter& consoleWriter = messageFormatter->getConsoleWriter();
-	
-	// Bail if output should not be displayed
-	if(hideOutput) return;
-	
-	// Notification prefix
-	consoleWriter << ConsoleWriter::Color::BlueBright << "::" << "  ";
-	
-	//
-	consoleWriter << "Test " << ConsoleWriter::Color::WhiteBright << test->getFullname();
-	
-	consoleWriter << consoleWriter.applypostfix;
-	
-	successes.clear();
-	failures.clear();
-	
-	consoleWriter << "    ";
-		consoleWriter << ConsoleWriter::Color::WhiteBright;
-		consoleWriter.outlineLeftNext(12,' ');
-		consoleWriter << ConsoleWriter::_push << "Iteration" << ConsoleWriter::_pop;
-		consoleWriter << ConsoleWriter::Color::Reset << " ¦ ";
-	for(const TestResultColumn& column: reportColumns) {
-		consoleWriter << ConsoleWriter::Color::WhiteBright;
-		consoleWriter.outlineLeftNext(12,' ');
-		consoleWriter << ConsoleWriter::_push << column.name << ConsoleWriter::_pop;
-		consoleWriter << ConsoleWriter::Color::Reset << " ¦ ";
-	}
-		consoleWriter.appendPostfix();
-	
-	for(const std::pair<std::string,TestResult*>& vtest: test->getVerifiedResults()) {
-		displayResult(test,"",vtest.first,vtest.second,false,Test::VERIFIEDOK);
-	}
-}
-
-void TestRun::reportTestEnd(TestSpecification* test) {
-	ConsoleWriter& consoleWriter = messageFormatter->getConsoleWriter();
-	
-	// Bail if output should not be displayed
-	if(hideOutput) return;
-	
-	
-	consoleWriter << " ";// << ConsoleWriter::Color::WhiteBright << ">" << ConsoleWriter::Color::Reset << "  ";
-	consoleWriter << "Test ";
-	if(failures.empty()) {
-		consoleWriter << ConsoleWriter::Color::GreenBright << "OK";
-	} else if(successes.empty()) {
-		consoleWriter << ConsoleWriter::Color::RedBright << "FAILED";
-	} else {
-		bool hadFirst = false;
-		consoleWriter << ConsoleWriter::Color::Yellow << "MIXED";
-		consoleWriter << ConsoleWriter::Color::Reset << " [";
-		for(string s: successes) {
-			if(hadFirst) consoleWriter << ConsoleWriter::Color::Reset << ",";
-			consoleWriter << ConsoleWriter::Color::GreenBright << s;
-			hadFirst = true;
-		}
-		for(string s: failures) {
-			if(hadFirst) consoleWriter << ConsoleWriter::Color::Reset << ",";
-			consoleWriter << ConsoleWriter::Color::RedBright << s;
-			hadFirst = true;
-		}
-		consoleWriter << ConsoleWriter::Color::Reset << "]";
-	}
-	consoleWriter << ConsoleWriter::Color::Reset;
-	consoleWriter.appendPostfix();
-}
-
-void TestRun::reportTestResult(TestSpecification* test, const std::string& iteration, const string& timeStamp, TestResult* testResult, bool cached) {
-	Test::ResultStatus resultStatus = Test::UNKNOWN;
-	if(testResult) {
-		resultStatus = test->verify(testResult);
-		if(testResult->isValid() && resultStatus==Test::OK) {
-			successes.push_back(iteration);
-		} else if(testResult->isValid() && resultStatus==Test::FAILED) {
-			failures.push_back(iteration);
-		}
-	}
-	displayResult(test,timeStamp,iteration,testResult,cached,resultStatus);
-}
-
-void TestRun::run(TestSuite& suite) {
-	
-	// Run all the tests in the suite
-	for(TestSpecification* test: suite.getTests()) {
-		
-		// If there's a limit on the tests, check if this test is in the list
-		bool ok = true;
-		if(!suite.getLimitTests().empty()) {
-			ok = false;
-			for(TestSpecification* ltest: suite.getLimitTests()) {
-				if(test == ltest) {
-					ok = true;
-				}
-			}
-		}
-		
-		// If green light, run the test
-		if(ok) {
-			run(test);
-			suite.updateOrigin();
-		}
-		
-		// If during the running of the test there was a request to stop the
-		// suite, do so
-		if(requestStopSuite) {
-			requestStopSuite = false;
-			break;
-		}
-	}
-}
-
-void TestRun::fillDisplayMapBase(TestSpecification* test, string timeStamp, string iteration, TestResult* result, bool cached, std::map<std::string,std::string>& content, std::map<std::string,ConsoleWriter::Color>& colors) {
-	if(result->stats.time_monraw>0) {
-		stringstream ss_time;
-		ss_time.precision(10);
-		ss_time << result->stats.time_monraw << "s";
-		content["time"] = ss_time.str();
-	} else {
-		content["time"] = "-";
-	}
-	if(result->stats.mem_virtual>0) {
-		stringstream ss_mem;
-		ss_mem << result->stats.mem_virtual << "kiB";
-		content["memory"] = ss_mem.str();
-	} else {
-		content["memory"] = "-";
-	}
-	fillDisplayMap(test,timeStamp,iteration,result,cached,content,colors);
-}
-
-void TestRun::displayResult(TestSpecification* test, string timeStamp, string iteration, TestResult* result, bool cached, const Test::ResultStatus& resultStatus = Test::UNKNOWN) {
-	std::map<std::string,std::string> content;
-	std::map<std::string,ConsoleWriter::Color> colors;
-	if(result) {
-		fillDisplayMapBase(test,timeStamp,iteration,result,cached,content,colors);
-	}
-	
-	ConsoleWriter& consoleWriter = messageFormatter->getConsoleWriter();
-	
-	// Prefix
-	switch(resultStatus) {
-		case OK:
-			consoleWriter << " " << ConsoleWriter::Color::GreenBright << "o" << ConsoleWriter::Color::Reset << "  ";
-			break;
-		case FAILED:
-			consoleWriter << " " << ConsoleWriter::Color::Red << "x" << ConsoleWriter::Color::Reset << "  ";
-			break;
-		case UNKNOWN:
-			consoleWriter << " " << ConsoleWriter::Color::Yellow << "-" << ConsoleWriter::Color::Reset << "  ";
-			break;
-		case VERIFIEDOK:
-		default:
-			consoleWriter << " " << ConsoleWriter::Color::Reset << " " << ConsoleWriter::Color::Reset << "  ";
-			break;
-	}
-	
-	{
-		if(resultStatus==VERIFIEDOK)
-			consoleWriter << ConsoleWriter::Color::GreenBright;
-		else
-			consoleWriter << ConsoleWriter::Color::Reset;
-		consoleWriter.outlineLeftNext(11,' ');
-		consoleWriter << ConsoleWriter::_push;
-		consoleWriter << iteration;
-		consoleWriter << ConsoleWriter::_pop;
-	}
-	
-	if(cached) {
-		consoleWriter << ConsoleWriter::Color::Cyan;
-		consoleWriter << "c";
-	} else {
-		consoleWriter << ConsoleWriter::Color::Reset;
-		consoleWriter << " ";
-	}
-	consoleWriter << ConsoleWriter::Color::Reset << " ¦ ";
-	
-	for(const TestResultColumn& column: reportColumns) {
-		if(resultStatus==VERIFIEDOK)
-			consoleWriter << ConsoleWriter::Color::GreenBright;
-		else {
-			consoleWriter << colors[column.id];
-		}
-		if(column.alignRight)
-			consoleWriter.outlineRightNext(12,' ');
-		else
-			consoleWriter.outlineLeftNext(12,' ');
-		consoleWriter << ConsoleWriter::_push << content[column.id] << ConsoleWriter::_pop;
-		consoleWriter << ConsoleWriter::Color::Reset << " ¦ ";
-	}
-	consoleWriter.appendPostfix();
-}
-
 
 } // Namespace: Test

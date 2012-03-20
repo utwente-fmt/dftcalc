@@ -30,6 +30,9 @@ include_directories(
 add_executable(dfttest
 	dfttest.cpp
 	test.cpp
+	testresult.cpp
+	testoutput.cpp
+	testrun.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/compiletime.h
 )
 
