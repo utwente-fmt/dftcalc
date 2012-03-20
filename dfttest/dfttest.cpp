@@ -97,49 +97,78 @@ void print_help(MessageFormatter* messageFormatter, string topic) {
 		messageFormatter->message("  -c              Do not run tests, only show cached results.");
 		messageFormatter->message("  -f              Force running all tests, regardless of cached results");
 		messageFormatter->message("  -t DFTFILE      Add/Limit testing to this DFT. Multiple allowed.");
+		messageFormatter->message("  -L              Output is the content of a LaTeX tabular. Implies -c.");
+		messageFormatter->message("  -C              Output is in CSV. Implies -c.");
 		messageFormatter->message("");
 		print_help(messageFormatter,"topics");
 		messageFormatter->flush();
 	} else if(topic=="output") {
-		messageFormatter->notify ("Timing Output");
+		messageFormatter->notify ("Output");
+		messageFormatter->reportAction("Timing");
 		messageFormatter->message("  Time measurements are done using platform specific implementations.");
 		messageFormatter->message("  On Linux, CLOCK_MONOTONIC_RAW is used and on Windows the API call");
 		messageFormatter->message("  QueryPerformanceCounter is used.");
 		messageFormatter->message("  Both implementations aim to assure there is no influence from other");
 		messageFormatter->message("  programs such as NTP. The measurement is as accurate as the clock of ");
 		messageFormatter->message("  the hardware is.");
+		messageFormatter->reportAction("Memory");
+		messageFormatter->message("  Memory measurements are done by SVL itself, using the program specified in");
+		messageFormatter->message("  CADP_TIME environment variable. ");
+		messageFormatter->reportAction("BCG Info");
+		messageFormatter->message("  Information of the generated BCG, like states and transitions, is obtained");
+		messageFormatter->message("  by calling bcg_info.");
 	} else if(topic=="input") {
 		messageFormatter->notify ("Suite Input");
 		messageFormatter->message("  A test suite file is a file in YAML format. It contains a list of tests, where");
 		messageFormatter->message("  each test is a map with settings. Supported keys in this map:");
-		messageFormatter->message("    - <key>    : <value>");
-		messageFormatter->message("    - fullname : a descriptive name of the test");
-		messageFormatter->message("    - longdesc : a longer description of the test");
-		messageFormatter->message("    - uuid     : a unique identifier for the test");
+		messageFormatter->message("    - <key>      : <value>");
+		messageFormatter->message("    - general    : a map containing general information about the test:");
+		messageFormatter->message("      - fullname : a descriptive name of the test");
+		messageFormatter->message("      - longdesc : a longer description of the test");
+		messageFormatter->message("      - uuid     : a unique identifier for the test");
+		messageFormatter->message("      - format   : a unique identifier for the test");
 		messageFormatter->message("    - dft      : relative or absolute path to the DFT file");
 		messageFormatter->message("    - timeunits: result will reflect P(\"dft fails within timeunits\")");
-		messageFormatter->message("    - verified : a map containing verified results as key and motives as key");
+		messageFormatter->message("    - verified : a map containing verified results as value and motives as key");
 		messageFormatter->message("    - results  : a list of maps containing resultmaps");
 		messageFormatter->message("                 a resultmap's key is the time the test was started");
 		messageFormatter->message("                 a resultmap's value is again a map with the obtained results as");
 		messageFormatter->message("                 value and the origin of the results as key");
 		messageFormatter->message("");
 		messageFormatter->message("  A complete example:");
-		messageFormatter->message("  - fullname: Tripple And Comparison");
-		messageFormatter->message("    uuid: 90381A40B69FDAD3050F1F0243BBA4C4028DD67FECEBCCD685BA51DDEA80EAC7");
-		messageFormatter->message("    longdesc: \"\"");
-		messageFormatter->message("    dft: tripple_and_c.dft");
-		messageFormatter->message("    timeunits: 1");
-		messageFormatter->message("    verified:");
-		messageFormatter->message("      comparison: 0.0239687");
+		messageFormatter->message("  - general:");
+		messageFormatter->message("      fullname: Basic Event");
+		messageFormatter->message("      uuid: 35896B7BE62877CD3255CA3E1579E976A2DDD9DDFEFC761A51075EBB97BD71A7");
+		messageFormatter->message("      longdesc: \"\"");
+		messageFormatter->message("      format: 1");
 		messageFormatter->message("    results:");
-		messageFormatter->message("      - 2012-02-11 03:15:41:");
+		messageFormatter->message("      - 2012-02-29 17:36:11:");
 		messageFormatter->message("          coral:");
-		messageFormatter->message("            time_monraw: 23.2737");
-		messageFormatter->message("            failprob: 0.0239687");
+		messageFormatter->message("            stats:");
+		messageFormatter->message("              time_monraw: 5.78413");
+		messageFormatter->message("            failprob: 0.3934693");
+		messageFormatter->message("            bcginfo:");
+		messageFormatter->message("              states: 4");
+		messageFormatter->message("              transitions: 7");
 		messageFormatter->message("          dftcalc:");
-		messageFormatter->message("            time_monraw: 7.98578");
-		messageFormatter->message("            failprob: 0.0239687");
+		messageFormatter->message("            stats:");
+		messageFormatter->message("              time_monraw: 3.15412");
+		messageFormatter->message("              mem_virtual: 13668");
+		messageFormatter->message("              mem_resident: 1752");
+		messageFormatter->message("            failprob: 0.3934693");
+		messageFormatter->message("            bcginfo:");
+		messageFormatter->message("              states: 4");
+		messageFormatter->message("              transitions: 6");
+		messageFormatter->message("    verified:");
+		messageFormatter->message("      manual:");
+		messageFormatter->message("        stats:");
+		messageFormatter->message("          {}");
+		messageFormatter->message("        failprob: 0.3934693");
+		messageFormatter->message("        bcginfo:");
+		messageFormatter->message("          states: 0");
+		messageFormatter->message("          transitions: 0");
+		messageFormatter->message("    timeunits: 1");
+		messageFormatter->message("    dft: /opt/dftroot/b.dft");
 	} else if(topic=="topics") {
 		messageFormatter->notify ("Help topics:");
 		messageFormatter->message("  input           Displays the input format of a suite file");
@@ -260,9 +289,13 @@ void conditionalAdd(vector<File>& tryOut, const File& file) {
 
 bool tryReadFile(MessageFormatter* messageFormatter, File& file, DFTTestSuite& suite) {
 	if(FileSystem::exists(file)) {
-		suite.readTestFile(file);
-		messageFormatter->reportAction("Using test file: " + suite.getOrigin().getFileRealPath(),VERBOSITY_FLOW);
-		return true;
+		if(suite.readTestFile(file)) {
+			messageFormatter->reportError("Error loading test file: " + suite.getOrigin().getFileRealPath());
+			return false;
+		} else {
+			messageFormatter->reportAction("Using test file: " + suite.getOrigin().getFileRealPath(),VERBOSITY_FLOW);
+			return true;
+		}
 	} else {
 		messageFormatter->reportWarning("Test file does not exist: " + file.getFileRealPath(),VERBOSITY_FILE_SEARCH);
 		return false;
@@ -472,16 +505,15 @@ int main(int argc, char** argv) {
 	// Apply limits
 	suite.applyLimitTests(limitTests);
 	
-	if(verbosity>=VERBOSITY_DATA) {
-		messageFormatter->notify("Going to perform these tests:",VERBOSITY_DATA);
-		for(auto it=suite.getTests().begin(); it!=suite.getTests().end(); it++) {
-			DFTTest* test = static_cast<DFTTest*>(*it);
-			messageFormatter->reportAction(test->getFile().getFilePath(),VERBOSITY_DATA);
-		}
-	}
-	
 	if(suite.getTestCount()>0) {
 		DFTTestRun run(messageFormatter,dft2lntRoot,coralRoot);
+		if(verbosity>=VERBOSITY_DATA) {
+			messageFormatter->notify("Going to perform these tests:",VERBOSITY_DATA);
+			for(auto it=suite.getTests().begin(); it!=suite.getTests().end(); it++) {
+				DFTTest* test = static_cast<DFTTest*>(*it);
+				messageFormatter->reportAction(test->getFile().getFilePath(),VERBOSITY_DATA);
+			}
+		}
 		run.setHideOutput(verbosity<0);
 		run.run(suite);
 		messageFormatter->notify("Done.",VERBOSITY_FLOW);
@@ -495,9 +527,6 @@ int main(int argc, char** argv) {
 
 void DFTTest::appendSpecific(const TestSpecification& otherGeneric) {
 	const DFTTest& other = static_cast<const DFTTest&>(otherGeneric);
-	for(auto verifiedDFTResult: other.verifiedDFTResults) {
-		this->verifiedDFTResults.insert(verifiedDFTResult);
-	}
 }
 
 void DFTTestSuite::applyLimitTests(const vector<string>& limitTests) {

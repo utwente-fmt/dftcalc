@@ -51,17 +51,12 @@ class DFTTest: public Test::TestSpecification {
 protected:
 	unsigned int timeUnits;
 	File file;
-	std::map<std::string,double> verifiedDFTResults;
 	std::vector<std::string> evidence;
 public:
 	void setTimeUnits(unsigned int timeUnits) {this->timeUnits = timeUnits;}
 	unsigned int getTimeUnits() const {return timeUnits;}
 	void setFile(const File& file) {this->file = file;}
 	const File& getFile() const {return file;}
-	void setVerifiedDFTResults(std::map<std::string,double> verifiedDFTResults) {this->verifiedDFTResults = verifiedDFTResults;}
-	std::map<std::string,double>& getVerifiedDFTResults() {return verifiedDFTResults;}
-	const std::map<std::string,double>& getVerifiedDFTResults() const {return verifiedDFTResults;}
-	
 	void setEvidence(std::vector<std::string>& evidence) {this->evidence = evidence;}
 	const std::vector<std::string>& getEvidence() const {return evidence;}
 	std::vector<std::string>& getEvidence() {return evidence;}
