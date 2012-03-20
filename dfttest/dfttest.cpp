@@ -531,10 +531,35 @@ Test::TestSpecification* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& no
 		try { *itemNode >> dft; }
 		catch(YAML::Exception& e) { reportYAMLException(e); wentOK = false; }
 		test->setFile(File(dft).fixWithOrigin(getOrigin().getPathTo()));
-	} else {
-		if(messageFormatter) messageFormatter->reportErrorAt(Location(getOrigin().getFileRealPath(),node.GetMark().line),"Test does not specify a DFT file");
-		wentOK = false;
-		goto error;
+	}
+	if(const YAML::Node* itemNode = node.FindValue("evidence")) {
+		std::vector<std::string>& evidence = test->getEvidence();
+		/* The evidence should be a sequence... */
+		if(itemNode->Type()==YAML::NodeType::Sequence) {
+			
+			/* It can be a sequence of sequences of strings */
+//			YAML::Iterator itR = itemNode->begin();
+//			if(itR!=itemNode->end() && itR->Type()==YAML::NodeType::Sequence) {
+//				messageFormatter->message("Sequence of sequences of strings");
+//				try {
+//					*itemNode >> evidence;
+//				} catch(YAML::Exception& e) {
+//					reportYAMLException(e);
+//					wentOK = false;
+//				}
+			
+			/* Or just a sequence of strings */
+//			} else {
+				try {
+					*itemNode >> evidence;
+				} catch(YAML::Exception& e) {
+					reportYAMLException(e);
+					wentOK = false;
+				}
+//			}
+		} else {
+			messageFormatter->reportErrorAt(Location(origin.getFileRealPath(),node.GetMark().line),"expected sequence of node names");
+		}
 	}
 	
 	if(wentOK) return test;
@@ -550,6 +575,12 @@ void DFTTestSuite::writeYAMLNodeSpecific(Test::TestSpecification* testGeneric, Y
 	out << YAML::Value << test->getTimeUnits();
 	out << YAML::Key   << "dft";
 	out << YAML::Value << test->getFile().getFilePath();
+	out << YAML::Key   << "evidence";
+//	if(test->getEvidence().size()==1) {
+//		out << YAML::Value << test->getEvidence()[0];
+//	} else {
+		out << YAML::Value << test->getEvidence();
+//	}
 }
 
 void DFTTestSuite::originChanged(const File& from) {
@@ -615,6 +646,12 @@ DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 	                                                + " -C " + outputDir.getFilePath()
 	                                                + " -r " + dftcalcResultFile.getFileRealPath()
 	                                                ;
+	dftcalc += " -e \"";
+	for(std::string e: test->getEvidence()) {
+		dftcalc += e;
+		dftcalc += ",";
+	}
+	dftcalc += "\"";
 	
 	//clock_t start = clock();
 	Shell::SystemOptions options;
