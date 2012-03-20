@@ -43,6 +43,8 @@ namespace DFT {
 		/// A map containing the results of the calculation. <filename> --> <result>
 		map<std::string,DFT::DFTCalculationResult> results;
 		
+		std::vector<std::string> evidence;
+		
 	public:
 		
 		/**
@@ -256,6 +258,8 @@ namespace DFT {
 		 */
 		int calculateDFT(const std::string& cwd, const File& dft, std::string timeSpec);
 		
+		void setEvidence(const std::vector<std::string>& evidence) {this->evidence = evidence;}
+		const std::vector<std::string>& getEvidence() const {return evidence;}
 	};
 
 } // Namespace: DFT

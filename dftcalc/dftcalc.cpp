@@ -276,6 +276,11 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	   << " -b \"" + bcg.getFileRealPath() + "\""
 	   << " \""    + dft.getFileRealPath() + "\""
 	    ;
+	ss << " -e \"";
+	for(std::string e: evidence) {
+		ss << e << ",";
+	}
+	ss << "\"";
 	sysOps.command = ss.str();
 	result = Shell::system(sysOps);
 
@@ -427,9 +432,11 @@ int main(int argc, char** argv) {
 	string printHelpTopic    = "";
 	int printVersion         = 0;
 	
+	std::vector<std::string> failedBEs;
+	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"C:h:m:pqr:t:v-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:e:h:m:pqr:t:v-:")) >= 0 ) {
 		switch(c) {
 			
 			// -C FILE
@@ -475,12 +482,28 @@ int main(int argc, char** argv) {
 			case 'v':
 				++verbosity;
 				break;
-
+			
 			// -q
 			case 'q':
 				--verbosity;
 				break;
-
+			
+			// -e
+			case 'e': {
+				const char* begin = optarg;
+				const char* end = begin;
+				while(*begin) {
+					end = begin;
+					while(*end && *end!=',') ++end;
+					if(begin<end) {
+						failedBEs.push_back(std::string(begin,end));
+					}
+					if(!*end) break;
+					begin = end + 1;
+				}
+				
+			}
+			
 			// --
 			case '-':
 				if(!strncmp("help",optarg,4)) {
@@ -568,6 +591,8 @@ int main(int argc, char** argv) {
 		messageFormatter->reportError("There was an error with the environment");
 		return -1;
 	}
+	
+	calc.setEvidence(failedBEs);
 	
 	/* Check if all went OK so far */
 	if(messageFormatter->getErrors()>0) {
