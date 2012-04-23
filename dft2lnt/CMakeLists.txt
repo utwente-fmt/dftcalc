@@ -59,6 +59,8 @@ add_library(dft2lnt
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
 )
 
+target_link_libraries(dft2lnt rt)
+
 # For clock_gettime() (to measure elapsed time), we need this
 if(UNIX AND NOT APPLE AND NOT WIN32)
 	target_link_libraries(dft2lnt rt)
