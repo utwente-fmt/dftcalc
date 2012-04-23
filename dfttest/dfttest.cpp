@@ -87,6 +87,7 @@ void print_help(MessageFormatter* messageFormatter, string topic) {
 		messageFormatter->message("  --color         Use colored messages.");
 		messageFormatter->message("  --no-color      Do not use colored messages.");
 		messageFormatter->message("  --version       Print version info and quit.");
+		messageFormatter->message("  -O<s>=<v>       Sets settings <s> to value <v>. (see --help=settings)");
 		messageFormatter->message("");
 		messageFormatter->notify ("Debug Options:");
 		messageFormatter->message("  --verbose=x     Set verbosity to x, -1 <= x <= 5.");
@@ -169,6 +170,11 @@ void print_help(MessageFormatter* messageFormatter, string topic) {
 		messageFormatter->message("          transitions: 0");
 		messageFormatter->message("    timeunits: 1");
 		messageFormatter->message("    dft: /opt/dftroot/b.dft");
+	} else if(topic=="settings") {
+		messageFormatter->notify ("Settings");
+		messageFormatter->message("  Use the format -Ok=v,k=v,k=v or specify multiple -O ");
+		messageFormatter->message("  Some key values:");
+		messageFormatter->message("");
 	} else if(topic=="topics") {
 		messageFormatter->notify ("Help topics:");
 		messageFormatter->message("  input           Displays the input format of a suite file");
@@ -303,7 +309,7 @@ bool tryReadFile(MessageFormatter* messageFormatter, File& file, DFTTestSuite& s
 }
 
 int main(int argc, char** argv) {
-
+	
 	/* Command line arguments and their default settings */
 	string testSuiteFileName  = "";
 	int    testSuiteFileSet   = 0;
@@ -319,10 +325,11 @@ int main(int argc, char** argv) {
 	bool useCachedOnly       = false;
 	bool forcedRunning       = false;
 	vector<string> limitTests;
+	string outputMode        = "nice";
 	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"cfh:qs:t:v-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"Ccfh:Lqs:t:v-:")) >= 0 ) {
 		switch(c) {
 
 			// -s FILE
@@ -369,6 +376,16 @@ int main(int argc, char** argv) {
 				printHelp = true;
 				break;
 			
+			// -C
+			case 'C':
+				outputMode = "csv";
+				break;
+			
+			// -L
+			case 'L':
+				outputMode = "latex";
+				break;
+			
 			// -v
 			case 'v':
 				++verbosity;
@@ -401,22 +418,23 @@ int main(int argc, char** argv) {
 				}
 		}
 	}
-
+	
 //	printf("args:\n");
 //	for(unsigned int i=0; i<(unsigned int)argc; i++) {
 //		printf("  %s\n",argv[i]);
 //	}
-
+	
 	/* Create a new compiler context */
 	MessageFormatter* messageFormatter = new MessageFormatter(std::cerr);
 	messageFormatter->useColoredMessages(useColoredMessages);
 	messageFormatter->setVerbosity(verbosity);
 	messageFormatter->setAutoFlush(true);
-
+	
 	Shell::messageFormatter = messageFormatter;
-
+	
 	messageFormatter->notify("Initializing...",VERBOSITY_FLOW);
-
+	
+	
 	/* Print help / version if requested and quit */
 	if(printHelp) {
 		print_help(messageFormatter,printHelpTopic);
@@ -515,6 +533,10 @@ int main(int argc, char** argv) {
 		}
 		
 		Test::OutputFormatter* outputFormatter = new Test::OutputFormatterNice();
+		if(outputMode=="csv") {
+		} else if(outputMode=="latex") {
+			outputFormatter = new Test::OutputFormatterLaTeX();
+		}
 		DFTTestRun run(outputFormatter,messageFormatter,dft2lntRoot,coralRoot);
 		run.setHideOutput(verbosity<0);
 		run.run(suite);
@@ -670,7 +692,9 @@ DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 	outputDir.fix();
 	FileSystem::mkdir(outputDir);
 	File dftcalcResultFile = File(outputDir.getFilePath(),test->getFile().getFileBase(),"result.dftcalc");
-	File bcgFile = File(outputDir.getFilePath(),test->getFile().getFileBase(),"bcg");
+	File bcgFile  = File(outputDir.getFilePath(),test->getFile().getFileBase(),"bcg");
+	File statFile = File(outputDir.getFilePath(),test->getFile().getFileBase()+".stats","log");
+	File svlLogFile = File(outputDir.getFilePath(),test->getFile().getFileBase(),"log");
 	FileSystem::remove(dftcalcResultFile);
 	string dftcalc = dft2lntRoot + "/bin/dftcalc '" + test->getFile().getFileRealPath() + "'"
 	                                                + " "    + test->getTimeDftcalc()
@@ -688,6 +712,11 @@ DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 	Shell::SystemOptions options;
 	options.command = dftcalc;
 	options.verbosity = VERBOSITY_EXECUTIONS;
+	if(Shell::memtimeAvailable()) {
+		messageFormatter->reportAction("Using memtime for resource statistics",VERBOSITY_DATA);
+		options.statProgram = "memtime";
+		options.statFile = statFile.getFileRealPath();
+	}
 	options.signalHandler = [this](int signal) -> int { return this->handleSignal(signal); };
 	Shell::RunStatistics stats;
 	Shell::system(options,&stats);
@@ -713,12 +742,24 @@ DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 		result->failprob = -1;
 	}
 	
+	// Read memory usage from SVL log file
+	// FIXME: this is the wrong SVL log file... where to find one for coral?
+	Shell::RunStatistics svlStats;
+	if(Shell::readMemtimeStatisticsFromLog(svlLogFile,svlStats)) {
+		messageFormatter->reportWarning("Could not read from svl log file `" + svlLogFile.getFileRealPath() + "'");
+	} else {
+		messageFormatter->reportAction2("Read from svl log file `" + svlLogFile.getFileRealPath() + "'",VERBOSITY_DATA);
+		result->stats.maxMem(svlStats);
+	}
+	
 	// Read statistics of BCG file
 	DFT::CADP::BCGInfo bcgInfo;
 	if(DFT::CADP::BCG_Info(bcgFile,bcgInfo)) {
 		messageFormatter->reportWarning("Could not read from BCG file `" + bcgFile.getFileRealPath() + "'");
+	} else {
+		result->bcgInfo = bcgInfo;
+		messageFormatter->reportAction2("Read from BCG file `" + bcgFile.getFileRealPath() + "'",VERBOSITY_DATA);
 	}
-	result->bcgInfo = bcgInfo;
 	
 	return result;
 }
@@ -731,8 +772,16 @@ DFTTestResult* DFTTestRun::runCoral(DFTTest* test) {
 	outputDir.fix();
 	FileSystem::mkdir(outputDir);
 	File coralResultFile = File(outputDir.getFilePath(),test->getFile().getFileBase(),"result.coral");
-	File bcgFile = File(outputDir.getFilePath(),test->getFile().getFileBase()+".coral","bcg");
+	File bcgFile  = File(outputDir.getFilePath(),test->getFile().getFileBase()+".coral","bcg");
+	File statFile = File(outputDir.getFilePath(),test->getFile().getFileBase()+".stats","log");
 	File svlLogFile = File(outputDir.getFilePath(),"uniformizer_error","log");
+	File mrmcLogFile = File(outputDir.getFilePath(),"mrmc_error","log");
+	File dft2bcgLogFile = File(outputDir.getFilePath(),"conversion_error","log");
+	File compositionLogFile = File(outputDir.getFilePath(),"composition_error","log");
+	File activateLogFile = File(outputDir.getFilePath(),"activate_error","log");
+	File imc2ctmdpLogFile = File(outputDir.getFilePath(),"imc2ctmdp_error","log");
+	
+	set<File> logList = { svlLogFile, mrmcLogFile, dft2bcgLogFile, compositionLogFile, activateLogFile, imc2ctmdpLogFile};
 	
 	FileSystem::remove(coralResultFile);
 	string coral = coralRoot + "/coral -f '" + test->getFile().getFileRealPath() + "'"
@@ -742,10 +791,17 @@ DFTTestResult* DFTTestRun::runCoral(DFTTest* test) {
 	                                         + " -l " + outputDir.getFilePath()
 	                                         + " -O " + coralResultFile.getFileRealPath()
 	                                         ;
-	
+	Shell::SystemOptions options;
+	options.command = coral;
+	options.verbosity = VERBOSITY_EXECUTIONS;
+	if(Shell::memtimeAvailable()) {
+		messageFormatter->reportAction("Using memtime for resource statistics",VERBOSITY_DATA);
+		options.statProgram = "memtime";
+		options.statFile = statFile.getFileRealPath();
+	}
 	Shell::RunStatistics stats;
-	Shell::system(coral,VERBOSITY_EXECUTIONS,&stats);//,".",coralResultFile.getFileRealPath());
-	
+	Shell::system(options,&stats);//,".",coralResultFile.getFileRealPath());
+
 	std::ifstream fin(coralResultFile.getFileRealPath());
 	char buffer[1000];
 	result->failprob = -1;
@@ -771,12 +827,15 @@ DFTTestResult* DFTTestRun::runCoral(DFTTest* test) {
 	}
 	
 	// Read memory usage from SVL log file
-	// FIXME: this is the wrong SVL log file... where do find one for coral?
-//	Shell::RunStatistics svlStats;
-//	if(DFT::CADP::readStatsFromSVLLog(svlLogFile,svlStats)) {
-//		messageFormatter->reportWarning("Could not read from svl log file `" + svlLogFile.getFileRealPath() + "'");
-//	}
-//	stats.maxMem(svlStats);
+	// FIXME: this is the wrong SVL log file... where to find one for coral?
+	for(File logFile: logList) {
+		Shell::RunStatistics logStats;
+		if(Shell::readMemtimeStatisticsFromLog(logFile,logStats)) {
+			messageFormatter->reportWarning("Could not read from svl log file `" + logFile.getFileRealPath() + "'");
+		} else {
+			stats.maxMem(logStats);
+		}
+	}
 	
 	result->stats = stats;
 	
@@ -846,6 +905,21 @@ void DFTTestRun::fillDisplayMap(Test::TestSpecification* testGeneric, string tim
 		content["transitions"] = ss.str();
 	} else {
 		content["transitions"] = "-";
+	}
+	
+	// Fill in relative result to compareBase
+	if(result->failprob>=0) {
+		std::pair<std::string,Test::TestResult*> baseResultGeneric = test->getLastResult(compareBase);
+		DFTTestResult* baseResult = static_cast<DFTTestResult*>(baseResultGeneric.second);
+		if(baseResult) {
+			std::stringstream ss;
+			ss << baseResult->stats.time_monraw/result->stats.time_monraw;
+			content["speedup"] = ss.str();
+		} else {
+			content["speedup"] = "-";
+		}
+	} else {
+		content["speedup"] = "-";
 	}
 }
 

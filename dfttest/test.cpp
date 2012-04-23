@@ -38,6 +38,22 @@ std::pair<std::string,TestResult*> TestSpecification::getLastResult(string itera
 		std::map<string,::Test::TestResult*>::iterator it2 = it->second.find(iteration);
 		if(it2 != it->second.end()) {
 			
+			return std::pair<std::string,TestResult*>(it->first,it2->second);
+		}
+	}
+	return std::pair<std::string,TestResult*>("",NULL);
+}
+
+std::pair<std::string,TestResult*> TestSpecification::getLastValidResult(string iteration) {
+	
+	// Loop over all the results, starting with the last
+	auto it = getResults().rbegin();
+	for(;it!=getResults().rend(); ++it) {
+		
+		// Check if this result contains a result of the specified iteration
+		std::map<string,::Test::TestResult*>::iterator it2 = it->second.find(iteration);
+		if(it2 != it->second.end()) {
+			
 			// If it does, check if it's a valid result and return it if so
 			if(it2->second->isValid()) {
 				return std::pair<std::string,TestResult*>(it->first,it2->second);
@@ -201,7 +217,7 @@ void TestSuite::writeYAMLNodeV1(TestSpecification* test, YAML::Emitter& out) {
 	out << YAML::Value << YAML::BeginSeq;
 	for(auto itResult=test->getResults().begin(); itResult!=test->getResults().end(); ++itResult) {
 		out << YAML::BeginMap;
-		out << YAML::Key   << itResult->first;
+		out << YAML::Key   << itResult->first; // time the test was executed
 		//out << YAML::Value << itResult->second;
 		out << YAML::Value;
 		out << YAML::BeginMap;
@@ -248,6 +264,75 @@ void TestSuite::readYAMLNodeV0(TestSpecification* test, const YAML::Node& node) 
 		catch(YAML::Exception& e) { reportYAMLException(e); }
 		test->setLongDescription(ldesc);
 	}
+	if(const YAML::Node* itemNode = node.FindValue("verified")) {
+		if(itemNode->Type()==YAML::NodeType::Map) {
+			for(YAML::Iterator it = itemNode->begin(); it!=itemNode->end(); ++it) {
+				string motive;
+				TestResult* iterationResults = newTestResult();
+				try {
+					it.first() >> motive;
+					iterationResults->readYAMLNodeSpecific(it.second());
+					test->getVerifiedResults().insert(pair<std::string,TestResult*>(motive,iterationResults));
+				} catch(YAML::Exception& e) {
+					reportYAMLException(e);
+				}
+			}
+		}
+	}
+	if(const YAML::Node* itemNode = node.FindValue("results")) {
+		if(itemNode->Type()==YAML::NodeType::Sequence) {
+			
+			// Iterate over the testruns
+			for(YAML::Iterator itR = itemNode->begin(); itR!=itemNode->end(); ++itR) {
+				
+				// 
+				for(YAML::Iterator it = itR->begin(); it!=itR->end(); ++it) {
+					string resultTime;
+					try {
+						it.first() >> resultTime;
+						//cerr << "Found result: " << resultTime << it.second().Type() << endl;
+						std::map<std::string,TestResult*>& results = test->getResults()[resultTime];
+						if(it.second().Type()==YAML::NodeType::Map) {
+							
+							// Iterate over individual results of a testrun
+							for(YAML::Iterator it2 = it.second().begin(); it2!=it.second().end(); ++it2) {
+								string iteration;
+								TestResult* iterationResults = newTestResult();
+								try {
+									it2.first() >> iteration;
+									const YAML::Node& node = it2.second();
+									if(const YAML::Node* itemNode = node.FindValue("time_monraw")) {
+										*itemNode >> iterationResults->stats.time_monraw;
+									}
+									if(const YAML::Node* itemNode = node.FindValue("time_user")) {
+										*itemNode >> iterationResults->stats.time_user;
+									}
+									if(const YAML::Node* itemNode = node.FindValue("time_system")) {
+										*itemNode >> iterationResults->stats.time_system;
+									}
+									if(const YAML::Node* itemNode = node.FindValue("time_elapsed")) {
+										*itemNode >> iterationResults->stats.time_elapsed;
+									}
+									if(const YAML::Node* itemNode = node.FindValue("mem_virtual")) {
+										*itemNode >> iterationResults->stats.mem_virtual;
+									}
+									if(const YAML::Node* itemNode = node.FindValue("mem_resident")) {
+										*itemNode >> iterationResults->stats.mem_resident;
+									}
+									iterationResults->readYAMLNodeSpecific(it2.second());
+									results.insert(pair<std::string,TestResult*>(iteration,iterationResults));
+								} catch(YAML::Exception& e) {
+									reportYAMLException(e);
+								}
+							}
+						}
+					} catch(YAML::Exception& e) {
+						reportYAMLException(e);
+					}
+				}
+			}
+		}
+	}
 }
 
 void TestSuite::writeYAMLNodeV0(TestSpecification* test, YAML::Emitter& out) {
@@ -257,7 +342,30 @@ void TestSuite::writeYAMLNodeV0(TestSpecification* test, YAML::Emitter& out) {
 	out << YAML::Value << test->getUUID();
 	out << YAML::Key   << "longdesc";
 	out << YAML::Value << test->getLongDescription();
-}
+	out << YAML::Key   << "verified";
+	out << YAML::Value << test->getVerifiedResults();
+	out << YAML::Key   << "results";
+	out << YAML::Value << YAML::BeginSeq;
+	for(auto itResult=test->getResults().begin(); itResult!=test->getResults().end(); ++itResult) {
+		out << YAML::BeginMap;
+		out << YAML::Key   << itResult->first; // time the test was executed
+		out << YAML::Value;
+		out << YAML::BeginMap;
+		for(auto itIteration=itResult->second.begin(); itIteration!=itResult->second.end(); ++itIteration) {
+			out << YAML::Key   << itIteration->first;
+			out << YAML::Value;
+			if(itIteration->second->stats.time_monraw>0)  out << YAML::Key << "time_monraw"  << YAML::Value << itIteration->second->stats.time_monraw;
+			if(itIteration->second->stats.time_user>0)    out << YAML::Key << "time_user"    << YAML::Value << itIteration->second->stats.time_user;
+			if(itIteration->second->stats.time_system>0)  out << YAML::Key << "time_system"  << YAML::Value << itIteration->second->stats.time_system;
+			if(itIteration->second->stats.time_elapsed>0) out << YAML::Key << "time_elapsed" << YAML::Value << itIteration->second->stats.time_elapsed;
+			if(itIteration->second->stats.mem_virtual>0)  out << YAML::Key << "mem_virtual"  << YAML::Value << itIteration->second->stats.mem_virtual;
+			if(itIteration->second->stats.mem_resident>0) out << YAML::Key << "mem_resident" << YAML::Value << itIteration->second->stats.mem_resident;
+			itIteration->second->writeYAMLNodeSpecific(out);
+		}
+		out << YAML::EndMap;
+		out << YAML::EndMap;
+	}
+	out << YAML::EndSeq;}
 
 void TestSuite::reportYAMLException(YAML::Exception& e) {
 	if(messageFormatter) {
@@ -266,35 +374,40 @@ void TestSuite::reportYAMLException(YAML::Exception& e) {
 }
 
 void TestSuite::writeTestFile(File file) {
-	YAML::Emitter out;
-	
-	out << YAML::BeginSeq;
-	for(TestSpecification* test: tests) {
-		writeYAMLNode(test,out);
-	}
-	out << YAML::EndSeq;
-	
-	File outFile = file;
-	while(true) {
-		if(FileSystem::canCreateOrModify(outFile)) {
-			break;
-		} else {
-			messageFormatter->reportAction("Test suite file is not writable, please enter new filename");
-			messageFormatter->getConsoleWriter() << " > Append to suite file [ " << ConsoleWriter::Color::Cyan << file.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
-			char input[PATH_MAX+1];
-			std::cin.getline(input,PATH_MAX);
-			std::string inputStr = std::string(input);
-			if(inputStr.empty()) inputStr = file.getFileName();
-			outFile = File(inputStr);
+	if(FileSystem::canCreateOrModify(file)) {
+		YAML::Emitter out;
+
+		out << YAML::BeginSeq;
+		for(TestSpecification* test: tests) {
+			writeYAMLNode(test,out);
 		}
-	}
-	std::ofstream resultFile(file.getFileRealPath());
-	if(resultFile.is_open()) {
-		resultFile << string(out.c_str());
+		out << YAML::EndSeq;
+		errno = 0;
+		std::ofstream resultFile(file.getFileRealPath());
+		if(resultFile.is_open()) {
+			resultFile << string(out.c_str());
+			resultFile.flush();
+		} else {
+			messageFormatter->reportError("Could not write to `" + file.getFileRealPath() + "': " + string(strerror(errno)));
+		}
 	} else {
-		messageFormatter->reportError("Could not write to `" + outFile.getFileRealPath() + "'");
+		testWritability();
 	}
-	resultFile.close();
+	
+//	File outFile = file;
+//	while(true) {
+//		if(FileSystem::canCreateOrModify(outFile)) {
+//			break;
+//		} else {
+//			messageFormatter->reportAction("Test suite file is not writable, please enter new filename");
+//			messageFormatter->getConsoleWriter() << " > Append to suite file [ " << ConsoleWriter::Color::Cyan << file.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
+//			char input[PATH_MAX+1];
+//			std::cin.getline(input,PATH_MAX);
+//			std::string inputStr = std::string(input);
+//			if(inputStr.empty()) inputStr = file.getFileName();
+//			outFile = File(inputStr);
+//		}
+//	}
 	
 }
 
@@ -334,7 +447,7 @@ bool TestSuite::readAndAppendTestFile(File file) {
 		}
 	} else {
 		error = true;
-		messageFormatter->reportError("could open suite file for reading");
+		messageFormatter->reportError("could not open suite file for reading");
 	}
 	
 	// Merge current list of tests with the list of tests we just loaded
@@ -367,7 +480,7 @@ bool TestSuite::readAndAppendToTestFile(File file) {
 		tests = loadedTests;
 	} else {
 		error = true;
-		messageFormatter->reportError("could open suite file for reading");
+		messageFormatter->reportError("could not open suite file for reading");
 	}
 	return error;
 }
@@ -465,7 +578,7 @@ void TestSuite::testWritability() {
 		if(FileSystem::canCreateOrModify(outFile)) {
 			break;
 		} else {
-			messageFormatter->reportAction("Test suite file is not writable, please enter new filename");
+			messageFormatter->reportAction("Test suite file ( `" + outFile.getFileRealPath() + "' ) is not writable, please enter new filename");
 			messageFormatter->getConsoleWriter() << " > Append to suite file [ " << ConsoleWriter::Color::Cyan << origin.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
 			char input[PATH_MAX+1];
 			std::cin.getline(input,PATH_MAX);

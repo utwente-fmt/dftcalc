@@ -118,6 +118,9 @@ public:
 	}
 	
 	virtual ::Test::ResultStatus verify(::Test::TestResult* result);
+	virtual string getShortName() const {
+		return file.getFileBase();
+	}
 };
 
 class DFTTestSuite: public Test::TestSuite {
@@ -147,16 +150,19 @@ private:
 	string dft2lntRoot;
 	string coralRoot;
 	std::map<std::string,double> results;
+	string compareBase;
 public:
 	DFTTestRun(Test::OutputFormatter* outputFormatter, MessageFormatter* messageFormatter, string dft2lntRoot, string coralRoot):
 		TestRun(outputFormatter,messageFormatter),
+		compareBase("coral"),
 		dft2lntRoot(dft2lntRoot),
 		coralRoot(coralRoot) {
-			iterations.push_back("dftcalc");
 			iterations.push_back("coral");
-			reportColumns.push_back(Test::TestResultColumn("failprob"   , "P(fail)"    , false));
-			reportColumns.push_back(Test::TestResultColumn("states"     , "States"     , true ));
-			reportColumns.push_back(Test::TestResultColumn("transitions", "Transitions", true ));
+			iterations.push_back("dftcalc");
+			reportColumns.push_back(Test::TestResultColumn("failprob"   , "P(fail)"    , "" , false));
+			reportColumns.push_back(Test::TestResultColumn("states"     , "States"     , "" , true ));
+			reportColumns.push_back(Test::TestResultColumn("transitions", "Transitions", "" , true ));
+			reportColumns.push_back(Test::TestResultColumn("speedup"    , "Speedup"    , "" , false));
 	}
 	
 	DFTTestResult* runDftcalc(DFTTest* test);

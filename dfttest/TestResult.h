@@ -20,8 +20,12 @@ enum ResultStatus {
 	ResultStatusCount
 };
 
+/**
+ * Results from the execution of an interation of a test
+ */
 class TestResult {
 public:
+	/// The stats hold resource usage and time elapsed
 	Shell::RunStatistics stats;
 
 	TestResult() {
@@ -38,19 +42,31 @@ public:
 	virtual bool isEqual(TestResult* other) { return true; }
 };
 
+/**
+ * Describes a single test result column.
+ */
 class TestResultColumn {
 public:
+	/// A unique ID to distinguish the column (e.g. in maps)
 	std::string id;
+	
+	/// The name of the column that should be displayed at the top
 	std::string name;
+	
+	/// The unit of the values in this column
+	std::string unit;
+	
+	/// Whether to align the results left or right
 	bool alignRight;
 	TestResultColumn():
 		id(""),
 		name(""),
 		alignRight(false) {
 	}
-	TestResultColumn(const std::string id, const std::string name, bool alignRight):
+	TestResultColumn(const std::string id, const std::string name, const std::string unit, bool alignRight):
 		id(id),
 		name(name),
+		unit(unit),
 		alignRight(alignRight) {
 	}
 };

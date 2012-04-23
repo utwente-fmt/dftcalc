@@ -89,8 +89,8 @@ public:
 	TestSuite* getParentSuite() { return suite; }
 	
 	bool operator==(const TestSpecification& other) {
-		if((!hadUUIDOnLoad || !other.hadUUIDOnLoad) && fullname != "" && fullname == other.fullname) {
-			return true;
+		if((!hadUUIDOnLoad || !other.hadUUIDOnLoad)) {
+			return fullname != "" && fullname == other.fullname;
 		}
 		return uuid == other.uuid;
 	}
@@ -99,10 +99,15 @@ public:
 	virtual void appendSpecific(const TestSpecification& other) {};
 
 	std::pair<std::string,TestResult*> getLastResult(string iteration);
+	std::pair<std::string,TestResult*> getLastValidResult(string iteration);
 	
 	virtual ResultStatus verify(TestResult* result) {};
 	
 	virtual std::map<std::string,TestResult*>& getVerifiedResults() { return verifiedResults; }
+	
+	virtual string getShortName() const {
+		return getFullname().substr(0,10);
+	}
 };
 
 class TestSuite {
