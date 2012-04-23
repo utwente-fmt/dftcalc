@@ -9,6 +9,8 @@
 
 #include <vector>
 #include <string>
+#include <functional>
+#include <unordered_map>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -52,6 +54,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  --color         Use colored messages.");
 		messageFormatter->message("  --no-color      Do not use colored messages.");
 		messageFormatter->message("  --version       Print version info and quit.");
+		messageFormatter->message("  -O<s>=<v>       Sets settings <s> to value <v>. (see --help=settings)");
 		messageFormatter->message("");
 		messageFormatter->notify ("Debug Options:");
 		messageFormatter->message("  --verbose=x     Set verbosity to x, -1 <= x <= 5.");
@@ -59,7 +62,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -q              Decrease verbosity.");
 		messageFormatter->message("");
 		messageFormatter->notify ("Output Options:");
-		messageFormatter->message("  -r FILE         Output result to this file. (see dftcalc --help=output)");
+		messageFormatter->message("  -r FILE         Output result to this file. (see --help=output)");
 		messageFormatter->message("  -p              Print result to stdout.");
 		messageFormatter->message("  -t x            Calculate P(DFT fails in x time units), default is 1");
 		messageFormatter->message("  -m <command>    Raw MRMC Calculation command. Overrules -t.");
@@ -82,6 +85,11 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  The MRMC Calculation command can be manually set using -m. The default is:");
 		messageFormatter->message("    P{>1} [ tt U[0,x] reach ]");
 		messageFormatter->message("  where x is the specified number of time units using -t, default is 1.");
+	} else if(topic=="settings") {
+		messageFormatter->notify ("Settings");
+		messageFormatter->message("  Use the format -Ok=v,k=v,k=v or specify multiple -O ");
+		messageFormatter->message("  Some key values:");
+		messageFormatter->message("");
 	} else if(topic=="topics") {
 		messageFormatter->notify ("Help topics:");
 		messageFormatter->message("  output          Displays the specification of the output format");
@@ -231,7 +239,7 @@ void DFT::DFTCalc::printOutput(const File& file) {
 	}
 }
 
-int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::string mrmcCalcCommand) {
+int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::string mrmcCalcCommand, unordered_map<string,string> settings) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File svlLog = dft.newWithExtension("log");
@@ -283,7 +291,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	   << " -x \"" + exp.getFileRealPath() + "\""
 	   << " -b \"" + bcg.getFileRealPath() + "\""
 	   << " \""    + dft.getFileRealPath() + "\""
-	    ;
+	   << " --warn-code";
 	ss << " -e \"";
 	for(std::string e: evidence) {
 		ss << e << ",";
@@ -292,7 +300,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	sysOps.command = ss.str();
 	result = Shell::system(sysOps);
 
-	if(!FileSystem::exists(exp) || !FileSystem::exists(svl)) {
+	if(result || !FileSystem::exists(exp) || !FileSystem::exists(svl)) {
 		printOutput(File(sysOps.outFile));
 		printOutput(File(sysOps.errFile));
 		return 1;
@@ -314,7 +322,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	}
 	
 	// obtain memtime result from svl
-	if(DFT::CADP::readStatsFromSVLLog(svlLog,stats)) {
+	if(Shell::readMemtimeStatisticsFromLog(svlLog,stats)) {
 		messageFormatter->reportWarning("Could not read from svl log file `" + svlLog.getFileRealPath() + "'");
 	}
 	
@@ -420,7 +428,13 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 }
 
 int main(int argc, char** argv) {
-
+	
+	/* Set defaults */
+	unordered_map<string,string> default_settings;
+	
+	/* Initialize default settings */
+	unordered_map<string,string> settings = default_settings;
+	
 	/* Command line arguments and their default settings */
 	string timeSpec           = "1";
 	int    timeSpecSet        = 0;
@@ -618,7 +632,7 @@ int main(int argc, char** argv) {
 		hasInput = true;
 		if(FileSystem::exists(dft)) {
 			string mrmcCommand = mrmcCalcCommandSet ? mrmcCalcCommand : "P{>1} [ tt U[0," + timeSpec + "] reach ]";
-			calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,mrmcCommand);
+			calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,mrmcCommand,settings);
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
 		}
@@ -655,6 +669,7 @@ int main(int argc, char** argv) {
 			if(resultFile.is_open()) {
 				messageFormatter->notify("Printing result to file: " + resultFileName);
 				resultFile << string(out.c_str()) << std::endl;
+				resultFile.flush();
 			} else {
 				messageFormatter->reportErrorAt(Location(resultFileName),"could not open file for printing result");
 			}

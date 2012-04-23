@@ -50,26 +50,6 @@ public:
 		return cadp;
 	}
 	
-	static bool readStatsFromSVLLog(File logFile, Shell::RunStatistics& stats) {
-		if(!FileSystem::exists(logFile)) {
-			return true;
-		}
-		
-		std::ifstream log(logFile.getFileRealPath());
-		if(!log.is_open()) {
-			return true;
-		}
-		
-		char buffer[200];
-		Shell::RunStatistics statsTemp;
-		while(log.getline(buffer,200)) {
-			if(!Shell::readMemtimeStatistics(buffer,statsTemp)) {
-				stats.addTimeMaxMem(statsTemp);
-			}
-		}
-		return false;
-	}
-	
 	static bool BCG_Info(File bcgFile, BCGInfo& bcgInfo) {
 		if(!FileSystem::exists(bcgFile)) {
 			return true;

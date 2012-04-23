@@ -11,6 +11,7 @@
 #define DFTCALC_H
 
 #include <string>
+#include <unordered_map>
 #include "DFTCalculationResult.h"
 
 namespace DFT {
@@ -256,7 +257,7 @@ namespace DFT {
 		 * @param dft The DFT to calculate
 		 * @return 0 if successful, non-zero otherwise
 		 */
-		int calculateDFT(const std::string& cwd, const File& dft, std::string timeSpec);
+		int calculateDFT(const std::string& cwd, const File& dft, std::string timeSpec, unordered_map<string,string> settings);
 		
 		void setEvidence(const std::vector<std::string>& evidence) {this->evidence = evidence;}
 		const std::vector<std::string>& getEvidence() const {return evidence;}
