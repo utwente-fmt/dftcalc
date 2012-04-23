@@ -131,6 +131,21 @@ public:
 		return *this;
 	}
 
+	virtual ConsoleWriter& operator<<(float f) {
+		ss() << f;
+		return *this;
+	}
+
+	virtual ConsoleWriter& operator<<(double d) {
+		ss() << d;
+		return *this;
+	}
+
+	virtual ConsoleWriter& operator<<(long double ld) {
+		ss() << ld;
+		return *this;
+	}
+
 	virtual ConsoleWriter& operator<<(const FileWriterOption& option) {
 		FileWriter::operator<<(option);
 		return *this;
