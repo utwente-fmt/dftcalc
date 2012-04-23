@@ -31,7 +31,7 @@ add_dependencies(dft2lntc dft2lnt yaml-cpp)
 
 ## Link with:
 ##   - libdft2lnt.a
-target_link_libraries(dft2lntc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a)
+target_link_libraries(dft2lntc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a ${CMAKE_CURRENT_BINARY_DIR}/../yaml-cpp/libyaml-cpp.a)
 
 ## POST_BUILD: copy the executable to the bin/ folder
 GET_TARGET_PROPERTY(BIN_LOCATION   dft2lntc LOCATION)

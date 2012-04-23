@@ -36,6 +36,7 @@
 #include "DFTreeSVLAndLNTBuilder.h"
 #include "DFTreeEXPBuilder.h"
 #include "compiletime.h"
+#include "Settings.h"
 
 FILE* pp_outputFile = stdout;
 
@@ -66,7 +67,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -x FILE         Output EXP to file. '-' for stdout. Overrules -o.");
 		messageFormatter->message("  -s FILE         Output SVL to file. '-' for stdout. Overrules -o.");
 		messageFormatter->message("  -b FILE         Output of SVL to this BCG file. Overrules -o.");
-		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup");
+		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
+		messageFormatter->message("  --warn-code     Return non-zero if there are one or more warnings.");
 		messageFormatter->flush();
 	} else if(topic=="topics") {
 		messageFormatter->notify ("Help topics:");
@@ -149,7 +151,14 @@ end:
 }
 
 int main(int argc, char** argv) {
-
+	
+	/* Set defaults */
+	Settings default_settings;
+	default_settings["warn-code"] = "0";
+	
+	/* Initialize default settings */
+	Settings settings = default_settings;
+	
 	/* Command line arguments and their default settings */
 	string inputFileName     = "";
 	int    inputFileSet      = 0;
@@ -293,6 +302,8 @@ int main(int argc, char** argv) {
 					}
 				} else if(!strcmp("no-color",optarg)) {
 					useColoredMessages = false;
+				} else if(!strcmp("warn-code",optarg)) {
+					settings["warn-code"] = "1";
 				}
 		}
 	}
@@ -536,7 +547,7 @@ int main(int argc, char** argv) {
 	}
 	
 	/* Printing DFT */
-	if(dft && outputDFTFileSet) {
+	if(dftValid && outputDFTFileSet) {
 		compilerContext->notify("Printing DFT...",VERBOSITY_FLOW);
 		compilerContext->flush();
 		DFT::DFTreePrinter printer(dft,compilerContext);
@@ -606,4 +617,9 @@ int main(int argc, char** argv) {
 	if(dft) delete dft;
 	delete parser;
 	delete compilerContext;
+	
+	if(settings["warn-code"] && compilerContext->getWarnings()>0) {
+		return true;
+	}
+	return compilerContext->getErrors()>0;
 }
