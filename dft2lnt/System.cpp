@@ -52,9 +52,15 @@ void System::sleep(uint64_t ms) {
 }
 
 void System::generateUUID(size_t bytes,std::string& uuid) {
+	static uint64_t lastTime;
+	static uint64_t currentTime;
 	static std::uniform_int_distribution<int> hex {0,15};  // distribution that maps to the ints 1..6
 	static std::default_random_engine re {};                     // the default engine	uuid.empty;
-	re.seed(getCurrentTimeMillis());
+	do {
+		currentTime = getCurrentTimeMicros();
+	} while(currentTime==lastTime);
+	lastTime = currentTime;
+	re.seed(currentTime);
 	uuid.clear();
 	uuid.reserve(bytes*2);
 	for(unsigned int i=0; i<bytes*2; ++i) {
@@ -68,4 +74,10 @@ uint64_t System::getCurrentTimeMillis() {
 	timeval now;
 	gettimeofday(&now, NULL);
 	return now.tv_sec*1000 + now.tv_usec/1000;
+}
+
+uint64_t System::getCurrentTimeMicros() {
+	timeval now;
+	gettimeofday(&now, NULL);
+	return now.tv_sec*1000000 + now.tv_usec;
 }

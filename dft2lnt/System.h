@@ -46,6 +46,7 @@ public:
 	static void generateUUID(size_t bytes,std::string& uuid);
 	
 	static uint64_t getCurrentTimeMillis();
+	static uint64_t getCurrentTimeMicros();
 };
 
 #endif
