@@ -34,7 +34,7 @@
   <Dependencies Name="Debug"/>
   <Settings Type="Executable">
     <GlobalSettings>
-      <Compiler Options="" C_Options="">
+      <Compiler Options="-std=gnu++0x" C_Options="">
         <IncludePath Value="."/>
       </Compiler>
       <Linker Options="">
