@@ -92,11 +92,11 @@ int DFT::DFTreeValidator::validateNodes() {
 		if(DFT::Nodes::Node::typeMatch(node->getType(),DFT::Nodes::BasicEventType)) {
 			DFT::Nodes::BasicEvent* be = static_cast<DFT::Nodes::BasicEvent*>(node);
 			assert(be);
-			validateBasicEvent(*be);
+			valid = validateBasicEvent(*be) ? valid : false;
 		} else if(DFT::Nodes::Node::typeMatch(node->getType(),DFT::Nodes::GateType)) {
 			DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*>(node);
 			assert(gate);
-			validateGate(*gate);
+			valid = validateGate(*gate) ? valid : false;
 		} else {
 			assert(0);
 		}
@@ -107,19 +107,34 @@ int DFT::DFTreeValidator::validateNodes() {
 
 int DFT::DFTreeValidator::validateBasicEvent(const DFT::Nodes::BasicEvent& be) {
 	int valid = true;
-
-	float l = be.getLambda();
-	if(l<0) {
+	
+	switch(be.getMode()) {
+	case DFT::Nodes::BE::CalculationMode::EXPONENTIAL: {
+		float l = be.getLambda();
+		if(l<0) {
+			valid = false;
+			cc->reportErrorAt(be.getLocation(),"BasicEvent `" + (be.getName()) + "': has negative lambda");
+		}
+		
+		float m = be.getMu();
+		if(m<0) {
+			valid = false;
+			cc->reportErrorAt(be.getLocation(),"BasicEvent `" + (be.getName()) + "': has negative mu");
+		}
+		break;
+	}
+	case DFT::Nodes::BE::CalculationMode::WEIBULL: {
 		valid = false;
-		cc->reportErrorAt(be.getLocation(),"BasicEvent `" + (be.getName()) + "': has negative lambda");
+		cc->reportErrorAt(be.getLocation(),"BasicEvent `" + (be.getName()) + "': Weibull distribution is not supported yet");
+		break;
+	}
+	default: {
+		valid = false;
+		cc->reportErrorAt(be.getLocation(),"BasicEvent `" + (be.getName()) + "': has unknown calculation mode");
+		break;
+	}
 	}
 	
-	float m = be.getMu();
-	if(m<0) {
-		valid = false;
-		cc->reportErrorAt(be.getLocation(),"BasicEvent `" + (be.getName()) + "': has negative mu");
-	}
-
 	return valid;
 }
 

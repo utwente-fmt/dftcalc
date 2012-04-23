@@ -128,13 +128,22 @@ public:
 		dft->addNode(be);
 		ASTVisitor<int>::visitBasicEvent(basicEvent);
 		
+		DFT::Nodes::BE::CalculationMode calcMode = DFT::Nodes::BE::CalculationMode::UNDEFINED;
+		
 		// Find lambda
 		{
 			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
 			for(; it!=basicEvent->getAttributes()->end(); ++it) {
 				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelLambda) {
-					float v = (*it)->getValue()->getFloatValue();
-					be->setLambda(v);
+					if(calcMode==DFT::Nodes::BE::CalculationMode::EXPONENTIAL) {
+						cc->reportErrorAt((*it)->getLocation(),"setting lambda would override previous calculation mode: " + DFT::Nodes::BE::getCalculationModeStr(calcMode));
+					} else if(calcMode!=DFT::Nodes::BE::CalculationMode::UNDEFINED) {
+						cc->reportWarningAt((*it)->getLocation(),"setting lambda twice, ignoring");
+					} else {
+						float v = (*it)->getValue()->getFloatValue();
+						be->setLambda(v);
+						calcMode = DFT::Nodes::BE::CalculationMode::EXPONENTIAL;
+					}
 				}
 			}
 		}
@@ -149,6 +158,37 @@ public:
 				}
 			}
 		}
+		
+		// Find rate
+		{
+			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+			for(; it!=basicEvent->getAttributes()->end(); ++it) {
+				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelRate) {
+					if(calcMode==DFT::Nodes::BE::CalculationMode::WEIBULL) {
+						cc->reportErrorAt((*it)->getLocation(),"setting rate would override previous calculation mode: " + DFT::Nodes::BE::getCalculationModeStr(calcMode));
+					} else if(calcMode!=DFT::Nodes::BE::CalculationMode::UNDEFINED) {
+						cc->reportWarningAt((*it)->getLocation(),"setting rate twice, ignoring");
+					} else {
+						float v = (*it)->getValue()->getFloatValue();
+						be->setRate(v);
+						calcMode = DFT::Nodes::BE::CalculationMode::WEIBULL;
+					}
+				}
+			}
+		}
+		
+		// Find shape
+		{
+			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+			for(; it!=basicEvent->getAttributes()->end(); ++it) {
+				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelShape) {
+					int v = (*it)->getValue()->getNumberValue();
+					be->setShape(v);
+				}
+			}
+		}
+		
+		be->setMode(calcMode);
 	}
 	virtual int visitGate(DFT::AST::ASTGate* astgate) {
 		DFT::Nodes::Gate* gate = buildGate(astgate);

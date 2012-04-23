@@ -40,6 +40,16 @@ enum AttributeLabelType {
     AttrLabelAph
 };
 
+enum class CalculationMode {
+	UNDEFINED = 0,
+	EXPONENTIAL,
+	WEIBULL, // not supported
+	NUMBER_OF
+	
+};
+
+const std::string& getCalculationModeStr(CalculationMode mode);
+
 /**
  * The label of an attribute
  */
@@ -219,19 +229,34 @@ public:
 
 /**
  * The BasicEvent DFT Node
+ * FIXME: different implementations (exponentional, weibull) should be
+ * separate subclasses.
  */
 class BasicEvent: public Node {
 private:
+	DFT::Nodes::BE::CalculationMode mode;
 	double lambda;
 	double mu;
 //	double dorm;
+	double rate;
+	int shape;
 	bool failed;
 public:
+	
 	void setLambda(double lambda) {
 		this->lambda = lambda;
 	}
 	void setMu(double mu) {
 		this->mu = mu;
+	}
+	void setRate(double rate) {
+		this->rate = rate;
+	}
+	void setShape(int shape) {
+		this->shape = shape;
+	}
+	void setMode(const DFT::Nodes::BE::CalculationMode& mode) {
+		this->mode = mode;
 	}
 	
 	/**
@@ -252,6 +277,10 @@ public:
 	 */
 	double getDorm()   const { return mu / lambda; }
 	
+	const DFT::Nodes::BE::CalculationMode& getMode() const {
+		return mode;
+	}
+	
 	/**
 	 * Creates a new Basic Event instance, originating from the specified
 	 * location and with the specified name.
@@ -260,8 +289,11 @@ public:
 	 */
 	BasicEvent(Location loc, std::string name):
 		Node(loc,name,BasicEventType),
+		mode(DFT::Nodes::BE::CalculationMode::UNDEFINED),
 		lambda(-1),
 		mu(0),
+		rate(-1),
+		shape(-1),
 		failed(false) {
 	}
 	virtual ~BasicEvent() {

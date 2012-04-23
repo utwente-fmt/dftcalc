@@ -10,4 +10,18 @@
 #include <dftnodes/BasicEvent.h>
 #include <string>
 
+const std::string CalculationModeUNDEFINED   = "undefined";
+const std::string CalculationModeEXPONENTIAL = "exponential";
+const std::string CalculationModeWEIBULL     = "weibull";
+const std::string& DFT::Nodes::BE::getCalculationModeStr(CalculationMode mode) {
+	switch(mode) {
+		case DFT::Nodes::BE::CalculationMode::EXPONENTIAL:
+			return CalculationModeEXPONENTIAL;
+		case DFT::Nodes::BE::CalculationMode::WEIBULL:
+			return CalculationModeWEIBULL;
+		default:
+			return CalculationModeUNDEFINED;
+	}
+}
+
 //std::string DFT::Nodes::BE::Attrib::Lambda("lambda");
