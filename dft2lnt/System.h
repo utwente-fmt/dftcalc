@@ -20,7 +20,7 @@
 #	include <windows.h>
 #	define SYSTEM_TIMER_BACKEND SYSTEM_TIMER_BACKEND_WINDOWS
 #else
-#	define SYSTEM_TIMER_BACKEND SYSTEM_TIMER_BACKEND_MONOTONIC_RAW
+#	define SYSTEM_TIMER_BACKEND SYSTEM_TIMER_BACKEND_MONOTONIC
 #endif
 
 class System {
@@ -32,6 +32,9 @@ public:
 		LARGE_INTEGER start;
 	#endif
 	#if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_MONOTONIC_RAW
+		timespec start;
+	#endif
+	#if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_MONOTONIC
 		timespec start;
 	#endif
 	public:

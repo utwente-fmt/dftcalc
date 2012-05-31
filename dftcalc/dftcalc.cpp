@@ -239,7 +239,7 @@ void DFT::DFTCalc::printOutput(const File& file) {
 	}
 }
 
-int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::string mrmcCalcCommand, unordered_map<string,string> settings) {
+int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::vector<std::string> mrmcCalcCommands, unordered_map<string,string> settings) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File svlLog = dft.newWithExtension("log");
@@ -344,43 +344,48 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		return 1;
 	}
 
-	// -> mrmcinput
-	MRMC::FileHandler* fileHandler = new MRMC::FileHandler(mrmcCalcCommand);
-	fileHandler->generateInputFile(input);
-	if(!FileSystem::exists(input)) {
-		messageFormatter->reportError("Error generating MRMC input file `" + input.getFileRealPath() + "'");
-		return 1;
-	}
+	for(std::string mrmcCalcCommand: mrmcCalcCommands) {
 
-	// ctmdpi, lab, mrmcinput -> calculation
-	messageFormatter->reportAction("Calculating probability...",VERBOSITY_FLOW);
-	sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".mrmc.report";
-	sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".mrmc.err";
-	sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".mrmc.out";
-	sysOps.command    = mrmcExec.getFilePath()
-	                  + " ctmdpi"
-	                  + " \""    + ctmdpi.getFileRealPath() + "\""
-	                  + " \""    + lab.getFileRealPath() + "\""
-	                  + " < \""  + input.getFileRealPath() + "\""
-	                  ;
-	result = Shell::system(sysOps);
+		// -> mrmcinput
+		MRMC::FileHandler* fileHandler = new MRMC::FileHandler(mrmcCalcCommand);
+		fileHandler->generateInputFile(input);
+		if(!FileSystem::exists(input)) {
+			messageFormatter->reportError("Error generating MRMC input file `" + input.getFileRealPath() + "'");
+			return 1;
+		}
 
-	if(result) {
-		printOutput(File(sysOps.outFile));
-		printOutput(File(sysOps.errFile));
-		return 1;
-	}
+		// ctmdpi, lab, mrmcinput -> calculation
+		messageFormatter->reportAction("Calculating probability...",VERBOSITY_FLOW);
+		sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".mrmc.report";
+		sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".mrmc.err";
+		sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".mrmc.out";
+		sysOps.command    = mrmcExec.getFilePath()
+	                  	+ " ctmdpi"
+	                  	+ " \""    + ctmdpi.getFileRealPath() + "\""
+	                  	+ " \""    + lab.getFileRealPath() + "\""
+	                  	+ " < \""  + input.getFileRealPath() + "\""
+	                  	;
+		result = Shell::system(sysOps);
 
-	if(fileHandler->readOutputFile(File(sysOps.outFile))) {
-		messageFormatter->reportError("Could not calculate");
-		return 1;
-	} else {
-		double res = fileHandler->getResult();
-		DFT::DFTCalculationResult calcResult;
-		calcResult.dftFile = dft.getFilePath();
-		calcResult.failprob = res;
-		calcResult.stats = stats;
-		results.insert(pair<string,DFT::DFTCalculationResult>(dft.getFileName(),calcResult));
+		if(result) {
+			printOutput(File(sysOps.outFile));
+			printOutput(File(sysOps.errFile));
+			return 1;
+		}
+
+		if(fileHandler->readOutputFile(File(sysOps.outFile))) {
+			messageFormatter->reportError("Could not calculate");
+			return 1;
+		} else {
+			double res = fileHandler->getResult();
+			DFT::DFTCalculationResult calcResult;
+			calcResult.dftFile = dft.getFilePath();
+			calcResult.failprob = res;
+			calcResult.stats = stats;
+			results.insert(pair<pair<string,string>,DFT::DFTCalculationResult>(pair<string,string>(dft.getFileName(), mrmcCalcCommand) , calcResult));
+		}
+	
+		delete fileHandler;
 	}
 
 
@@ -422,8 +427,6 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		
 	}
 	
-	delete fileHandler;
-	
 	return 0;
 }
 
@@ -438,6 +441,10 @@ int main(int argc, char** argv) {
 	/* Command line arguments and their default settings */
 	string timeSpec           = "1";
 	int    timeSpecSet        = 0;
+	string timeIntervalLwb    = "";
+	string timeIntervalUpb    = "";
+	string timeIntervalStep   = "";
+	int    timeIntervalSet    = 0;
 	string resultFileName     = "";
 	int    resultFileSet      = 0;
 	string dotToType          = "png";
@@ -458,7 +465,7 @@ int main(int argc, char** argv) {
 	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"C:e:h:m:pqr:t:v-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:e:h:m:pqr:t:i:v-:")) >= 0 ) {
 		switch(c) {
 			
 			// -C FILE
@@ -489,10 +496,20 @@ int main(int argc, char** argv) {
 				mrmcCalcCommandSet = true;
 				break;
 			
-			// -t FILE
+			// -t STRING containing time values separated by whitespace
 			case 't':
 				timeSpec = string(optarg);
 				timeSpecSet = 1;
+				break;
+			
+			// -i STRING STRING STRING
+			case 'i':
+				timeIntervalLwb = string(optarg);
+				timeIntervalUpb = string(argv[optind]);
+				optind++;
+				timeIntervalStep = string(argv[optind]);
+				optind++;
+				timeIntervalSet = 1;
 				break;
 			
 			// -h
@@ -560,6 +577,8 @@ int main(int argc, char** argv) {
 				}
 		}
 	}
+	if (!mrmcCalcCommandSet && !timeIntervalSet)
+		timeSpecSet = 1; // default
 	
 	/* Create a new compiler context */
 	MessageFormatter* messageFormatter = new MessageFormatter(std::cerr);
@@ -577,10 +596,47 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 	
-	{
-		int t = atoi(timeSpec.c_str());
-		if(t<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-t requires a positive integer as argument");
+	std::vector<std::string> mrmcCommands;
+	if(mrmcCalcCommandSet) {
+		mrmcCommands.push_back(mrmcCalcCommand);
+	} else if (timeSpecSet) {
+		std::string str = timeSpec;
+		size_t b, e;
+		while((b=str.find_first_not_of(" \t")) != string::npos) {
+			//messageFormatter->notify("str: \"" + str +"\"");
+			//cout << "b: " << b << endl;
+			e=str.substr(b).find_first_not_of("0123456789.");
+			//cout << "e: " << e << endl;
+			std::string s;
+			s = str.substr(b,e);
+			if (e!=string::npos) {
+				str = str.substr(e+b+1);
+			} else {
+				str = "";
+			}
+			//messageFormatter->notify("s: \"" + s + "\"");
+			double t = atof(s.c_str());
+			if(t<=0) {
+				messageFormatter->reportErrorAt(Location("commandline"),"-t value item requires a positive number as argument: "+s);
+			}
+			mrmcCommands.push_back("P{>1} [ tt U[0," + s + "] reach ]");
+		}
+	} else if (timeIntervalSet) {
+		double lwb = atof(timeIntervalLwb.c_str());
+		if(lwb<=0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-i lwb value requires a positive number as argument: "+timeIntervalLwb);
+		}
+		double upb = atof(timeIntervalUpb.c_str());
+		if(upb<=0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-i upb value requires a positive number as argument: "+timeIntervalUpb);
+		}
+		double step = atof(timeIntervalStep.c_str());
+		if(step<=0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-i step value item requires a positive number as argument: "+timeIntervalStep);
+		}
+		// for(double n=lwb; n < upb || std::fabs(upb-n) <std::numeric_limits<double>::epsilon(); n+= step) {
+		for(double n=lwb; n <= upb + std::numeric_limits<double>::epsilon(); n+= step) {
+			mrmcCommands.push_back("P{>1} [ tt U[0," + static_cast<ostringstream*>( &(ostringstream() << n) )->str() + "] reach ]");
 		}
 	}
 	
@@ -625,14 +681,13 @@ int main(int argc, char** argv) {
 	File outputFolderFile = File(outputFolder).fix();
 	FileSystem::mkdir(outputFolderFile);
 	PushD workdir(outputFolderFile);
-	
+			
 	/* Calculate DFTs */
 	bool hasInput = false;
 	for(File dft: dfts) {
 		hasInput = true;
 		if(FileSystem::exists(dft)) {
-			string mrmcCommand = mrmcCalcCommandSet ? mrmcCalcCommand : "P{>1} [ tt U[0," + timeSpec + "] reach ]";
-			calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,mrmcCommand,settings);
+			calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,mrmcCommands,settings);
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
 		}
@@ -648,12 +703,14 @@ int main(int argc, char** argv) {
 	if(verbosity>=0 || print || (resultFileSet && resultFileName=="")) {
 		if(mrmcCalcCommandSet) {
 			messageFormatter->notify("Using: " + mrmcCalcCommand);
+		} else if (timeIntervalSet) {
+			messageFormatter->notify("Within time interval: [" + timeIntervalLwb + " .. " + timeIntervalUpb +"], stepsize " + timeIntervalStep);
 		} else {
 			messageFormatter->notify("Within time units: " + timeSpec);
 		}
 		for(auto it: calc.getResults()) {
 			std::stringstream out;
-			out << "P(`" << it.first << "' fails)=" << it.second.failprob;
+			out << "P(`" << it.first.first << "'" << ", " << it.first.second << ", " << "fails)=" << it.second.failprob;
 			messageFormatter->reportAction(out.str());
 		}
 	}
@@ -661,7 +718,7 @@ int main(int argc, char** argv) {
 	/* Write result file */
 	if(resultFileSet) {
 		YAML::Emitter out;
-		out << calc.getResults();
+		//out << calc.getResults();
 		if(resultFileName=="") {
 			std::cout << string(out.c_str()) << std::endl;
 		} else {
