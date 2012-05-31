@@ -432,6 +432,11 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	return 0;
 }
 
+double normalize(double d) {
+	std::string s = static_cast<ostringstream*>( &(ostringstream() << d))->str();
+	return atof(s.c_str());
+}
+
 int main(int argc, char** argv) {
 	
 	/* Set defaults */
@@ -637,7 +642,7 @@ int main(int argc, char** argv) {
 			messageFormatter->reportErrorAt(Location("commandline"),"-i step value item requires a positive number as argument: "+timeIntervalStep);
 		}
 		// for(double n=lwb; n < upb || std::fabs(upb-n) <std::numeric_limits<double>::epsilon(); n+= step) {
-		for(double n=lwb; n <= upb + std::numeric_limits<double>::epsilon(); n+= step) {
+		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
 			mrmcCommands.push_back("P{>1} [ tt U[0," + static_cast<ostringstream*>( &(ostringstream() << n) )->str() + "] reach ]");
 		}
 	}
