@@ -437,6 +437,23 @@ double normalize(double d) {
 	return atof(s.c_str());
 }
 
+YAML::Emitter& operator << (YAML::Emitter& out, const std::map<std::string,std::vector<std::pair<std::string,DFT::DFTCalculationResult>>>& v) {
+	out << YAML::BeginMap;
+	for(auto it: v) {
+		out << YAML::Key << it.first;
+		out << YAML::Value;
+        	out << YAML::Flow;
+		out << YAML::BeginSeq;
+		for(auto it2: it.second) {
+        		out << YAML::Flow;
+        		out << YAML::BeginSeq << it2.first << it2.second << YAML::EndSeq;
+		}
+		out << YAML::EndSeq;
+	}
+	out << YAML::EndMap;
+        return out;
+}
+
 int main(int argc, char** argv) {
 	
 	/* Set defaults */
@@ -728,7 +745,7 @@ int main(int argc, char** argv) {
 	/* Write result file */
 	if(resultFileSet) {
 		YAML::Emitter out;
-		//out << calc.getResults();
+		out << calc.getResults();
 		if(resultFileName=="") {
 			std::cout << string(out.c_str()) << std::endl;
 		} else {
