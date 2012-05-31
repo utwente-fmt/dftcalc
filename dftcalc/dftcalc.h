@@ -42,7 +42,7 @@ namespace DFT {
 		std::string getCADPRoot(MessageFormatter* messageFormatter);
 		
 		/// A map containing the results of the calculation. <filename> --> <result>
-		map<std::pair<std::string,std::string>,DFT::DFTCalculationResult> results;
+		map<std::string,std::vector<std::pair<std::string,DFT::DFTCalculationResult>>> results;
 		
 		std::vector<std::string> evidence;
 		
@@ -53,7 +53,7 @@ namespace DFT {
 		 *   <filename> --> <result>
 		 * @return The result map.
 		 */
-		const map<std::pair<std::string,std::string>,DFT::DFTCalculationResult> getResults() const {
+		const map<std::string,std::vector<std::pair<std::string,DFT::DFTCalculationResult>>> getResults() const {
 			return results;
 		}
 		

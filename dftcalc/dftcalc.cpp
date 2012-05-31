@@ -344,6 +344,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		return 1;
 	}
 
+	std::vector<std::pair<std::string,DFT::DFTCalculationResult>> resultPairs;
 	for(std::string mrmcCalcCommand: mrmcCalcCommands) {
 
 		// -> mrmcinput
@@ -382,11 +383,12 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 			calcResult.dftFile = dft.getFilePath();
 			calcResult.failprob = res;
 			calcResult.stats = stats;
-			results.insert(pair<pair<string,string>,DFT::DFTCalculationResult>(pair<string,string>(dft.getFileName(), mrmcCalcCommand) , calcResult));
+			resultPairs.push_back(pair<string,DFT::DFTCalculationResult>(mrmcCalcCommand, calcResult));
 		}
 	
 		delete fileHandler;
 	}
+	results.insert(pair<string,std::vector<std::pair<std::string,DFT::DFTCalculationResult>>>(dft.getFileName(), resultPairs));
 
 
 	if(!buildDot.empty()) {
@@ -709,9 +711,12 @@ int main(int argc, char** argv) {
 			messageFormatter->notify("Within time units: " + timeSpec);
 		}
 		for(auto it: calc.getResults()) {
-			std::stringstream out;
-			out << "P(`" << it.first.first << "'" << ", " << it.first.second << ", " << "fails)=" << it.second.failprob;
-			messageFormatter->reportAction(out.str());
+			std::string fName = it.first;
+			for(auto it2: it.second) {
+				std::stringstream out;
+				out << "P(`" << fName << "'" << ", " << it2.first << ", " << "fails)=" << it2.second.failprob;
+				messageFormatter->reportAction(out.str());
+			}
 		}
 	}
 	
