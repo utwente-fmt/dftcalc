@@ -160,7 +160,7 @@ void MessageFormatter::message(const std::string& str, const MessageType& mType,
 void MessageFormatter::messageAt(Location loc, const std::string& str, const MessageType& mType, const int& verbosityLevel) {
 	static int n=1;
 
-	if(verbosityLevel>verbosity) {
+	if(verbosityLevel>verbosity && !mType.isError() && !mType.isWarning()) {
 		return;
 	}
 
