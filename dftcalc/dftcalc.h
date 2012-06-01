@@ -249,7 +249,7 @@ namespace DFT {
 		 * with setMessageFormatter().
 		 * @param file The file to print.
 		 */
-		void printOutput(const File& file);
+		void printOutput(const File& file, int status);
 		
 		/**
 		 * Calculates the specified DFT file, using the specified working directory.

@@ -244,11 +244,14 @@ double normalize(double d) {
 	return atof(s.c_str());
 }
 
-void DFT::DFTCalc::printOutput(const File& file) {
+void DFT::DFTCalc::printOutput(const File& file, int status) {
 	std::string* outContents = FileSystem::load(file);
 	if(outContents) {
 		messageFormatter->notifyHighlighted("** OUTPUT of " + file.getFileName() + " **");
-		messageFormatter->message(*outContents);
+		if (status!=0)
+			messageFormatter->message(*outContents, MessageFormatter::MessageType::Error);
+		else
+			messageFormatter->message(*outContents);
 		messageFormatter->notifyHighlighted("** END output of " + file.getFileName() + " **");
 		delete outContents;
 	}
@@ -318,8 +321,8 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	result = Shell::system(sysOps);
 
 	if(result || !FileSystem::exists(exp) || !FileSystem::exists(svl)) {
-		printOutput(File(sysOps.outFile));
-		printOutput(File(sysOps.errFile));
+		printOutput(File(sysOps.outFile), result);
+		printOutput(File(sysOps.errFile), result);
 		return 1;
 	}
 
@@ -333,8 +336,8 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	result = Shell::system(sysOps);
 	
 	if(!FileSystem::exists(bcg)) {
-		printOutput(File(sysOps.outFile));
-		printOutput(File(sysOps.errFile));
+		printOutput(File(sysOps.outFile), result);
+		printOutput(File(sysOps.errFile), result);
 		return 1;
 	}
 	
@@ -356,8 +359,8 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	result = Shell::system(sysOps);
 
 	if(!FileSystem::exists(ctmdpi)) {
-		printOutput(File(sysOps.outFile));
-		printOutput(File(sysOps.errFile));
+		printOutput(File(sysOps.outFile), result);
+		printOutput(File(sysOps.errFile), result);
 		return 1;
 	}
 
@@ -386,8 +389,8 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		result = Shell::system(sysOps);
 
 		if(result) {
-			printOutput(File(sysOps.outFile));
-			printOutput(File(sysOps.errFile));
+			printOutput(File(sysOps.outFile), result);
+			printOutput(File(sysOps.errFile), result);
 			return 1;
 		}
 
@@ -421,8 +424,8 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		result = Shell::system(sysOps);
 		
 		if(!FileSystem::exists(dot)) {
-			printOutput(File(sysOps.outFile));
-			printOutput(File(sysOps.errFile));
+			printOutput(File(sysOps.outFile), result);
+			printOutput(File(sysOps.errFile), result);
 			return 1;
 		}
 		
@@ -439,8 +442,8 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		result = Shell::system(sysOps);
 
 		if(!FileSystem::exists(png)) {
-			printOutput(File(sysOps.outFile));
-			printOutput(File(sysOps.errFile));
+			printOutput(File(sysOps.outFile), result);
+			printOutput(File(sysOps.errFile), result);
 			return 1;
 		}
 		
