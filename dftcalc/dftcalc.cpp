@@ -734,15 +734,21 @@ int main(int argc, char** argv) {
 			
 	/* Calculate DFTs */
 	bool hasInput = false;
+	bool hasErrors = false;
 	for(File dft: dfts) {
 		hasInput = true;
 		if(FileSystem::exists(dft)) {
-			calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,mrmcCommands,settings);
+			bool res = calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,mrmcCommands,settings);
+			hasErrors = hasErrors || res;
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
 		}
 	}
 	workdir.popd();
+
+	if (hasErrors) {
+		return(1);
+	}
 	
 	/* If there were no DFT calculations performed... */
 	if(!hasInput) {
