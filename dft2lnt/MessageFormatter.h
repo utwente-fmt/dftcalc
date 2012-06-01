@@ -269,7 +269,7 @@ public:
 	 * Returns whether or not this MessageFormatter is using coloured messages.
 	 * @return Whether or not this MessageFormatter is using coloured messages.
 	 */
-	virtual const bool& usingColoredMessaged() const { return m_useColoredMessages; }
+	virtual const bool& usingColoredMessages() const { return m_useColoredMessages; }
 
 	/**
 	 * Displays the number of errors and warnings gathered until now.
