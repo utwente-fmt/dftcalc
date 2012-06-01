@@ -64,7 +64,10 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->notify ("Output Options:");
 		messageFormatter->message("  -r FILE         Output result to this file. (see --help=output)");
 		messageFormatter->message("  -p              Print result to stdout.");
-		messageFormatter->message("  -t x            Calculate P(DFT fails in x time units), default is 1");
+		messageFormatter->message("  -i l u s        Calculate P(DFT fails in x time units) for each x in interval,");
+		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
+		messageFormatter->message("  -t xList        Calculate P(DFT fails in x time units) for each x in xList,");
+		messageFormatter->message("                  where xList is a whitespace-separated list of values, default is \"1\"");
 		messageFormatter->message("  -m <command>    Raw MRMC Calculation command. Overrules -t.");
 		messageFormatter->message("  -C DIR          Temporary output files will be in this directory");
 		messageFormatter->flush();
