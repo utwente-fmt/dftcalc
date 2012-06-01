@@ -748,7 +748,7 @@ int main(int argc, char** argv) {
 	}
 	
 	/* Show results */
-	if(verbosity>=0 || print) {
+	if(verbosity>0 || print) {
 		if(mrmcCalcCommandSet) {
 			messageFormatter->notify("Using: " + mrmcCalcCommand);
 		} else if (timeIntervalSet) {
