@@ -62,7 +62,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -q              Decrease verbosity.");
 		messageFormatter->message("");
 		messageFormatter->notify ("Output Options:");
-		messageFormatter->message("  -r FILE         Output result to this file. (see --help=output)");
+		messageFormatter->message("  -r FILE         Output result in YAML format to this file. (see --help=output)");
+		messageFormatter->message("  -c FILE         Output result as CSV format to this file. (see --help=output)");
 		messageFormatter->message("  -p              Print result to stdout.");
 		messageFormatter->message("  -i l u s        Calculate P(DFT fails in x time units) for each x in interval,");
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
@@ -472,8 +473,10 @@ int main(int argc, char** argv) {
 	string timeIntervalUpb    = "";
 	string timeIntervalStep   = "";
 	int    timeIntervalSet    = 0;
-	string resultFileName     = "";
-	int    resultFileSet      = 0;
+	string yamlFileName       = "";
+	int    yamlFileSet        = 0;
+	string csvFileName        = "";
+	int    csvFileSet         = 0;
 	string dotToType          = "png";
 	int    dotToTypeSet       = 0;
 	string outputFolder       = "output";
@@ -492,7 +495,7 @@ int main(int argc, char** argv) {
 	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"C:e:h:m:pqr:t:i:v-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:e:h:m:pqr:c:t:i:v-:")) >= 0 ) {
 		switch(c) {
 			
 			// -C FILE
@@ -504,11 +507,22 @@ int main(int argc, char** argv) {
 			// -r FILE
 			case 'r':
 				if(strlen(optarg)==1 && optarg[0]=='-') {
-					resultFileName = "";
-					resultFileSet = 1;
+					yamlFileName = "";
+					yamlFileSet = 1;
 				} else {
-					resultFileName = string(optarg);
-					resultFileSet = 1;
+					yamlFileName = string(optarg);
+					yamlFileSet = 1;
+				}
+				break;
+			
+			// -c FILE
+			case 'c':
+				if(strlen(optarg)==1 && optarg[0]=='-') {
+					csvFileName = "";
+					csvFileSet = 1;
+				} else {
+					csvFileName = string(optarg);
+					csvFileSet = 1;
 				}
 				break;
 			
@@ -727,8 +741,8 @@ int main(int argc, char** argv) {
 		messageFormatter->reportWarning("No calculations performed");
 	}
 	
-	/* Print result file */
-	if(verbosity>=0 || print || (resultFileSet && resultFileName=="")) {
+	/* Show results */
+	if(verbosity>=0 || print) {
 		if(mrmcCalcCommandSet) {
 			messageFormatter->notify("Using: " + mrmcCalcCommand);
 		} else if (timeIntervalSet) {
@@ -746,20 +760,44 @@ int main(int argc, char** argv) {
 		std::cout << out.str();
 	}
 	
-	/* Write result file */
-	if(resultFileSet) {
+	/* Write yaml file */
+	if(yamlFileSet) {
 		YAML::Emitter out;
 		out << calc.getResults();
-		if(resultFileName=="") {
+		if(yamlFileName=="") {
 			std::cout << string(out.c_str()) << std::endl;
 		} else {
-			std::ofstream resultFile(resultFileName);
-			if(resultFile.is_open()) {
-				messageFormatter->notify("Printing result to file: " + resultFileName);
-				resultFile << string(out.c_str()) << std::endl;
-				resultFile.flush();
+			std::ofstream yamlFile(yamlFileName);
+			if(yamlFile.is_open()) {
+				messageFormatter->notify("Printing yaml to file: " + yamlFileName);
+				yamlFile << string(out.c_str()) << std::endl;
+				yamlFile.flush();
 			} else {
-				messageFormatter->reportErrorAt(Location(resultFileName),"could not open file for printing result");
+				messageFormatter->reportErrorAt(Location(yamlFileName),"could not open file for printing yaml");
+			}
+		}
+	}
+	
+	/* Write csv file */
+	if(csvFileSet) {
+		std::stringstream out;
+		out << "Time" << ", " << "Unreliability" << std::endl;
+		for(auto it: calc.getResults()) {
+			std::string fName = it.first;
+			for(auto it2: it.second) {
+				out << it2.first.second << ", " << it2.second.failprob << std::endl;
+			}
+		}
+		if(csvFileName=="") {
+			std::cout << out.str();
+		} else {
+			std::ofstream csvFile(csvFileName);
+			if(csvFile.is_open()) {
+				messageFormatter->notify("Printing csv to file: " + csvFileName);
+				csvFile << out.str();
+				csvFile.flush();
+			} else {
+				messageFormatter->reportErrorAt(Location(csvFileName),"could not open file for printing csv");
 			}
 		}
 	}
