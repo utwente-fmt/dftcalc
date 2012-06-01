@@ -733,14 +733,14 @@ int main(int argc, char** argv) {
 		} else {
 			messageFormatter->notify("Within time units: " + timeSpec);
 		}
+		std::stringstream out;
 		for(auto it: calc.getResults()) {
 			std::string fName = it.first;
 			for(auto it2: it.second) {
-				std::stringstream out;
-				out << "P(`" << fName << "'" << ", " << it2.first.first << ", " << it2.first.second << ", " << "fails)=" << it2.second.failprob;
-				messageFormatter->reportAction(out.str());
+				out << "P(`" << fName << "'" << ", " << it2.first.first << ", " << it2.first.second << ", " << "fails)=" << it2.second.failprob << std::endl;;
 			}
 		}
+		std::cout << out.str();
 	}
 	
 	/* Write result file */
