@@ -233,6 +233,17 @@ std::string intToString(int i) {
 	return ss.str();
 }
 
+std::string doubleToString(double d) {
+	std::stringstream ss;
+	ss << d;
+	return ss.str();
+}
+
+double normalize(double d) {
+	std::string s = doubleToString(d);
+	return atof(s.c_str());
+}
+
 void DFT::DFTCalc::printOutput(const File& file) {
 	std::string* outContents = FileSystem::load(file);
 	if(outContents) {
@@ -434,11 +445,6 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	}
 	
 	return 0;
-}
-
-double normalize(double d) {
-	std::string s = static_cast<ostringstream*>( &(ostringstream() << d))->str();
-	return atof(s.c_str());
 }
 
 YAML::Emitter& operator << (YAML::Emitter& out, const std::map<std::string,std::vector<std::pair<std::pair<std::string,std::string>,DFT::DFTCalculationResult>>>& v) {
@@ -677,7 +683,7 @@ int main(int argc, char** argv) {
 		}
 		// for(double n=lwb; n < upb || std::fabs(upb-n) <std::numeric_limits<double>::epsilon(); n+= step) {
 		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
-			std::string s = static_cast<ostringstream*>( &(ostringstream() << n) )->str();
+			std::string s = doubleToString(n);
 			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
 		}
 	}
