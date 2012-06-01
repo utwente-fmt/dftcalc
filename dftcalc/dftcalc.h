@@ -42,7 +42,7 @@ namespace DFT {
 		std::string getCADPRoot(MessageFormatter* messageFormatter);
 		
 		/// A map containing the results of the calculation. <filename> --> <result>
-		map<std::string,std::vector<std::pair<std::string,DFT::DFTCalculationResult>>> results;
+		map<std::string,std::vector<std::pair<std::pair<std::string,std::string>,DFT::DFTCalculationResult>>> results;
 		
 		std::vector<std::string> evidence;
 		
@@ -53,7 +53,7 @@ namespace DFT {
 		 *   <filename> --> <result>
 		 * @return The result map.
 		 */
-		const map<std::string,std::vector<std::pair<std::string,DFT::DFTCalculationResult>>> getResults() const {
+		const map<std::string,std::vector<std::pair<std::pair<std::string,std::string>,DFT::DFTCalculationResult>>> getResults() const {
 			return results;
 		}
 		
@@ -257,7 +257,7 @@ namespace DFT {
 		 * @param dft The DFT to calculate
 		 * @return 0 if successful, non-zero otherwise
 		 */
-		int calculateDFT(const std::string& cwd, const File& dft, std::vector<std::string>mrmcCommands, unordered_map<string,string> settings);
+		int calculateDFT(const std::string& cwd, const File& dft, std::vector<std::pair<std::string,std::string>>mrmcCommands, unordered_map<string,string> settings);
 		
 		void setEvidence(const std::vector<std::string>& evidence) {this->evidence = evidence;}
 		const std::vector<std::string>& getEvidence() const {return evidence;}

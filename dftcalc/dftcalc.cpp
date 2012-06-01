@@ -239,7 +239,7 @@ void DFT::DFTCalc::printOutput(const File& file) {
 	}
 }
 
-int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::vector<std::string> mrmcCalcCommands, unordered_map<string,string> settings) {
+int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::vector<std::pair<std::string,std::string>> mrmcCalcCommands, unordered_map<string,string> settings) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File svlLog = dft.newWithExtension("log");
@@ -344,11 +344,11 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		return 1;
 	}
 
-	std::vector<std::pair<std::string,DFT::DFTCalculationResult>> resultPairs;
-	for(std::string mrmcCalcCommand: mrmcCalcCommands) {
+	std::vector<std::pair<std::pair<std::string,std::string>,DFT::DFTCalculationResult>> resultPairs;
+	for(auto mrmcCalcCommand: mrmcCalcCommands) {
 
 		// -> mrmcinput
-		MRMC::FileHandler* fileHandler = new MRMC::FileHandler(mrmcCalcCommand);
+		MRMC::FileHandler* fileHandler = new MRMC::FileHandler(mrmcCalcCommand.first);
 		fileHandler->generateInputFile(input);
 		if(!FileSystem::exists(input)) {
 			messageFormatter->reportError("Error generating MRMC input file `" + input.getFileRealPath() + "'");
@@ -383,12 +383,12 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 			calcResult.dftFile = dft.getFilePath();
 			calcResult.failprob = res;
 			calcResult.stats = stats;
-			resultPairs.push_back(pair<string,DFT::DFTCalculationResult>(mrmcCalcCommand, calcResult));
+			resultPairs.push_back(pair<pair<string,string>,DFT::DFTCalculationResult>(mrmcCalcCommand, calcResult));
 		}
 	
 		delete fileHandler;
 	}
-	results.insert(pair<string,std::vector<std::pair<std::string,DFT::DFTCalculationResult>>>(dft.getFileName(), resultPairs));
+	results.insert(pair<string,std::vector<std::pair<std::pair<std::string,std::string>,DFT::DFTCalculationResult>>>(dft.getFileName(), resultPairs));
 
 
 	if(!buildDot.empty()) {
@@ -437,7 +437,7 @@ double normalize(double d) {
 	return atof(s.c_str());
 }
 
-YAML::Emitter& operator << (YAML::Emitter& out, const std::map<std::string,std::vector<std::pair<std::string,DFT::DFTCalculationResult>>>& v) {
+YAML::Emitter& operator << (YAML::Emitter& out, const std::map<std::string,std::vector<std::pair<std::pair<std::string,std::string>,DFT::DFTCalculationResult>>>& v) {
 	out << YAML::BeginMap;
 	for(auto it: v) {
 		out << YAML::Key << it.first;
@@ -446,7 +446,7 @@ YAML::Emitter& operator << (YAML::Emitter& out, const std::map<std::string,std::
 		out << YAML::BeginSeq;
 		for(auto it2: it.second) {
         		out << YAML::Flow;
-        		out << YAML::BeginSeq << it2.first << it2.second << YAML::EndSeq;
+        		out << YAML::BeginSeq << it2.first.first << it2.first.second << it2.second << YAML::EndSeq;
 		}
 		out << YAML::EndSeq;
 	}
@@ -620,9 +620,9 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 	
-	std::vector<std::string> mrmcCommands;
+	std::vector<std::pair<std::string,std::string>> mrmcCommands;
 	if(mrmcCalcCommandSet) {
-		mrmcCommands.push_back(mrmcCalcCommand);
+		mrmcCommands.push_back(pair<string,string>(mrmcCalcCommand,"?"));
 	} else if (timeSpecSet) {
 		std::string str = timeSpec;
 		size_t b, e;
@@ -643,7 +643,7 @@ int main(int argc, char** argv) {
 			if(t<=0) {
 				messageFormatter->reportErrorAt(Location("commandline"),"-t value item requires a positive number as argument: "+s);
 			}
-			mrmcCommands.push_back("P{>1} [ tt U[0," + s + "] reach ]");
+			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
 		}
 	} else if (timeIntervalSet) {
 		double lwb = atof(timeIntervalLwb.c_str());
@@ -660,7 +660,8 @@ int main(int argc, char** argv) {
 		}
 		// for(double n=lwb; n < upb || std::fabs(upb-n) <std::numeric_limits<double>::epsilon(); n+= step) {
 		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
-			mrmcCommands.push_back("P{>1} [ tt U[0," + static_cast<ostringstream*>( &(ostringstream() << n) )->str() + "] reach ]");
+			std::string s = static_cast<ostringstream*>( &(ostringstream() << n) )->str();
+			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
 		}
 	}
 	
@@ -736,7 +737,7 @@ int main(int argc, char** argv) {
 			std::string fName = it.first;
 			for(auto it2: it.second) {
 				std::stringstream out;
-				out << "P(`" << fName << "'" << ", " << it2.first << ", " << "fails)=" << it2.second.failprob;
+				out << "P(`" << fName << "'" << ", " << it2.first.first << ", " << it2.first.second << ", " << "fails)=" << it2.second.failprob;
 				messageFormatter->reportAction(out.str());
 			}
 		}
