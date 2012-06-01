@@ -312,6 +312,8 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		ss << e << ",";
 	}
 	ss << "\"";
+	if (!messageFormatter->usingColoredMessages())
+		ss << " --no-color";
 	sysOps.command = ss.str();
 	result = Shell::system(sysOps);
 
