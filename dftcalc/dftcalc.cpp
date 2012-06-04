@@ -257,7 +257,7 @@ void DFT::DFTCalc::printOutput(const File& file, int status) {
 	}
 }
 
-int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::vector<std::pair<std::string,std::string>> mrmcCalcCommands, unordered_map<string,string> settings) {
+int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& mrmcCalcCommands, unordered_map<string,string> settings) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File svlLog = dft.newWithExtension("log");

@@ -257,7 +257,7 @@ namespace DFT {
 		 * @param dft The DFT to calculate
 		 * @return 0 if successful, non-zero otherwise
 		 */
-		int calculateDFT(const std::string& cwd, const File& dft, std::vector<std::pair<std::string,std::string>>mrmcCommands, unordered_map<string,string> settings);
+		int calculateDFT(const std::string& cwd, const File& dft, const std::vector<std::pair<std::string,std::string>>& mrmcCommands, unordered_map<string,string> settings);
 		
 		void setEvidence(const std::vector<std::string>& evidence) {this->evidence = evidence;}
 		const std::vector<std::string>& getEvidence() const {return evidence;}
