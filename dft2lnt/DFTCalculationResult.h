@@ -16,11 +16,18 @@
 
 namespace DFT {
 
+        class DFTCalculationResultItem {
+        public:
+                std::string missionTime;
+                std::string mrmcCommand;
+                double failprob;
+        };
+
 	class DFTCalculationResult {
 	public:
 		std::string dftFile;
 		Shell::RunStatistics stats;
-		double failprob;
+		std::vector<DFTCalculationResultItem> failprobs;
 	};
 
 } // Namespace: DFT
@@ -30,5 +37,11 @@ YAML::Emitter& operator<<(YAML::Emitter& out, const DFT::DFTCalculationResult& r
 
 const YAML::Node& operator>>(const YAML::Node& node, map<std::string,DFT::DFTCalculationResult>& resultMap);
 YAML::Emitter& operator<<(YAML::Emitter& out, const map<std::string,DFT::DFTCalculationResult>& resultMap);
+
+const YAML::Node& operator>>(const YAML::Node& node, DFT::DFTCalculationResultItem& result);
+YAML::Emitter& operator<<(YAML::Emitter& out, const DFT::DFTCalculationResultItem& result);
+
+const YAML::Node& operator>>(const YAML::Node& node, vector<DFT::DFTCalculationResultItem>& resultVector);
+YAML::Emitter& operator<<(YAML::Emitter& out, const vector<DFT::DFTCalculationResultItem>& resultVector);
 
 #endif

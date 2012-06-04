@@ -364,7 +364,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		return 1;
 	}
 
-	std::vector<std::pair<std::pair<std::string,std::string>,DFT::DFTCalculationResult>> resultPairs;
+	std::vector<DFT::DFTCalculationResultItem> resultItems;
 	for(auto mrmcCalcCommand: mrmcCalcCommands) {
 
 		// -> mrmcinput
@@ -399,16 +399,20 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 			return 1;
 		} else {
 			double res = fileHandler->getResult();
-			DFT::DFTCalculationResult calcResult;
-			calcResult.dftFile = dft.getFilePath();
-			calcResult.failprob = res;
-			calcResult.stats = stats;
-			resultPairs.push_back(pair<pair<string,string>,DFT::DFTCalculationResult>(mrmcCalcCommand, calcResult));
+			DFT::DFTCalculationResultItem calcResultItem;
+			calcResultItem.missionTime = mrmcCalcCommand.second;
+			calcResultItem.mrmcCommand = mrmcCalcCommand.first;
+			calcResultItem.failprob = res;
+			resultItems.push_back(calcResultItem);
 		}
 	
 		delete fileHandler;
 	}
-	results.insert(pair<string,std::vector<std::pair<std::pair<std::string,std::string>,DFT::DFTCalculationResult>>>(dft.getFileName(), resultPairs));
+	DFT::DFTCalculationResult calcResult;
+	calcResult.dftFile = dft.getFilePath();
+	calcResult.failprobs = resultItems;
+	calcResult.stats = stats;
+	results.insert(pair<string,DFT::DFTCalculationResult>(dft.getFileName(), calcResult));
 
 
 	if(!buildDot.empty()) {
@@ -450,23 +454,6 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	}
 	
 	return 0;
-}
-
-YAML::Emitter& operator << (YAML::Emitter& out, const std::map<std::string,std::vector<std::pair<std::pair<std::string,std::string>,DFT::DFTCalculationResult>>>& v) {
-	out << YAML::BeginMap;
-	for(auto it: v) {
-		out << YAML::Key << it.first;
-		out << YAML::Value;
-        	out << YAML::Flow;
-		out << YAML::BeginSeq;
-		for(auto it2: it.second) {
-        		out << YAML::Flow;
-        		out << YAML::BeginSeq << it2.first.first << it2.first.second << it2.second << YAML::EndSeq;
-		}
-		out << YAML::EndSeq;
-	}
-	out << YAML::EndMap;
-        return out;
 }
 
 int main(int argc, char** argv) {
@@ -770,8 +757,8 @@ int main(int argc, char** argv) {
 		std::stringstream out;
 		for(auto it: calc.getResults()) {
 			std::string fName = it.first;
-			for(auto it2: it.second) {
-				out << "P(`" << fName << "'" << ", " << it2.first.first << ", " << it2.first.second << ", " << "fails)=" << it2.second.failprob << std::endl;;
+			for(auto it2: it.second.failprobs) {
+				out << "P(`" << fName << "'" << ", " << it2.mrmcCommand << ", " << it2.missionTime << ", " << "fails)=" << it2.failprob << std::endl;;
 			}
 		}
 		std::cout << out.str();
@@ -801,8 +788,8 @@ int main(int argc, char** argv) {
 		out << "Time" << ", " << "Unreliability" << std::endl;
 		for(auto it: calc.getResults()) {
 			std::string fName = it.first;
-			for(auto it2: it.second) {
-				out << it2.first.second << ", " << it2.second.failprob << std::endl;
+			for(auto it2: it.second.failprobs) {
+				out << it2.missionTime << ", " << it2.failprob << std::endl;
 			}
 		}
 		if(csvFileName=="") {

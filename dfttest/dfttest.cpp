@@ -735,11 +735,14 @@ DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 		}
 	}
 	map<string,DFT::DFTCalculationResult>::iterator res = dftcalcResults.find(test->getFile().getFileName());
+	result->failprob = -1;
 	if(res != dftcalcResults.end()) {
 		result->stats.maxMem(res->second.stats);
-		result->failprob = res->second.failprob;
-	} else {
-		result->failprob = -1;
+		// HACK assumes that we have a single result item
+		for(auto it: res->second.failprobs) {
+			result->failprob = it.failprob;
+			break;
+		}
 	}
 	
 	// Read memory usage from SVL log file
