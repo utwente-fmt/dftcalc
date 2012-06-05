@@ -68,6 +68,9 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -s FILE         Output SVL to file. '-' for stdout. Overrules -o.");
 		messageFormatter->message("  -b FILE         Output of SVL to this BCG file. Overrules -o.");
 		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
+		messageFormatter->message("  -n FILE         Name to use in error messages and to find");
+		messageFormatter->message("                  embedded bcg files mentioned as aph attributes");
+		messageFormatter->message("                  (used by dftcalc; not intented to be used directly by user).");
 		messageFormatter->message("  --warn-code     Return non-zero if there are one or more warnings.");
 		messageFormatter->flush();
 	} else if(topic=="topics") {
@@ -162,6 +165,8 @@ int main(int argc, char** argv) {
 	/* Command line arguments and their default settings */
 	string inputFileName     = "";
 	int    inputFileSet      = 0;
+	string origFileName      = "";
+	int    origFileSet       = 0;
 	string outputFileName    = "a";
 	int    outputFileSet     = 0;
 	string outputASTFileName = "";
@@ -187,7 +192,7 @@ int main(int argc, char** argv) {
 	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"o:a:b:e:t:s:x:hvq-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"o:n:a:b:e:t:s:x:hvq-:")) >= 0 ) {
 		switch(c) {
 
 			// -o FILE
@@ -199,6 +204,12 @@ int main(int argc, char** argv) {
 					outputFileName = string(optarg);
 					outputFileSet = 1;
 				}
+				break;
+
+			// -n FILENAME
+			case 'n':
+				origFileName = string(optarg);
+				origFileSet = 1;
 				break;
 
 			// -a FILE
@@ -448,13 +459,18 @@ int main(int argc, char** argv) {
 //		return 0;
 //	}
 //
+
+	if(!origFileSet) {
+		origFileName = inputFileName;
+	}
 	
 	compilerContext->notify("Running dft2lntc...");
 
-	char* real_path = new char[PATH_MAX];
-	cwd_realpath(inputFileName.c_str(),real_path);
-	std::string parserInputFilePath(real_path);
-	delete[] real_path;
+	//char* real_path = new char[PATH_MAX];
+	//cwd_realpath(inputFileName.c_str(),real_path);
+	//std::string parserInputFilePath(real_path);
+	//delete[] real_path;
+	std::string parserInputFilePath(origFileName);
 
 	std::string parserInputFileName(path_basename(inputFileName.c_str()));
 	

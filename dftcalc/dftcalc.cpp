@@ -308,6 +308,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	   << " -s \"" + svl.getFileRealPath() + "\""
 	   << " -x \"" + exp.getFileRealPath() + "\""
 	   << " -b \"" + bcg.getFileRealPath() + "\""
+	   << " -n \"" + dftOriginal.getFileRealPath() + "\""
 	   << " \""    + dft.getFileRealPath() + "\""
 	   << " --warn-code";
 	ss << " -e \"";
