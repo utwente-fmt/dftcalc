@@ -266,15 +266,21 @@ public:
 				}
 				if(value->isString()) {
 					DFT::AST::ASTIdentifier* id = static_cast<DFT::AST::ASTAttribString*>(value)->getValue();
-					string s = id->getString();
-					// ASTIdentifier
-					if (s == "") {
+					File fileToEmbed(id->getString());
+                                        //std::cerr << "aph orig file='" << fileToEmbed.getFileRealPath() << "'" << std::endl;
+                                        File dftFile(attribute->getLocation().getFileName());
+                                        fileToEmbed.insertPathToPrefix(dftFile.getPathTo());
+ 
+					if (!FileSystem::exists(fileToEmbed)) {
 						valid = false;
-						cc->reportErrorAt(attribute->getLocation(),"empty string aph value");
+						//std::cerr << "aph distr file dirname='" << fileToEmbed.getPathTo() << "'" << std::endl;
+						cc->reportErrorAt(attribute->getLocation(),"aph distribution file does not exist: \""+id->getString()+"\"");
+					} else {
+						//std::cerr << "aph distr file dirname='" << fileToEmbed.getPathTo() << "'" << std::endl;
 					}
 				} else {
 					valid = false;
-					cc->reportErrorAt(attribute->getLocation(),"aph label needs string value");
+					cc->reportErrorAt(attribute->getLocation(),"aph label needs string value: name of .bcg distribution file to embed");
 				}
 				break;
 

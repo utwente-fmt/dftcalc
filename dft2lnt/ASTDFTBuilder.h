@@ -170,7 +170,12 @@ public:
 						cc->reportWarningAt((*it)->getLocation(),"setting phase type distribition twice, ignoring");
 					} else {
 						std::string v = (*it)->getValue()->getStringValue()->getString();
-						be->setFileToEmbed(v);
+                                        	File fileToEmbed(v);
+						//std::cerr << "aph orig file='" << fileToEmbed.getFileRealPath() << "'" << std::endl;
+						File dftFile((*it)->getLocation().getFileName());
+                                                fileToEmbed.insertPathToPrefix(dftFile.getPathTo());
+						be->setFileToEmbed(fileToEmbed.getFileRealPath());
+						//std::cerr << "aph ext-file='" << fileToEmbed.getFileRealPath() << "'" << std::endl;
 						calcMode = DFT::Nodes::BE::CalculationMode::APH;
 					}
 				}

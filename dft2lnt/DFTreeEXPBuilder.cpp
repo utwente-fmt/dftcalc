@@ -58,7 +58,7 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		//ss << ", ";
 		//ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !0\" -> \"F\"";
 		ss << " in \"";
-		ss << bcgRoot << be.getFileToEmbed();
+		ss << be.getFileToEmbed();
 		ss << "\" end rename";
 	} else {
 		ss << "total rename ";
