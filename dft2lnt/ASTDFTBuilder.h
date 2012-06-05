@@ -159,6 +159,24 @@ public:
 			}
 		}
 		
+		// Find embedded distribution
+		{
+			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+			for(; it!=basicEvent->getAttributes()->end(); ++it) {
+				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelAph) {
+					if(calcMode==DFT::Nodes::BE::CalculationMode::APH) {
+						cc->reportErrorAt((*it)->getLocation(),"setting phase type distribution would override previous calculation mode: " + DFT::Nodes::BE::getCalculationModeStr(calcMode));
+					} else if(calcMode!=DFT::Nodes::BE::CalculationMode::UNDEFINED) {
+						cc->reportWarningAt((*it)->getLocation(),"setting phase type distribition twice, ignoring");
+					} else {
+						std::string v = (*it)->getValue()->getStringValue()->getString();
+						be->setFileToEmbed(v);
+						calcMode = DFT::Nodes::BE::CalculationMode::APH;
+					}
+				}
+			}
+		}
+		
 		// Find rate
 		{
 			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();

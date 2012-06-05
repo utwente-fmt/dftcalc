@@ -44,6 +44,7 @@ enum class CalculationMode {
 	UNDEFINED = 0,
 	EXPONENTIAL,
 	WEIBULL, // not supported
+	APH,
 	NUMBER_OF
 	
 };
@@ -241,6 +242,7 @@ private:
 	double rate;
 	int shape;
 	bool failed;
+	std::string fileToEmbed;
 public:
 	
 	void setLambda(double lambda) {
@@ -254,6 +256,9 @@ public:
 	}
 	void setShape(int shape) {
 		this->shape = shape;
+	}
+	void setFileToEmbed(std::string fileToEmbed) {
+		this->fileToEmbed = fileToEmbed;
 	}
 	void setMode(const DFT::Nodes::BE::CalculationMode& mode) {
 		this->mode = mode;
@@ -276,6 +281,13 @@ public:
 	 * @return The dormancy factor (mu/lambda) of this Basic Event.
 	 */
 	double getDorm()   const { return mu / lambda; }
+
+	/**
+	 * Returns the embedded aph fileName of this Basic Event.
+	 * @return The PH-distribution fileName of this Basic Event.
+	 */
+	std::string getFileToEmbed()   const { return fileToEmbed; }
+
 	
 	const DFT::Nodes::BE::CalculationMode& getMode() const {
 		return mode;

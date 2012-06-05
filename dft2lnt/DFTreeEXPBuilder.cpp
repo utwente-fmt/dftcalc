@@ -48,19 +48,32 @@ void DFT::DFTreeEXPBuilder::printSyncLineShort(std::ostream& stream, const EXPSy
 
 std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) const {
 	std::stringstream ss;
-	ss << "total rename ";
-	
-	// Insert lambda value
-	ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !2\" -> \"rate " << be.getLambda() << "\"";
-	
-	// Insert mu value (only for non-cold BE's)
-	if(be.getMu()>0) {
+
+	if(be.getMode() == DFT::Nodes::BE::CalculationMode::APH) {
+		ss << "total rename ";
+		ss << "\"A\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE << " !0 !FALSE\"";
 		ss << ", ";
-		ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << be.getMu()     << "\"";
+		ss << "\"F\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !0\"";
+		//ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE << " !0 !FALSE\" -> \"A\"";
+		//ss << ", ";
+		//ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !0\" -> \"F\"";
+		ss << " in \"";
+		ss << bcgRoot << be.getFileToEmbed();
+		ss << "\" end rename";
+	} else {
+		ss << "total rename ";
+		// Insert lambda value
+		ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !2\" -> \"rate " << be.getLambda() << "\"";
+	
+		// Insert mu value (only for non-cold BE's)
+		if(be.getMu()>0) {
+			ss << ", ";
+			ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << be.getMu()     << "\"";
+		}
+		ss << " in \"";
+		ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
+		ss << ".bcg\" end rename";
 	}
-	ss << " in \"";
-	ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
-	ss << ".bcg\" end rename";
 	return ss.str();
 }
 

@@ -259,6 +259,24 @@ public:
 				}
 				break;
 			case DFT::Nodes::BE::AttrLabelAph:
+				if(!value) {
+					valid = false;
+					cc->reportErrorAt(attribute->getLocation(),"aph label without value");
+					break;
+				}
+				if(value->isString()) {
+					DFT::AST::ASTIdentifier* id = static_cast<DFT::AST::ASTAttribString*>(value)->getValue();
+					string s = id->getString();
+					// ASTIdentifier
+					if (s == "") {
+						valid = false;
+						cc->reportErrorAt(attribute->getLocation(),"empty string aph value");
+					}
+				} else {
+					valid = false;
+					cc->reportErrorAt(attribute->getLocation(),"aph label needs string value");
+				}
+				break;
 
 			case DFT::Nodes::BE::AttrLabelProb:
 
