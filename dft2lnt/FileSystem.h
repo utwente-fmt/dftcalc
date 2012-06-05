@@ -101,6 +101,7 @@ public:
 	std::string getFileRealPath() const { return FileSystem::getRealPath(filePath); }
 	
 	File& setPathTo(const std::string& pathTo);
+	File& insertPathToPrefix(const std::string& pathTo);
 	File& setFileExtension(const std::string& fileExtension );
 	File& fix();
 	File& fixWithOrigin(const std::string& path);
@@ -133,6 +134,10 @@ public:
 	
 	inline bool isEmpty() {
 		return fileBase.empty() && fileExtension.empty();
+	}
+
+	inline bool isAbsolute() {
+		return !pathTo.empty() && pathTo[0] == '/';
 	}
 	
 };

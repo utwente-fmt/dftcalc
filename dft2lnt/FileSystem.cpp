@@ -154,11 +154,14 @@ extern "C" {
 char* cwd_realpath(const char* path, char resolved_path[PATH_MAX]) {
 	char* relative_path = (char*)malloc(PATH_MAX);
 	getcwd(relative_path,PATH_MAX);
+	//std::cerr << "cwd_realpath: path='" << path << "' relative_path='" << relative_path << "'" << std::endl;
 	int len = strlen(relative_path);
 	relative_path[len++] = '/';
 	strncpy(relative_path+len,path,PATH_MAX-len);
 
 	realpath(relative_path,resolved_path);
+	//std::cerr << "cwd_realpath: path='" << path << "' ext-relative_path='" << relative_path << "' resolved_path='" << resolved_path << "'" << std::endl;
+
 	free(relative_path);
 	return resolved_path;
 }
@@ -525,6 +528,14 @@ File::File(const std::string& pathTo, const std::string& fileBase, const std::st
 File& File::setPathTo(const std::string& pathTo) {
 	this->pathTo = pathTo;
 	updateExtra();
+	return *this;
+}
+
+File& File::insertPathToPrefix(const std::string& pathTo) {
+	if(!this->isAbsolute()) {
+		this->pathTo = pathTo + "/" + this->pathTo;
+		updateExtra();
+	}
 	return *this;
 }
 
