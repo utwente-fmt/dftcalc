@@ -65,6 +65,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -r FILE         Output result in YAML format to this file. (see --help=output)");
 		messageFormatter->message("  -c FILE         Output result as CSV format to this file. (see --help=output)");
 		messageFormatter->message("  -p              Print result to stdout.");
+		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
 		messageFormatter->message("  -i l u s        Calculate P(DFT fails in x time units) for each x in interval,");
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
 		messageFormatter->message("  -t xList        Calculate P(DFT fails in x time units) for each x in xList,");
