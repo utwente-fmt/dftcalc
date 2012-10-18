@@ -3,6 +3,8 @@
  * 
  * Part of a general library.
  * 
+ * Adapted by Gerjan Stokkink to support Mac OS X.
+ *
  * @author Freark van der Berg
  */
 
@@ -24,6 +26,9 @@ void System::Timer::reset() {
 	QueryPerformanceFrequency(&freq);
 	QueryPerformanceCounter(&start);
 #endif
+#if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_APPLE
+	gettimeofday(&start, (void *)NULL);
+#endif
 #if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_MONOTONIC_RAW
 	clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 #endif
@@ -34,6 +39,12 @@ double System::Timer::getElapsedSeconds() {
 	LARGE_INTEGER now;
 	QueryPerformanceCounter(&now);
 	return (double)(now.QuadPart-start.QuadPart) / (double)(freq.QuadPart) ;
+#endif
+#if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_APPLE
+	timeval now;
+	gettimeofday(&now, (void *)NULL);
+	return (double)(now.tv_sec -start.tv_sec )
+		 + (double)(now.tv_usec-start.tv_usec)*0.000001;
 #endif
 #if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_MONOTONIC_RAW
 	timespec now;
@@ -72,12 +83,12 @@ void System::generateUUID(size_t bytes,std::string& uuid) {
 
 uint64_t System::getCurrentTimeMillis() {
 	timeval now;
-	gettimeofday(&now, NULL);
+	gettimeofday(&now, (void *)NULL);
 	return now.tv_sec*1000 + now.tv_usec/1000;
 }
 
 uint64_t System::getCurrentTimeMicros() {
 	timeval now;
-	gettimeofday(&now, NULL);
+	gettimeofday(&now, (void *)NULL);
 	return now.tv_sec*1000000 + now.tv_usec;
 }

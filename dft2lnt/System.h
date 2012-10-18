@@ -3,6 +3,8 @@
  * 
  * Part of a general library.
  * 
+ * Adapted by Gerjan Stokkink to support Mac OS X.
+ *
  * @author Freark van der Berg
  */
 
@@ -12,6 +14,7 @@
 #define SYSTEM_TIMER_BACKEND_MONOTONIC     1
 #define SYSTEM_TIMER_BACKEND_MONOTONIC_RAW 2
 #define SYSTEM_TIMER_BACKEND_WINDOWS       3
+#define SYSTEM_TIMER_BACKEND_APPLE         4
 
 #include <time.h>
 #include <string>
@@ -19,6 +22,8 @@
 #ifdef WIN32
 #	include <windows.h>
 #	define SYSTEM_TIMER_BACKEND SYSTEM_TIMER_BACKEND_WINDOWS
+#elif defined __APPLE__
+#   define SYSTEM_TIMER_BACKEND SYSTEM_TIMER_BACKEND_APPLE
 #else
 #	define SYSTEM_TIMER_BACKEND SYSTEM_TIMER_BACKEND_MONOTONIC_RAW
 #endif
@@ -30,6 +35,9 @@ public:
 	#if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_WINDOWS
 		LARGE_INTEGER freq;
 		LARGE_INTEGER start;
+	#endif
+	#if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_APPLE
+		timeval start;
 	#endif
 	#if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_MONOTONIC_RAW
 		timespec start;
