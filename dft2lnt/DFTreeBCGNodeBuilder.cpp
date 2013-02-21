@@ -504,7 +504,6 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 	// If the LNT file needs (re)generation
 	bool lntGenerationOK = true;
 	if(lntGenerationNeeded) {
-		
 		// Generate header (header comment is not closed!)
 		generateHeader(lntOut);
 		switch(node.getType()) {
@@ -582,13 +581,10 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			default:
 				lntGenerationOK = false;
 		}
-		
 		// If LNT file generation went OK so far
 		if(lntGenerationOK) {
-			
 			// Write it to file
 			fancyFileWrite(lntFilePath,lntOut);
-			
 			// Test if it is valid
 			lntGenerationOK = lntIsValid(lntFilePath);
 		}
@@ -626,7 +622,6 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			cc->reportAction("Generating: " + bcgFileName,VERBOSE_GENERATION);
 			// Generate SVL
 			generateSVLBuilder(svlOut,getFileForNode(node));
-
 			if(bcgGenerationOK) {
 				// call SVL
 				//cc->reportFile(svlOut.toString());

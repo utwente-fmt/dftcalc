@@ -83,12 +83,12 @@ void System::generateUUID(size_t bytes,std::string& uuid) {
 
 uint64_t System::getCurrentTimeMillis() {
 	timeval now;
-	gettimeofday(&now, (void *)NULL);
+	gettimeofday(&now, NULL);
 	return now.tv_sec*1000 + now.tv_usec/1000;
 }
 
 uint64_t System::getCurrentTimeMicros() {
 	timeval now;
-	gettimeofday(&now, (void *)NULL);
+	gettimeofday(&now, NULL);
 	return now.tv_sec*1000000 + now.tv_usec;
 }

@@ -4,7 +4,7 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg
+ * @author Freark van der Berg, extended by Dennis Guck
  */
 
 #ifndef DFTCALC_H
@@ -28,16 +28,20 @@ namespace DFT {
 		MessageFormatter* messageFormatter;
 		std::string dft2lntRoot;
 		std::string coralRoot;
+		std::string imcaRoot;
 		std::string cadpRoot;
 		File dft2lntcExec;
 		File coralExec;
 		File imc2ctmdpExec;
+		File bcg2imcaExec;
 		File svlExec;
 		File bcgioExec;
 		File mrmcExec;
+		File imcaExec;
 		File dotExec;
 		
 		std::string getCoralRoot(MessageFormatter* messageFormatter);
+		std::string getImcaRoot(MessageFormatter* messageFormatter);
 		std::string getRoot(MessageFormatter* messageFormatter);
 		std::string getCADPRoot(MessageFormatter* messageFormatter);
 		
@@ -73,12 +77,14 @@ namespace DFT {
 			dft2lntRoot = getRoot(NULL);
 			coralRoot = getCoralRoot(NULL);
 			cadpRoot = getCADPRoot(NULL);
+			imcaRoot = getImcaRoot(NULL);
 			
 			/* These tools should be easy to find in the roots. Note that an added
 			 * bonus would be to locate them using PATH as well.
 			 */
 			dft2lntcExec = File(dft2lntRoot+"/bin/dft2lntc");
 			imc2ctmdpExec = File(coralRoot+"/bin/imc2ctmdp");
+			bcg2imcaExec = File(imcaRoot+"/bin/bcg2imca");
 			coralExec = File(coralRoot+"/coral");
 			svlExec = File(cadpRoot+"/com/svl");
 			
@@ -115,6 +121,15 @@ namespace DFT {
 					ok = false;
 				} else {
 					messageFormatter->reportAction("Using imc2ctmdp [" + imc2ctmdpExec.getFilePath() + "]",VERBOSITY_SEARCHING);
+				}
+				if(!FileSystem::hasAccessTo(bcg2imcaExec,F_OK)) {
+					messageFormatter->reportError("bcg2imca not found (in " + imcaRoot+"/bin)");
+					ok = false;
+				} else if(!FileSystem::hasAccessTo(bcg2imcaExec,X_OK)) {
+					messageFormatter->reportError("bcg2imca not executable (in " + imcaRoot+"/bin)");
+					ok = false;
+				} else {
+					messageFormatter->reportAction("Using bcg2imca [" + bcg2imcaExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 				}
 				if(!FileSystem::hasAccessTo(coralExec,F_OK)) {
 					messageFormatter->reportError("coral not found (in " + coralRoot+"/bin)");
@@ -169,6 +184,32 @@ namespace DFT {
 					ok = false;
 				} else {
 					messageFormatter->reportAction("Using mrmc [" + mrmcExec.getFilePath() + "]",VERBOSITY_SEARCHING);
+				}
+			}
+			
+			/* Find an imca executable (based on PATH environment variable) */
+			{
+				bool exists = false;
+				bool accessible = false;
+				vector<File> imcas;
+				int n = FileSystem::findInPath(imcas,File("imca"));
+				for(File imca: imcas) {
+					accessible = false;
+					exists = true;
+					if(FileSystem::hasAccessTo(imca,X_OK)) {
+						accessible = true;
+						imcaExec = imca;
+						break;
+					} else {
+						messageFormatter->reportWarning("imca [" + imca.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
+						ok = false;
+					}
+				}
+				if(!accessible) {
+					messageFormatter->reportError("no runnable imca executable found in PATH");
+					ok = false;
+				} else {
+					messageFormatter->reportAction("Using imca [" + imcaExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 				}
 			}
 			
@@ -257,7 +298,7 @@ namespace DFT {
 		 * @param dft The DFT to calculate
 		 * @return 0 if successful, non-zero otherwise
 		 */
-		int calculateDFT(const std::string& cwd, const File& dft, std::string timeSpec, unordered_map<string,string> settings);
+		int calculateDFT(const std::string& cwd, const File& dft, std::string timeSpec, std::string imca, unordered_map<string,string> settings, bool calcImca);
 		
 		void setEvidence(const std::vector<std::string>& evidence) {this->evidence = evidence;}
 		const std::vector<std::string>& getEvidence() const {return evidence;}
