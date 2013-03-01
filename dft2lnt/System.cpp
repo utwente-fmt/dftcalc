@@ -3,6 +3,8 @@
  * 
  * Part of a general library.
  * 
+ * Adapted by Gerjan Stokkink to support Mac OS X.
+ *
  * @author Freark van der Berg
  */
 
@@ -24,6 +26,9 @@ void System::Timer::reset() {
 	QueryPerformanceFrequency(&freq);
 	QueryPerformanceCounter(&start);
 #endif
+#if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_APPLE
+	gettimeofday(&start, (void *)NULL);
+#endif
 #if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_MONOTONIC_RAW
 	clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 #endif
@@ -37,6 +42,12 @@ double System::Timer::getElapsedSeconds() {
 	LARGE_INTEGER now;
 	QueryPerformanceCounter(&now);
 	return (double)(now.QuadPart-start.QuadPart) / (double)(freq.QuadPart) ;
+#endif
+#if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_APPLE
+	timeval now;
+	gettimeofday(&now, (void *)NULL);
+	return (double)(now.tv_sec -start.tv_sec )
+		 + (double)(now.tv_usec-start.tv_usec)*0.000001;
 #endif
 #if SYSTEM_TIMER_BACKEND == SYSTEM_TIMER_BACKEND_MONOTONIC_RAW
 	timespec now;

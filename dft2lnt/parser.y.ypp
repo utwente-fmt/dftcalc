@@ -4,6 +4,8 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
+ * Adapted by Gerjan Stokkink to support Mac OS X.
+ *
  * @author Freark van der Berg
  */
 
@@ -34,6 +36,7 @@
 	#include "dft_ast.h"
 	#include "DFTree.h"
 	#include "dft2lnt.h"
+	#include "dft_parser.h"
 
 #ifdef assert
 	#undef assert
@@ -72,7 +75,7 @@
 }
 
 %code {
-	#include "dft_parser.h"
+//	#include "dft_parser.h"
 	#include "yyheader.h"
 //	#include "parser.y.hpp"
 }

@@ -3,6 +3,8 @@
  * 
  * Part of a general library.
  * 
+ * Adapted by Gerjan Stokkink to support Mac OS X.
+ *
  * @author Freark van der Berg
  */
 
@@ -25,7 +27,7 @@
 		return mkdir(path);
 	}
 #else
-	int dir_make(const char* path, __mode_t mode) {
+	int dir_make(const char* path, mode_t mode) {
 		return mkdir(path,mode);
 	}
 #endif

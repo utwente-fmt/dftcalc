@@ -4,7 +4,7 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg
+ * @author Freark van der Berg, extended by Dennis Guck
  */
 
 #include <vector>
@@ -35,6 +35,7 @@ using namespace std;
 #include "dftcalc.h"
 #include "compiletime.h"
 #include "yaml-cpp/yaml.h"
+#include "imca.h"
 
 const int DFT::DFTCalc::VERBOSITY_SEARCHING = 2;
 
@@ -55,6 +56,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  --no-color      Do not use colored messages.");
 		messageFormatter->message("  --version       Print version info and quit.");
 		messageFormatter->message("  -O<s>=<v>       Sets settings <s> to value <v>. (see --help=settings)");
+		messageFormatter->message("  --mrmc          Use MRMC. (standard setting)");
+		messageFormatter->message("  --imca          Use IMCA instead of MRMC.");
 		messageFormatter->message("");
 		messageFormatter->notify ("Debug Options:");
 		messageFormatter->message("  --verbose=x     Set verbosity to x, -1 <= x <= 5.");
@@ -70,7 +73,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
 		messageFormatter->message("  -t xList        Calculate P(DFT fails in x time units) for each x in xList,");
 		messageFormatter->message("                  where xList is a whitespace-separated list of values, default is \"1\"");
-		messageFormatter->message("  -m <command>    Raw MRMC Calculation command. Overrules -t.");
+		messageFormatter->message("  -f <command>    Raw Calculation formula for MRMC or IMCA. Overrules -t.");
+		messageFormatter->message("                  See --mrmc and --imca");
 		messageFormatter->message("  -C DIR          Temporary output files will be in this directory");
 		messageFormatter->flush();
 	} else if(topic=="output") {
@@ -154,6 +158,38 @@ std::string DFT::DFTCalc::getCoralRoot(MessageFormatter* messageFormatter) {
 	}
 end:
 	return coralRoot;
+}
+
+std::string DFT::DFTCalc::getImcaRoot(MessageFormatter* messageFormatter) {
+	
+	if(!imcaRoot.empty()) {
+		return imcaRoot;
+	}
+	
+	char* root = getenv((const char*)"IMCA");
+	std::string imcaRoot = root?string(root):"";
+	if(imcaRoot=="") {
+		if(messageFormatter) messageFormatter->reportError("Environment variable `IMCA' not set. Please set it to where IMCA can be found.");
+		goto end;
+	}
+	
+	// \ to /
+	{
+		char buf[imcaRoot.length()+1];
+		for(int i=imcaRoot.length();i--;) {
+			if(imcaRoot[i]=='\\')
+				buf[i] = '/';
+			else
+				buf[i] = imcaRoot[i];
+		}
+		buf[imcaRoot.length()] = '\0';
+		if(buf[imcaRoot.length()-1]=='/') {
+			buf[imcaRoot.length()-1] = '\0';
+		}
+		imcaRoot = string(buf);
+	}
+end:
+	return imcaRoot;
 }
 
 std::string DFT::DFTCalc::getRoot(MessageFormatter* messageFormatter) {
@@ -258,7 +294,7 @@ void DFT::DFTCalc::printOutput(const File& file, int status) {
 	}
 }
 
-int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& mrmcCalcCommands, unordered_map<string,string> settings) {
+int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& calcCommands, unordered_map<string,string> settings, bool calcImca) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File svlLog = dft.newWithExtension("log");
@@ -266,10 +302,12 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	File bcg    = dft.newWithExtension("bcg");
 	File imc    = dft.newWithExtension("imc");
 	File ctmdpi = dft.newWithExtension("ctmdpi");
+	File ma     = dft.newWithExtension("ma");
 	File lab    = ctmdpi.newWithExtension("lab");
 	File dot    = dft.newWithExtension("dot");
 	File png    = dot.newWithExtension("png");
 	File input  = dft.newWithExtension("input");
+	File inputImca  = dft.newWithExtension("inputImca");
 
 	Shell::RunStatistics stats;
 
@@ -282,6 +320,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	if(FileSystem::exists(bcg))    FileSystem::remove(bcg);
 	if(FileSystem::exists(imc))    FileSystem::remove(imc);
 	if(FileSystem::exists(ctmdpi)) FileSystem::remove(ctmdpi);
+	if(FileSystem::exists(ma))     FileSystem::remove(ma);
 	if(FileSystem::exists(lab))    FileSystem::remove(lab);
 	if(FileSystem::exists(dot))    FileSystem::remove(dot);
 	if(FileSystem::exists(png))    FileSystem::remove(png);
@@ -348,74 +387,149 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		messageFormatter->reportWarning("Could not read from svl log file `" + svlLog.getFileRealPath() + "'");
 	}
 	
-	// bcg -> ctmdpi, lab
-	messageFormatter->reportAction("Translating IMC to CTMDPI...",VERBOSITY_FLOW);
-	sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imc2ctmdpi.report";
-	sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imc2ctmdpi.err";
-	sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".imc2ctmdpi.out";
-	sysOps.command    = imc2ctmdpExec.getFilePath()
-	                  + " -a FAIL"
-	                  + " -o \"" + ctmdpi.getFileRealPath() + "\""
-	                  + " \""    + bcg.getFileRealPath() + "\""
-					  ;
-	result = Shell::system(sysOps);
-
-	if(!FileSystem::exists(ctmdpi)) {
-		printOutput(File(sysOps.outFile), result);
-		printOutput(File(sysOps.errFile), result);
-		return 1;
-	}
-
-	std::vector<DFT::DFTCalculationResultItem> resultItems;
-	for(auto mrmcCalcCommand: mrmcCalcCommands) {
-
-		// -> mrmcinput
-		MRMC::FileHandler* fileHandler = new MRMC::FileHandler(mrmcCalcCommand.first);
-		fileHandler->generateInputFile(input);
-		if(!FileSystem::exists(input)) {
-			messageFormatter->reportError("Error generating MRMC input file `" + input.getFileRealPath() + "'");
-			return 1;
-		}
-
-		// ctmdpi, lab, mrmcinput -> calculation
-		messageFormatter->reportAction("Calculating probability...",VERBOSITY_FLOW);
-		sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".mrmc.report";
-		sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".mrmc.err";
-		sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".mrmc.out";
-		sysOps.command    = mrmcExec.getFilePath()
-	                  	+ " ctmdpi"
-	                  	+ " \""    + ctmdpi.getFileRealPath() + "\""
-	                  	+ " \""    + lab.getFileRealPath() + "\""
-	                  	+ " < \""  + input.getFileRealPath() + "\""
-	                  	;
+	if(!calcImca) {
+		// bcg -> ctmdpi, lab
+		messageFormatter->reportAction("Translating IMC to CTMDPI...",VERBOSITY_FLOW);
+		sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imc2ctmdpi.report";
+		sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imc2ctmdpi.err";
+		sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".imc2ctmdpi.out";
+		sysOps.command    = imc2ctmdpExec.getFilePath()
+	                  			+ " -a FAIL"
+	                  			+ " -o \"" + ctmdpi.getFileRealPath() + "\""
+	                  			+ " \""    + bcg.getFileRealPath() + "\""
+					  	;
 		result = Shell::system(sysOps);
 
-		if(result) {
+		if(!FileSystem::exists(ctmdpi)) {
 			printOutput(File(sysOps.outFile), result);
 			printOutput(File(sysOps.errFile), result);
 			return 1;
 		}
 
-		if(fileHandler->readOutputFile(File(sysOps.outFile))) {
-			messageFormatter->reportError("Could not calculate");
-			return 1;
-		} else {
-			double res = fileHandler->getResult();
-			DFT::DFTCalculationResultItem calcResultItem;
-			calcResultItem.missionTime = mrmcCalcCommand.second;
-			calcResultItem.mrmcCommand = mrmcCalcCommand.first;
-			calcResultItem.failprob = res;
-			resultItems.push_back(calcResultItem);
-		}
-	
-		delete fileHandler;
-	}
-	DFT::DFTCalculationResult calcResult;
-	calcResult.dftFile = dft.getFilePath();
-	calcResult.failprobs = resultItems;
-	calcResult.stats = stats;
-	results.insert(pair<string,DFT::DFTCalculationResult>(dft.getFileName(), calcResult));
+		std::vector<DFT::DFTCalculationResultItem> resultItems;
+		for(auto mrmcCalcCommand: calcCommands) {
 
+			// -> mrmcinput
+			MRMC::FileHandler* fileHandler = new MRMC::FileHandler(mrmcCalcCommand.first);
+			fileHandler->generateInputFile(input);
+			if(!FileSystem::exists(input)) {
+				messageFormatter->reportError("Error generating MRMC input file `" + input.getFileRealPath() + "'");
+				return 1;
+			}
+
+			// ctmdpi, lab, mrmcinput -> calculation
+			messageFormatter->reportAction("Calculating probability...",VERBOSITY_FLOW);
+			sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".mrmc.report";
+			sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".mrmc.err";
+			sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".mrmc.out";
+			sysOps.command    = mrmcExec.getFilePath()
+	                  			+ " ctmdpi"
+	                  			+ " \""    + ctmdpi.getFileRealPath() + "\""
+	                  			+ " \""    + lab.getFileRealPath() + "\""
+	                  			+ " < \""  + input.getFileRealPath() + "\""
+	                  			;
+			result = Shell::system(sysOps);
+
+			if(result) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
+				return 1;
+			}
+
+			if(fileHandler->readOutputFile(File(sysOps.outFile))) {
+				messageFormatter->reportError("Could not calculate");
+				return 1;
+			} else {
+				double res = fileHandler->getResult();
+				DFT::DFTCalculationResultItem calcResultItem;
+				calcResultItem.missionTime = mrmcCalcCommand.second;
+				calcResultItem.mrmcCommand = mrmcCalcCommand.first;
+				calcResultItem.failprob = res;
+				resultItems.push_back(calcResultItem);
+			}
+	
+			delete fileHandler;
+		}
+		DFT::DFTCalculationResult calcResult;
+		calcResult.dftFile = dft.getFilePath();
+		calcResult.failprobs = resultItems;
+		calcResult.stats = stats;
+		results.insert(pair<string,DFT::DFTCalculationResult>(dft.getFileName(), calcResult));
+	} else {
+		// bcg -> ma
+		messageFormatter->reportAction("Translating IMC to IMCA format...",VERBOSITY_FLOW);
+		sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg2imca.report";
+		sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg2imca.err";
+		sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".bcg2imca.out";
+		sysOps.command    = bcg2imcaExec.getFilePath()
+						+ " " + bcg.getFileRealPath()
+						+ " " + ma.getFileRealPath()
+						+ " FAIL"
+						;
+		result = Shell::system(sysOps);
+	
+		if(!FileSystem::exists(ma)) {
+			printOutput(File(sysOps.outFile), result);
+			printOutput(File(sysOps.errFile), result);
+			return 1;
+		}
+		
+		std::vector<DFT::DFTCalculationResultItem> resultItems;
+		for(auto imcaCalcCommand: calcCommands) {
+
+			// -> imcainput
+			IMCA::FileHandler* fileHandler = new IMCA::FileHandler(imcaCalcCommand.first);
+		
+			// imca -> calculation
+			messageFormatter->reportAction("Calculating probability with IMCA...",VERBOSITY_FLOW);
+			sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imca.report";
+			sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imca.err";
+			sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".imca.out";
+			sysOps.command    = imcaExec.getFilePath()
+							+ " "    + ma.getFileRealPath()
+							+ " "    + imcaCalcCommand.first
+							;
+			result = Shell::system(sysOps);
+
+			if(result) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
+				return 1;
+			}
+
+			if(fileHandler->readOutputFile(File(sysOps.outFile))) {
+				messageFormatter->reportError("Could not calculate");
+				return 1;
+			} else {
+				// FIXME we should use a fileHandler->getResults() that returns
+				// a list of pairs: <missionTime, probability>
+				// Hmm... what if the formula computes something entirely different, like expected time to failure?
+				std::vector<std::pair<std::string,IMCA::T_Chance>> imcaResult = fileHandler->getResults();
+				for(auto imcaResultItem: imcaResult) {
+					DFT::DFTCalculationResultItem calcResultItem;
+					calcResultItem.missionTime = imcaCalcCommand.second;
+					calcResultItem.mrmcCommand = imcaCalcCommand.first;
+					calcResultItem.failprob = imcaResultItem.second;
+					resultItems.push_back(calcResultItem);
+				}
+/*
+				double res = fileHandler->getResult();
+				DFT::DFTCalculationResultItem calcResultItem;
+				calcResultItem.missionTime = imcaCalcCommand.second;
+				calcResultItem.mrmcCommand = imcaCalcCommand.first;
+				calcResultItem.failprob = res;
+				resultItems.push_back(calcResultItem);
+ */
+			}
+	
+			delete fileHandler;
+		}
+		DFT::DFTCalculationResult calcResult;
+		calcResult.dftFile = dft.getFilePath();
+		calcResult.failprobs = resultItems;
+		calcResult.stats = stats;
+		results.insert(pair<string,DFT::DFTCalculationResult>(dft.getFileName(), calcResult));
+	}
 
 	if(!buildDot.empty()) {
 		// bcg -> dot
@@ -481,8 +595,8 @@ int main(int argc, char** argv) {
 	int    dotToTypeSet       = 0;
 	string outputFolder       = "output";
 	int    outputFolderSet    = 0;
-	string mrmcCalcCommand    = "";
-	int    mrmcCalcCommandSet = 0;
+	string calcCommand    = "";
+	int    calcCommandSet = 0;
 
 	int verbosity            = 0;
 	int print                = 0;
@@ -490,12 +604,14 @@ int main(int argc, char** argv) {
 	int printHelp            = 0;
 	string printHelpTopic    = "";
 	int printVersion         = 0;
+	bool calcImca = false;
 	
 	std::vector<std::string> failedBEs;
 	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"C:e:h:m:pqr:c:t:i:v-:")) >= 0 ) {
+	//while( (c = getopt(argc,argv,"C:e:m:i:pqr:t:hv-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:e:f:pqr:c:t:i:hv-:")) >= 0 ) {
 		switch(c) {
 			
 			// -C FILE
@@ -531,10 +647,11 @@ int main(int argc, char** argv) {
 				print = 1;
 				break;
 			
-			// -m MRMCCommand
-			case 'm':
-				mrmcCalcCommand = string(optarg);
-				mrmcCalcCommandSet = true;
+			// -f MRMC/IMCA Command
+			case 'f':
+				calcCommand = string(optarg);
+				calcCommandSet = true;
+				//calcImca = false;
 				break;
 			
 			// -t STRING containing time values separated by whitespace
@@ -616,9 +733,14 @@ int main(int argc, char** argv) {
 				} else if(!strcmp("no-color",optarg)) {
 					useColoredMessages = false;
 				}
+				if(!strcmp("mrmc",optarg)) {
+					calcImca=false;
+				}else if(!strcmp("imca",optarg)) {
+					calcImca=true;
+				}
 		}
 	}
-	if (!mrmcCalcCommandSet && !timeIntervalSet)
+	if (!calcCommandSet && !timeIntervalSet)
 		timeSpecSet = 1; // default
 	
 	/* Create a new compiler context */
@@ -638,8 +760,10 @@ int main(int argc, char** argv) {
 	}
 	
 	std::vector<std::pair<std::string,std::string>> mrmcCommands;
-	if(mrmcCalcCommandSet) {
-		mrmcCommands.push_back(pair<string,string>(mrmcCalcCommand,"?"));
+	std::vector<std::pair<std::string,std::string>> imcaCommands;
+	if(calcCommandSet) {
+		mrmcCommands.push_back(pair<string,string>(calcCommand,"?"));
+		imcaCommands.push_back(pair<string,string>(calcCommand,"?"));
 	} else if (timeSpecSet) {
 		std::string str = timeSpec;
 		size_t b, e;
@@ -661,6 +785,7 @@ int main(int argc, char** argv) {
 				messageFormatter->reportErrorAt(Location("commandline"),"-t value item requires a positive number as argument: "+s);
 			}
 			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
+			imcaCommands.push_back(pair<string,string>("-max -tb -T " + s, s));
 		}
 	} else if (timeIntervalSet) {
 		double lwb = atof(timeIntervalLwb.c_str());
@@ -676,9 +801,11 @@ int main(int argc, char** argv) {
 			messageFormatter->reportErrorAt(Location("commandline"),"-i step value item requires a positive number as argument: "+timeIntervalStep);
 		}
 		// for(double n=lwb; n < upb || std::fabs(upb-n) <std::numeric_limits<double>::epsilon(); n+= step) {
+		//}
 		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
 			std::string s = doubleToString(n);
 			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
+			imcaCommands.push_back(pair<string,string>("-max -tb -T " + s, s));
 		}
 	}
 	
@@ -730,7 +857,7 @@ int main(int argc, char** argv) {
 	for(File dft: dfts) {
 		hasInput = true;
 		if(FileSystem::exists(dft)) {
-			bool res = calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,mrmcCommands,settings);
+			bool res = calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,(calcImca?imcaCommands:mrmcCommands),settings,calcImca);
 			hasErrors = hasErrors || res;
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
@@ -749,8 +876,8 @@ int main(int argc, char** argv) {
 	
 	/* Show results */
 	if(verbosity>0 || print) {
-		if(mrmcCalcCommandSet) {
-			messageFormatter->notify("Using: " + mrmcCalcCommand);
+		if(calcCommandSet) {
+			messageFormatter->notify("Using: " + calcCommand);
 		} else if (timeIntervalSet) {
 			messageFormatter->notify("Within time interval: [" + timeIntervalLwb + " .. " + timeIntervalUpb +"], stepsize " + timeIntervalStep);
 		} else {
@@ -813,3 +940,4 @@ int main(int argc, char** argv) {
 	
 	return 0;
 }
+
