@@ -275,7 +275,7 @@ void DFT::DFTCalc::printOutput(const File& file) {
 	}
 }
 
-int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::string mrmcCalcCommand, std::string imcaCalcCommand, unordered_map<string,string> settings, bool calcImca) {
+int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, std::string calcCommand, unordered_map<string,string> settings, bool calcImca) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File svlLog = dft.newWithExtension("log");
@@ -385,7 +385,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		}
 
 		// -> mrmcinput
-		MRMC::FileHandler* fileHandler = new MRMC::FileHandler(mrmcCalcCommand);
+		MRMC::FileHandler* fileHandler = new MRMC::FileHandler(calcCommand);
 		fileHandler->generateInputFile(input);
 		if(!FileSystem::exists(input)) {
 			messageFormatter->reportError("Error generating MRMC input file `" + input.getFileRealPath() + "'");
@@ -443,7 +443,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		}
 		
 		// -> imcainput
-		IMCA::FileHandler* fileHandlerImca = new IMCA::FileHandler(imcaCalcCommand);
+		IMCA::FileHandler* fileHandlerImca = new IMCA::FileHandler(calcCommand);
 		
 		// imca -> calculation
 		messageFormatter->reportAction("Calculating probability with IMCA...",VERBOSITY_FLOW);
@@ -452,7 +452,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".imca.out";
 		sysOps.command    = imcaExec.getFilePath()
 						+ " "    + ma.getFileRealPath()
-						+ " "    + imcaCalcCommand
+						+ " "    + calcCommand
 						;
 		result = Shell::system(sysOps);
 
@@ -752,7 +752,7 @@ int main(int argc, char** argv) {
 		if(FileSystem::exists(dft)) {
 			string mrmcCommand = mrmcCalcCommandSet ? mrmcCalcCommand : "P{>1} [ tt U[0," + timeSpec + "] reach ]";
 			string imcaCommand = imcaCalcCommandSet ? imcaCalcCommand : "-max -tb -T " + timeSpec;
-			calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,mrmcCommand,imcaCommand,settings,calcImca);
+			calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,(calcImca?imcaCommand:mrmcCommand),settings,calcImca);
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
 		}
