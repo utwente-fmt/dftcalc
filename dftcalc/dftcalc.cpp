@@ -507,7 +507,11 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 				std::vector<std::pair<std::string,IMCA::T_Chance>> imcaResult = fileHandler->getResults();
 				for(auto imcaResultItem: imcaResult) {
 					DFT::DFTCalculationResultItem calcResultItem;
-					calcResultItem.missionTime = imcaCalcCommand.second;
+					//if (imcaResult.size() == 1 && imcaResultItem.first == "?")
+					if (imcaResultItem.first == "" || imcaResultItem.first == "?")
+						calcResultItem.missionTime = imcaCalcCommand.second;
+					else
+						calcResultItem.missionTime = imcaResultItem.first;
 					calcResultItem.mrmcCommand = imcaCalcCommand.first;
 					calcResultItem.failprob = imcaResultItem.second;
 					resultItems.push_back(calcResultItem);
