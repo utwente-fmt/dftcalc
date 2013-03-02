@@ -26,7 +26,7 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 	}
 
 	FILE* fp;
-	long len;
+	long len, n;
 	char* buffer;
 
 	fp = fopen(file.getFileRealPath().c_str(),"rb");
@@ -34,9 +34,34 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 	len = ftell(fp)+1;
 	fseek(fp,0,SEEK_SET);
 	buffer = (char *)malloc(len);
-	fread(buffer,len,1,fp); //read into buffer
+	memset(buffer, 0, len);
+	n = fread(buffer,len,1,fp); //read into buffer
 	fclose(fp);
 
+	fprintf(stdout, "imca buffer info (%ld,%ld):\n", len, n);
+	fprintf(stdout, "imca buffer\n%*s\n", (int)n, buffer);
+
+	// for each line:
+	char *p = buffer;
+	char *k;
+	char needle[] = "probability: ";
+	while((k= strstr(p, needle)) != 0) {
+		char *prob = k + strlen(needle);
+		char *e = strchr(prob, '\n');
+		if (e != 0)
+			*e = '\0';
+		double res = 0;
+                int r  = sscanf(prob,"%lf",&res);
+		if (r ==  1){
+			results.push_back(std::pair<std::string,IMCA::T_Chance>("?",res));
+			i_isCalculated = true;
+		}
+		if (e != 0)
+			p = e + 1;
+		else
+			p = prob;
+	}
+#if 0
 	const char* resultString = NULL;
 	{
 		const char* c = buffer;
@@ -77,6 +102,7 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 
 		i_isCalculated = true;
 	}
+#endif
 
 
 	free(buffer);
