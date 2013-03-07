@@ -69,6 +69,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -c FILE         Output result as CSV format to this file. (see --help=output)");
 		messageFormatter->message("  -p              Print result to stdout.");
 		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
+		messageFormatter->message("  -m              Calculate mean time to failure using IMCA.");
+		messageFormatter->message("                  Overrules -i, -t, -f, --mrmc.");
 		messageFormatter->message("  -i l u s        Calculate P(DFT fails in x time units) for each x in interval,");
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
 		messageFormatter->message("  -t xList        Calculate P(DFT fails in x time units) for each x in xList,");
@@ -599,6 +601,7 @@ int main(int argc, char** argv) {
 	int    dotToTypeSet       = 0;
 	string outputFolder       = "output";
 	int    outputFolderSet    = 0;
+	int    mttf               = 0;
 	string calcCommand    = "";
 	int    calcCommandSet = 0;
 
@@ -615,7 +618,7 @@ int main(int argc, char** argv) {
 	/* Parse command line arguments */
 	char c;
 	//while( (c = getopt(argc,argv,"C:e:m:i:pqr:t:hv-:")) >= 0 ) {
-	while( (c = getopt(argc,argv,"C:e:f:pqr:c:t:i:hv-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:e:f:mpqr:c:t:i:hv-:")) >= 0 ) {
 		switch(c) {
 			
 			// -C FILE
@@ -656,6 +659,11 @@ int main(int argc, char** argv) {
 				calcCommand = string(optarg);
 				calcCommandSet = true;
 				//calcImca = false;
+				break;
+			
+			// -m
+			case 'm':
+				mttf = 1;
 				break;
 			
 			// -t STRING containing time values separated by whitespace
@@ -744,14 +752,26 @@ int main(int argc, char** argv) {
 				}
 		}
 	}
-	if (!calcCommandSet && !timeIntervalSet)
-		timeSpecSet = 1; // default
 	
 	/* Create a new compiler context */
 	MessageFormatter* messageFormatter = new MessageFormatter(std::cerr);
 	messageFormatter->useColoredMessages(useColoredMessages);
 	messageFormatter->setVerbosity(verbosity);
 	messageFormatter->setAutoFlush(true);
+
+	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet)) {
+		messageFormatter->reportError("Mttf flag (-m) given: ignoring any given time specification or calculation command");
+	}
+	if (mttf) {
+		calcImca = true;
+		calcCommandSet = true;
+		calcCommand = "-et -max";
+		timeIntervalSet = false;
+		timeSpecSet = false;
+	}
+
+	if (!calcCommandSet && !timeIntervalSet)
+		timeSpecSet = 1; // default
 
 	/* Print help / version if requested and quit */
 	if(printHelp) {
@@ -891,7 +911,11 @@ int main(int argc, char** argv) {
 		for(auto it: calc.getResults()) {
 			std::string fName = it.first;
 			for(auto it2: it.second.failprobs) {
-				out << "P(`" << fName << "'" << ", " << it2.mrmcCommand << ", " << it2.missionTime << ", " << "fails)=" << it2.failprob << std::endl;;
+				if (mttf) {
+					out << "MTTF(`" << fName << "'" << ")=" << it2.failprob << std::endl;;
+				} else {
+					out << "P(`" << fName << "'" << ", " << it2.mrmcCommand << ", " << it2.missionTime << ", " << "fails)=" << it2.failprob << std::endl;;
+				}
 			}
 		}
 		std::cout << out.str();
@@ -918,11 +942,21 @@ int main(int argc, char** argv) {
 	/* Write csv file */
 	if(csvFileSet) {
 		std::stringstream out;
-		out << "Time" << ", " << "Unreliability" << std::endl;
-		for(auto it: calc.getResults()) {
-			std::string fName = it.first;
-			for(auto it2: it.second.failprobs) {
-				out << it2.missionTime << ", " << it2.failprob << std::endl;
+		if (mttf) {
+			out << "Mean Time to Failure" << std::endl;
+			for(auto it: calc.getResults()) {
+				std::string fName = it.first;
+				for(auto it2: it.second.failprobs) {
+					out << it2.failprob << std::endl;
+				}
+			}
+		} else {
+			out << "Time" << ", " << "Unreliability" << std::endl;
+			for(auto it: calc.getResults()) {
+				std::string fName = it.first;
+				for(auto it2: it.second.failprobs) {
+					out << it2.missionTime << ", " << it2.failprob << std::endl;
+				}
 			}
 		}
 		if(csvFileName=="") {
