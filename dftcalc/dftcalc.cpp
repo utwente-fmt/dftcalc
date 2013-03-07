@@ -56,6 +56,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  --no-color      Do not use colored messages.");
 		messageFormatter->message("  --version       Print version info and quit.");
 		messageFormatter->message("  -O<s>=<v>       Sets settings <s> to value <v>. (see --help=settings)");
+		messageFormatter->message("  -R              Reuse existing output files.");
 		messageFormatter->message("  --mrmc          Use MRMC. (standard setting)");
 		messageFormatter->message("  --imca          Use IMCA instead of MRMC.");
 		messageFormatter->message("");
@@ -298,7 +299,7 @@ void DFT::DFTCalc::printOutput(const File& file, int status) {
 	}
 }
 
-int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& calcCommands, unordered_map<string,string> settings, bool calcImca) {
+int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& calcCommands, unordered_map<string,string> settings, bool calcImca) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File svlLog = dft.newWithExtension("log");
@@ -317,21 +318,30 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 
 	FileSystem::mkdir(File(cwd));
 
-	if(FileSystem::exists(dft))    FileSystem::remove(dft);
-	if(FileSystem::exists(svl))    FileSystem::remove(svl);
-	if(FileSystem::exists(svlLog)) FileSystem::remove(svlLog);
-	if(FileSystem::exists(exp))    FileSystem::remove(exp);
-	if(FileSystem::exists(bcg))    FileSystem::remove(bcg);
-	if(FileSystem::exists(imc))    FileSystem::remove(imc);
-	if(FileSystem::exists(ctmdpi)) FileSystem::remove(ctmdpi);
-	if(FileSystem::exists(ma))     FileSystem::remove(ma);
-	if(FileSystem::exists(lab))    FileSystem::remove(lab);
-	if(FileSystem::exists(dot))    FileSystem::remove(dot);
-	if(FileSystem::exists(png))    FileSystem::remove(png);
-	if(FileSystem::exists(input))  FileSystem::remove(input);
+	if(!reuse) {
+		messageFormatter->notify("Deleting generated files");
+		if(FileSystem::exists(dft))    FileSystem::remove(dft);
+		if(FileSystem::exists(svl))    FileSystem::remove(svl);
+		if(FileSystem::exists(svlLog)) FileSystem::remove(svlLog);
+		if(FileSystem::exists(exp))    FileSystem::remove(exp);
+		if(FileSystem::exists(bcg))    FileSystem::remove(bcg);
+		if(FileSystem::exists(imc))    FileSystem::remove(imc);
+		if(FileSystem::exists(ctmdpi)) FileSystem::remove(ctmdpi);
+		if(FileSystem::exists(ma))     FileSystem::remove(ma);
+		if(FileSystem::exists(lab))    FileSystem::remove(lab);
+		if(FileSystem::exists(dot))    FileSystem::remove(dot);
+		if(FileSystem::exists(png))    FileSystem::remove(png);
+		if(FileSystem::exists(input))  FileSystem::remove(input);
+	} else {
+		messageFormatter->notify("Preserved generated files");
+	}
 
-	//printf("Copying %s to %s\n",dftOriginal.getFileRealPath().c_str(),dft.getFileRealPath().c_str());
-	FileSystem::copy(dftOriginal,dft);
+	if(!reuse || !FileSystem::exists(dft)) {
+		//printf("Copying %s to %s\n",dftOriginal.getFileRealPath().c_str(),dft.getFileRealPath().c_str());
+		FileSystem::copy(dftOriginal,dft);
+	} else {
+		messageFormatter->notify("Not copied original dft file");
+	}
 
 	int com = 0;
 	int result = 0;
@@ -340,50 +350,58 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	sysOps.cwd = cwd;
 	
 	messageFormatter->notify("Calculating `"+dft.getFileBase()+"'");
-	
-	// dft -> exp, svl
-	messageFormatter->reportAction("Translating DFT to EXP...",VERBOSITY_FLOW);
-	sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".dft2lntc.report";
-	sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".dft2lntc.err";
-	sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".dft2lntc.out";
-	std::stringstream ss;
-	ss << dft2lntcExec.getFilePath()
-	   << " --verbose=" << messageFormatter->getVerbosity()
-	   << " -s \"" + svl.getFileRealPath() + "\""
-	   << " -x \"" + exp.getFileRealPath() + "\""
-	   << " -b \"" + bcg.getFileRealPath() + "\""
-	   << " -n \"" + dftOriginal.getFileRealPath() + "\""
-	   << " \""    + dft.getFileRealPath() + "\""
-	   << " --warn-code";
-	ss << " -e \"";
-	for(std::string e: evidence) {
-		ss << e << ",";
-	}
-	ss << "\"";
-	if (!messageFormatter->usingColoredMessages())
-		ss << " --no-color";
-	sysOps.command = ss.str();
-	result = Shell::system(sysOps);
 
-	if(result || !FileSystem::exists(exp) || !FileSystem::exists(svl)) {
-		printOutput(File(sysOps.outFile), result);
-		printOutput(File(sysOps.errFile), result);
-		return 1;
+	if(!reuse || !FileSystem::exists(exp) || !FileSystem::exists(svl)) {
+		// dft -> exp, svl
+		messageFormatter->reportAction("Translating DFT to EXP...",VERBOSITY_FLOW);
+		sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".dft2lntc.report";
+		sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".dft2lntc.err";
+		sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".dft2lntc.out";
+			std::stringstream ss;
+		ss << dft2lntcExec.getFilePath()
+		   << " --verbose=" << messageFormatter->getVerbosity()
+		   << " -s \"" + svl.getFileRealPath() + "\""
+		   << " -x \"" + exp.getFileRealPath() + "\""
+		   << " -b \"" + bcg.getFileRealPath() + "\""
+		   << " -n \"" + dftOriginal.getFileRealPath() + "\""
+		   << " \""    + dft.getFileRealPath() + "\""
+		   << " --warn-code";
+		ss << " -e \"";
+		for(std::string e: evidence) {
+			ss << e << ",";
+		}
+		ss << "\"";
+		if (!messageFormatter->usingColoredMessages())
+			ss << " --no-color";
+		sysOps.command = ss.str();
+		result = Shell::system(sysOps);
+
+		if(result || !FileSystem::exists(exp) || !FileSystem::exists(svl)) {
+			printOutput(File(sysOps.outFile), result);
+			printOutput(File(sysOps.errFile), result);
+			return 1;
+		}
+	} else {
+		messageFormatter->notify("Not translated DFT to EXP");
 	}
 
-	// svl, exp -> bcg
-	messageFormatter->reportAction("Building IMC...",VERBOSITY_FLOW);
-	sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".svl.report";
-	sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".svl.err";
-	sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".svl.out";
-	sysOps.command    = svlExec.getFilePath()
-		                + " \""    + svl.getFileRealPath() + "\"";
-	result = Shell::system(sysOps);
-	
-	if(!FileSystem::exists(bcg)) {
-		printOutput(File(sysOps.outFile), result);
-		printOutput(File(sysOps.errFile), result);
-		return 1;
+	if (!reuse || !FileSystem::exists(bcg)) {
+		// svl, exp -> bcg
+		messageFormatter->reportAction("Building IMC...",VERBOSITY_FLOW);
+		sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".svl.report";
+		sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".svl.err";
+		sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".svl.out";
+		sysOps.command    = svlExec.getFilePath()
+			                + " \""    + svl.getFileRealPath() + "\"";
+		result = Shell::system(sysOps);
+
+		if(!FileSystem::exists(bcg)) {
+			printOutput(File(sysOps.outFile), result);
+			printOutput(File(sysOps.errFile), result);
+			return 1;
+		}
+	} else {
+		messageFormatter->notify("Not built IMC");
 	}
 	
 	// obtain memtime result from svl
@@ -392,22 +410,26 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	}
 	
 	if(!calcImca) {
-		// bcg -> ctmdpi, lab
-		messageFormatter->reportAction("Translating IMC to CTMDPI...",VERBOSITY_FLOW);
-		sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imc2ctmdpi.report";
-		sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imc2ctmdpi.err";
-		sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".imc2ctmdpi.out";
-		sysOps.command    = imc2ctmdpExec.getFilePath()
+		if(!reuse || !FileSystem::exists(ctmdpi)) {
+			// bcg -> ctmdpi, lab
+			messageFormatter->reportAction("Translating IMC to CTMDPI...",VERBOSITY_FLOW);
+			sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imc2ctmdpi.report";
+			sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imc2ctmdpi.err";
+			sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".imc2ctmdpi.out";
+			sysOps.command    = imc2ctmdpExec.getFilePath()
 	                  			+ " -a FAIL"
 	                  			+ " -o \"" + ctmdpi.getFileRealPath() + "\""
 	                  			+ " \""    + bcg.getFileRealPath() + "\""
 					  	;
-		result = Shell::system(sysOps);
+			result = Shell::system(sysOps);
 
-		if(!FileSystem::exists(ctmdpi)) {
-			printOutput(File(sysOps.outFile), result);
-			printOutput(File(sysOps.errFile), result);
-			return 1;
+			if(!FileSystem::exists(ctmdpi)) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
+				return 1;
+			}
+		} else {
+			messageFormatter->notify("Not translated IMC to CTMDPI");
 		}
 
 		std::vector<DFT::DFTCalculationResultItem> resultItems;
@@ -460,22 +482,26 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		calcResult.stats = stats;
 		results.insert(pair<string,DFT::DFTCalculationResult>(dft.getFileName(), calcResult));
 	} else {
-		// bcg -> ma
-		messageFormatter->reportAction("Translating IMC to IMCA format...",VERBOSITY_FLOW);
-		sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg2imca.report";
-		sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg2imca.err";
-		sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".bcg2imca.out";
-		sysOps.command    = bcg2imcaExec.getFilePath()
+		if(!reuse || !FileSystem::exists(ma)) {
+			// bcg -> ma
+			messageFormatter->reportAction("Translating IMC to IMCA format...",VERBOSITY_FLOW);
+			sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg2imca.report";
+			sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg2imca.err";
+			sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".bcg2imca.out";
+			sysOps.command    = bcg2imcaExec.getFilePath()
 						+ " " + bcg.getFileRealPath()
 						+ " " + ma.getFileRealPath()
 						+ " FAIL"
 						;
-		result = Shell::system(sysOps);
-	
-		if(!FileSystem::exists(ma)) {
-			printOutput(File(sysOps.outFile), result);
-			printOutput(File(sysOps.errFile), result);
-			return 1;
+			result = Shell::system(sysOps);
+
+			if(!FileSystem::exists(ma)) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
+				return 1;
+			}
+		} else {
+			messageFormatter->notify("Not translated IMC to IMCA format");
 		}
 		
 		std::vector<DFT::DFTCalculationResultItem> resultItems;
@@ -490,9 +516,9 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 			sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imca.err";
 			sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".imca.out";
 			sysOps.command    = imcaExec.getFilePath()
-							+ " "    + ma.getFileRealPath()
-							+ " "    + imcaCalcCommand.first
-							;
+						+ " "    + ma.getFileRealPath()
+						+ " "    + imcaCalcCommand.first
+						;
 			result = Shell::system(sysOps);
 
 			if(result) {
@@ -546,9 +572,9 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg_io.err";
 		sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".bcg_io.out";
 		sysOps.command    = bcgioExec.getFilePath()
-						  + " \""    + bcg.getFileRealPath() + "\""
-						  + " \""    + dot.getFileRealPath() + "\""
-						  ;
+					+ " \""    + bcg.getFileRealPath() + "\""
+					+ " \""    + dot.getFileRealPath() + "\""
+					;
 		result = Shell::system(sysOps);
 		
 		if(!FileSystem::exists(dot)) {
@@ -563,10 +589,10 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 		sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".dot.err";
 		sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".dot.out";
 		sysOps.command    = dotExec.getFilePath()
-						  + " -T" + buildDot
-						  + " \""    + dot.getFileRealPath() + "\""
-						  + " -o \"" + png.getFileRealPath() + "\""
-						  ;
+					+ " -T" + buildDot
+					+ " \""    + dot.getFileRealPath() + "\""
+					+ " -o \"" + png.getFileRealPath() + "\""
+					;
 		result = Shell::system(sysOps);
 
 		if(!FileSystem::exists(png)) {
@@ -614,6 +640,7 @@ int main(int argc, char** argv) {
 
 	int verbosity            = 0;
 	int print                = 0;
+	int reuse                = 0;
 	int useColoredMessages   = 1;
 	int printHelp            = 0;
 	string printHelpTopic    = "";
@@ -625,7 +652,7 @@ int main(int argc, char** argv) {
 	/* Parse command line arguments */
 	char c;
 	//while( (c = getopt(argc,argv,"C:e:m:i:pqr:t:hv-:")) >= 0 ) {
-	while( (c = getopt(argc,argv,"C:e:E:f:mpqr:c:t:i:I:hv-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:e:E:f:mpqr:Rc:t:i:I:hv-:")) >= 0 ) {
 		switch(c) {
 			
 			// -C FILE
@@ -659,6 +686,11 @@ int main(int argc, char** argv) {
 			// -p
 			case 'p':
 				print = 1;
+				break;
+			
+			// -R
+			case 'R':
+				reuse = 1;
 				break;
 			
 			// -E Error bound
@@ -916,7 +948,7 @@ int main(int argc, char** argv) {
 	for(File dft: dfts) {
 		hasInput = true;
 		if(FileSystem::exists(dft)) {
-			bool res = calc.calculateDFT(outputFolderFile.getFileRealPath(),dft,(calcImca?imcaCommands:mrmcCommands),settings,calcImca);
+			bool res = calc.calculateDFT(reuse, outputFolderFile.getFileRealPath(),dft,(calcImca?imcaCommands:mrmcCommands),settings,calcImca);
 			hasErrors = hasErrors || res;
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
