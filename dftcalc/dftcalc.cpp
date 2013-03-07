@@ -805,7 +805,7 @@ int main(int argc, char** argv) {
 				}
 		}
 	}
-	
+
 	/* Create a new compiler context */
 	MessageFormatter* messageFormatter = new MessageFormatter(std::cerr);
 	messageFormatter->useColoredMessages(useColoredMessages);
