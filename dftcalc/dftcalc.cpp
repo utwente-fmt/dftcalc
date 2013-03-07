@@ -461,7 +461,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 			}
 
 			// ctmdpi, lab, mrmcinput -> calculation
-			messageFormatter->reportAction("Calculating probability...",VERBOSITY_FLOW);
+			messageFormatter->reportAction("Calculating probability with MRMC...",VERBOSITY_FLOW);
 			sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".mrmc.report";
 			sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".mrmc.err";
 			sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".mrmc.out";
