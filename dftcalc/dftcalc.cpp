@@ -96,9 +96,12 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("      time_elapsed: 1.8");
 		messageFormatter->message("      mem_virtual: 13668");
 		messageFormatter->message("      mem_resident: 1752");
-		messageFormatter->message("  The MRMC Calculation command can be manually set using -m. The default is:");
-		messageFormatter->message("    P{>1} [ tt U[0,x] reach ]");
-		messageFormatter->message("  where x is the specified number of time units using -t, default is 1.");
+		messageFormatter->message("  The Calculation command can be manually set using -f.");
+		messageFormatter->message("  For MRMC the default is:");
+		messageFormatter->message("    P{>1} [ tt U[0,n] reach ]");
+		messageFormatter->message("  and for IMCA the default is:");
+		messageFormatter->message("    -max -tb -T n");
+		messageFormatter->message("  where n is the mission time (specified via -t or -i), default is 1.");
 	} else if(topic=="settings") {
 		messageFormatter->notify ("Settings");
 		messageFormatter->message("  Use the format -Ok=v,k=v,k=v or specify multiple -O ");
