@@ -4,8 +4,7 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Dennis Guck
- * updated by Axel Belinfante (parsing Maximal expected time, tb= prefixes)
+ * @author Dennis Guck, extended by Axel Belinfante
  */
 
 #include "imca.h"
