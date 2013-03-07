@@ -71,9 +71,9 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
 		messageFormatter->message("  -m              Calculate mean time to failure using IMCA.");
 		messageFormatter->message("                  Overrules -i, -t, -f, --mrmc.");
-		messageFormatter->message("  -i l u s        Calculate P(DFT fails in x time units) for each x in interval,");
+		messageFormatter->message("  -i l u s        Calculate P(DFT fails in [0,x] time units) for each x in interval,");
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
-		messageFormatter->message("  -t xList        Calculate P(DFT fails in x time units) for each x in xList,");
+		messageFormatter->message("  -t xList        Calculate P(DFT fails in [0,x] time units) for each x in xList,");
 		messageFormatter->message("                  where xList is a whitespace-separated list of values, default is \"1\"");
 		messageFormatter->message("  -I l u          Calculate P(DFT fails in [l,u] time units) where l can be >= 0");
 		messageFormatter->message("  -f <command>    Raw Calculation formula for MRMC or IMCA. Overrules -t.");
