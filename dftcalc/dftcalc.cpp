@@ -346,7 +346,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".dft2lntc.out";
 	std::stringstream ss;
 	ss << dft2lntcExec.getFilePath()
-	   << " --verbosity=" << messageFormatter->getVerbosity()
+	   << " --verbose=" << messageFormatter->getVerbosity()
 	   << " -s \"" + svl.getFileRealPath() + "\""
 	   << " -x \"" + exp.getFileRealPath() + "\""
 	   << " -b \"" + bcg.getFileRealPath() + "\""
