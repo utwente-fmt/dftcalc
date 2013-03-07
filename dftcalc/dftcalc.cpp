@@ -601,9 +601,9 @@ int main(int argc, char** argv) {
 	int    dotToTypeSet       = 0;
 	string outputFolder       = "output";
 	int    outputFolderSet    = 0;
+	string calcCommand        = "";
+	int    calcCommandSet     = 0;
 	int    mttf               = 0;
-	string calcCommand    = "";
-	int    calcCommandSet = 0;
 
 	int verbosity            = 0;
 	int print                = 0;
