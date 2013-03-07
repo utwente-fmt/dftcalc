@@ -278,6 +278,17 @@ std::string intToString(int i) {
 	return ss.str();
 }
 
+int isReal(string s, double *res) {
+	double tmp;
+	int r  = sscanf(s.c_str(),"%lf",&tmp);
+	if (r == 1) {
+		if (res != 0)
+			*res = tmp;
+		return 1;
+	}
+	return 0;
+}
+
 std::string doubleToString(double d) {
 	std::stringstream ss;
 	ss << d;
@@ -805,9 +816,9 @@ int main(int argc, char** argv) {
 
 	string imcaEb("");
 	if (errorBoundSet) {
-		double t = atof(errorBound.c_str());
-		if(t<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-E requires a positive number as argument: "+errorBound);
+		double t;
+		if (!isReal(errorBound, &t) || t<=0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-E requires a positive real as argument: "+errorBound);
 		}
 		imcaEb = " -e " + errorBound;
 	}
@@ -823,13 +834,13 @@ int main(int argc, char** argv) {
 		timeSpecSet = false;
 	}
 	if (timeLwbUpbSet) {
-		double tl = atof(timeLwb.c_str());
-		if(tl<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-I requires a positive number as lwb argument: "+timeLwb);
+		double tl;
+		if(!isReal(timeLwb, &tl) || tl<0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-I requires a non-negative real as lwb argument: "+timeLwb);
 		}
-		double tu = atof(timeUpb.c_str());
-		if(tu<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-I requires a positive number as upb argument: "+timeUpb);
+		double tu;
+		if(!isReal(timeUpb, &tu) || tu<=0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-I requires a positive real as upb argument: "+timeUpb);
 		}
 		calcImca = true;
 		calcCommandSet = true;
@@ -872,25 +883,29 @@ int main(int argc, char** argv) {
 				str = "";
 			}
 			//messageFormatter->notify("s: \"" + s + "\"");
-			double t = atof(s.c_str());
-			if(t<=0) {
-				messageFormatter->reportErrorAt(Location("commandline"),"-t value item requires a positive number as argument: "+s);
+			double t;
+			if(!isReal(s, &t) || t<0) {
+				messageFormatter->reportErrorAt(Location("commandline"),"-t value item requires a non-negative real as argument: "+s);
 			}
 			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
 			imcaCommands.push_back(pair<string,string>("-max -tb -T " + s + imcaEb, s));
 		}
 	} else if (timeIntervalSet) {
-		double lwb = atof(timeIntervalLwb.c_str());
-		if(lwb<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a positive number as lwb argument: "+timeIntervalLwb);
+		double lwb;
+		if(!isReal(timeIntervalLwb, &lwb) || lwb<0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a non-negative real as lwb argument: "+timeIntervalLwb);
 		}
-		double upb = atof(timeIntervalUpb.c_str());
-		if(upb<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a positive number as upb argument: "+timeIntervalUpb);
+		double upb;
+		if(!isReal(timeIntervalUpb, &upb) || upb<=0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a positive real as upb argument: "+timeIntervalUpb);
 		}
-		double step = atof(timeIntervalStep.c_str());
-		if(step<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a positive number as step argument: "+timeIntervalStep);
+		double step;
+		if(!isReal(timeIntervalStep, &step) || step<=0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a positive real as step argument: "+timeIntervalStep);
+		}
+		/* Check if all went OK so far */
+		if(messageFormatter->getErrors()>0) {
+			return -1;
 		}
 		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
 			std::string s = doubleToString(n);
