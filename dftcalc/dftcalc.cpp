@@ -879,6 +879,8 @@ int main(int argc, char** argv) {
 	} else if (timeSpecSet) {
 		std::string str = timeSpec;
 		size_t b, e;
+		bool hasValidItems = false;
+		bool hasInvalidItems = false;
 		while((b=str.find_first_not_of(" \t")) != string::npos) {
 			//messageFormatter->notify("str: \"" + str +"\"");
 			//cout << "b: " << b << endl;
@@ -894,10 +896,16 @@ int main(int argc, char** argv) {
 			//messageFormatter->notify("s: \"" + s + "\"");
 			double t;
 			if(!isReal(s, &t) || t<0) {
+				hasInvalidItems = true;
 				messageFormatter->reportErrorAt(Location("commandline"),"-t value item requires a non-negative real as argument: "+s);
+			} else {
+				hasValidItems = true;
+				mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
+				imcaCommands.push_back(pair<string,string>("-max -tb -T " + s + imcaEb, s));
 			}
-			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
-			imcaCommands.push_back(pair<string,string>("-max -tb -T " + s + imcaEb, s));
+		}
+		if (!hasInvalidItems && !hasValidItems) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-t requires at least one argument");
 		}
 	} else if (timeIntervalSet) {
 		double lwb;
