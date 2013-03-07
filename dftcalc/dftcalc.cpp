@@ -75,6 +75,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
 		messageFormatter->message("  -t xList        Calculate P(DFT fails in x time units) for each x in xList,");
 		messageFormatter->message("                  where xList is a whitespace-separated list of values, default is \"1\"");
+		messageFormatter->message("  -I l u          Calculate P(DFT fails in [l,u] time units) where l can be >= 0");
 		messageFormatter->message("  -f <command>    Raw Calculation formula for MRMC or IMCA. Overrules -t.");
 		messageFormatter->message("                  See --mrmc and --imca");
 		messageFormatter->message("  -C DIR          Temporary output files will be in this directory");
@@ -593,6 +594,9 @@ int main(int argc, char** argv) {
 	string timeIntervalUpb    = "";
 	string timeIntervalStep   = "";
 	int    timeIntervalSet    = 0;
+	string timeLwb            = "";
+	string timeUpb            = "";
+	int    timeLwbUpbSet      = 0;
 	string yamlFileName       = "";
 	int    yamlFileSet        = 0;
 	string csvFileName        = "";
@@ -618,7 +622,7 @@ int main(int argc, char** argv) {
 	/* Parse command line arguments */
 	char c;
 	//while( (c = getopt(argc,argv,"C:e:m:i:pqr:t:hv-:")) >= 0 ) {
-	while( (c = getopt(argc,argv,"C:e:f:mpqr:c:t:i:hv-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:e:f:mpqr:c:t:i:I:hv-:")) >= 0 ) {
 		switch(c) {
 			
 			// -C FILE
@@ -680,6 +684,14 @@ int main(int argc, char** argv) {
 				timeIntervalStep = string(argv[optind]);
 				optind++;
 				timeIntervalSet = 1;
+				break;
+			
+			// -I STRING STRING
+			case 'I':
+				timeLwb = string(optarg);
+				timeUpb = string(argv[optind]);
+				optind++;
+				timeLwbUpbSet = 1;
 				break;
 			
 			// -h
@@ -759,13 +771,20 @@ int main(int argc, char** argv) {
 	messageFormatter->setVerbosity(verbosity);
 	messageFormatter->setAutoFlush(true);
 
-	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet)) {
+	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet ||timeLwbUpbSet)) {
 		messageFormatter->reportError("Mttf flag (-m) given: ignoring any given time specification or calculation command");
 	}
 	if (mttf) {
 		calcImca = true;
 		calcCommandSet = true;
 		calcCommand = "-et -max";
+		timeIntervalSet = false;
+		timeSpecSet = false;
+	}
+	if (timeLwbUpbSet) {
+		calcImca = true;
+		calcCommandSet = true;
+		calcCommand = "-max -tb -F " +timeLwb + " -T " + timeUpb;
 		timeIntervalSet = false;
 		timeSpecSet = false;
 	}
