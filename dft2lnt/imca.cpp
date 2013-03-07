@@ -5,6 +5,7 @@
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
  * @author Dennis Guck
+ * updated by Axel Belinfante (parsing Maximal expected time, tb= prefixes)
  */
 
 #include "imca.h"
