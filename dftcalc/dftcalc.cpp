@@ -531,9 +531,6 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 				messageFormatter->reportError("Could not calculate");
 				return 1;
 			} else {
-				// FIXME we should use a fileHandler->getResults() that returns
-				// a list of pairs: <missionTime, probability>
-				// Hmm... what if the formula computes something entirely different, like expected time to failure?
 				std::vector<std::pair<std::string,IMCA::T_Chance>> imcaResult = fileHandler->getResults();
 				for(auto imcaResultItem: imcaResult) {
 					DFT::DFTCalculationResultItem calcResultItem;
@@ -546,14 +543,6 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 					calcResultItem.failprob = imcaResultItem.second;
 					resultItems.push_back(calcResultItem);
 				}
-/*
-				double res = fileHandler->getResult();
-				DFT::DFTCalculationResultItem calcResultItem;
-				calcResultItem.missionTime = imcaCalcCommand.second;
-				calcResultItem.mrmcCommand = imcaCalcCommand.first;
-				calcResultItem.failprob = res;
-				resultItems.push_back(calcResultItem);
- */
 			}
 	
 			delete fileHandler;
@@ -651,7 +640,6 @@ int main(int argc, char** argv) {
 	
 	/* Parse command line arguments */
 	char c;
-	//while( (c = getopt(argc,argv,"C:e:m:i:pqr:t:hv-:")) >= 0 ) {
 	while( (c = getopt(argc,argv,"C:e:E:f:mpqr:Rc:t:i:I:hv-:")) >= 0 ) {
 		switch(c) {
 			
@@ -888,8 +876,6 @@ int main(int argc, char** argv) {
 		if(step<=0) {
 			messageFormatter->reportErrorAt(Location("commandline"),"-i step value item requires a positive number as argument: "+timeIntervalStep);
 		}
-		// for(double n=lwb; n < upb || std::fabs(upb-n) <std::numeric_limits<double>::epsilon(); n+= step) {
-		//}
 		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
 			std::string s = doubleToString(n);
 			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
