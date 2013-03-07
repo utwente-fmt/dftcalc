@@ -78,6 +78,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -I l u          Calculate P(DFT fails in [l,u] time units) where l can be >= 0");
 		messageFormatter->message("  -f <command>    Raw Calculation formula for MRMC or IMCA. Overrules -t.");
 		messageFormatter->message("                  See --mrmc and --imca");
+		messageFormatter->message("  -E errorbound   Error bound, to be passed to IMCA.");
 		messageFormatter->message("  -C DIR          Temporary output files will be in this directory");
 		messageFormatter->flush();
 	} else if(topic=="output") {
@@ -608,6 +609,8 @@ int main(int argc, char** argv) {
 	string calcCommand        = "";
 	int    calcCommandSet     = 0;
 	int    mttf               = 0;
+	string errorBound         = "";
+	int    errorBoundSet      = 0;
 
 	int verbosity            = 0;
 	int print                = 0;
@@ -622,7 +625,7 @@ int main(int argc, char** argv) {
 	/* Parse command line arguments */
 	char c;
 	//while( (c = getopt(argc,argv,"C:e:m:i:pqr:t:hv-:")) >= 0 ) {
-	while( (c = getopt(argc,argv,"C:e:f:mpqr:c:t:i:I:hv-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:e:E:f:mpqr:c:t:i:I:hv-:")) >= 0 ) {
 		switch(c) {
 			
 			// -C FILE
@@ -656,6 +659,12 @@ int main(int argc, char** argv) {
 			// -p
 			case 'p':
 				print = 1;
+				break;
+			
+			// -E Error bound
+			case 'E':
+				errorBound = string(optarg);
+				errorBoundSet = true;
 				break;
 			
 			// -f MRMC/IMCA Command
@@ -771,20 +780,24 @@ int main(int argc, char** argv) {
 	messageFormatter->setVerbosity(verbosity);
 	messageFormatter->setAutoFlush(true);
 
+	string imcaEb("");
+	if (errorBoundSet)
+		imcaEb = " -e " + errorBound;
+
 	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet ||timeLwbUpbSet)) {
 		messageFormatter->reportError("Mttf flag (-m) given: ignoring any given time specification or calculation command");
 	}
 	if (mttf) {
 		calcImca = true;
 		calcCommandSet = true;
-		calcCommand = "-et -max";
+		calcCommand = "-et -max" + imcaEb;
 		timeIntervalSet = false;
 		timeSpecSet = false;
 	}
 	if (timeLwbUpbSet) {
 		calcImca = true;
 		calcCommandSet = true;
-		calcCommand = "-max -tb -F " +timeLwb + " -T " + timeUpb;
+		calcCommand = "-max -tb -F " +timeLwb + " -T " + timeUpb + imcaEb;
 		timeIntervalSet = false;
 		timeSpecSet = false;
 	}
@@ -828,7 +841,7 @@ int main(int argc, char** argv) {
 				messageFormatter->reportErrorAt(Location("commandline"),"-t value item requires a positive number as argument: "+s);
 			}
 			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
-			imcaCommands.push_back(pair<string,string>("-max -tb -T " + s, s));
+			imcaCommands.push_back(pair<string,string>("-max -tb -T " + s + imcaEb, s));
 		}
 	} else if (timeIntervalSet) {
 		double lwb = atof(timeIntervalLwb.c_str());
@@ -852,7 +865,7 @@ int main(int argc, char** argv) {
 		std::string s_from = doubleToString(lwb);
 		std::string s_to = doubleToString(upb);
 		std::string s_step = doubleToString(step);
-		imcaCommands.push_back(pair<string,string>("-max -tb -b " + s_from + " -T " + s_to + " -i "+s_step, "?"));
+		imcaCommands.push_back(pair<string,string>("-max -tb -b " + s_from + " -T " + s_to + " -i "+s_step + imcaEb, "?"));
 	}
 	
 	/* Parse command line arguments without a -X.
