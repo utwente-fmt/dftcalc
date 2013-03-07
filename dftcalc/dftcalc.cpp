@@ -879,15 +879,15 @@ int main(int argc, char** argv) {
 	} else if (timeIntervalSet) {
 		double lwb = atof(timeIntervalLwb.c_str());
 		if(lwb<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-i lwb value requires a positive number as argument: "+timeIntervalLwb);
+			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a positive number as lwb argument: "+timeIntervalLwb);
 		}
 		double upb = atof(timeIntervalUpb.c_str());
 		if(upb<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-i upb value requires a positive number as argument: "+timeIntervalUpb);
+			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a positive number as upb argument: "+timeIntervalUpb);
 		}
 		double step = atof(timeIntervalStep.c_str());
 		if(step<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-i step value item requires a positive number as argument: "+timeIntervalStep);
+			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a positive number as step argument: "+timeIntervalStep);
 		}
 		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
 			std::string s = doubleToString(n);
