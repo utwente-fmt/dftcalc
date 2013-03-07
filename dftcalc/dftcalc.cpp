@@ -848,8 +848,11 @@ int main(int argc, char** argv) {
 		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
 			std::string s = doubleToString(n);
 			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
-			imcaCommands.push_back(pair<string,string>("-max -tb -T " + s, s));
 		}
+		std::string s_from = doubleToString(lwb);
+		std::string s_to = doubleToString(upb);
+		std::string s_step = doubleToString(step);
+		imcaCommands.push_back(pair<string,string>("-max -tb -b " + s_from + " -T " + s_to + " -i "+s_step, "?"));
 	}
 	
 	/* Parse command line arguments without a -X.
