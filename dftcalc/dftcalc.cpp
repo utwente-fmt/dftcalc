@@ -377,7 +377,7 @@ int DFT::DFTCalc::calculateDFT(const std::string& cwd, const File& dftOriginal, 
 	sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".svl.err";
 	sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".svl.out";
 	sysOps.command    = svlExec.getFilePath()
-	                  + " \""    + svl.getFileRealPath() + "\"";
+		                + " \""    + svl.getFileRealPath() + "\"";
 	result = Shell::system(sysOps);
 	
 	if(!FileSystem::exists(bcg)) {
