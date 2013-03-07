@@ -305,10 +305,10 @@ int main(int argc, char** argv) {
 					printVersion = true;
 				} else if(!strcmp("color",optarg)) {
 					useColoredMessages = true;
-				} else if(!strcmp("verbose",optarg)) {
+				} else if(!strncmp("verbose",optarg,7)) {
 					if(strlen(optarg)>8 && optarg[7]=='=') {
 						verbosity = atoi(optarg+8);
-					} else {
+					} else if (strlen(optarg)==7) {
 						++verbosity;
 					}
 				} else if(!strcmp("no-color",optarg)) {

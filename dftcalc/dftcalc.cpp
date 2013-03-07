@@ -774,16 +774,16 @@ int main(int argc, char** argv) {
 						printf("%s: --times needs argument\n\n",argv[0]);
 						printHelp = true;
 					}
-				} else if(!strcmp("dot",optarg)) {
+				} else if(!strncmp("dot",optarg,3)) {
 					dotToTypeSet = true;
 					if(strlen(optarg)>4 && optarg[3]=='=') {
 						dotToType = string(optarg+4);
 						cerr << "DOT: " << dotToType << endl;
 					}
-				} else if(!strcmp("verbose",optarg)) {
+				} else if(!strncmp("verbose",optarg,7)) {
 					if(strlen(optarg)>8 && optarg[7]=='=') {
 						verbosity = atoi(optarg+8);
-					} else {
+					} else if(strlen(optarg)==7) {
 						++verbosity;
 					}
 				} else if(!strcmp("no-color",optarg)) {
