@@ -333,7 +333,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 	FileSystem::mkdir(File(cwd));
 
 	if(!reuse) {
-		messageFormatter->notify("Deleting generated files");
+		//messageFormatter->notify("Deleting generated files");
 		if(FileSystem::exists(dft))    FileSystem::remove(dft);
 		if(FileSystem::exists(svl))    FileSystem::remove(svl);
 		if(FileSystem::exists(svlLog)) FileSystem::remove(svlLog);
@@ -347,14 +347,14 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 		if(FileSystem::exists(png))    FileSystem::remove(png);
 		if(FileSystem::exists(input))  FileSystem::remove(input);
 	} else {
-		messageFormatter->notify("Preserved generated files");
+		messageFormatter->notify("Preserving generated files");
 	}
 
 	if(!reuse || !FileSystem::exists(dft)) {
 		//printf("Copying %s to %s\n",dftOriginal.getFileRealPath().c_str(),dft.getFileRealPath().c_str());
 		FileSystem::copy(dftOriginal,dft);
 	} else {
-		messageFormatter->notify("Not copied original dft file");
+		messageFormatter->notify("Reusing copy of original dft file");
 	}
 
 	int com = 0;
@@ -396,7 +396,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 			return 1;
 		}
 	} else {
-		messageFormatter->notify("Not translated DFT to EXP");
+		messageFormatter->notify("Reusing DFT to EXP translation result");
 	}
 
 	if (!reuse || !FileSystem::exists(bcg)) {
@@ -415,7 +415,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 			return 1;
 		}
 	} else {
-		messageFormatter->notify("Not built IMC");
+		messageFormatter->notify("Reusing IMC");
 	}
 	
 	// obtain memtime result from svl
@@ -443,7 +443,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 				return 1;
 			}
 		} else {
-			messageFormatter->notify("Not translated IMC to CTMDPI");
+			messageFormatter->notify("Reusing IMC to CTMDPI translation result");
 		}
 
 		std::vector<DFT::DFTCalculationResultItem> resultItems;
@@ -515,7 +515,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 				return 1;
 			}
 		} else {
-			messageFormatter->notify("Not translated IMC to IMCA format");
+			messageFormatter->notify("Reusing IMC to IMCA format translation result");
 		}
 		
 		std::vector<DFT::DFTCalculationResultItem> resultItems;
