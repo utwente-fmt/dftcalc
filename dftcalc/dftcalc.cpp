@@ -801,8 +801,13 @@ int main(int argc, char** argv) {
 	messageFormatter->setAutoFlush(true);
 
 	string imcaEb("");
-	if (errorBoundSet)
+	if (errorBoundSet) {
+		double t = atof(errorBound.c_str());
+		if(t<=0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-E requires a positive number as argument: "+errorBound);
+		}
 		imcaEb = " -e " + errorBound;
+	}
 
 	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet ||timeLwbUpbSet)) {
 		messageFormatter->reportError("Mttf flag (-m) given: ignoring any given time specification or calculation command");
@@ -815,6 +820,14 @@ int main(int argc, char** argv) {
 		timeSpecSet = false;
 	}
 	if (timeLwbUpbSet) {
+		double tl = atof(timeLwb.c_str());
+		if(tl<=0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-I requires a positive number as lwb argument: "+timeLwb);
+		}
+		double tu = atof(timeUpb.c_str());
+		if(tu<=0) {
+			messageFormatter->reportErrorAt(Location("commandline"),"-I requires a positive number as upb argument: "+timeUpb);
+		}
 		calcImca = true;
 		calcCommandSet = true;
 		calcCommand = "-max -tb -F " +timeLwb + " -T " + timeUpb + imcaEb;
