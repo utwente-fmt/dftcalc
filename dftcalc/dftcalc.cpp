@@ -394,6 +394,9 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 			printOutput(File(sysOps.outFile), result);
 			printOutput(File(sysOps.errFile), result);
 			return 1;
+		} else if (messageFormatter->getVerbosity() >= 5) {
+			printOutput(File(sysOps.outFile), result);
+			printOutput(File(sysOps.errFile), result);
 		}
 	} else {
 		messageFormatter->notify("Reusing DFT to EXP translation result");
@@ -474,6 +477,9 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 				printOutput(File(sysOps.outFile), result);
 				printOutput(File(sysOps.errFile), result);
 				return 1;
+			} else if (messageFormatter->getVerbosity() >= 5) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
 			}
 
 			if(fileHandler->readOutputFile(File(sysOps.outFile))) {
@@ -539,6 +545,9 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 				printOutput(File(sysOps.outFile), result);
 				printOutput(File(sysOps.errFile), result);
 				return 1;
+			} else if (messageFormatter->getVerbosity() >= 5) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
 			}
 
 			if(fileHandler->readOutputFile(File(sysOps.outFile))) {
