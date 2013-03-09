@@ -892,7 +892,7 @@ int main(int argc, char** argv) {
 			std::string s;
 			s = str.substr(b,e);
 			if (e!=string::npos) {
-				str = str.substr(e+b+1);
+				str = str.substr(b+e+1);
 			} else {
 				str = "";
 			}
