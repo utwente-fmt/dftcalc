@@ -882,10 +882,12 @@ int main(int argc, char** argv) {
 		size_t b, e;
 		bool hasValidItems = false;
 		bool hasInvalidItems = false;
-		while((b=str.find_first_not_of(" \t")) != string::npos) {
+		std::string sep(" \t,;"); // separator characters that we allow
+		while((b=str.find_first_not_of(sep)) != string::npos) {
+			// find first separator character
+			e=str.substr(b).find_first_of(sep);
 			//messageFormatter->notify("str: \"" + str +"\"");
 			//cout << "b: " << b << endl;
-			e=str.substr(b).find_first_not_of("0123456789.");
 			//cout << "e: " << e << endl;
 			std::string s;
 			s = str.substr(b,e);
