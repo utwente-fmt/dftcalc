@@ -43,12 +43,12 @@ const ConsoleWriter::Color ConsoleWriter::Color::WhiteBright  (FOREGROUND_RED   
 #include <cstdlib>
 const ConsoleWriter::Color ConsoleWriter::Color::Error  (31);
 const ConsoleWriter::Color ConsoleWriter::Color::Warning(33);
-const ConsoleWriter::Color ConsoleWriter::Color::Notify (134);
-const ConsoleWriter::Color ConsoleWriter::Color::Notify2(137);
-const ConsoleWriter::Color ConsoleWriter::Color::NotifyH(135);
-const ConsoleWriter::Color ConsoleWriter::Color::Action (136);
-const ConsoleWriter::Color ConsoleWriter::Color::Proper (132);
-const ConsoleWriter::Color ConsoleWriter::Color::Message(0);
+const ConsoleWriter::Color ConsoleWriter::Color::Notify (34); // was 134
+const ConsoleWriter::Color ConsoleWriter::Color::Notify2(30); // was 137
+const ConsoleWriter::Color ConsoleWriter::Color::NotifyH(35); // was 135
+const ConsoleWriter::Color ConsoleWriter::Color::Action (36); // was 136
+const ConsoleWriter::Color ConsoleWriter::Color::Proper (32); // was 132
+const ConsoleWriter::Color ConsoleWriter::Color::Message(0); // was 0
 const ConsoleWriter::Color ConsoleWriter::Color::Reset  (0);
 
 const ConsoleWriter::Color ConsoleWriter::Color::Red          (31);

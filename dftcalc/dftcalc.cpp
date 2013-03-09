@@ -347,14 +347,14 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 		if(FileSystem::exists(png))    FileSystem::remove(png);
 		if(FileSystem::exists(input))  FileSystem::remove(input);
 	} else {
-		messageFormatter->notify("Preserving generated files");
+		messageFormatter->reportAction("Preserving generated files",VERBOSITY_FLOW);
 	}
 
 	if(!reuse || !FileSystem::exists(dft)) {
 		//printf("Copying %s to %s\n",dftOriginal.getFileRealPath().c_str(),dft.getFileRealPath().c_str());
 		FileSystem::copy(dftOriginal,dft);
 	} else {
-		messageFormatter->notify("Reusing copy of original dft file");
+		messageFormatter->reportAction("Reusing copy of original dft file",VERBOSITY_FLOW);
 	}
 
 	int com = 0;
@@ -399,7 +399,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 			printOutput(File(sysOps.errFile), result);
 		}
 	} else {
-		messageFormatter->notify("Reusing DFT to EXP translation result");
+		messageFormatter->reportAction("Reusing DFT to EXP translation result",VERBOSITY_FLOW);
 	}
 
 	if (!reuse || !FileSystem::exists(bcg)) {
@@ -418,7 +418,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 			return 1;
 		}
 	} else {
-		messageFormatter->notify("Reusing IMC");
+		messageFormatter->reportAction("Reusing IMC",VERBOSITY_FLOW);
 	}
 	
 	// obtain memtime result from svl
@@ -446,7 +446,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 				return 1;
 			}
 		} else {
-			messageFormatter->notify("Reusing IMC to CTMDPI translation result");
+			messageFormatter->reportAction("Reusing IMC to CTMDPI translation result",VERBOSITY_FLOW);
 		}
 
 		std::vector<DFT::DFTCalculationResultItem> resultItems;
@@ -521,7 +521,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 				return 1;
 			}
 		} else {
-			messageFormatter->notify("Reusing IMC to IMCA format translation result");
+			messageFormatter->reportAction("Reusing IMC to IMCA format translation result",VERBOSITY_FLOW);
 		}
 		
 		std::vector<DFT::DFTCalculationResultItem> resultItems;
