@@ -884,11 +884,11 @@ int main(int argc, char** argv) {
 		bool hasInvalidItems = false;
 		std::string sep(" \t,;"); // separator characters that we allow
 		while((b=str.find_first_not_of(sep)) != string::npos) {
+			//cerr << "str: \"" + str + "\"" << endl;
+			//cerr << "b: " << b << endl;
 			// find first separator character
 			e=str.substr(b).find_first_of(sep);
-			//messageFormatter->notify("str: \"" + str +"\"");
-			//cout << "b: " << b << endl;
-			//cout << "e: " << e << endl;
+			//cerr << "e: " << e << endl;
 			std::string s;
 			s = str.substr(b,e);
 			if (e!=string::npos) {
@@ -896,7 +896,7 @@ int main(int argc, char** argv) {
 			} else {
 				str = "";
 			}
-			//messageFormatter->notify("s: \"" + s + "\"");
+			//cerr<< "s: \"" << s << "\"" << endl;
 			double t;
 			if(!isReal(s, &t) || t<0) {
 				hasInvalidItems = true;
