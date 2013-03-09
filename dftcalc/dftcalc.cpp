@@ -279,11 +279,12 @@ std::string intToString(int i) {
 }
 
 int isReal(string s, double *res) {
-	double tmp;
-	int r  = sscanf(s.c_str(),"%lf",&tmp);
+	double tmp_real;
+	char * tmp_string;
+	int r  = sscanf(s.c_str(),"%lf%s",&tmp_real, &tmp_string);
 	if (r == 1) {
 		if (res != 0)
-			*res = tmp;
+			*res = tmp_real;
 		return 1;
 	}
 	return 0;
