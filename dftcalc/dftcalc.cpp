@@ -827,13 +827,13 @@ int main(int argc, char** argv) {
 	if (errorBoundSet) {
 		double t;
 		if (!isReal(errorBound, &t) || t<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-E requires a positive real as argument: "+errorBound);
+			messageFormatter->reportErrorAt(Location("commandline -E flag"),"Given error bound is not a positive real: "+errorBound);
 		}
 		imcaEb = " -e " + errorBound;
 	}
 
 	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet ||timeLwbUpbSet)) {
-		messageFormatter->reportError("Mttf flag (-m) given: ignoring any given time specification or calculation command");
+		messageFormatter->reportError("MTTF flag (-m) has been given: ignoring time specifications and calculation commands");
 	}
 	if (mttf) {
 		calcImca = true;
@@ -845,11 +845,11 @@ int main(int argc, char** argv) {
 	if (timeLwbUpbSet) {
 		double tl;
 		if(!isReal(timeLwb, &tl) || tl<0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-I requires a non-negative real as lwb argument: "+timeLwb);
+			messageFormatter->reportErrorAt(Location("commandline -I flag"),"Given interval lwb is not a non-negative real: "+timeLwb);
 		}
 		double tu;
 		if(!isReal(timeUpb, &tu) || tu<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-I requires a positive real as upb argument: "+timeUpb);
+			messageFormatter->reportErrorAt(Location("commandline -I flag"),"Given interval upb is not a positive real: "+timeUpb);
 		}
 		calcImca = true;
 		calcCommandSet = true;
@@ -897,7 +897,7 @@ int main(int argc, char** argv) {
 			double t;
 			if(!isReal(s, &t) || t<0) {
 				hasInvalidItems = true;
-				messageFormatter->reportErrorAt(Location("commandline"),"-t value item requires a non-negative real as argument: "+s);
+				messageFormatter->reportErrorAt(Location("commandline -t flag"),"Given mission time value is not a non-negative real: "+s);
 			} else {
 				hasValidItems = true;
 				mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
@@ -905,20 +905,20 @@ int main(int argc, char** argv) {
 			}
 		}
 		if (!hasInvalidItems && !hasValidItems) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-t requires at least one argument");
+			messageFormatter->reportErrorAt(Location("commandline -t flag"),"Given mission time list of values is empty");
 		}
 	} else if (timeIntervalSet) {
 		double lwb;
 		if(!isReal(timeIntervalLwb, &lwb) || lwb<0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a non-negative real as lwb argument: "+timeIntervalLwb);
+			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval lwb is not a non-negative real: "+timeIntervalLwb);
 		}
 		double upb;
 		if(!isReal(timeIntervalUpb, &upb) || upb<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a positive real as upb argument: "+timeIntervalUpb);
+			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval upb is not a positive real: "+timeIntervalUpb);
 		}
 		double step;
 		if(!isReal(timeIntervalStep, &step) || step<=0) {
-			messageFormatter->reportErrorAt(Location("commandline"),"-i requires a positive real as step argument: "+timeIntervalStep);
+			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval step is not a positive real: "+timeIntervalStep);
 		}
 		/* Check if all went OK so far */
 		if(messageFormatter->getErrors()>0) {
