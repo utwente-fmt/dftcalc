@@ -908,23 +908,29 @@ int main(int argc, char** argv) {
 			messageFormatter->reportErrorAt(Location("commandline -t flag"),"Given mission time list of values is empty");
 		}
 	} else if (timeIntervalSet) {
+		bool hasItems = false;
+		bool intervalErrorReported = false;
 		double lwb;
 		if(!isReal(timeIntervalLwb, &lwb) || lwb<0) {
 			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval lwb is not a non-negative real: "+timeIntervalLwb);
+			intervalErrorReported = true;
 		}
 		double upb;
 		if(!isReal(timeIntervalUpb, &upb) || upb<=0) {
 			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval upb is not a positive real: "+timeIntervalUpb);
+			intervalErrorReported = true;
 		}
 		double step;
 		if(!isReal(timeIntervalStep, &step) || step<=0) {
 			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval step is not a positive real: "+timeIntervalStep);
+			intervalErrorReported = true;
 		}
 		/* Check if all went OK so far */
 		if(messageFormatter->getErrors()>0) {
 			return -1;
 		}
 		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
+			hasItems = true;
 			std::string s = doubleToString(n);
 			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
 		}
@@ -932,6 +938,9 @@ int main(int argc, char** argv) {
 		std::string s_to = doubleToString(upb);
 		std::string s_step = doubleToString(step);
 		imcaCommands.push_back(pair<string,string>("-max -tb -b " + s_from + " -T " + s_to + " -i "+s_step + imcaEb, "?"));
+		if (!hasItems && !intervalErrorReported) {
+			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval is empty (lwb > upb)");
+		}
 	}
 	
 	/* Parse command line arguments without a -X.
