@@ -833,7 +833,7 @@ int main(int argc, char** argv) {
 	}
 
 	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet ||timeLwbUpbSet)) {
-		messageFormatter->reportError("MTTF flag (-m) has been given: ignoring time specifications and calculation commands");
+		messageFormatter->reportWarningAt(Location("commandline"),"MTTF flag (-m) has been given: ignoring time specifications and calculation commands");
 	}
 	if (mttf) {
 		calcImca = true;
