@@ -72,8 +72,6 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
 		messageFormatter->message("  -m              Calculate mean time to failure using IMCA.");
 		messageFormatter->message("                  Overrules -i, -t, -f, --mrmc.");
-		messageFormatter->message("                  This is always computed using maximum time-bounded reachability,");
-		messageFormatter->message("                  independent of --imca-min and --imca-max options.");
 		messageFormatter->message("  -i l u s        Calculate P(DFT fails in [0,x] time units) for each x in interval,");
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
 		messageFormatter->message("  -t xList        Calculate P(DFT fails in [0,x] time units) for each x in xList,");
@@ -83,7 +81,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("                  See --mrmc and --imca");
 		messageFormatter->message("  -E errorbound   Error bound, to be passed to IMCA.");
 		messageFormatter->message("  -C DIR          Temporary output files will be in this directory");
-		messageFormatter->message("  --imca-min      When IMCA is used: Compute minimum time-bounded reachability");
+		messageFormatter->message("  --imca-min      When IMCA is used: Compute minimum time-bounded reachability (default)");
 		messageFormatter->message("  --imca-max      When IMCA is used: Compute maximum time-bounded reachability");
 		messageFormatter->flush();
 	} else if(topic=="output") {
@@ -845,13 +843,13 @@ int main(int argc, char** argv) {
 		imcaEb = " -e " + errorBound;
 	}
 
-	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet || timeLwbUpbSet || imcaMinMaxSet)) {
+	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet || timeLwbUpbSet)) {
 		messageFormatter->reportWarningAt(Location("commandline"),"MTTF flag (-m) has been given: ignoring time specifications and calculation commands");
 	}
 	if (mttf) {
 		calcImca = true;
 		calcCommandSet = true;
-		calcCommand = "-et -max" + imcaEb;
+		calcCommand = "-et " + imcaMinMax + imcaEb;
 		timeIntervalSet = false;
 		timeSpecSet = false;
 	}
