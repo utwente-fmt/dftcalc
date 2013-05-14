@@ -72,6 +72,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
 		messageFormatter->message("  -m              Calculate mean time to failure using IMCA.");
 		messageFormatter->message("                  Overrules -i, -t, -f, --mrmc.");
+		messageFormatter->message("                  This is always computed using maximum time-bounded reachability,");
+		messageFormatter->message("                  independent of --imca-min and --imca-max options.");
 		messageFormatter->message("  -i l u s        Calculate P(DFT fails in [0,x] time units) for each x in interval,");
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
 		messageFormatter->message("  -t xList        Calculate P(DFT fails in [0,x] time units) for each x in xList,");
@@ -81,6 +83,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("                  See --mrmc and --imca");
 		messageFormatter->message("  -E errorbound   Error bound, to be passed to IMCA.");
 		messageFormatter->message("  -C DIR          Temporary output files will be in this directory");
+		messageFormatter->message("  --imca-min      When IMCA is used: Compute minimum time-bounded reachability");
+		messageFormatter->message("  --imca-max      When IMCA is used: Compute maximum time-bounded reachability");
 		messageFormatter->flush();
 	} else if(topic=="output") {
 		messageFormatter->notify ("Output");
@@ -99,8 +103,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  The Calculation command can be manually set using -f.");
 		messageFormatter->message("  For MRMC the default is:");
 		messageFormatter->message("    P{>1} [ tt U[0,n] reach ]");
-		messageFormatter->message("  and for IMCA the default is:");
-		messageFormatter->message("    -max -tb -T n");
+		messageFormatter->message("  and for IMCA the default is (where \"-min\" can be overruled by --imca-max):");
+		messageFormatter->message("    -min -tb -T n");
 		messageFormatter->message("  where n is the mission time (specified via -t or -i), default is 1.");
 	} else if(topic=="settings") {
 		messageFormatter->notify ("Settings");
@@ -658,7 +662,9 @@ int main(int argc, char** argv) {
 	int printHelp            = 0;
 	string printHelpTopic    = "";
 	int printVersion         = 0;
-	bool calcImca = false;
+	bool calcImca            = false;
+	string imcaMinMax        = "-min";
+	int imcaMinMaxSet        = 0;
 	
 	std::vector<std::string> failedBEs;
 	
@@ -809,6 +815,12 @@ int main(int argc, char** argv) {
 					}
 				} else if(!strcmp("no-color",optarg)) {
 					useColoredMessages = false;
+				} else if(!strcmp("imca-min",optarg)) {
+					imcaMinMaxSet = true;
+					imcaMinMax = "-min";
+				} else if(!strcmp("imca-max",optarg)) {
+					imcaMinMaxSet = true;
+					imcaMinMax = "-max";
 				}
 				if(!strcmp("mrmc",optarg)) {
 					calcImca=false;
@@ -833,7 +845,7 @@ int main(int argc, char** argv) {
 		imcaEb = " -e " + errorBound;
 	}
 
-	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet ||timeLwbUpbSet)) {
+	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet || timeLwbUpbSet || imcaMinMaxSet)) {
 		messageFormatter->reportWarningAt(Location("commandline"),"MTTF flag (-m) has been given: ignoring time specifications and calculation commands");
 	}
 	if (mttf) {
@@ -854,7 +866,7 @@ int main(int argc, char** argv) {
 		}
 		calcImca = true;
 		calcCommandSet = true;
-		calcCommand = "-max -tb -F " +timeLwb + " -T " + timeUpb + imcaEb;
+		calcCommand = "" + imcaMinMax + " -tb -F " +timeLwb + " -T " + timeUpb + imcaEb;
 		timeIntervalSet = false;
 		timeSpecSet = false;
 	}
@@ -904,7 +916,7 @@ int main(int argc, char** argv) {
 			} else {
 				hasValidItems = true;
 				mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
-				imcaCommands.push_back(pair<string,string>("-max -tb -T " + s + imcaEb, s));
+				imcaCommands.push_back(pair<string,string>("" + imcaMinMax + " -tb -T " + s + imcaEb, s));
 			}
 		}
 		if (!hasInvalidItems && !hasValidItems) {
@@ -940,7 +952,7 @@ int main(int argc, char** argv) {
 		std::string s_from = doubleToString(lwb);
 		std::string s_to = doubleToString(upb);
 		std::string s_step = doubleToString(step);
-		imcaCommands.push_back(pair<string,string>("-max -tb -b " + s_from + " -T " + s_to + " -i "+s_step + imcaEb, "?"));
+		imcaCommands.push_back(pair<string,string>("" + imcaMinMax + " -tb -b " + s_from + " -T " + s_to + " -i "+s_step + imcaEb, "?"));
 		if (!hasItems && !intervalErrorReported) {
 			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval is empty (lwb > upb)");
 		}
