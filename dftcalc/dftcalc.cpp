@@ -81,8 +81,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("                  See --mrmc and --imca");
 		messageFormatter->message("  -E errorbound   Error bound, to be passed to IMCA.");
 		messageFormatter->message("  -C DIR          Temporary output files will be in this directory");
-		messageFormatter->message("  --imca-min      When IMCA is used: Compute minimum time-bounded reachability (default)");
-		messageFormatter->message("  --imca-max      When IMCA is used: Compute maximum time-bounded reachability");
+		messageFormatter->message("  --min           Compute minimum time-bounded reachability (default)");
+		messageFormatter->message("  --max           Compute maximum time-bounded reachability");
 		messageFormatter->flush();
 	} else if(topic=="output") {
 		messageFormatter->notify ("Output");
@@ -99,10 +99,12 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("      mem_virtual: 13668");
 		messageFormatter->message("      mem_resident: 1752");
 		messageFormatter->message("  The Calculation command can be manually set using -f.");
-		messageFormatter->message("  For MRMC the default is:");
-		messageFormatter->message("    P{>1} [ tt U[0,n] reach ]");
-		messageFormatter->message("  and for IMCA the default is (where \"-min\" can be overruled by --imca-max):");
-		messageFormatter->message("    -min -tb -T n");
+		messageFormatter->message("  For MRMC the defaults are:");
+		messageFormatter->message("    P{>1} [ tt U[0,n] reach ]             (default)");
+		messageFormatter->message("    P{<0} [ tt U[0,n] reach ]             (when --max is given)");
+		messageFormatter->message("  and for IMCA the defaults are:");
+		messageFormatter->message("    -min -tb -T n                         (default)");
+		messageFormatter->message("    -max -tb -T n                         (when --max is given)");
 		messageFormatter->message("  where n is the mission time (specified via -t or -i), default is 1.");
 	} else if(topic=="settings") {
 		messageFormatter->notify ("Settings");
@@ -447,6 +449,9 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 				printOutput(File(sysOps.outFile), result);
 				printOutput(File(sysOps.errFile), result);
 				return 1;
+			} else if (messageFormatter->getVerbosity() >= 5) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
 			}
 		} else {
 			messageFormatter->reportAction("Reusing IMC to CTMDPI translation result",VERBOSITY_FLOW);
@@ -662,6 +667,7 @@ int main(int argc, char** argv) {
 	int printVersion         = 0;
 	bool calcImca            = false;
 	string imcaMinMax        = "-min";
+	string mrmcMinMax        = "{>1}";
 	int imcaMinMaxSet        = 0;
 	
 	std::vector<std::string> failedBEs;
@@ -813,12 +819,14 @@ int main(int argc, char** argv) {
 					}
 				} else if(!strcmp("no-color",optarg)) {
 					useColoredMessages = false;
-				} else if(!strcmp("imca-min",optarg)) {
+				} else if(!strcmp("min",optarg)) {
 					imcaMinMaxSet = true;
 					imcaMinMax = "-min";
-				} else if(!strcmp("imca-max",optarg)) {
+					mrmcMinMax = "{>1}";
+				} else if(!strcmp("max",optarg)) {
 					imcaMinMaxSet = true;
 					imcaMinMax = "-max";
+					mrmcMinMax = "{<0}";
 				}
 				if(!strcmp("mrmc",optarg)) {
 					calcImca=false;
@@ -913,7 +921,7 @@ int main(int argc, char** argv) {
 				messageFormatter->reportErrorAt(Location("commandline -t flag"),"Given mission time value is not a non-negative real: "+s);
 			} else {
 				hasValidItems = true;
-				mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
+				mrmcCommands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] reach ]", s));
 				imcaCommands.push_back(pair<string,string>("" + imcaMinMax + " -tb -T " + s + imcaEb, s));
 			}
 		}
@@ -945,7 +953,7 @@ int main(int argc, char** argv) {
 		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
 			hasItems = true;
 			std::string s = doubleToString(n);
-			mrmcCommands.push_back(pair<string,string>("P{>1} [ tt U[0," + s + "] reach ]", s));
+			mrmcCommands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] reach ]", s));
 		}
 		std::string s_from = doubleToString(lwb);
 		std::string s_to = doubleToString(upb);
