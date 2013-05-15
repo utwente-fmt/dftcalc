@@ -318,6 +318,16 @@ void DFT::DFTCalc::printOutput(const File& file, int status) {
 	}
 }
 
+bool hasHiddenLabels(const File& file) {
+	std::string* fileContents = FileSystem::load(file);
+	bool res = false;
+	if (fileContents) {
+		res = ((*fileContents).find("no transition with a hidden label", 0) ==  string::npos);
+		delete fileContents;
+	}
+	return res;
+}
+
 int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& calcCommands, unordered_map<string,string> settings, bool calcImca) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
@@ -430,7 +440,34 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 	if(Shell::readMemtimeStatisticsFromLog(svlLog,stats)) {
 		messageFormatter->reportWarning("Could not read from svl log file `" + svlLog.getFileRealPath() + "'");
 	}
-	
+
+	// test for non-determinism	
+	messageFormatter->reportAction("Testing for non-determinism...",VERBOSITY_FLOW);
+	sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg_info.report";
+	sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg_info.err";
+	sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".bcg_info.out";
+	sysOps.command    = bcginfoExec.getFilePath()
+				+ " -hidden"
+				+ " \""    + bcg.getFileRealPath() + "\""
+				;
+	result = Shell::system(sysOps);
+		
+	if(result || !FileSystem::exists(sysOps.outFile)) {
+		printOutput(File(sysOps.outFile), result);
+		printOutput(File(sysOps.errFile), result);
+		return 1;
+	} else if (messageFormatter->getVerbosity() >= 5) {
+		printOutput(File(sysOps.outFile), result);
+		printOutput(File(sysOps.errFile), result);
+	}
+
+	if (hasHiddenLabels(File(sysOps.outFile))) {
+		messageFormatter->reportWarning("Non-determinism detected... you will want to ask for both 'min' and 'max' analysis results!");
+	} else {
+		messageFormatter->notify("No non-determinism detected.");
+	}
+
+		
 	if(!calcImca) {
 		if(!reuse || !FileSystem::exists(ctmdpi)) {
 			// bcg -> ctmdpi, lab
