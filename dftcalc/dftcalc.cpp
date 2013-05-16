@@ -59,6 +59,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -R              Reuse existing output files.");
 		messageFormatter->message("  --mrmc          Use MRMC. (standard setting)");
 		messageFormatter->message("  --imca          Use IMCA instead of MRMC.");
+		messageFormatter->message("  --no-nd-warning Do not warn (but give notice) for non-determinism.");
 		messageFormatter->message("");
 		messageFormatter->notify ("Debug Options:");
 		messageFormatter->message("  --verbose=x     Set verbosity to x, -1 <= x <= 5.");
@@ -328,7 +329,7 @@ bool hasHiddenLabels(const File& file) {
 	return res;
 }
 
-int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& calcCommands, unordered_map<string,string> settings, bool calcImca) {
+int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& calcCommands, unordered_map<string,string> settings, bool calcImca, bool warnNonDeterminism) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File svlLog = dft.newWithExtension("log");
@@ -462,7 +463,11 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 	}
 
 	if (hasHiddenLabels(File(sysOps.outFile))) {
-		messageFormatter->reportWarning("Non-determinism detected... you will want to ask for both 'min' and 'max' analysis results!");
+		if (warnNonDeterminism) {
+			messageFormatter->reportWarning("Non-determinism detected... you will want to ask for both 'min' and 'max' analysis results!");
+		} else {
+			messageFormatter->notify("Non-determinism detected... you will want to ask for both 'min' and 'max' analysis results!");
+		}
 	} else {
 		messageFormatter->notify("No non-determinism detected.");
 	}
@@ -696,6 +701,7 @@ int main(int argc, char** argv) {
 	int    errorBoundSet      = 0;
 
 	int verbosity            = 0;
+	bool warnNonDeterminism  = true;
 	int print                = 0;
 	int reuse                = 0;
 	int useColoredMessages   = 1;
@@ -856,6 +862,8 @@ int main(int argc, char** argv) {
 					}
 				} else if(!strcmp("no-color",optarg)) {
 					useColoredMessages = false;
+				} else if(!strcmp("no-nd-warning",optarg)) {
+					warnNonDeterminism = false;
 				} else if(!strcmp("min",optarg)) {
 					imcaMinMaxSet = true;
 					imcaMinMax = "-min";
@@ -1049,7 +1057,7 @@ int main(int argc, char** argv) {
 	for(File dft: dfts) {
 		hasInput = true;
 		if(FileSystem::exists(dft)) {
-			bool res = calc.calculateDFT(reuse, outputFolderFile.getFileRealPath(),dft,(calcImca?imcaCommands:mrmcCommands),settings,calcImca);
+			bool res = calc.calculateDFT(reuse, outputFolderFile.getFileRealPath(),dft,(calcImca?imcaCommands:mrmcCommands),settings,calcImca, warnNonDeterminism);
 			hasErrors = hasErrors || res;
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
