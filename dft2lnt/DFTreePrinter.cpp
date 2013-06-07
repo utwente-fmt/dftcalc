@@ -46,6 +46,9 @@ int DFT::DFTreePrinter::printBasicEvent(std::ostream& out, const DFT::Nodes::Bas
 	out << " dorm=" << basicEvent->getDorm();
 	out.precision(ss_old);
 	out << ";";
+	if(basicEvent->getFailed()) {
+		out << " /*FAILED*/";
+	}
 	return 0;
 }
 
