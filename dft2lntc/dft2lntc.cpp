@@ -484,6 +484,7 @@ int main(int argc, char** argv) {
 	compilerContext->flush();
 	if(!ast || compilerContext->getErrors()>0) {
 		compilerContext->reportError("Syntax is incorrect");
+		ast = 0;
 	} else {
 		compilerContext->reportAction("Syntax is correct",VERBOSITY_FLOW);
 	}
@@ -506,10 +507,10 @@ int main(int argc, char** argv) {
 	compilerContext->flush();
 	
 	/* Validate input */
-	compilerContext->notify("Validating AST...",VERBOSITY_FLOW);
-	compilerContext->flush();
 	int astValid = false;
 	if(ast) {
+		compilerContext->notify("Validating AST...",VERBOSITY_FLOW);
+		compilerContext->flush();
 		DFT::ASTValidator validator(ast,compilerContext);
 		astValid = validator.validate();
 		if(!astValid) {
