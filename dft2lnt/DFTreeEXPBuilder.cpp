@@ -482,10 +482,34 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 						printSyncLineShort(report,*otherRuleA);
 						cc->reportAction3(report.str(),VERBOSITY_RULEORIGINS);
 						
+						// First, we look up the sending Node of the
+						// current activation rule...
+						std::map<unsigned int,EXPSyncItem*>::const_iterator it = otherRuleA->label.begin();
+						int otherNodeID = -1;
+						int otherLocalNodeID = -1;
+						for(;it != otherRuleA->label.end(); ++it) {
+							if(it->second->getArg(1)) {
+								otherNodeID = it->first;
+								otherLocalNodeID = it->second->getArg(0);
+								break;
+							}
+						}
+
+						// ... then we add a synchronization item to the
+						// new rule we create for the THIS node, specifying
+						// the other node wants to listen to activates of
+						// the THIS node.
+						if(otherNodeID<0) {
+							cc->reportError("Could not find sender of the other rule, bailing...");
+							return 1;
+						}
+						
+						const DFT::Nodes::Node* otherNode = otherNode = getNodeWithID(otherNodeID);
+
 						// The synchronization depends if THIS node uses
 						// dynamic activation or not. The prime example of
 						// this is the Spare gate.
-						if(node.usesDynamicActivation()) {
+						if(node.usesDynamicActivation() && otherNode->usesDynamicActivation()) {
 							
 							
 							// If the THIS node used dynamic activation, the
@@ -500,36 +524,9 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 							// This is not enough, because the other way
 							// around also has to be added: the other node
 							// wants to listen to Activates of the THIS node
-							// as well. But ONLY in the case that the other
-							// node uses dynamic activation as well.
-							
-							// First, we look up the sending Node of the
-							// current activation rule...
-							std::map<unsigned int,EXPSyncItem*>::const_iterator it = otherRuleA->label.begin();
-							int otherNodeID = -1;
-							int otherLocalNodeID = -1;
-							for(;it != otherRuleA->label.end(); ++it) {
-								if(it->second->getArg(1)) {
-									otherNodeID = it->first;
-									otherLocalNodeID = it->second->getArg(0);
-									break;
-								}
-							}
-							
-							// ... then we add a synchronization item to the
-							// new rule we create for the THIS node, specifying
-							// the other node wants to listen to activates of
-							// the THIS node.
-							if(otherNodeID<0) {
-								cc->reportError("Could not find sender of the other rule, bailing...");
-								return 1;
-							} else {
-								const DFT::Nodes::Node* otherNode = getNodeWithID(otherNodeID);
-								if(otherNode->usesDynamicActivation()) {
-									ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(otherNodeID,syncActivate(otherLocalNodeID,false)) );
-									cc->reportAction3("Detected (other) dynamic activator `" + otherNode->getName() + "', added to sync rule",VERBOSITY_RULEORIGINS);
-								}
-							}
+							// as well.
+							ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(otherNodeID,syncActivate(otherLocalNodeID,false)) );
+							cc->reportAction3("Detected (other) dynamic activator `" + otherNode->getName() + "', added to sync rule",VERBOSITY_RULEORIGINS);
 							
 							// TODO: primary is a special case??????
 						} else {
