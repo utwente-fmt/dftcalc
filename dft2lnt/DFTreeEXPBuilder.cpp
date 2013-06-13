@@ -484,31 +484,35 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 						
 						// First, we look up the sending Node of the
 						// current activation rule...
-						std::map<unsigned int,EXPSyncItem*>::const_iterator it = otherRuleA->label.begin();
 						int otherNodeID = -1;
 						int otherLocalNodeID = -1;
-						for(;it != otherRuleA->label.end(); ++it) {
-							if(it->second->getArg(1)) {
-								otherNodeID = it->first;
-								otherLocalNodeID = it->second->getArg(0);
+						for(auto& syncItem: otherRuleA->label) {
+							if(syncItem.second->getArg(1)) {
+								otherNodeID = syncItem.first;
+								otherLocalNodeID = syncItem.second->getArg(0);
 								break;
 							}
 						}
-
-						// ... then we add a synchronization item to the
-						// new rule we create for the THIS node, specifying
-						// the other node wants to listen to activates of
-						// the THIS node.
 						if(otherNodeID<0) {
 							cc->reportError("Could not find sender of the other rule, bailing...");
 							return 1;
 						}
+						const DFT::Nodes::Node* otherNode = getNodeWithID(otherNodeID);
+						assert(otherNode);
 						
-						const DFT::Nodes::Node* otherNode = otherNode = getNodeWithID(otherNodeID);
-
 						// The synchronization depends if THIS node uses
 						// dynamic activation or not. The prime example of
 						// this is the Spare gate.
+						// It also depends on the sending Node of the current
+						// activation rule (otherNode). Both have to use
+						// dynamic activation, because otherwise a Spare gate
+						// will not activate a child if it's activated by a
+						// static node, which is what is required.
+						// The fundamental issue is that the semantics of
+						// "using" or "claiming" a node is implicitely within
+						// activating it. This should be covered more
+						// thoroughly in the theory first, thus:
+						/// @todo Fix "using" semantics in activation"
 						if(node.usesDynamicActivation() && otherNode->usesDynamicActivation()) {
 							
 							
@@ -525,6 +529,10 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 							// around also has to be added: the other node
 							// wants to listen to Activates of the THIS node
 							// as well.
+							// Thus, we add a synchronization item to the
+							// new rule we create for the THIS node, specifying
+							// the other node wants to listen to activates of
+							// the THIS node.
 							ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(otherNodeID,syncActivate(otherLocalNodeID,false)) );
 							cc->reportAction3("Detected (other) dynamic activator `" + otherNode->getName() + "', added to sync rule",VERBOSITY_RULEORIGINS);
 							
