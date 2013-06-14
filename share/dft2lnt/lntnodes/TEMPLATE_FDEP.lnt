@@ -54,7 +54,7 @@ module TEMPLATE_FDEP(TEMPLATE_COMMON) is
 								break fail
 							end if
 						end select
-					end loop;
+					end loop
 				end if
 			
 			(*
