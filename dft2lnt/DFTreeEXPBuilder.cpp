@@ -51,9 +51,9 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 
 	if(be.getMode() == DFT::Nodes::BE::CalculationMode::APH) {
 		ss << "total rename ";
-		ss << "\"A\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE << " !0 !FALSE\"";
+		ss << "\"ACTIVATE\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE << " !0 !FALSE\"";
 		ss << ", ";
-		ss << "\"F\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !0\"";
+		ss << "\"FAIL\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !0\"";
 		//ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE << " !0 !FALSE\" -> \"A\"";
 		//ss << ", ";
 		//ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !0\" -> \"F\"";
