@@ -676,7 +676,18 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 		ss << DFT::DFTreeBCGNodeBuilder::GATE_FAIL;
 		if(!nameTop.empty()) ss << "_" << nameTop;
 		DFT::EXPSyncRule* ruleF = new EXPSyncRule(ss.str(),false);
+		ss.str("");
 		ruleF->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncFail(0)) );
+
+		DFT::EXPSyncRule* ruleO;
+		if(dft->getTopNode()->isRepairable()){
+			// Generate the Top Node Online rule
+			ss << DFT::DFTreeBCGNodeBuilder::GATE_ONLINE;
+			ruleO = new EXPSyncRule(ss.str(),false);
+			if(!nameTop.empty()) ss << "_" << nameTop;
+			ruleO->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncOnline(0)) );
+			onlineRules.push_back(ruleO);
+		}
 
 		// Add the generated rules to the lists
 		activationRules.push_back(ruleA);
@@ -694,6 +705,14 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 			report << "Added new fail       sync rule: ";
 			printSyncLineShort(report,*ruleF);
 			cc->reportAction2(report.str(),VERBOSITY_RULES);
+		}
+		if(dft->getTopNode()->isRepairable()){
+		{
+			std::stringstream report;
+			report << "Added new online     sync rule: ";
+			printSyncLineShort(report,*ruleO);
+			cc->reportAction2(report.str(),VERBOSITY_RULES);
+		}
 		}
 
 		return 0;
@@ -1131,6 +1150,53 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 					}
 				}
 
+				/** ONLINE Rules **/
+				{
+					// Go through all the existing fail rules
+					std::vector<EXPSyncRule*>::iterator itf = onlineRules.begin();
+					bool areOtherRules = false;
+					for(;itf != onlineRules.end();++itf) {
+
+						// If there is a rule that also synchronizes on the same node,
+						// we have come across a child with another parent.
+						if((*itf)->syncOnNode == &child) {
+							cc->reportAction3("Detected earlier online rule",VERBOSITY_RULEORIGINS);
+							if(areOtherRules) {
+								cc->reportError("There should be only one ONLINE rule per node, bailing...");
+								return 1;
+							}
+							areOtherRules = true;
+							// We can simply add the THIS node as a sender to
+							// the other synchronization rule.
+							// FIXME: Possibly this is actually never wanted,
+							// as it could allow multiple senders to synchronize
+							// with each other.
+							(*itf)->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncFail(n+1)) );
+							cc->reportAction3("THIS Node added to existing sync rule",VERBOSITY_RULEORIGINS);
+						}
+					}
+
+					// If there are other rules that synchronize on the same node,
+					// we do not need to synchronize any further
+					// FIXME: This is probably not true!
+					if(!areOtherRules) {
+						// Add the child Node to the synchronization rule
+						// Create synchronization rules a_<nodetype><nodeid>_<childtype><childid>
+						std::stringstream ss;
+						ss << "o_" << child.getTypeStr() << childID;
+						EXPSyncRule* ruleO = new EXPSyncRule(ss.str());
+						ruleO->syncOnNode = &child;
+						ruleO->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncOnline(n+1)) );
+						ruleO->label.insert( pair<unsigned int,EXPSyncItem*>(childID,syncOnline(0)) );
+						{
+							std::stringstream report;
+							report << "Added new online     sync rule: ";
+							printSyncLineShort(report,*ruleO);
+							cc->reportAction2(report.str(),VERBOSITY_RULES);
+						}
+						onlineRules.push_back(ruleO);
+					}
+				}
 
 				}else {
 

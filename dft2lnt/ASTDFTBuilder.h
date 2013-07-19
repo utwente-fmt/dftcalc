@@ -169,6 +169,7 @@ public:
 				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelRepair) {
 					double v = (*it)->getValue()->getFloatValue();
 					be->setRepair(v);
+					be->setRepairable(true);
 				}
 			}
 		}

@@ -77,7 +77,7 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 			ss << "_d" << gateFDEP.getDependers().size();
 		}
 		if(node.isRepairable()) {
-			ss << "_r" << gate.getRepairableChildren();
+			ss << "_r"; //<< gate.getRepairableChildren();
 		}
 	} else {
 		assert(0 && "getFileForNode(): Unknown node type");
@@ -120,55 +120,43 @@ int DFT::DFTreeBCGNodeBuilder::lntIsValid(std::string lntFilePath) {
 int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::GateAnd& gate) {
 	int nr_parents = gate.getParents().size();
 	int total = gate.getChildren().size();
-	int repairable = 0;
 
-	for(size_t n = 0; n<gate.getChildren().size(); ++n) {
+	out << out.applyprefix << " * Generating And(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
+	generateHeaderClose(out);
 
-		// Get the current child and associated childID
-		const DFT::Nodes::Node& child = *gate.getChildren().at(n);
+	if(gate.isRepairable()){
+		int repairable = 0;
 
-		if(child.isBasicEvent()) {
-			const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&child);
-			if(be.getRepair() > 0)
-				repairable++;
-		}else if(child.isGate()) {
+		for(size_t n = 0; n<gate.getChildren().size(); ++n) {
+
+			// Get the current child and associated childID
+			const DFT::Nodes::Node& child = *gate.getChildren().at(n);
 			if(child.isRepairable())
 				repairable++;
 		}
 
+		//gate.setRepairableChildren(repairable);
+
+		out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING_REPAIR) is" << out.applypostfix;
+		out.indent();
+
+		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
+		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
+		out.indent();
+		out << out.applyprefix << "VOTING_K [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_ONLINE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)), (BOOL_ARRAY(FALSE)), " << repairable << " of NAT)" << out.applypostfix;
+		out.outdent();
+		out << out.applyprefix << "end process" << out.applypostfix;
+	} else {
+		out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING) is" << out.applypostfix;
+		out.indent();
+
+		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
+		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
+		out.indent();
+		out << out.applyprefix << "VOTING [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+		out.outdent();
+		out << out.applyprefix << "end process" << out.applypostfix;
 	}
-
-	//gate->setRepairableChildren(repairable);
-	//cc->reportAction("Repairable children: " + gate.getRepairableChildren(),0);
-	//if(repairable>0){
-	//	gate.setRepairable(true);
-	//	cc->reportAction("Test: " + gate.isRepairable(),0);
-	//}
-
-	out << out.applyprefix << " * Generating Or(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
-	generateHeaderClose(out);
-
-		if(repairable==0){
-			out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING) is" << out.applypostfix;
-			out.indent();
-
-			out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
-			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
-			out.indent();
-			out << out.applyprefix << "VOTING [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
-			out.outdent();
-			out << out.applyprefix << "end process" << out.applypostfix;
-		} else {
-			out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING_REPAIR) is" << out.applypostfix;
-			out.indent();
-
-			out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
-			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
-			out.indent();
-			out << out.applyprefix << "VOTING_K [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_ONLINE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)), " << repairable << " of NAT)" << out.applypostfix;
-			out.outdent();
-			out << out.applyprefix << "end process" << out.applypostfix;
-		}
 	out.outdent();
 	out << out.applyprefix << "end module" << out.applypostfix;
 

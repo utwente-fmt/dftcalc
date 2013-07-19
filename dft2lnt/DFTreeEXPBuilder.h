@@ -314,6 +314,16 @@ public:
 	}
 
 	/**
+	 * Create a new EXPSyncItem instance reflecting a Online action
+	 * based on the specified localNodeID.
+	 * @param localNodeID This is the ID of the Node seen from the actor.
+	 * @return A new EXPSyncItem instance.
+	 */
+	EXPSyncItem* syncOnline(unsigned int localNodeID) {
+		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_ONLINE,localNodeID);
+	}
+
+	/**
 	 * Create a new EXPSyncItem instance reflecting an Repaired action
 	 * based on the specified localNodeID and if this is the sendign action
 	 * or not.
