@@ -5,6 +5,7 @@
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
  * @author Freark van der Berg
+ * @modified by Dennis Guck
  */
 
 %option reentrant
@@ -333,6 +334,7 @@ pand                    { yylval->c_string=my_strdup(yytext); return PAND;     }
 seq                     { yylval->c_string=my_strdup(yytext); return SEQ;      }
 of                      { yylval->c_string=my_strdup(yytext); return OF;       }
 fdep                    { yylval->c_string=my_strdup(yytext); return FDEP;     }
+ru                      { yylval->c_string=my_strdup(yytext); return RU;       }
 {transfer}              { yylval->c_string=my_strdup(yytext); return TRANSFER; }
 
  /* Attributes */
@@ -347,6 +349,7 @@ res                     { yylval->c_string=my_strdup(yytext); return RES;    }
 repl                    { yylval->c_string=my_strdup(yytext); return REPL;   }
 dorm                    { yylval->c_string=my_strdup(yytext); return DORM;   }
 aph                     { yylval->c_string=my_strdup(yytext); return APH;    }
+repair                  { yylval->c_string=my_strdup(yytext); return REPAIR; }
 
 {identifier} {
 	yylval->c_string=my_strdup(yytext);

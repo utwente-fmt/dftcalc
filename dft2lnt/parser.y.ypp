@@ -7,6 +7,7 @@
  * Adapted by Gerjan Stokkink to support Mac OS X.
  *
  * @author Freark van der Berg
+ * @modified by Dennis Guck
  */
 
 %pure-parser
@@ -99,6 +100,7 @@
 %token<c_string> SEQ
 %token<c_string> OF
 %token<c_string> FDEP
+%token<c_string> RU
 %token<c_string> TRANSFER
 
 // Attribute names
@@ -113,6 +115,7 @@
 %token<c_string> REPL
 %token<c_string> DORM
 %token<c_string> APH
+%token<c_string> REPAIR
 
 // Other
 %token ENDLINE
@@ -317,6 +320,7 @@ be_attrib_name //{
 	|	REPL   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepl  ); free($1); }
 	|	DORM   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelDorm  ); free($1); }
 	|	APH    { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelAph   ); free($1); }
+	|	REPAIR { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepair); free($1); }
 	;
 //}
 
@@ -463,6 +467,7 @@ gate //{
 	|	SEQ       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateSeqType     ); free($1); }
 	|	VOTING    { $$ = new DFT::AST::ASTVotingGateType(@$,$1.k,$1.n);                                        }
 	|	FDEP      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateFDEPType    ); free($1); }
+	|	RU        { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitType    ); free($1); }
 	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType); free($1); }
 	;
 //}

@@ -216,6 +216,13 @@ public:
 	std::string getBEProc(const DFT::Nodes::BasicEvent& be) const;
 	
 	/**
+	 * Returns an EXP formatted string reflecting the specified Repair Unit.
+	 * Takes into account the renaming of failure rates.
+	 * @param be The Repair Unit of which an EXP formatted strign is wanted.
+	 */
+	std::string getRUProc(const DFT::Nodes::Gate& ru) const;
+
+	/**
 	 * Start building EXP specification from the DFT specified
 	 * in the constructor.
 	 * @return UNDECIDED
@@ -242,6 +249,26 @@ public:
 	 */
 	int parseDFT(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules);
 	
+	/**
+	 * Builds the rule system for the to be generated EXP file.
+	 * Calls to buildEXPBody() and buildEXPHeader() should be valid after this.
+	 * @return UNDECIDED
+	 */
+	int parseDFT(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& onlineRules);
+
+	/**
+	 * Affects FileWriters: exp_header
+	 * @return UNDECIDED
+	 */
+	int buildEXPHeader(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& onlineRules);
+
+	/**
+	 * Builds the actual composition script from the DFT specification
+	 * Affects FileWriters: exp_body
+	 * @return UNDECIDED
+	 */
+	int buildEXPBody(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& onlineRules);
+
 	/**
 	 * Return the Node ID (index in the dft->getNodes() vector) of the
 	 * specified Node.
@@ -276,6 +303,28 @@ public:
 		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_FAIL,localNodeID);
 	}
 
+	/**
+	 * Create a new EXPSyncItem instance reflecting a Repair action
+	 * based on the specified localNodeID.
+	 * @param localNodeID This is the ID of the Node seen from the actor.
+	 * @return A new EXPSyncItem instance.
+	 */
+	EXPSyncItem* syncRepair(unsigned int localNodeID) {
+		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_REPAIR,localNodeID);
+	}
+
+	/**
+	 * Create a new EXPSyncItem instance reflecting an Repaired action
+	 * based on the specified localNodeID and if this is the sendign action
+	 * or not.
+	 * @param localNodeID This is the ID of the Node seen from the actor.
+	 * @param sending Whether this is a sending action or not.
+	 * @return A new EXPSyncItem instance.
+	 */
+	EXPSyncItem* syncRepaired(unsigned int localNodeID, bool sending) {
+		return new EXPSyncItemIB(DFT::DFTreeBCGNodeBuilder::GATE_REPAIRED,localNodeID,sending);
+	}
+
 	int createSyncRuleBE(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::BasicEvent& node, unsigned int nodeID);
 	int createSyncRuleGateOr(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateOr& node, unsigned int nodeID);
 	int createSyncRuleGateAnd(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateAnd& node, unsigned int nodeID);
@@ -283,6 +332,7 @@ public:
 	int createSyncRuleGatePAnd(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GatePAnd& node, unsigned int nodeID);
 	int createSyncRuleGateVoting(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateVoting& node, unsigned int nodeID);
 	int createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateFDEP& node, unsigned int nodeID);
+	int createSyncRuleRepairUnit(vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, const DFT::Nodes::RepairUnit& node, unsigned int nodeID);
 
 	/**
 	 * Generate synchronization rules for the Top Node.
@@ -293,7 +343,10 @@ public:
 	 * @return 0.
 	 */
 	int createSyncRuleTop(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules);
+	int createSyncRuleTop(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& onlineRules);
 	int createSyncRule(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::Gate& node, unsigned int nodeID);
+	int createSyncRule(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules,
+			vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& onlineRules, const DFT::Nodes::Gate& node, unsigned int nodeID);
 
 	/**
 	 * Modifies the specified columnWidths to reflect the width needed by the

@@ -5,6 +5,7 @@
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
  * @author Freark van der Berg
+ * @modified by Dennis Guck
  */
 
 namespace DFT {
@@ -28,6 +29,8 @@ public:
 	static const std::string GATE_FAIL;
 	static const std::string GATE_ACTIVATE;
 	static const std::string GATE_REPAIR;
+	static const std::string GATE_REPAIRED;
+	static const std::string GATE_ONLINE;
 	static const std::string GATE_RATE_FAIL;
 	static const std::string GATE_RATE_REPAIR;
 private:
@@ -55,6 +58,7 @@ private:
 	int generateSpare(FileWriter& out, const DFT::Nodes::GateWSP& gate);
 	int generateFDEP(FileWriter& out, const DFT::Nodes::GateFDEP& gate);
 	int generateBE(FileWriter& out, const DFT::Nodes::BasicEvent& gate);
+	int generateRU(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 
 	int generateSVLBuilder(FileWriter& out, std::string fileName);
 	int executeSVL(std::string root, std::string fileName);

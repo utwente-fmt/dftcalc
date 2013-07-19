@@ -5,6 +5,7 @@
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
  * @author Freark van der Berg
+ * @modified by Dennis Guck
  */
 
 namespace DFT {
@@ -76,7 +77,7 @@ public:
 	
 	/**
 	 * Returns the location in the code of this ASTNode.
-	 * @eturn The location in the code of this ASTNode.
+	 * @return The location in the code of this ASTNode.
 	 */
 	const Location& getLocation() const {
 		return location;
