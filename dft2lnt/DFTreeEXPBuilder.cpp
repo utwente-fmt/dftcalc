@@ -509,7 +509,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 						const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
 						exp_body << exp_body.applyprefix << getBEProc(be) << exp_body.applypostfix;
 					} else if(node.isGate()) {
-						if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitType)){
+						if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitType) || DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitFcfsType)){
 							const DFT::Nodes::Gate& ru = *static_cast<const DFT::Nodes::Gate*>(&node);
 							exp_body << exp_body.applyprefix << getRUProc(ru) << exp_body.applypostfix;
 						}else {
@@ -986,7 +986,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 				cc->reportAction2("Child `" + child.getName() + "'" + (child.usesDynamicActivation()?" (dynact)":"") + " ...",VERBOSITY_RULES);
 
 				// ask if we have a repair unit (if it is the case we don't have to handle activation and fail)
-				if(!DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitType))
+				if(!DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitType) && !DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitFcfsType))
 				{
 
 				/** ACTIVATION RULE **/
@@ -1429,6 +1429,11 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 				break;
 			}
 			case DFT::Nodes::RepairUnitType: {
+				const DFT::Nodes::RepairUnit* g = static_cast<const DFT::Nodes::RepairUnit*>(&node);
+				createSyncRuleRepairUnit(repairRules,repairedRules,*g,nodeID);
+				break;
+			}
+			case DFT::Nodes::RepairUnitFcfsType: {
 				const DFT::Nodes::RepairUnit* g = static_cast<const DFT::Nodes::RepairUnit*>(&node);
 				createSyncRuleRepairUnit(repairRules,repairedRules,*g,nodeID);
 				break;

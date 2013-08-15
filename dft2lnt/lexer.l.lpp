@@ -335,6 +335,7 @@ seq                     { yylval->c_string=my_strdup(yytext); return SEQ;      }
 of                      { yylval->c_string=my_strdup(yytext); return OF;       }
 fdep                    { yylval->c_string=my_strdup(yytext); return FDEP;     }
 ru                      { yylval->c_string=my_strdup(yytext); return RU;       }
+ru_f                      { yylval->c_string=my_strdup(yytext); return RU_F;   }
 {transfer}              { yylval->c_string=my_strdup(yytext); return TRANSFER; }
 
  /* Attributes */

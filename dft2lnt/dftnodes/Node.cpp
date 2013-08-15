@@ -23,6 +23,7 @@ namespace Nodes {
 	const std::string Node::GateFDEPStr("fdep");
 	const std::string Node::UnknownStr("XXX");
 	const std::string Node::RepairUnitStr("ru");
+	const std::string Node::RepairUnitFcfsStr("ru_f");
 
 }
 }

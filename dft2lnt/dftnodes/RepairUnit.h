@@ -24,6 +24,9 @@ public:
 	RepairUnit(Location loc, std::string name):
 		Gate(loc,name,RepairUnitType) {
 	}
+	RepairUnit(Location loc, std::string name, NodeType type):
+		Gate(loc,name,type) {
+	}
 	virtual ~RepairUnit() {
 	}
 

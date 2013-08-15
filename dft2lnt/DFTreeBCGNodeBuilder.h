@@ -59,6 +59,7 @@ private:
 	int generateFDEP(FileWriter& out, const DFT::Nodes::GateFDEP& gate);
 	int generateBE(FileWriter& out, const DFT::Nodes::BasicEvent& gate);
 	int generateRU(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
+	int generateRU_FCFS(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 
 	int generateSVLBuilder(FileWriter& out, std::string fileName);
 	int executeSVL(std::string root, std::string fileName);

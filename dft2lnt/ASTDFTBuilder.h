@@ -78,6 +78,9 @@ public:
 		case DFT::Nodes::RepairUnitType:
 			gate = new DFT::Nodes::RepairUnit(astgate->getLocation(), astgate->getName()->getString());
 			break;
+		case DFT::Nodes::RepairUnitFcfsType:
+			gate = new DFT::Nodes::RepairUnit(astgate->getLocation(), astgate->getName()->getString(), DFT::Nodes::RepairUnitFcfsType);
+			break;
 		case DFT::Nodes::GateTransferType:
 			break;
 		default:

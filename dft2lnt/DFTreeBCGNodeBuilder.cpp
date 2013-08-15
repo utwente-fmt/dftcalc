@@ -376,6 +376,29 @@ int DFT::DFTreeBCGNodeBuilder::generateRU(FileWriter& out, const DFT::Nodes::Rep
 	out << out.applyprefix << " * Generating RepairUnit(dependers=" << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
+	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_REPAIRUNIT_ARB) is" << out.applypostfix;
+	out.indent();
+
+		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
+		out << out.applyprefix << "type NAT_ARRAY is array[1.." << total << "] of NAT end type" << out.applypostfix;
+
+		out << out.applyprefix << "process MAIN [" << GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_RATE_REPAIR  << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
+		out.indent();
+			out << out.applyprefix << "REPAIRUNIT [" << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_RATE_REPAIR << "] (" << total << " of NAT, (BOOL_ARRAY(FALSE)), (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+		out.outdent();
+		out << out.applyprefix << "end process" << out.applypostfix;
+	out.outdent();
+	out << out.applyprefix << "end module" << out.applypostfix;
+
+	return 0;
+}
+
+int DFT::DFTreeBCGNodeBuilder::generateRU_FCFS(FileWriter& out, const DFT::Nodes::RepairUnit& gate) {
+	//int nr_parents = gate.getParents().size();
+	int total = gate.getChildren().size();
+	out << out.applyprefix << " * Generating RepairUnit(dependers=" << total << ")" << out.applypostfix;
+	generateHeaderClose(out);
+
 	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_REPAIRUNIT) is" << out.applypostfix;
 	out.indent();
 
@@ -710,6 +733,14 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 				report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generateRU(lntOut,gate);
+				break;
+			}
+			case DFT::Nodes::RepairUnitFcfsType: {
+				const DFT::Nodes::RepairUnit& gate = static_cast<const DFT::Nodes::RepairUnit&>(node);
+				FileWriter report;
+				report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+				cc->reportAction(report.toString(),VERBOSE_GENERATION);
+				generateRU_FCFS(lntOut,gate);
 				break;
 			}
 			case DFT::Nodes::GateTransferType: {
