@@ -43,10 +43,11 @@ enum NodeType {
 
 	RepairUnitType,
 	RepairUnitFcfsType,
+	RepairUnitPrioType,
 
 	GateType,
 	GATES_FIRST = GatePhasedOrType,
-	GATES_LAST  = RepairUnitFcfsType,
+	GATES_LAST  = RepairUnitPrioType,
 	
 	AnyType,
 	NUMBEROF
@@ -67,6 +68,7 @@ public:
 	static const std::string UnknownStr;
 	static const std::string RepairUnitStr;
 	static const std::string RepairUnitFcfsStr;
+	static const std::string RepairUnitPrioStr;
 	
 	/**
 	 * Returns the textual representation of the specified NodeType.
@@ -92,6 +94,8 @@ public:
 			return RepairUnitStr;
 		case RepairUnitFcfsType:
 			return RepairUnitFcfsStr;
+		case RepairUnitPrioType:
+			return RepairUnitPrioStr;
 		default:
 			return UnknownStr;
 		}

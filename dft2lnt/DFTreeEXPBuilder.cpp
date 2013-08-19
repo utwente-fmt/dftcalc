@@ -4,7 +4,7 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg
+ * @author Freark van der Berg and extended by Dennis Guck
  */
 
 #include "DFTreeBCGNodeBuilder.h"
@@ -509,7 +509,8 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 						const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
 						exp_body << exp_body.applyprefix << getBEProc(be) << exp_body.applypostfix;
 					} else if(node.isGate()) {
-						if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitType) || DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitFcfsType)){
+						if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitType) || DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitFcfsType)
+						|| DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitPrioType)){
 							const DFT::Nodes::Gate& ru = *static_cast<const DFT::Nodes::Gate*>(&node);
 							exp_body << exp_body.applyprefix << getRUProc(ru) << exp_body.applypostfix;
 						}else {
@@ -986,7 +987,8 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 				cc->reportAction2("Child `" + child.getName() + "'" + (child.usesDynamicActivation()?" (dynact)":"") + " ...",VERBOSITY_RULES);
 
 				// ask if we have a repair unit (if it is the case we don't have to handle activation and fail)
-				if(!DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitType) && !DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitFcfsType))
+				if(!DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitType) && !DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitFcfsType)
+				&& !DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitPrioType))
 				{
 
 				/** ACTIVATION RULE **/
@@ -1434,6 +1436,11 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 				break;
 			}
 			case DFT::Nodes::RepairUnitFcfsType: {
+				const DFT::Nodes::RepairUnit* g = static_cast<const DFT::Nodes::RepairUnit*>(&node);
+				createSyncRuleRepairUnit(repairRules,repairedRules,*g,nodeID);
+				break;
+			}
+			case DFT::Nodes::RepairUnitPrioType: {
 				const DFT::Nodes::RepairUnit* g = static_cast<const DFT::Nodes::RepairUnit*>(&node);
 				createSyncRuleRepairUnit(repairRules,repairedRules,*g,nodeID);
 				break;

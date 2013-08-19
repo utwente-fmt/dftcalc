@@ -4,8 +4,7 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg
- * @modified by Dennis Guck
+ * @author Freark van der Berg and extended by Dennis Guck
  */
 
 namespace DFT {
@@ -60,6 +59,7 @@ private:
 	int generateBE(FileWriter& out, const DFT::Nodes::BasicEvent& gate);
 	int generateRU(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 	int generateRU_FCFS(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
+	int generateRU_Prio(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 
 	int generateSVLBuilder(FileWriter& out, std::string fileName);
 	int executeSVL(std::string root, std::string fileName);

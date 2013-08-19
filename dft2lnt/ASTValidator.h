@@ -4,7 +4,7 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg
+ * @author Freark van der Berg and extended by Dennis Guck
  */
 
 #ifndef ASTVALIDATOR_H
@@ -280,6 +280,30 @@ public:
 				} else {
 					valid = false;
 					cc->reportErrorAt(attribute->getLocation(),"repair label needs float value");
+				}
+			break;
+			// check for new priority label
+			case DFT::Nodes::BE::AttrLabelPrio:
+				if(!value) {
+					valid = false;
+					cc->reportErrorAt(attribute->getLocation(),"priority label without value");
+					break;
+				}
+				if(value->isNumber()) {
+					int v = static_cast<DFT::AST::ASTAttribNumber*>(value)->getValue();
+					if(v < 0) {
+						valid = false;
+						cc->reportErrorAt(attribute->getLocation(),"negative priority");
+					}
+				} else if(value->isFloat()) {
+					int v = static_cast<DFT::AST::ASTAttribNumber*>(value)->getValue();
+					if(v < 0) {
+						valid = false;
+						cc->reportErrorAt(attribute->getLocation(),"negative priority");
+					}
+				} else {
+					valid = false;
+					cc->reportErrorAt(attribute->getLocation(),"priority label needs integer value");
 				}
 			break;
 			case DFT::Nodes::BE::AttrLabelAph:

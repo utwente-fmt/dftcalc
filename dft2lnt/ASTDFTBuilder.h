@@ -4,7 +4,7 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg
+ * @author Freark van der Berg and extended by Dennis Guck
  */
 
 #ifndef ASTDFTBUILDER_H
@@ -80,6 +80,9 @@ public:
 			break;
 		case DFT::Nodes::RepairUnitFcfsType:
 			gate = new DFT::Nodes::RepairUnit(astgate->getLocation(), astgate->getName()->getString(), DFT::Nodes::RepairUnitFcfsType);
+			break;
+		case DFT::Nodes::RepairUnitPrioType:
+			gate = new DFT::Nodes::RepairUnit(astgate->getLocation(), astgate->getName()->getString(), DFT::Nodes::RepairUnitPrioType);
 			break;
 		case DFT::Nodes::GateTransferType:
 			break;
@@ -173,6 +176,16 @@ public:
 					double v = (*it)->getValue()->getFloatValue();
 					be->setRepair(v);
 					be->setRepairable(true);
+				}
+			}
+		}
+		// Find priority
+		{
+			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+			for(; it!=basicEvent->getAttributes()->end(); ++it) {
+				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelPrio) {
+					int v = (*it)->getValue()->getNumberValue();
+					be->setPriority(v);
 				}
 			}
 		}
