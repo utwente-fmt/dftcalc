@@ -32,6 +32,7 @@ public:
 	static const std::string GATE_ONLINE;
 	static const std::string GATE_RATE_FAIL;
 	static const std::string GATE_RATE_REPAIR;
+	static const std::string GATE_REPAIRING;
 private:
 	static const unsigned int VERSION;
 	static const int VERBOSE_LNTISVALID;
@@ -60,6 +61,7 @@ private:
 	int generateRU(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 	int generateRU_FCFS(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 	int generateRU_Prio(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
+	int generateRU_Nd(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 
 	int generateSVLBuilder(FileWriter& out, std::string fileName);
 	int executeSVL(std::string root, std::string fileName);

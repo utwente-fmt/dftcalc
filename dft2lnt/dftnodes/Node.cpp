@@ -25,6 +25,7 @@ namespace Nodes {
 	const std::string Node::RepairUnitStr("ru");
 	const std::string Node::RepairUnitFcfsStr("ru_f");
 	const std::string Node::RepairUnitPrioStr("ru_p");
+	const std::string Node::RepairUnitNdStr("ru_nd");
 
 }
 }

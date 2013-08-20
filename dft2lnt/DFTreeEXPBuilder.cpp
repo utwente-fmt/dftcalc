@@ -178,14 +178,16 @@ int DFT::DFTreeEXPBuilder::build() {
 		// new rules for repair, repaired and online
 		vector<DFT::EXPSyncRule*> repairRules;
 		vector<DFT::EXPSyncRule*> repairedRules;
+		vector<DFT::EXPSyncRule*> repairingRules;
 		vector<DFT::EXPSyncRule*> onlineRules;
 		
+
 		//parseDFT(activationRules,failRules);
 		//buildEXPHeader(activationRules,failRules);
 		//buildEXPBody(activationRules,failRules);
-		parseDFT(activationRules,failRules,repairRules,repairedRules,onlineRules);
+		parseDFT(activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules);
 		buildEXPHeader(activationRules,failRules,repairRules,repairedRules,onlineRules);
-		buildEXPBody(activationRules,failRules,repairRules,repairedRules,onlineRules);
+		buildEXPBody(activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules);
 		
 		// Build SVL file
 		svl_body << "% BCG_MIN_OPTIONS=\"-self\";" << svl_body.applypostfix;
@@ -268,7 +270,7 @@ int DFT::DFTreeEXPBuilder::parseDFT(vector<DFT::EXPSyncRule*>& activationRules, 
 }
 
 int DFT::DFTreeEXPBuilder::parseDFT(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules,
-		vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& onlineRules) {
+		vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules) {
 
 	/* Create synchronization rules for all nodes in the DFT */
 
@@ -282,7 +284,7 @@ int DFT::DFTreeEXPBuilder::parseDFT(vector<DFT::EXPSyncRule*>& activationRules, 
 			if((*it)->isGate()) {
 				const DFT::Nodes::Gate& gate = static_cast<const DFT::Nodes::Gate&>(**it);
 				cc->reportAction("Creating synchronization rules for `" + gate.getName() + "' (THIS node)",VERBOSITY_FLOW);
-				createSyncRule(activationRules,failRules,repairRules,repairedRules,onlineRules,gate,getIDOfNode(gate));
+				createSyncRule(activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules,gate,getIDOfNode(gate));
 			}
 		}
 	}
@@ -383,11 +385,11 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 }
 
 int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules,
-		vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& onlineRules) {
+		vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules) {
 
 	/* Generate the EXP based on the generated synchronization rules */
 	exp_body.clearAll();
-	exp_body << exp_body.applyprefix << "(* Number of rules: " << (activationRules.size()+failRules.size()+repairRules.size()+repairedRules.size()+onlineRules.size()) << "*)" << exp_body.applypostfix;
+	exp_body << exp_body.applyprefix << "(* Number of rules: " << (activationRules.size()+failRules.size()+repairRules.size()+repairedRules.size()+repairingRules.size()+onlineRules.size()) << "*)" << exp_body.applypostfix;
 	exp_body << exp_body.applyprefix << "hide" << exp_body.applypostfix;
 	exp_body.indent();
 
@@ -466,6 +468,17 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 				exp_body << exp_body.applypostfix;
 			}
 		}
+		if(!repairingRules.empty()){
+		// Generate repairing rules
+		{
+			for(size_t s=0; s<repairRules.size(); ++s) {
+				exp_body << exp_body.applyprefix;
+				printSyncLine(*repairingRules.at(s),columnWidths);
+				exp_body << ",";
+				exp_body << exp_body.applypostfix;
+			}
+		}
+		}
 		// Generate repaired rules
 		{
 			for(size_t s=0; s<repairedRules.size(); ++s) {
@@ -510,7 +523,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 						exp_body << exp_body.applyprefix << getBEProc(be) << exp_body.applypostfix;
 					} else if(node.isGate()) {
 						if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitType) || DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitFcfsType)
-						|| DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitPrioType)){
+						|| DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitPrioType) || DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitNdType)){
 							const DFT::Nodes::Gate& ru = *static_cast<const DFT::Nodes::Gate*>(&node);
 							exp_body << exp_body.applyprefix << getRUProc(ru) << exp_body.applypostfix;
 						}else {
@@ -606,7 +619,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 	 * Add RU Specific syncRules
 	 * The RU needs to synchronize with multiple nodes: namely its dependers.
 	 */
-	int DFT::DFTreeEXPBuilder::createSyncRuleRepairUnit(vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, const DFT::Nodes::RepairUnit& node, unsigned int nodeID) {
+	int DFT::DFTreeEXPBuilder::createSyncRuleRepairUnit(vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, const DFT::Nodes::RepairUnit& node, unsigned int nodeID) {
 		return 0;
 	}
 
@@ -970,7 +983,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 	}
 
 	int DFT::DFTreeEXPBuilder::createSyncRule(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules,
-			vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& onlineRules, const DFT::Nodes::Gate& node, unsigned int nodeID) {
+			vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, const DFT::Nodes::Gate& node, unsigned int nodeID) {
 
 			/* Generate non-specific rules for the node */
 
@@ -988,7 +1001,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 
 				// ask if we have a repair unit (if it is the case we don't have to handle activation and fail)
 				if(!DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitType) && !DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitFcfsType)
-				&& !DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitPrioType))
+				&& !DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitPrioType) && !DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitNdType))
 				{
 
 				/** ACTIVATION RULE **/
@@ -1204,7 +1217,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 
 				/* REPAIR rule */
 				{
-					// Go through all the existing fail rules
+					// Go through all the existing repair rules
 					std::vector<EXPSyncRule*>::iterator itf = repairRules.begin();
 					bool areOtherRules = false;
 					for(;itf != repairRules.end();++itf) {
@@ -1248,6 +1261,25 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 						}
 						repairRules.push_back(ruleR);
 					}
+				}
+
+				{
+				/** REPAIRING RULE for ND **/
+				if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitNdType)) {
+					// Create labelTo string
+					std::stringstream ss;
+					ss << "REPAIRING_" << child.getTypeStr() << childID;
+					EXPSyncRule* ruleRnd = new EXPSyncRule(ss.str(),false);
+
+					std::stringstream report;
+					report << "New EXPSyncRule " << ss.str();
+					cc->reportAction3(report.str(),VERBOSITY_RULEORIGINS);
+
+					ss << DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING;
+					if(!nameTop.empty()) ss << "_" << nameTop;
+					ruleRnd->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncRepairing(childID)) );
+					repairingRules.push_back(ruleRnd);
+				}
 				}
 
 				/** REPAIRED RULE **/
@@ -1432,17 +1464,22 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 			}
 			case DFT::Nodes::RepairUnitType: {
 				const DFT::Nodes::RepairUnit* g = static_cast<const DFT::Nodes::RepairUnit*>(&node);
-				createSyncRuleRepairUnit(repairRules,repairedRules,*g,nodeID);
+				createSyncRuleRepairUnit(repairRules,repairedRules,repairingRules,*g,nodeID);
 				break;
 			}
 			case DFT::Nodes::RepairUnitFcfsType: {
 				const DFT::Nodes::RepairUnit* g = static_cast<const DFT::Nodes::RepairUnit*>(&node);
-				createSyncRuleRepairUnit(repairRules,repairedRules,*g,nodeID);
+				createSyncRuleRepairUnit(repairRules,repairedRules,repairingRules,*g,nodeID);
+				break;
+			}
+			case DFT::Nodes::RepairUnitNdType: {
+				const DFT::Nodes::RepairUnit* g = static_cast<const DFT::Nodes::RepairUnit*>(&node);
+				createSyncRuleRepairUnit(repairRules,repairedRules,repairingRules,*g,nodeID);
 				break;
 			}
 			case DFT::Nodes::RepairUnitPrioType: {
 				const DFT::Nodes::RepairUnit* g = static_cast<const DFT::Nodes::RepairUnit*>(&node);
-				createSyncRuleRepairUnit(repairRules,repairedRules,*g,nodeID);
+				createSyncRuleRepairUnit(repairRules,repairedRules,repairingRules,*g,nodeID);
 				break;
 			}
 			default: {

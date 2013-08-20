@@ -102,6 +102,7 @@
 %token<c_string> RU
 %token<c_string> RU_F
 %token<c_string> RU_P
+%token<c_string> RU_ND
 %token<c_string> TRANSFER
 
 // Attribute names
@@ -473,6 +474,7 @@ gate //{
 	|	RU        { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitType    ); free($1); }
 	|	RU_F      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitFcfsType); free($1); }
 	|	RU_P      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitPrioType); free($1); }
+	|	RU_ND     { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitNdType);   free($1); }
 	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType  ); free($1); }
 	;
 //}

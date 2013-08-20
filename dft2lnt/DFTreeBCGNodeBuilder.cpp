@@ -34,6 +34,7 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_ONLINE      ("ONLINE");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRED    ("REPAIRED");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL   ("RATE_FAIL");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR ("RATE_REPAIR");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING   ("REPAIRING");
 
 const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 6;
 
@@ -447,6 +448,30 @@ int DFT::DFTreeBCGNodeBuilder::generateRU_Prio(FileWriter& out, const DFT::Nodes
 	return 0;
 }
 
+int DFT::DFTreeBCGNodeBuilder::generateRU_Nd(FileWriter& out, const DFT::Nodes::RepairUnit& gate) {
+	//int nr_parents = gate.getParents().size();
+	int total = gate.getChildren().size();
+	out << out.applyprefix << " * Generating RepairUnit(dependers=" << total << ")" << out.applypostfix;
+	generateHeaderClose(out);
+
+	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_REPAIRUNIT_ND) is" << out.applypostfix;
+	out.indent();
+
+		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
+		out << out.applyprefix << "type NAT_ARRAY is array[1.." << total << "] of NAT end type" << out.applypostfix;
+
+		out << out.applyprefix << "process MAIN [" << GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_RATE_REPAIR  << " : NAT_NAT_CHANNEL, " <<
+				GATE_REPAIRING << " : NAT_CHANNEL] is" << out.applypostfix;
+		out.indent();
+			out << out.applyprefix << "REPAIRUNIT [" << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_RATE_REPAIR << "," << GATE_REPAIRING << "] (" << total << " of NAT, (BOOL_ARRAY(FALSE)), (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+		out.outdent();
+		out << out.applyprefix << "end process" << out.applypostfix;
+	out.outdent();
+	out << out.applyprefix << "end module" << out.applypostfix;
+
+	return 0;
+}
+
 int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string>& triedToGenerate) {
 
 	// If the LNT file for the node was not generated before in this iteration
@@ -782,6 +807,14 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 				generateRU_Prio(lntOut,gate);
 				break;
 			}
+			case DFT::Nodes::RepairUnitNdType: {
+				const DFT::Nodes::RepairUnit& gate = static_cast<const DFT::Nodes::RepairUnit&>(node);
+				FileWriter report;
+				report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+				cc->reportAction(report.toString(),VERBOSE_GENERATION);
+				generateRU_Nd(lntOut,gate);
+				break;
+			}
 			case DFT::Nodes::GateTransferType: {
 				break;
 			}
@@ -835,7 +868,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 				fancyFileWrite(svlFilePath,svlOut);
 				executeSVL(lntRoot,svlFileName);
 				
-				// Check if the generation resulted in a valid BCG file
+				// Check if the generation resulted in a valid BCGs file
 				if(bcgIsValid(bcgFilePath)) {
 					
 					// Open and close .valid file, making sure it exists
