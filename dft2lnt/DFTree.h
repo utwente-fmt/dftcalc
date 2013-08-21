@@ -301,6 +301,8 @@ public:
 			}else if(child->isGate()) {
 				DFT::Nodes::Gate* g = static_cast<DFT::Nodes::Gate*>(child);
 				findRepairInfo(g);
+				if(child->isRepairable())
+					gate->setRepairable(true);
 			}
 		}
 	}
