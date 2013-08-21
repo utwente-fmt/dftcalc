@@ -1277,7 +1277,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 
 					ss << DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING;
 					if(!nameTop.empty()) ss << "_" << nameTop;
-					ruleRnd->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncRepairing(childID)) );
+					ruleRnd->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncRepairing(n+1)) );
 					repairingRules.push_back(ruleRnd);
 				}
 				}
