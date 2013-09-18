@@ -554,18 +554,21 @@ int main(int argc, char** argv) {
 	/* Apply evidence to DFT */
 	if(dftValid && !failedBEs.empty()) {
 		compilerContext->reportAction("Applying evidence to DFT...",VERBOSITY_FLOW);
+		compilerContext->flush();
 		try {
 			dft->applyEvidence(failedBEs);
 		} catch(std::vector<std::string>& errors) {
 			for(std::string e: errors) {
 				compilerContext->reportError(e);
 			}
+			compilerContext->flush();
 		}
 	}
 	
 	/* Add repair knowledge to gates */
 	if(dft) {
 		compilerContext->reportAction("Applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
+		compilerContext->flush();
 		dft->addRepairInfo();
 	}
 
