@@ -1,6 +1,6 @@
 module TEMPLATE_BE_REPAIR(TEMPLATE_COMMON_REPAIR) is
 
-	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL, REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, ONLINE : NAT_CHANNEL] (total: NAT, cold: BOOL, initial: STATUS) is
+	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL, REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, ONLINE : NAT_CHANNEL, DEACTIVATE : NAT_BOOL_CHANNEL] (total: NAT, cold: BOOL, initial: STATUS) is
 	var
 		status : STATUS,
 		nr : NAT
@@ -37,8 +37,8 @@ module TEMPLATE_BE_REPAIR(TEMPLATE_COMMON_REPAIR) is
 				nr := 0
 				
 			-- termination signal only relevant if it is in the active branch
-			(*[]
-				TERMINATION (?nr,FALSE) where (nr==0 of NAT);
+			[]
+				DEACTIVATE (?nr,FALSE) where (nr==0 of NAT);
 				if(status == ACTIVE) then
 					status := UP
 				end if;
@@ -57,7 +57,7 @@ module TEMPLATE_BE_REPAIR(TEMPLATE_COMMON_REPAIR) is
 				if(status == UNAVAILABLE_ACTIVE) then
 					status := UNAVAILABLE_INACTIVE
 				end if;
-				nr := 0*)
+				nr := 0
 			
 			(*
 			 * When this BE is in the UP state, it can fail with the

@@ -29,6 +29,7 @@
 
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_FAIL        ("FAIL");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE    ("ACTIVATE");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_DEACTIVATE  ("DEACTIVATE");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIR      ("REPAIR");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_ONLINE      ("ONLINE");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRED    ("REPAIRED");

@@ -84,7 +84,7 @@ module TEMPLATE_VOTING_REPAIR(TEMPLATE_COMMON_REPAIR) is
 						nr_act := 0
 					end if
 				end if
-				
+
 			end select
 		end loop
 	end var

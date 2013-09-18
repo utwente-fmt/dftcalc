@@ -27,6 +27,7 @@ class DFTreeBCGNodeBuilder {
 public:
 	static const std::string GATE_FAIL;
 	static const std::string GATE_ACTIVATE;
+	static const std::string GATE_DEACTIVATE;
 	static const std::string GATE_REPAIR;
 	static const std::string GATE_REPAIRED;
 	static const std::string GATE_ONLINE;
