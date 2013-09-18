@@ -121,7 +121,7 @@ public:
 		buildDefinedNodesList();
 
 		if (definedNodes.size() == 0) {
-			std::cout << "No nodes defined (nada)" << std::endl;
+			std::cout << "No nodes defined (nada niente nix). Empty input file?!?!?" << std::endl;
 			return false;
 		}
 		
