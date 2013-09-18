@@ -1,8 +1,8 @@
 ## The DFT2LNT Compiler project
 project (dftcalc)
 set (dftcalc_VERSION_MAJOR 1)
-set (dftcalc_VERSION_MINOR 0)
-set (dftcalc_VERSION_PATCH 2)
+set (dftcalc_VERSION_MINOR 1)
+set (dftcalc_VERSION_PATCH 0)
 
 ## Not sure if needed
 cmake_minimum_required (VERSION 2.6)

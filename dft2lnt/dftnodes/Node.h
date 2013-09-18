@@ -5,6 +5,7 @@
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
  * @author Freark van der Berg
+ * @modified by Dennis Guck
  */
 
 class Node;
@@ -40,9 +41,14 @@ enum NodeType {
 	GateFDEPType,
 	GateTransferType,
 
+	RepairUnitType,
+	RepairUnitFcfsType,
+	RepairUnitPrioType,
+	RepairUnitNdType,
+
 	GateType,
 	GATES_FIRST = GatePhasedOrType,
-	GATES_LAST  = GateTransferType,
+	GATES_LAST  = RepairUnitNdType,
 	
 	AnyType,
 	NUMBEROF
@@ -61,6 +67,10 @@ public:
 	static const std::string GateVotingStr;
 	static const std::string GateFDEPStr;
 	static const std::string UnknownStr;
+	static const std::string RepairUnitStr;
+	static const std::string RepairUnitFcfsStr;
+	static const std::string RepairUnitPrioStr;
+	static const std::string RepairUnitNdStr;
 	
 	/**
 	 * Returns the textual representation of the specified NodeType.
@@ -82,6 +92,14 @@ public:
 			return GateVotingStr;
 		case GateFDEPType:
 			return GateFDEPStr;
+		case RepairUnitType:
+			return RepairUnitStr;
+		case RepairUnitFcfsType:
+			return RepairUnitFcfsStr;
+		case RepairUnitPrioType:
+			return RepairUnitPrioStr;
+		case RepairUnitNdType:
+			return RepairUnitNdStr;
 		default:
 			return UnknownStr;
 		}
@@ -106,19 +124,28 @@ private:
 	Location location;
 	string name;
 	NodeType type;
+	bool repairable;
 	
 	/// List of parents, instances are freed by DFTree instance.
 	std::vector<Nodes::Node*> parents;
 public:
 	Node(Location location, NodeType type):
 		location(location),
-		type(type) {
+		type(type),
+		repairable(false){
 	}
 	Node(Location location, std::string name, NodeType type):
 		location(location),
 		name(name),
-		type(type) {
+		type(type),
+		repairable(false){
 	}
+	Node(Location location, std::string name, NodeType type, bool repairable):
+			location(location),
+			name(name),
+			type(type),
+			repairable(repairable){
+		}
 	Node() {
 	}
 	virtual ~Node() {
@@ -140,6 +167,7 @@ public:
 		this->name = name;
 	}
 	
+
 	/**
 	 * Adds all the Nodes that this Node references to the specified list.
 	 * @param nodeList The list to which the references are added.
@@ -157,7 +185,7 @@ public:
 	 * Returns the type of this Node.
 	 * @return The type of this Node.
 	 */
-	const NodeType& getType() const {return type;}
+	virtual const NodeType& getType() const {return type;}
 	
 	void setParents(std::vector<Nodes::Node*> parents) { this->parents = parents;}
 	std::vector<Node*>& getParents() {return parents;}
@@ -169,6 +197,17 @@ public:
 	 */
 	virtual const std::string& getTypeStr() const { return getTypeName(getType()); }
 	
+	void setRepairable(bool repair) { repairable=repair; }
+	const void setRepairable(bool repair) const { setRepairable(repairable); }
+
+	/**
+	 * returns if gate is repairable
+	 * @return True if repairable, otherwise false
+	 */
+	virtual bool isRepairable() const {
+		return repairable;
+	}
+
 	/**
 	 * Returns whether this Node is a BasicEvent, i.e. typeMatch(type,BasicEventType).
 	 * @return true: this node is a BasicEvent, false otherwise

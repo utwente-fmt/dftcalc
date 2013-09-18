@@ -4,7 +4,7 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg
+ * @author Freark van der Berg and extended by Dennis Guck
  */
 
 class BasicEvent;
@@ -37,7 +37,9 @@ enum AttributeLabelType {
     AttrLabelRes,
     AttrLabelRepl,
     AttrLabelDorm,
-    AttrLabelAph
+    AttrLabelAph,
+    AttrLabelRepair,
+    AttrLabelPrio
 };
 
 enum class CalculationMode {
@@ -238,6 +240,8 @@ private:
 	DFT::Nodes::BE::CalculationMode mode;
 	double lambda;
 	double mu;
+	double repair_rate;
+	int priority;
 //	double dorm;
 	double rate;
 	int shape;
@@ -250,6 +254,12 @@ public:
 	}
 	void setMu(double mu) {
 		this->mu = mu;
+	}
+	void setRepair(double repair_rate) {
+		this->repair_rate = repair_rate;
+	}
+	void setPriority(int priority) {
+		this->priority = priority;
 	}
 	void setRate(double rate) {
 		this->rate = rate;
@@ -283,6 +293,18 @@ public:
 	double getDorm()   const { return mu / lambda; }
 
 	/**
+	 * Returns the repair rate of this Basic Event.
+	 * @return The repair rate of this Basic Event.
+	 */
+	double getRepair()     const { return repair_rate; }
+
+	/**
+	 * Returns the priority of this Basic Event.
+	 * @return The priority of this Basic Event.
+	 */
+	double getPriority()     const { return priority; }
+
+	/**
 	 * Returns the embedded aph fileName of this Basic Event.
 	 * @return The PH-distribution fileName of this Basic Event.
 	 */
@@ -304,6 +326,8 @@ public:
 		mode(DFT::Nodes::BE::CalculationMode::UNDEFINED),
 		lambda(-1),
 		mu(0),
+		repair_rate(-1),
+		priority(0),
 		rate(-1),
 		shape(-1),
 		failed(false) {

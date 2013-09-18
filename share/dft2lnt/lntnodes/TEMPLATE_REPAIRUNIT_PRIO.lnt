@@ -1,0 +1,92 @@
+module TEMPLATE_REPAIRUNIT_PRIO(TEMPLATE_COMMON) is
+
+	process REPAIRUNIT [REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, RATE_REPAIR : NAT_NAT_CHANNEL] (total : NAT, repair_needed : BOOL_ARRAY, repaired : BOOL_ARRAY, priority : NAT_ARRAY) is
+	var
+		nr : NAT,
+		nr_repair : NAT,
+		nr_queue : NAT,
+		signal : BOOL,
+		idx : NAT,
+		prio : NAT,
+		itt : NAT,
+		prio_tmp : NAT	
+	in
+		idx := 0;
+		nr_queue := 0;
+		signal := FALSE;
+		nr_repair := 0;
+		prio:=0;
+		prio_tmp := 0;
+		itt:=0;
+		loop
+			select
+				-- listen for repair
+				REPAIR (?nr) where (0 < nr) and (nr <= total);
+				if (not (repair_needed[nr]) and (not(repaired[nr]))) then
+					repair_needed[nr] := TRUE;
+					nr_queue := nr_queue + 1;
+					if(prio < priority[nr]) then
+						prio := priority[nr]
+					end if
+				end if
+				
+				-- repair with priority strategy
+				[]
+					if ((nr_queue > 0) and not(signal)) then
+						if ((0 < idx) and (idx <= total) and (repair_needed[idx]) and (not(repaired[idx]))) then
+							if(priority[idx] == prio) then
+								repaired[idx] := TRUE;
+								nr_queue := nr_queue - 1;
+								signal := TRUE;
+								RATE_REPAIR (!1 of NAT,idx of NAT);
+								prio:=0
+							end if
+						end if
+					end if
+
+				-- look for all BCs
+				[]
+					if(not(signal)) then
+						if (idx < total) then
+							idx := idx+1
+						else
+							idx := 0
+						end if
+					end if
+					
+				-- signal the repair signal of repaired BC
+				[]
+					if (signal) then
+						if((0 < idx) and (idx <= total) and (repair_needed[idx]) and (repaired[idx])) then
+							signal := FALSE;
+							repair_needed[idx] := FALSE;
+							repaired[idx] := FALSE;
+							REPAIRED(!idx,TRUE);
+							if(nr_queue==0) then
+								prio:=0;
+								prio_tmp:=0
+							else
+							itt:=1;
+							prio_tmp:=0;
+							loop check in
+								if((repair_needed[itt]) and (prio_tmp < priority[itt])) then
+									prio_tmp:=priority[itt]
+								end if;
+								itt := itt+1;
+								if(itt > total) then
+									break check
+								end if
+							end loop;
+							prio:=prio_tmp
+							end if
+						elsif (idx < total) then
+							idx := idx+1
+						end if
+					end if
+			
+			end select
+		end loop
+	end var
+	end process
+
+end module 

@@ -1,0 +1,77 @@
+module TEMPLATE_REPAIRUNIT_ND(TEMPLATE_COMMON) is
+
+	process REPAIRUNIT [REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, RATE_REPAIR : NAT_NAT_CHANNEL, REPAIRING : NAT_CHANNEL] (total : NAT, repair_needed : BOOL_ARRAY, repaired : BOOL_ARRAY) is
+	var
+		nr : NAT,
+		idx : NAT,
+		nr_queue : NAT,
+		signal : BOOL,
+		in_repair : BOOL
+	in
+		idx := 0;
+		nr_queue := 0;
+		signal := FALSE;
+		in_repair := FALSE;
+		loop
+			select
+				-- listen for repair
+				REPAIR (?nr) where (0 < nr) and (nr <= total);
+				if (not (repair_needed[nr])) then
+					repair_needed[nr] := TRUE;
+					nr_queue := nr_queue + 1
+				end if;
+				nr := 0
+
+				
+
+				-- repair with any strategy
+				[]
+					if ((nr_queue > 0) and (not(in_repair))) then
+					if ((0 < idx) and (idx <= total) and (repair_needed[idx]) and (not(repaired[idx]))) then
+						repaired[idx] := TRUE;
+						in_repair := TRUE;
+						REPAIRING (idx of NAT)
+					end if
+					end if
+
+				[]
+					if ((nr_queue > 0) and (in_repair)) then
+					if ((0 < idx) and (idx <= total) and (repair_needed[idx]) and (repaired[idx])) then
+						nr_queue := nr_queue - 1;
+						signal := TRUE;
+						in_repair := FALSE;
+						RATE_REPAIR (!1 of NAT,idx of NAT)
+					end if
+					end if
+					
+
+				-- look for all BCs
+				[]
+					if(not(signal) and (not(in_repair))) then
+						if (idx < total) then
+							idx := idx+1
+						else
+							idx := 0
+						end if
+					end if
+					
+				-- signal the repair signal of repaired BC
+				[]
+					if (signal) then
+						if((0 < idx) and (idx <= total) and (repair_needed[idx]) and (repaired[idx])) then
+							signal := FALSE;
+							repair_needed[idx] := FALSE;
+							repaired[idx] := FALSE;
+							REPAIRED(!idx,TRUE);
+							idx := idx+1
+						elsif (idx < total) then
+							idx := idx+1
+						end if
+					end if
+			
+			end select
+		end loop
+	end var
+	end process
+
+end module 

@@ -325,7 +325,8 @@ namespace DFT {
 		 * @param dft The DFT to calculate
 		 * @return 0 if successful, non-zero otherwise
 		 */
-		int calculateDFT(const bool reuse, const std::string& cwd, const File& dft, const std::vector<std::pair<std::string,std::string>>& timeSpec, unordered_map<string,string> settings,  bool calcImca, bool warnNonDeterminism);
+		int calculateDFT(const bool reuse, const std::string& cwd, const File& dft, const std::vector<std::pair<std::string,std::string>>& timeSpec,
+				unordered_map<string,string> settings,  bool calcImca, bool warnNonDeterminism);
 		
 		void setEvidence(const std::vector<std::string>& evidence) {this->evidence = evidence;}
 		const std::vector<std::string>& getEvidence() const {return evidence;}

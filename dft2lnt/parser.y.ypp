@@ -6,7 +6,7 @@
  * 
  * Adapted by Gerjan Stokkink to support Mac OS X.
  *
- * @author Freark van der Berg
+ * @author Freark van der Berg and extended by Dennis Guck
  */
 
 %pure-parser
@@ -99,6 +99,10 @@
 %token<c_string> SEQ
 %token<c_string> OF
 %token<c_string> FDEP
+%token<c_string> RU
+%token<c_string> RU_F
+%token<c_string> RU_P
+%token<c_string> RU_ND
 %token<c_string> TRANSFER
 
 // Attribute names
@@ -113,6 +117,8 @@
 %token<c_string> REPL
 %token<c_string> DORM
 %token<c_string> APH
+%token<c_string> REPAIR
+%token<c_string> PRIO
 
 // Other
 %token ENDLINE
@@ -317,6 +323,8 @@ be_attrib_name //{
 	|	REPL   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepl  ); free($1); }
 	|	DORM   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelDorm  ); free($1); }
 	|	APH    { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelAph   ); free($1); }
+	|	REPAIR { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepair); free($1); }
+	|	PRIO   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelPrio); free($1); }
 	;
 //}
 
@@ -453,17 +461,21 @@ page_line //{
 
 /* gate */
 gate //{
-	:	PHASEDOR  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GatePhasedOrType); free($1); }
-	|	OR        { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateOrType      ); free($1); }
-	|	AND       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateAndType     ); free($1); }
-	|	HSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateHSPType     ); free($1); }
-	|	WSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateWSPType     ); free($1); }
-	|	CSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateCSPType     ); free($1); }
-	|	PAND      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GatePAndType    ); free($1); }
-	|	SEQ       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateSeqType     ); free($1); }
+	:	PHASEDOR  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GatePhasedOrType  ); free($1); }
+	|	OR        { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateOrType        ); free($1); }
+	|	AND       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateAndType       ); free($1); }
+	|	HSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateHSPType       ); free($1); }
+	|	WSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateWSPType       ); free($1); }
+	|	CSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateCSPType       ); free($1); }
+	|	PAND      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GatePAndType      ); free($1); }
+	|	SEQ       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateSeqType       ); free($1); }
 	|	VOTING    { $$ = new DFT::AST::ASTVotingGateType(@$,$1.k,$1.n);                                        }
-	|	FDEP      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateFDEPType    ); free($1); }
-	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType); free($1); }
+	|	FDEP      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateFDEPType      ); free($1); }
+	|	RU        { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitType    ); free($1); }
+	|	RU_F      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitFcfsType); free($1); }
+	|	RU_P      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitPrioType); free($1); }
+	|	RU_ND     { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitNdType);   free($1); }
+	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType  ); free($1); }
 	;
 //}
 

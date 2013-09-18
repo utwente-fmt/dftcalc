@@ -5,6 +5,7 @@
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
  * @author Freark van der Berg
+ * @modified by Dennis Guck
  */
 
 #include "Node.h"
@@ -21,6 +22,10 @@ namespace Nodes {
 	const std::string Node::GateVotingStr("voting");
 	const std::string Node::GateFDEPStr("fdep");
 	const std::string Node::UnknownStr("XXX");
+	const std::string Node::RepairUnitStr("ru");
+	const std::string Node::RepairUnitFcfsStr("ru_f");
+	const std::string Node::RepairUnitPrioStr("ru_p");
+	const std::string Node::RepairUnitNdStr("ru_nd");
 
 }
 }

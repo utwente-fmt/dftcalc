@@ -20,5 +20,6 @@
 #include "dftnodes/GateWSP.h"
 #include "dftnodes/GatePAnd.h"
 #include "dftnodes/GateFDEP.h"
+#include "dftnodes/RepairUnit.h"
 
 #endif // NODES_H

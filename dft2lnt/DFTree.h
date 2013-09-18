@@ -4,7 +4,7 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg
+ * @author Freark van der Berg and extended by Dennis Guck
  */
 
 namespace DFT {
@@ -267,6 +267,55 @@ public:
 		}
 		if(!errors.empty()) {
 			throw errors;
+		}
+	}
+
+	/**
+	 * Apply repair information to a gates
+	 * @param Gate to apply informatrion
+	 */
+	void addRepairInfo(DFT::Nodes::Gate* gate) {
+		gate->setRepairable(true);
+		for(size_t n = 0; n<gate->getParents().size(); ++n) {
+			DFT::Nodes::Node* parent = gate->getChildren().at(n);
+			if(parent->isGate()){
+				DFT::Nodes::Gate* p = static_cast<DFT::Nodes::Gate*>(parent);
+				addRepairInfo(p);
+			}
+		}
+	}
+
+	/**
+	 * Find repair information
+	 * @param Gate to start
+	 */
+	void findRepairInfo(DFT::Nodes::Gate* gate) {
+		for(size_t n = 0; n<gate->getChildren().size(); ++n) {
+			// Get the current child and associated childID
+			DFT::Nodes::Node* child = gate->getChildren().at(n);
+			if(child->isBasicEvent()) {
+				const DFT::Nodes::BasicEvent* be = static_cast<const DFT::Nodes::BasicEvent*>(child);
+				if(be->isRepairable()){
+					addRepairInfo(gate);
+				}
+			}else if(child->isGate()) {
+				DFT::Nodes::Gate* g = static_cast<DFT::Nodes::Gate*>(child);
+				findRepairInfo(g);
+				if(child->isRepairable())
+					gate->setRepairable(true);
+			}
+		}
+	}
+
+
+	/**
+	 * Apply repair information to all gates
+	 */
+	void addRepairInfo() {
+		DFT::Nodes::Node* node=getTopNode();
+		if(node->isGate()){
+			DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*>(node);
+			findRepairInfo(gate);
 		}
 	}
 };

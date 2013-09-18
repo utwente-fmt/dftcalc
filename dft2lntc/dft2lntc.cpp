@@ -4,7 +4,7 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg
+ * @author Freark van der Berg and extended by Dennis Guck
  */
 
 #include <stdlib.h>
@@ -553,7 +553,7 @@ int main(int argc, char** argv) {
 	
 	/* Apply evidence to DFT */
 	if(dftValid && !failedBEs.empty()) {
-		compilerContext->reportAction("Appling evidence to DFT...",VERBOSITY_FLOW);
+		compilerContext->reportAction("Applying evidence to DFT...",VERBOSITY_FLOW);
 		try {
 			dft->applyEvidence(failedBEs);
 		} catch(std::vector<std::string>& errors) {
@@ -563,6 +563,12 @@ int main(int argc, char** argv) {
 		}
 	}
 	
+	/* Add repair knowledge to gates */
+	if(dft) {
+		compilerContext->reportAction("Applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
+		dft->addRepairInfo();
+	}
+
 	/* Printing DFT */
 	if(dftValid && outputDFTFileSet) {
 		compilerContext->notify("Printing DFT...",VERBOSITY_FLOW);
