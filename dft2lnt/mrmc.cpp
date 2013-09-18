@@ -59,7 +59,7 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 		const char* c = buffer;
 		while(*c) {
 			//printf("%c",*c);
-			if(!strncmp("$MIN_RESULT",c,11)) {
+			if(!strncmp("$MIN_RESULT",c,11) || !strncmp("$MAX_RESULT",c,11)) {
 				c += 15;
 				const char* ce = c;
 				while(*ce && *ce!=')') ce++;

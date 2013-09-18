@@ -46,23 +46,31 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 	char *k;
 	char tb_needle[] = "tb=";
 	char prob_needle[] = "probability: ";
-	char et_needle[] = "Maximal expected time: ";
-	if((k=strstr(p, et_needle)) != 0) {
-		char *et = k + strlen(et_needle);
-		char *et_e = strchr(et, '\n');
-		if (et_e != 0) {
-			*et_e = '\0';
-			p = et_e + 1;
-		} else {
-			p = et;
+	char et_max_needle[] = "Maximal expected time: ";
+	char et_min_needle[] = "Minimal expected time: ";
+	char *et_needles[] = { et_max_needle, et_min_needle, 0 };
+	int found = 0;
+	for(int i=0; et_needles[i] != 0; i++) {
+		if((k=strstr(p, et_needles[i])) != 0) {
+			char *et = k + strlen(et_needles[i]);
+			char *et_e = strchr(et, '\n');
+			if (et_e != 0) {
+				*et_e = '\0';
+				p = et_e + 1;
+			} else {
+				p = et;
+			}
+			double et_res = 0;
+                	int r_et  = sscanf(et,"%lf",&et_res);
+			if (r_et ==  1){
+				results.push_back(std::pair<std::string,IMCA::T_Chance>("?",et_res));
+				i_isCalculated = true;
+				found = 1;
+				break;
+			}
 		}
-		double et_res = 0;
-                int r_et  = sscanf(et,"%lf",&et_res);
-		if (r_et ==  1){
-			results.push_back(std::pair<std::string,IMCA::T_Chance>("?",et_res));
-			i_isCalculated = true;
-		}
-	} else {
+	}
+	if(! found) {
 		p = buffer;
 		while((k= strstr(p, prob_needle)) != 0) {
 			// find start of line, by looking for end of previous line (either '\n' or '\0')
