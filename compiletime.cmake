@@ -3,6 +3,7 @@ execute_process(
 	OUTPUT_VARIABLE date_output OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 if(USECOMMANDLINEGITINFO STREQUAL "YES")
+else()
 	execute_process(
 		COMMAND git rev-parse --verify HEAD
 		OUTPUT_VARIABLE git_output OUTPUT_STRIP_TRAILING_WHITESPACE
