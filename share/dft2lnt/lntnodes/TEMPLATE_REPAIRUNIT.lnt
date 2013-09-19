@@ -1,0 +1,78 @@
+module TEMPLATE_REPAIRUNIT(TEMPLATE_COMMON) is
+
+	process REPAIRUNIT [REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, RATE_REPAIR : NAT_NAT_CHANNEL] (total : NAT, repair_needed : BOOL_ARRAY, repair_queue : NAT_ARRAY) is
+	var
+		nr : NAT,
+		nr_re : NAT,
+		nr_queue : NAT,
+		nr_signal : NAT,
+		idx : NAT
+	in
+		nr_queue := 0;
+		nr_signal := 0;
+		idx := 0;
+		loop
+			select
+				-- listen for repair
+				REPAIR (?nr) where (0 < nr) and (nr <= total);
+				if (not (repair_needed[nr])) then
+					repair_needed[nr] := TRUE;
+					nr_queue := nr_queue + 1;
+					repair_queue[nr] := nr_queue
+				end if
+				
+				-- repair with FCFS strategy
+				[]
+					if ((nr_queue > 0) and (nr_signal == 0)) then
+						idx := idx + 1;
+						loop repair in
+							if ((repair_needed[idx]) and (repair_queue[idx] == 1)) then
+								nr_queue := nr_queue - 1;
+								nr_signal := 1;
+								RATE_REPAIR (!1 of NAT,idx of NAT);
+								break repair
+							end if;
+							idx := idx + 1;
+							if(idx > total) then
+								break repair
+							end if
+						end loop;
+						idx := 1;
+						loop decrement in
+							if(repair_needed[idx]) then
+								repair_queue[idx] := repair_queue[idx] - 1
+							end if;
+							idx := idx + 1;
+							if(idx > total) then
+								break decrement
+							end if
+						end loop;
+						idx := 0
+					end if
+					
+				-- signal the repair with FCFS strategy
+				[]
+					if (nr_signal > 0) then
+						idx := idx+ 1;
+						loop signal in
+							if((repair_needed[idx]) and (repair_queue[idx] == 0)) then
+								nr_signal := 0;
+								repair_needed[idx] := FALSE;
+								REPAIRED(!idx,TRUE);
+								break signal
+							end if;
+							idx := idx + 1;
+							if(idx > total) then
+								break signal
+							end if
+						end loop;
+						idx := 0
+					end if
+			
+			
+			end select
+		end loop
+	end var
+	end process
+
+end module 
