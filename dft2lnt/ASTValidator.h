@@ -119,6 +119,11 @@ public:
 		if(!ast) return false;
 		
 		buildDefinedNodesList();
+
+		if (definedNodes.size() == 0) {
+			std::cout << "No nodes defined (nada niente nix nenio). Empty input file?!?!?" << std::endl;
+			return false;
+		}
 		
 		int valid = true;
 		
