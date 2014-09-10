@@ -37,6 +37,7 @@ enum NodeType {
 	GateCSPType,
 	GatePAndType,
 	GateSeqType,
+    GatePORType,
 	GateVotingType,
 	GateFDEPType,
 	GateTransferType,

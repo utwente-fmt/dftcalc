@@ -272,7 +272,7 @@ public:
 
 	/**
 	 * Apply repair information to a gates
-	 * @param Gate to apply informatrion
+	 * @param Gate to apply information on
 	 */
 	void addRepairInfo(DFT::Nodes::Gate* gate) {
 		gate->setRepairable(true);
@@ -302,7 +302,7 @@ public:
 				DFT::Nodes::Gate* g = static_cast<DFT::Nodes::Gate*>(child);
 				findRepairInfo(g);
 				if(child->isRepairable())
-					gate->setRepairable(true);
+                    gate->setRepairable(true);
 			}
 		}
 	}

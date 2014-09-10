@@ -4,7 +4,7 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg
+ * @author Freark van der Berg extended by Dennis Guck
  */
 
 #ifndef NODES_H
@@ -19,6 +19,7 @@
 #include "dftnodes/GateVoting.h"
 #include "dftnodes/GateWSP.h"
 #include "dftnodes/GatePAnd.h"
+#include "dftnodes/GatePOR.h"
 #include "dftnodes/GateFDEP.h"
 #include "dftnodes/RepairUnit.h"
 
