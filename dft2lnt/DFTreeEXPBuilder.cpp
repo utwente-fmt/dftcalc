@@ -1179,6 +1179,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 
 				/** ONLINE Rules **/
 				{
+                    if(node.isRepairable()) {
 					// Go through all the existing fail rules
 					std::vector<EXPSyncRule*>::iterator itf = onlineRules.begin();
 					bool areOtherRules = false;
@@ -1223,6 +1224,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 						}
 						onlineRules.push_back(ruleO);
 					}
+                    }
 				}
 
 				}else {
