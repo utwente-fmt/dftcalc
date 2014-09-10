@@ -65,6 +65,9 @@ public:
 		case DFT::Nodes::GatePAndType:
 			gate = new DFT::Nodes::GatePAnd(astgate->getLocation(), astgate->getName()->getString());
 			break;
+        case DFT::Nodes::GatePorType:
+            gate = new DFT::Nodes::GatePor(astgate->getLocation(), astgate->getName()->getString());
+            break;
 		case DFT::Nodes::GateSeqType:
 			break;
 		case DFT::Nodes::GateVotingType: {

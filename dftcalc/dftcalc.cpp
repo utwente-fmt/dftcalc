@@ -394,13 +394,15 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 		   << " -x \"" + exp.getFileRealPath() + "\""
 		   << " -b \"" + bcg.getFileRealPath() + "\""
 		   << " -n \"" + dftOriginal.getFileRealPath() + "\""
-		   << " \""    + dft.getFileRealPath() + "\""
-		   << " --warn-code";
-		ss << " -e \"";
+		   << " \""    + dft.getFileRealPath() + "\"";
+		//   << " --warn-code";
+		if(!evidence.empty())
+        { ss << " -e \"";
 		for(std::string e: evidence) {
 			ss << e << ",";
 		}
 		ss << "\"";
+        }
 		if (!messageFormatter->usingColoredMessages())
 			ss << " --no-color";
 		sysOps.command = ss.str();

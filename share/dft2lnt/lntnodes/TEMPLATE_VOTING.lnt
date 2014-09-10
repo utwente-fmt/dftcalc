@@ -10,7 +10,7 @@ module TEMPLATE_VOTING(TEMPLATE_COMMON) is
 		done := FALSE;
 		loop
 			select
-			
+
 			(*
 			 * Listen for any child to be triggered.
 			 * If this happens, we remember this by setting the boolean
@@ -21,7 +21,7 @@ module TEMPLATE_VOTING(TEMPLATE_COMMON) is
 					received[nr] := TRUE;
 					threshold := threshold - 1
 				end if
-			
+
 			(*
 			 * If the threshold reaches 0, this means the threshold number
 			 * of children have failed out of the total number of children.
@@ -32,7 +32,7 @@ module TEMPLATE_VOTING(TEMPLATE_COMMON) is
 					FAIL (!0 of NAT); done := TRUE
 				end if;
 				nr := 0
-			
+
 			(*
 			 * If this node is activated, enable the activation procedure.
 			 *)
@@ -41,7 +41,7 @@ module TEMPLATE_VOTING(TEMPLATE_COMMON) is
 				if (nr_act == 0 of NAT) then
 					nr_act := 1 of NAT
 				end if
-			
+
 			(*
 			 * If the children should be activated, do so, one by one,
 			 * from left to right.
@@ -63,5 +63,4 @@ module TEMPLATE_VOTING(TEMPLATE_COMMON) is
 	end process
 
 
-end module 
-
+end module

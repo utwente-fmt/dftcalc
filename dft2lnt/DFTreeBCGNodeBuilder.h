@@ -56,6 +56,7 @@ private:
 	int generateOr(FileWriter& out, const DFT::Nodes::GateOr& gate);
 	int generateVoting(FileWriter& out, const DFT::Nodes::GateVoting& gate);
 	int generatePAnd(FileWriter& out, const DFT::Nodes::GatePAnd& gate);
+    int generatePor(FileWriter& out, const DFT::Nodes::GatePor& gate);
 	int generateSpare(FileWriter& out, const DFT::Nodes::GateWSP& gate);
 	int generateFDEP(FileWriter& out, const DFT::Nodes::GateFDEP& gate);
 	int generateBE(FileWriter& out, const DFT::Nodes::BasicEvent& gate);
@@ -103,7 +104,7 @@ public:
 	
 	/**
 	 * Writes the contents of the specified FileWriter to the file at the
-	 * specified path. It will report warnings to the CompilerContext known to
+	 * specified path. It will rePort warnings to the CompilerContext known to
 	 * this instance.
 	 * @param filePath Path to the file to write to
 	 * @param fw FileWriter of which the contents will be written to the file.

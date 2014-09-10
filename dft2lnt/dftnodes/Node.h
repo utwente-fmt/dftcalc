@@ -37,7 +37,7 @@ enum NodeType {
 	GateCSPType,
 	GatePAndType,
 	GateSeqType,
-    GatePORType,
+    GatePorType,
 	GateVotingType,
 	GateFDEPType,
 	GateTransferType,
@@ -65,6 +65,7 @@ public:
 	static const std::string GateOrStr;
 	static const std::string GateWSPStr;
 	static const std::string GatePAndStr;
+    static const std::string GatePorStr;
 	static const std::string GateVotingStr;
 	static const std::string GateFDEPStr;
 	static const std::string UnknownStr;
@@ -89,6 +90,8 @@ public:
 			return GateWSPStr;
 		case GatePAndType:
 			return GatePAndStr;
+        case GatePorType:
+            return GatePorStr;
 		case GateVotingType:
 			return GateVotingStr;
 		case GateFDEPType:

@@ -7,7 +7,7 @@
  * @author Florian Arnold and extended by Dennis Guck
  */
 
-class GatePOR;
+class GatePor;
 
 #ifndef GATEPOR_H
 #define GATEPOR_H
@@ -17,14 +17,14 @@ class GatePOR;
 namespace DFT {
 namespace Nodes {
 
-class GatePOR: public Gate {
+class GatePor: public Gate {
 private:
 	
 public:
-	GatePOR(Location loc, std::string name):
-		Gate(loc,name,GatePORType) {
+	GatePor(Location loc, std::string name):
+		Gate(loc,name,GatePorType) {
 	}
-	virtual ~GatePOR() {
+	virtual ~GatePor() {
 	}
 };
 

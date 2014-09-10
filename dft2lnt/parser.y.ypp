@@ -1,9 +1,9 @@
 /*
  * parser.y.ypp
- * 
+ *
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
- * 
+ *
  * Adapted by Gerjan Stokkink to support Mac OS X.
  *
  * @author Freark van der Berg and extended by Dennis Guck
@@ -47,12 +47,12 @@
 		int number;
 		char* suffix;
 	} NumberSuffix;
-	
+
 	typedef struct Voting {
 		int n;
 		int k;
 	} Voting;
-	
+
 }
 
 %union {
@@ -96,6 +96,7 @@
 %token<c_string> WSP
 %token<c_string> CSP
 %token<c_string> PAND
+%token<c_string> POR
 %token<c_string> SEQ
 %token<c_string> OF
 %token<c_string> FDEP
@@ -145,7 +146,7 @@
 //%type <dft>       dft
 
 %initial-action{
-	
+
 	// Likely this has no effect, as YYLLOC_DEFAULT() is called to init the first location
 	@$.setFileName(currentParser->getCurrentFileName());
 }
@@ -300,7 +301,7 @@ be_attrib // {
 			currentParser->getCC()->reportErrorAt(@1.end(),"name needs a value assigned");
 			$$ = NULL;
 		}
-		
+
 // Causes shift/reduce conflicts
 //	|	be_attrib_value
 //		{
@@ -377,7 +378,7 @@ gate_line //{
 		{
 			$$ = new DFT::AST::ASTGate(@$,$1,$3,$5);
 		}
-	
+
 	/** Error rules */
 // Causes shift/reduce errors
 //	|	nodeid gate names be_attribs SEMICOLON
@@ -468,13 +469,14 @@ gate //{
 	|	WSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateWSPType       ); free($1); }
 	|	CSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateCSPType       ); free($1); }
 	|	PAND      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GatePAndType      ); free($1); }
+	|	POR       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GatePorType       ); free($1); }
 	|	SEQ       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateSeqType       ); free($1); }
-	|	VOTING    { $$ = new DFT::AST::ASTVotingGateType(@$,$1.k,$1.n);                                        }
+	|	VOTING    { $$ = new DFT::AST::ASTVotingGateType(@$,$1.k,$1.n);                                          }
 	|	FDEP      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateFDEPType      ); free($1); }
 	|	RU        { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitType    ); free($1); }
 	|	RU_F      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitFcfsType); free($1); }
 	|	RU_P      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitPrioType); free($1); }
-	|	RU_ND     { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitNdType);   free($1); }
+	|	RU_ND     { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitNdType  ); free($1); }
 	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType  ); free($1); }
 	;
 //}

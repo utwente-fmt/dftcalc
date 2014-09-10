@@ -60,7 +60,7 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		ss << " in \"";
 		ss << be.getFileToEmbed();
 		ss << "\" end rename";
-	} else {
+	} else if(be.getLambda()>0){
 		ss << "total rename ";
 		// Insert lambda value
 		ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !2\" -> \"rate " << be.getLambda() << "\"";
@@ -73,7 +73,11 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		ss << " in \"";
 		ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
 		ss << ".bcg\" end rename";
-	}
+	} else {
+		ss << "\"";
+		ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
+		ss << ".bcg\"";
+    }
 	return ss.str();
 }
 
@@ -558,6 +562,9 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 	int DFT::DFTreeEXPBuilder::createSyncRuleGatePAnd(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GatePAnd& node, unsigned int nodeID) {
 		return 0;
 	}
+    int DFT::DFTreeEXPBuilder::createSyncRuleGatePor(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GatePor& node, unsigned int nodeID) {
+        return 0;
+    }
 	int DFT::DFTreeEXPBuilder::createSyncRuleGateVoting(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateVoting& node, unsigned int nodeID) {
 		return 0;
 	}
@@ -955,6 +962,11 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 			createSyncRuleGatePAnd(activationRules,failRules,*g,nodeID);
 			break;
 		}
+        case DFT::Nodes::GatePorType: {
+            const DFT::Nodes::GatePor* g = static_cast<const DFT::Nodes::GatePor*>(&node);
+            createSyncRuleGatePor(activationRules,failRules,*g,nodeID);
+            break;
+        }
 		case DFT::Nodes::GateSeqType: {
 			cc->reportErrorAt(node.getLocation(),"DFTreeEXPBuilder: unsupported gate: " + node.getTypeStr());
 			break;
@@ -1444,6 +1456,11 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 				createSyncRuleGatePAnd(activationRules,failRules,*g,nodeID);
 				break;
 			}
+            case DFT::Nodes::GatePorType: {
+                const DFT::Nodes::GatePor* g = static_cast<const DFT::Nodes::GatePor*>(&node);
+                createSyncRuleGatePor(activationRules,failRules,*g,nodeID);
+                break;
+            }
 			case DFT::Nodes::GateSeqType: {
 				cc->reportErrorAt(node.getLocation(),"DFTreeEXPBuilder: unsupported gate: " + node.getTypeStr());
 				break;
