@@ -1,0 +1,52 @@
+module TEMPLATE_BE_DUMMY(TEMPLATE_COMMON) is
+
+	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (total: NAT, initial: STATUS) is
+	var
+		status : STATUS,
+		nr : NAT
+	in
+		status := initial;
+		nr := 0;
+		loop
+			select
+
+			(*
+			 * When this BE is activated, it will set the status to ACTIVE,
+			 * but only if it was DORMANT (not active and not failed)
+			 *)
+				ACTIVATE (?nr,FALSE) where (nr==0 of NAT);
+				if (status == DORMANT) then
+					status := ACTIVE
+				end if;
+				nr := 0
+
+			(*
+			* When this BE is ACTIVE or DORMANT, it can fail with the
+			* failure triggered by an event.
+			* If the failure event is trigger, go into the FAILING state.
+			*)
+			[]
+				if (not (status == FAILING) or not (status == FAILED)) then
+					FAIL (?nr) where (0 < nr) and (nr <= total);
+					if ((status == DORMANT) or (status == ACTIVE)) then
+						status := FAILING
+					end if
+				end if;
+				nr := 0
+
+			(*
+			 * When this BE is in the FAILING state (caused by one of the
+			 * failure rates), signal this to the system using FAIL !0.
+			 * After this, go into the FAILED state.
+			 *)
+			[]
+				if (status == FAILING) then
+					FAIL (!0 of NAT);
+					status := FAILED
+				end if
+			end select
+		end loop
+	end var
+	end process
+
+end module
