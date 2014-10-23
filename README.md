@@ -37,11 +37,11 @@ Download the most recent IMCA version from [github](https://github.com/utwente-f
 Installation
 =====================================================================================================================
 
-# Create Makefiles
+**Create Makefiles**
 $ cmake CMakeList
 
-# Build
+**Build**
 $ make
 
-# Install
+**Install**
 $ make install
