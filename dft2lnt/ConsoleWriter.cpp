@@ -73,9 +73,9 @@ ConsoleWriter::ConsoleWriter(std::ostream& out):
 	out(out),
 	ignoreColors(false) {
 		
-	if(out==std::cout) {
+        if(&out==&std::cout) {
 		kindOfStream = 1;
-	} else if(out==std::cerr) {
+	} else if(&out==&std::cerr) {
 		kindOfStream = 2;
 	} else {
 		kindOfStream = 0;
