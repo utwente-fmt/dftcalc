@@ -37,6 +37,7 @@ enum AttributeLabelType {
     AttrLabelRes,
     AttrLabelRepl,
     AttrLabelDorm,
+    AttrLabelMaintain,
     AttrLabelAph,
     AttrLabelRepair,
     AttrLabelPrio
@@ -240,6 +241,7 @@ private:
 	DFT::Nodes::BE::CalculationMode mode;
 	double lambda;
 	double mu;
+    double maintain_rate;
 	double repair_rate;
 	int priority;
 //	double dorm;
@@ -255,6 +257,9 @@ public:
 	void setMu(double mu) {
 		this->mu = mu;
 	}
+    void setMaintain(double maintain_rate) {
+        this->maintain_rate = maintain_rate;
+    }
 	void setRepair(double repair_rate) {
 		this->repair_rate = repair_rate;
 	}
@@ -292,6 +297,12 @@ public:
 	 */
 	double getDorm()   const { return mu / lambda; }
 
+    /**
+     * Returns the repair rate of this Basic Event.
+     * @return The repair rate of this Basic Event.
+     */
+    double getMaintain()     const { return maintain_rate; }
+    
 	/**
 	 * Returns the repair rate of this Basic Event.
 	 * @return The repair rate of this Basic Event.
@@ -326,6 +337,7 @@ public:
 		mode(DFT::Nodes::BE::CalculationMode::UNDEFINED),
 		lambda(-1),
 		mu(0),
+        maintain_rate(0),
 		repair_rate(-1),
 		priority(0),
 		rate(-1),

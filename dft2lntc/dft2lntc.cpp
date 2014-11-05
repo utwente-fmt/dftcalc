@@ -564,7 +564,7 @@ int main(int argc, char** argv) {
 			compilerContext->flush();
 		}
 	}
-	
+    
 	/* Add repair knowledge to gates */
 	if(dft) {
 		compilerContext->reportAction("Applying repair knowledge to DFT gates...",VERBOSITY_FLOW);

@@ -173,6 +173,17 @@ public:
 				}
 			}
 		}
+        
+        // Find maintain
+        {
+            std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+            for(; it!=basicEvent->getAttributes()->end(); ++it) {
+                if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelMaintain) {
+                    double v = (*it)->getValue()->getFloatValue();
+                    be->setMaintain(v);
+                }
+            }
+        }
 		
 		// Find repair
 		{

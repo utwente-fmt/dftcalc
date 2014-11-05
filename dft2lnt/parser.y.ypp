@@ -117,6 +117,7 @@
 %token<c_string> RES
 %token<c_string> REPL
 %token<c_string> DORM
+%token<c_string> MAINTAIN
 %token<c_string> APH
 %token<c_string> REPAIR
 %token<c_string> PRIO
@@ -323,6 +324,7 @@ be_attrib_name //{
 	|	RES    { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRes   ); free($1); }
 	|	REPL   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepl  ); free($1); }
 	|	DORM   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelDorm  ); free($1); }
+	|	MAINTAIN{ $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelMaintain); free($1); }
 	|	APH    { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelAph   ); free($1); }
 	|	REPAIR { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepair); free($1); }
 	|	PRIO   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelPrio); free($1); }

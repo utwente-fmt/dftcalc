@@ -352,6 +352,7 @@ res                     { yylval->c_string=my_strdup(yytext); return RES;    }
 repl                    { yylval->c_string=my_strdup(yytext); return REPL;   }
 dorm                    { yylval->c_string=my_strdup(yytext); return DORM;   }
 aph                     { yylval->c_string=my_strdup(yytext); return APH;    }
+maintain                  { yylval->c_string=my_strdup(yytext); return MAINTAIN; }
 repair                  { yylval->c_string=my_strdup(yytext); return REPAIR; }
 prio                    { yylval->c_string=my_strdup(yytext); return PRIO; }
 

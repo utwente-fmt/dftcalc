@@ -70,6 +70,10 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 			ss << ", ";
 			ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << be.getMu()     << "\"";
 		}
+        if(be.getMaintain()>0) {
+            ss << ", ";
+            ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_MAINTAIN << " !1 !1\" -> \"rate " << be.getMaintain()     << "\"";
+        }
 		ss << " in \"";
 		ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
 		ss << ".bcg\" end rename";

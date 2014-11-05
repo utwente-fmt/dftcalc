@@ -263,6 +263,31 @@ public:
 					cc->reportErrorAt(attribute->getLocation(),"dorm label needs float value");
 				}
 				break;
+            // check for new maintain label
+            case DFT::Nodes::BE::AttrLabelMaintain:
+                if(!value) {
+                    valid = false;
+                    cc->reportErrorAt(attribute->getLocation(),"maintain label without value");
+                    break;
+                }
+                if(value->isFloat()) {
+                    float v = static_cast<DFT::AST::ASTAttribFloat*>(value)->getValue();
+                    if(v < 0) {
+                        valid = false;
+                        cc->reportErrorAt(attribute->getLocation(),"negative maintain");
+                    }
+                } else if(value->isNumber()) {
+                    int v = static_cast<DFT::AST::ASTAttribNumber*>(value)->getValue();
+                    if(v < 0) {
+                        valid = false;
+                        cc->reportErrorAt(attribute->getLocation(),"negative maitntain");
+                    }
+                } else {
+                    valid = false;
+                    cc->reportErrorAt(attribute->getLocation(),"maintain label needs float value");
+                }
+                break;
+
 			// check for new repair label
 			case DFT::Nodes::BE::AttrLabelRepair:
 				if(!value) {
