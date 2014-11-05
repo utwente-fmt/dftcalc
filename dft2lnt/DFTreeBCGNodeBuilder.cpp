@@ -34,6 +34,7 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIR      ("REPAIR");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_ONLINE      ("ONLINE");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRED    ("REPAIRED");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL   ("RATE_FAIL");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_MAINTAIN   ("RATE_MAINTAIN");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR ("RATE_REPAIR");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING   ("REPAIRING");
 
@@ -60,10 +61,13 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		if(be.getMu()==0) {
 			ss << "_cold";
 		}
+        if(be.getMaintain()>0) {
+            ss << "_maintain";
+        }
 		// extension for a repairable BE
 		if(be.getRepair()>0) {
-					ss << "_repair";
-				}
+            ss << "_repair";
+        }
         if(be.getLambda()==0) {
             ss << "_dummy";
         }
@@ -358,6 +362,9 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 
 	// new boolean variable for repairable BE
 	bool repair = be.getRepair() > 0;
+    
+    // check if it is maintainabel
+    bool maintain = be.getMaintain() > 0;
 
 	std::string initialState;
 	if(be.getFailed()) initialState = "FAILING";
@@ -368,19 +375,23 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 	generateHeaderClose(out);
 	out << out.applyprefix << "module " << getFileForNode(be) << "(TEMPLATE_BE";
 	// use repair template if  repairable
-	out << (repair?"_REPAIR) is":") is") << out.applypostfix;
+	out << (repair?"_REPAIR) is":maintain?"_MAINTAIN) is":") is") << out.applypostfix;
 	out.appendLine("");
 	out.indent();
 		if(repair)
 			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, "
 			<< GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
-		else
+		else if(maintain)
+            out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << "MAINTAIN : NAT_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, " << GATE_RATE_MAINTAIN << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
+        else
 			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
 		out.indent();
 			if(repair)
 				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_ONLINE <<
 				"](" << nr_parents << " of NAT";
-			else
+			else if(maintain)
+                out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << ", MAINTAIN, " << GATE_RATE_FAIL << "," << GATE_RATE_MAINTAIN << "](" << nr_parents << " of NAT";
+            else
 				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "](" << nr_parents << " of NAT";
 			out << ", " << (cold?"TRUE":"FALSE");
 			out << ", " << initialState;
@@ -731,7 +742,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 					// Read the list of dependencies until ')' is reached
 					while(*deps != '\0' && *deps != ')') {
 						while(isspace(*deps)) ++deps;
-						if(*deps==')' || deps == '\0') break;
+						if(*deps==')' || *deps == '\0') break;
 						char* enddep = deps;
 						while(!isspace(*enddep) && *enddep != ')' && *enddep != '\0') ++enddep;
 						dependencies.push_back(string(deps,enddep));
