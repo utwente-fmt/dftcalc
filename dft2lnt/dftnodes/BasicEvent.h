@@ -39,6 +39,7 @@ enum AttributeLabelType {
     AttrLabelDorm,
     AttrLabelMaintain,
     AttrLabelAph,
+    AttrLabelPhases,
     AttrLabelRepair,
     AttrLabelPrio
 };

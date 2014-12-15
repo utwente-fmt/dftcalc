@@ -196,6 +196,16 @@ public:
 				}
 			}
 		}
+        // Find phases
+        {
+            std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+            for(; it!=basicEvent->getAttributes()->end(); ++it) {
+                if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelPhases) {
+                    double v = (*it)->getValue()->getNumberValue();
+                    be->setPhases(v);
+                }
+            }
+        }
 		// Find priority
 		{
 			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
