@@ -36,7 +36,10 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRED    ("REPAIRED");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL   ("RATE_FAIL");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_MAINTAIN   ("RATE_MAINTAIN");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR ("RATE_REPAIR");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_INSPECTION ("RATE_INSPECTION");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING   ("REPAIRING");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECT   ("INSPECT");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECTED   ("INSPECTED");
 
 const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 6;
 
@@ -525,7 +528,27 @@ int DFT::DFTreeBCGNodeBuilder::generateRU_Nd(FileWriter& out, const DFT::Nodes::
 }
 
 int DFT::DFTreeBCGNodeBuilder::generateInspection(FileWriter& out, const DFT::Nodes::Inspection& gate) {
+    int total = gate.getChildren().size();
+    // TODO: define how to set and get phases for Inspection and Replacement
+    int phases = 1;
+    out << out.applyprefix << " * Generating Inspection(dependers=" << total << ")" << out.applypostfix;
+    generateHeaderClose(out);
     
+    out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_INSPECTION) is" << out.applypostfix;
+    out.indent();
+
+        out << out.applyprefix << "process MAIN [" << GATE_INSPECT << " : NAT_CHANNEL, " << GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED  << " : NAT_BOOL_CHANNEL, " <<
+            GATE_RATE_INSPECTION << " : NAT_CHANNEL, " << GATE_INSPECTED << " : NAT_CHANNEL ] is" << out.applypostfix;
+        out.indent();
+    
+            out << out.applyprefix << "INSPECTION [" << GATE_INSPECT << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_RATE_INSPECTION << "," << GATE_INSPECTED << "] (" << total << " of NAT," << phases << " of NAT)" << out.applypostfix;
+    
+        out.outdent();
+        out << out.applyprefix << "end process" << out.applypostfix;
+    
+    out.outdent();
+    out << out.applyprefix << "end module" << out.applypostfix;
+
     return 0;
 }
 

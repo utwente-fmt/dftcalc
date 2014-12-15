@@ -29,6 +29,6 @@ namespace Nodes {
 	const std::string Node::RepairUnitNdStr("ru_nd");
     const std::string Node::InspectionStr("insp");
     const std::string Node::ReplacementStr("rep");
-
+ 
 }
 }
