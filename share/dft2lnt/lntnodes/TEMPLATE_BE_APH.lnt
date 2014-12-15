@@ -1,0 +1,69 @@
+module TEMPLATE_BE_APH(TEMPLATE_COMMON) is
+
+	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL] (total: NAT, cold: BOOL, initial: STATUS, phases: NAT) is
+	var
+		status : STATUS,
+		nr : NAT
+	in
+		status := initial;
+		nr := 0;
+		loop
+			select
+
+			(*
+			 * When this BE is activated, it will set the status to ACTIVE,
+			 * but only if it was DORMANT (not active and not failed)
+			 *)
+				ACTIVATE (?nr,FALSE) where (nr==0 of NAT);
+				if (status == DORMANT) then
+					status := ACTIVE
+				end if;
+				nr := 0
+
+			(*
+			 * When this BE is in the DORMANT state, it can fail with the
+			 * failure rate associated with this state. The rate is later
+			 * introduced using renaming of RATE_FAIL !1 !1.
+			 * If the failure event is trigger, go into the FAILING state.
+			 *)
+			[]
+
+				if ((not (cold)) and (status == DORMANT)) then
+					RATE_FAIL (!1 of NAT,1 of NAT);
+					phases := phases-1;
+					if (phases < 1) then
+						status := FAILING
+					end if
+				end if
+
+			(*
+			 * When this BE is in the ACTIVE state, it can fail with the
+			 * failure rate associated with this state. The rate is later
+			 * introduced using renaming of RATE_FAIL !1 !2.
+			 * If the failure event is trigger, go into the FAILING state.
+			 *)
+			[]
+				if (status == ACTIVE) then
+					RATE_FAIL (!1 of NAT,2 of NAT);
+					phases := phases-1;
+					if (phases < 1) then
+						status := FAILING
+					end if
+				end if
+
+			(*
+			 * When this BE is in the FAILING state (caused by one of the
+			 * failure rates), signal this to the system using FAIL !0.
+			 * After this, go into the FAILED state.
+			 *)
+			[]
+				if (status == FAILING) then
+					FAIL (!0 of NAT);
+					status := FAILED
+				end if
+			end select
+		end loop
+	end var
+	end process
+
+end module
