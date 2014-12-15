@@ -246,6 +246,7 @@ private:
 	int priority;
 //	double dorm;
 	double rate;
+    int phases;
 	int shape;
 	bool failed;
 	std::string fileToEmbed;
@@ -269,6 +270,9 @@ public:
 	void setRate(double rate) {
 		this->rate = rate;
 	}
+    void setPhases(int phases) {
+        this->phases = phases;
+    }
 	void setShape(int shape) {
 		this->shape = shape;
 	}
@@ -308,6 +312,12 @@ public:
 	 * @return The repair rate of this Basic Event.
 	 */
 	double getRepair()     const { return repair_rate; }
+    
+    /**
+     * Returns the Erlang phases of this Basic Event.
+     * @return The phases of this Basic Event.
+     */
+    int getPhases()     const { return phases; }
 
 	/**
 	 * Returns the priority of this Basic Event.
@@ -341,6 +351,7 @@ public:
 		repair_rate(-1),
 		priority(0),
 		rate(-1),
+        phases(1),
 		shape(-1),
 		failed(false) {
 	}

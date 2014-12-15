@@ -22,5 +22,7 @@
 #include "dftnodes/GatePor.h"
 #include "dftnodes/GateFDEP.h"
 #include "dftnodes/RepairUnit.h"
+#include "dftnodes/Inspection.h"
+#include "dftnodes/Replacement.h"
 
 #endif // NODES_H
