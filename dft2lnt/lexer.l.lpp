@@ -338,6 +338,8 @@ ru                      { yylval->c_string=my_strdup(yytext); return RU;       }
 ru_f                    { yylval->c_string=my_strdup(yytext); return RU_F;     }
 ru_p                    { yylval->c_string=my_strdup(yytext); return RU_P;     }
 ru_nd                   { yylval->c_string=my_strdup(yytext); return RU_ND;    }
+insp                    { yylval->c_string=my_strdup(yytext); return INSP;     }
+rep                     { yylval->c_string=my_strdup(yytext); return REP;      }
 {transfer}              { yylval->c_string=my_strdup(yytext); return TRANSFER; }
 
  /* Attributes */
@@ -352,9 +354,10 @@ res                     { yylval->c_string=my_strdup(yytext); return RES;    }
 repl                    { yylval->c_string=my_strdup(yytext); return REPL;   }
 dorm                    { yylval->c_string=my_strdup(yytext); return DORM;   }
 aph                     { yylval->c_string=my_strdup(yytext); return APH;    }
-maintain                  { yylval->c_string=my_strdup(yytext); return MAINTAIN; }
+phases                  { yylval->c_string=my_strdup(yytext); return PHASES; }
+maintain                { yylval->c_string=my_strdup(yytext); return MAINTAIN; }
 repair                  { yylval->c_string=my_strdup(yytext); return REPAIR; }
-prio                    { yylval->c_string=my_strdup(yytext); return PRIO; }
+prio                    { yylval->c_string=my_strdup(yytext); return PRIO;   }
 
 {identifier} {
 	yylval->c_string=my_strdup(yytext);

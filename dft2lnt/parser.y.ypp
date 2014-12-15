@@ -104,6 +104,8 @@
 %token<c_string> RU_F
 %token<c_string> RU_P
 %token<c_string> RU_ND
+%token<c_string> INSP
+%token<c_string> REP
 %token<c_string> TRANSFER
 
 // Attribute names
@@ -119,6 +121,7 @@
 %token<c_string> DORM
 %token<c_string> MAINTAIN
 %token<c_string> APH
+%token<c_string> PHASES
 %token<c_string> REPAIR
 %token<c_string> PRIO
 
@@ -325,6 +328,7 @@ be_attrib_name //{
 	|	REPL   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepl  ); free($1); }
 	|	DORM   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelDorm  ); free($1); }
 	|	MAINTAIN{ $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelMaintain); free($1); }
+	|	PHASES { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelPhases); free($1); }
 	|	APH    { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelAph   ); free($1); }
 	|	REPAIR { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepair); free($1); }
 	|	PRIO   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelPrio); free($1); }
@@ -479,6 +483,8 @@ gate //{
 	|	RU_F      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitFcfsType); free($1); }
 	|	RU_P      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitPrioType); free($1); }
 	|	RU_ND     { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitNdType  ); free($1); }
+    |	INSP      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::InspectionType); free($1); }
+    |	REP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::ReplacementType); free($1); }
 	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType  ); free($1); }
 	;
 //}
