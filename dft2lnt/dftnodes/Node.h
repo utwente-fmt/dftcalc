@@ -48,7 +48,7 @@ enum NodeType {
 	RepairUnitNdType,
 
     InspectionType,
-    ReplacementType
+    ReplacementType,
     
 	GateType,
 	GATES_FIRST = GatePhasedOrType,

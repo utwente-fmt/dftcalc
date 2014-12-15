@@ -27,7 +27,7 @@ namespace DFT {
             Replacement(Location loc, std::string name, NodeType type):
             Gate(loc,name,type) {
             }
-            virtual Replacement() {
+            virtual ~Replacement() {
             }
             
             void setDependers(vector<DFT::Nodes::Node*> dependers) {
