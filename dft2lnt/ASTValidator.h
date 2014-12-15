@@ -311,7 +311,7 @@ public:
 					valid = false;
 					cc->reportErrorAt(attribute->getLocation(),"repair label needs float value");
 				}
-			break;
+                break;
 			// check for new priority label
 			case DFT::Nodes::BE::AttrLabelPrio:
 				if(!value) {
@@ -335,7 +335,8 @@ public:
 					valid = false;
 					cc->reportErrorAt(attribute->getLocation(),"priority label needs integer value");
 				}
-			break;
+                break;
+            // check for APH label
 			case DFT::Nodes::BE::AttrLabelAph:
 				if(!value) {
 					valid = false;
@@ -361,6 +362,30 @@ public:
 					cc->reportErrorAt(attribute->getLocation(),"aph label needs string value: name of .bcg distribution file to embed");
 				}
 				break;
+            // check for PHASES label
+            case DFT::Nodes::BE::AttrLabelPhases:
+                if(!value) {
+                    valid = false;
+                    cc->reportErrorAt(attribute->getLocation(),"phases label without value");
+                    break;
+                }
+                if(value->isNumber()) {
+                    int v = static_cast<DFT::AST::ASTAttribNumber*>(value)->getValue();
+                    if(v < 1) {
+                        valid = false;
+                        cc->reportErrorAt(attribute->getLocation(),"no valid phases specified");
+                    }
+                } else if(value->isFloat()) {
+                    int v = static_cast<DFT::AST::ASTAttribNumber*>(value)->getValue();
+                    if(v < 0) {
+                        valid = false;
+                        cc->reportErrorAt(attribute->getLocation(),"no valid phases specified");
+                    }
+                } else {
+                    valid = false;
+                    cc->reportErrorAt(attribute->getLocation(),"phases label needs integer value");
+                }
+                break;
 
 			case DFT::Nodes::BE::AttrLabelProb:
 
