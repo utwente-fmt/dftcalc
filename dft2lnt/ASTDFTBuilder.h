@@ -90,6 +90,12 @@ public:
 		case DFT::Nodes::RepairUnitNdType:
 			gate = new DFT::Nodes::RepairUnit(astgate->getLocation(), astgate->getName()->getString(), DFT::Nodes::RepairUnitNdType);
 			break;
+        case DFT::Nodes::InspectionType:
+            gate = new DFT::Nodes::Inspection(astgate->getLocation(), astgate->getName()->getString(), DFT::Nodes::InspectionType);
+            break;
+        case DFT::Nodes::ReplacementType:
+            gate = new DFT::Nodes::Replacement(astgate->getLocation(), astgate->getName()->getString(), DFT::Nodes::ReplacementType);
+            break;
 		case DFT::Nodes::GateTransferType:
 			break;
 		default:
