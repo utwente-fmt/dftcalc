@@ -553,6 +553,25 @@ int DFT::DFTreeBCGNodeBuilder::generateInspection(FileWriter& out, const DFT::No
 }
 
 int DFT::DFTreeBCGNodeBuilder::generateReplacement(FileWriter& out, const DFT::Nodes::Replacement& gate) {
+    int total = gate.getChildren().size();
+    // TODO: define how to set and get phases for Inspection and Replacement
+    int phases = 1;
+    out << out.applyprefix << " * Generating Replacement(dependers=" << total << ")" << out.applypostfix;
+    generateHeaderClose(out);
+
+    out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_PERIODIC_REPAIRUNIT) is" << out.applypostfix;
+    out.indent();
+    
+        out << out.applyprefix << "process MAIN [" << GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_RATE_PERIOD << " : NAT_CHANNEL ] is" << out.applypostfix;
+        out.indent();
+    
+            out << out.applyprefix << "REPLACEMENT [" << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_RATE_PERIOD << "] (" << total << " of NAT," << phases << " of NAT)" << out.applypostfix;
+    
+        out.outdent();
+        out << out.applyprefix << "end process" << out.applypostfix;
+    
+    out.outdent();
+    out << out.applyprefix << "end module" << out.applypostfix;
     
     return 0;
 }

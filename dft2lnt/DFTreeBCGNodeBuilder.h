@@ -34,6 +34,7 @@ public:
 	static const std::string GATE_RATE_FAIL;
     static const std::string GATE_RATE_MAINTAIN;
 	static const std::string GATE_RATE_REPAIR;
+    static const std::string GATE_RATE_PERIOD;
     static const std::string GATE_RATE_INSPECTION;
 	static const std::string GATE_REPAIRING;
     static const std::string GATE_INSPECT;
