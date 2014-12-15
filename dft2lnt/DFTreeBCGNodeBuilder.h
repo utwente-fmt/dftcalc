@@ -65,6 +65,9 @@ private:
 	int generateRU_FCFS(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 	int generateRU_Prio(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 	int generateRU_Nd(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
+    
+    int generateInspection(FileWriter& out, const DFT::Nodes::Inspection& gate);
+    int generateReplacement(FileWriter& out, const DFT::Nodes::Replacement& gate);
 
 	int generateSVLBuilder(FileWriter& out, std::string fileName);
 	int executeSVL(std::string root, std::string fileName);

@@ -524,6 +524,16 @@ int DFT::DFTreeBCGNodeBuilder::generateRU_Nd(FileWriter& out, const DFT::Nodes::
 	return 0;
 }
 
+int DFT::DFTreeBCGNodeBuilder::generateInspection(FileWriter& out, const DFT::Nodes::Inspection& gate) {
+    
+    return 0;
+}
+
+int DFT::DFTreeBCGNodeBuilder::generateReplacement(FileWriter& out, const DFT::Nodes::Replacement& gate) {
+    
+    return 0;
+}
+
 int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string>& triedToGenerate) {
 
 	// If the LNT file for the node was not generated before in this iteration
@@ -875,6 +885,22 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 				generateRU_Nd(lntOut,gate);
 				break;
 			}
+            case DFT::Nodes::InspectionType: {
+                const DFT::Nodes::Inspection& gate = static_cast<const DFT::Nodes::Inspection&>(node);
+                FileWriter report;
+                report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+                cc->reportAction(report.toString(),VERBOSE_GENERATION);
+                generateInspection(lntOut,gate);
+                break;
+            }
+            case DFT::Nodes::ReplacementType: {
+                const DFT::Nodes::Replacement& gate = static_cast<const DFT::Nodes::Replacement&>(node);
+                FileWriter report;
+                report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+                cc->reportAction(report.toString(),VERBOSE_GENERATION);
+                generateReplacement(lntOut,gate);
+                break;
+            }
 			case DFT::Nodes::GateTransferType: {
 				break;
 			}
