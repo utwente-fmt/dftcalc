@@ -78,6 +78,9 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		if(be.getFailed()) {
 			ss << "_failed";
 		}
+		if(be.getPhases()>1){
+			ss << "_aph_" << be.getPhases();
+		}
 	} else if(node.isGate()) {
 		const DFT::Nodes::Gate& gate = *static_cast<const DFT::Nodes::Gate*>(&node);
 		ss << "_c" << gate.getChildren().size();
@@ -362,8 +365,8 @@ int DFT::DFTreeBCGNodeBuilder::generateFDEP(FileWriter& out, const DFT::Nodes::G
 int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::BasicEvent& be) {
 	int nr_parents = be.getParents().size();
 	bool cold = be.getMu()==0;
-    bool dummy = be.getLambda()==0;
-
+	bool dummy = be.getLambda()==0;
+	bool aph = be.getPhases()>1;
 	// new boolean variable for repairable BE
 	bool repair = be.getRepair() > 0;
     
@@ -379,15 +382,18 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 	generateHeaderClose(out);
 	out << out.applyprefix << "module " << getFileForNode(be) << "(TEMPLATE_BE";
 	// use repair template if  repairable
-	out << (repair?"_REPAIR) is":maintain?"_MAINTAIN) is":") is") << out.applypostfix;
+	out << (repair?"_REPAIR) is":maintain?"_MAINTAIN) is":aph?"_APH) is":") is") << out.applypostfix;
 	out.appendLine("");
 	out.indent();
+		// APH also a subcase in repair
 		if(repair)
 			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, "
 			<< GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
 		else if(maintain)
             out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << "MAINTAIN : NAT_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, " << GATE_RATE_MAINTAIN << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
-        else
+        else if(aph)
+			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
+		else
 			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
 		out.indent();
 			if(repair)
@@ -395,10 +401,12 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 				"](" << nr_parents << " of NAT";
 			else if(maintain)
                 out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << ", MAINTAIN, " << GATE_RATE_FAIL << "," << GATE_RATE_MAINTAIN << "](" << nr_parents << " of NAT";
-            else
+			else
 				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "](" << nr_parents << " of NAT";
 			out << ", " << (cold?"TRUE":"FALSE");
 			out << ", " << initialState;
+			if(aph)
+				out << ", " << be.getPhases() << " of NAT";
 			out << ")" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
