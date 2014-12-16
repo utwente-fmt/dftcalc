@@ -37,6 +37,7 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL   ("RATE_FAIL");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_MAINTAIN   ("RATE_MAINTAIN");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR ("RATE_REPAIR");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_INSPECTION ("RATE_INSPECTION");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_PERIOD ("RATE_PERIOD");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING   ("REPAIRING");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECT   ("INSPECT");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECTED   ("INSPECTED");
