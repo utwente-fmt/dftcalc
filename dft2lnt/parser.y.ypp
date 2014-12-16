@@ -124,6 +124,7 @@
 %token<c_string> PHASES
 %token<c_string> REPAIR
 %token<c_string> PRIO
+%token<c_string> INTERVAL
 
 // Other
 %token ENDLINE
@@ -332,6 +333,7 @@ be_attrib_name //{
 	|	APH    { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelAph   ); free($1); }
 	|	REPAIR { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepair); free($1); }
 	|	PRIO   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelPrio); free($1); }
+	|	INTERVAL{ $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelInterval); free($1); }
 	;
 //}
 

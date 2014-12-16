@@ -41,7 +41,8 @@ enum AttributeLabelType {
     AttrLabelAph,
     AttrLabelPhases,
     AttrLabelRepair,
-    AttrLabelPrio
+    AttrLabelPrio,
+	AttrLabelInterval
 };
 
 enum class CalculationMode {
@@ -245,6 +246,7 @@ private:
     double maintain_rate;
 	double repair_rate;
 	int priority;
+	int interval;
 //	double dorm;
 	double rate;
     int phases;
@@ -273,6 +275,9 @@ public:
 	}
     void setPhases(int phases) {
         this->phases = phases;
+    }
+    void setInterval(int interval) {
+        this->interval = interval;
     }
 	void setShape(int shape) {
 		this->shape = shape;
@@ -319,6 +324,12 @@ public:
      * @return The phases of this Basic Event.
      */
     int getPhases()     const { return phases; }
+    
+    /**
+     * Returns the inspection interval of this Basic Event.
+     * @return The interval of this Basic Event.
+     */
+    int getInterval()     const { return interval; }
 
 	/**
 	 * Returns the priority of this Basic Event.
@@ -354,6 +365,7 @@ public:
 		rate(-1),
         phases(1),
 		shape(-1),
+		interval(0),
 		failed(false) {
 	}
 	virtual ~BasicEvent() {

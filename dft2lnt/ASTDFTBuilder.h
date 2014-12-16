@@ -198,7 +198,7 @@ public:
 				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelRepair) {
 					double v = (*it)->getValue()->getFloatValue();
 					be->setRepair(v);
-					be->setRepairable(true);
+					//be->setRepairable(true);
 				}
 			}
 		}
@@ -209,6 +209,17 @@ public:
                 if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelPhases) {
                     double v = (*it)->getValue()->getNumberValue();
                     be->setPhases(v);
+                }
+            }
+        }
+        // Find interval
+        {
+            std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+            for(; it!=basicEvent->getAttributes()->end(); ++it) {
+                if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelInterval) {
+                    double v = (*it)->getValue()->getNumberValue();
+                    be->setInterval(v);
+					//be->setRepairable(true);
                 }
             }
         }

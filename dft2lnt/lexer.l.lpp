@@ -355,9 +355,10 @@ repl                    { yylval->c_string=my_strdup(yytext); return REPL;   }
 dorm                    { yylval->c_string=my_strdup(yytext); return DORM;   }
 aph                     { yylval->c_string=my_strdup(yytext); return APH;    }
 phases                  { yylval->c_string=my_strdup(yytext); return PHASES; }
-maintain                { yylval->c_string=my_strdup(yytext); return MAINTAIN; }
+maintain                { yylval->c_string=my_strdup(yytext); return MAINTAIN;}
 repair                  { yylval->c_string=my_strdup(yytext); return REPAIR; }
 prio                    { yylval->c_string=my_strdup(yytext); return PRIO;   }
+interval                { yylval->c_string=my_strdup(yytext); return INTERVAL;}
 
 {identifier} {
 	yylval->c_string=my_strdup(yytext);
