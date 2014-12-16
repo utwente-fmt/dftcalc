@@ -251,6 +251,7 @@ private:
 	double rate;
     int phases;
 	int shape;
+	bool repairable;
 	bool failed;
 	std::string fileToEmbed;
 public:
@@ -343,7 +344,6 @@ public:
 	 */
 	std::string getFileToEmbed()   const { return fileToEmbed; }
 
-	
 	const DFT::Nodes::BE::CalculationMode& getMode() const {
 		return mode;
 	}
