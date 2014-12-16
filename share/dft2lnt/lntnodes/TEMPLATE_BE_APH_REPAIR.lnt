@@ -59,7 +59,7 @@ module TEMPLATE_BE_APH_REPAIR(TEMPLATE_COMMON_APH_REPAIR) is
 
 			[]
 				if ((not (cold)) and (status == UP) and ((phases-degenerated) >= threshold)) then
-					INSPECTION (!0 of NAT);
+					INSPECT (!0 of NAT);
 					status := INSPECTING_INACTIVE
 				end if
 
@@ -80,7 +80,7 @@ module TEMPLATE_BE_APH_REPAIR(TEMPLATE_COMMON_APH_REPAIR) is
 
 			[]
 				if ((status == ACTIVE) and ((phases-degenerated) >= threshold)) then
-					INSPECTION (!0 of NAT);
+					INSPECT (!0 of NAT);
 					status := INSPECTING_ACTIVE
 				end if
 
@@ -127,12 +127,14 @@ module TEMPLATE_BE_APH_REPAIR(TEMPLATE_COMMON_APH_REPAIR) is
 					status := AVAILABLE_INACTIVE
 				end if;
 			-- listen if there was a replacement due to inspection active branch
-				if ((status == ACTIVE)) then
-					degenerated := phases
+				if ((status == ACTIVE) or (status == INSPECTING_ACTIVE)) then
+					degenerated := phases;
+					status := ACTIVE
 				end if;
 			-- listen if there was a replacement due to inspection inactive branch
-				if ((status == UP)) then
-					degenerated := phases
+				if ((status == UP) or (status == INSPECTING_INACTIVE)) then
+					degenerated := phases;
+					status := UP
 				end if;
 				nr := 0
 

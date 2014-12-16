@@ -386,6 +386,30 @@ public:
                     cc->reportErrorAt(attribute->getLocation(),"phases label needs integer value");
                 }
                 break;
+			// check for INTERVAL label
+            case DFT::Nodes::BE::AttrLabelInterval:
+                if(!value) {
+                    valid = false;
+                    cc->reportErrorAt(attribute->getLocation(),"interval label without value");
+                    break;
+                }
+                if(value->isNumber()) {
+                    int v = static_cast<DFT::AST::ASTAttribNumber*>(value)->getValue();
+                    if(v < 1) {
+                        valid = false;
+                        cc->reportErrorAt(attribute->getLocation(),"no valid interval specified");
+                    }
+                } else if(value->isFloat()) {
+                    int v = static_cast<DFT::AST::ASTAttribNumber*>(value)->getValue();
+                    if(v < 0) {
+                        valid = false;
+                        cc->reportErrorAt(attribute->getLocation(),"no valid interval specified");
+                    }
+                } else {
+                    valid = false;
+                    cc->reportErrorAt(attribute->getLocation(),"interval label needs integer value");
+                }
+                break;
 
 			case DFT::Nodes::BE::AttrLabelProb:
 

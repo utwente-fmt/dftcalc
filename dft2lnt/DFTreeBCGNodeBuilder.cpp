@@ -81,6 +81,9 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		if(be.getPhases()>1){
 			ss << "_aph_" << be.getPhases();
 		}
+		if(be.getInterval()>0){
+			ss << "_interval_" << be.getInterval();
+		}
 	} else if(node.isGate()) {
 		const DFT::Nodes::Gate& gate = *static_cast<const DFT::Nodes::Gate*>(&node);
 		ss << "_c" << gate.getChildren().size();
@@ -377,6 +380,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 	std::string initialState;
 	if(be.getFailed()) initialState = "FAILING";
 	else if(repair) initialState = "UP";
+	else if(aph_repair) initialState = "UP";
 	else initialState = "DORMANT";
     if(!dummy){
 	out << out.applyprefix << " * Generating BE(parents=" << nr_parents << ")" << out.applypostfix;
