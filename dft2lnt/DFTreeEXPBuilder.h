@@ -218,9 +218,23 @@ public:
 	/**
 	 * Returns an EXP formatted string reflecting the specified Repair Unit.
 	 * Takes into account the renaming of failure rates.
-	 * @param be The Repair Unit of which an EXP formatted strign is wanted.
+	 * @param ru The Repair Unit of which an EXP formatted strign is wanted.
 	 */
 	std::string getRUProc(const DFT::Nodes::Gate& ru) const;
+    
+    /**
+     * Returns an EXP formatted string reflecting the specified inspection.
+     * Takes into account the renaming of inspection rates.
+     * @param insp The inspection Unit of which an EXP formatted strign is wanted.
+     */
+    std::string getINSPProc(const DFT::Nodes::Inspection& insp) const;
+    
+    /**
+     * Returns an EXP formatted string reflecting the specified replacement.
+     * Takes into account the renaming of inspection rates.
+     * @param rep The replacement Unit of which an EXP formatted strign is wanted.
+     */
+    std::string getREPProc(const DFT::Nodes::Replacement& rep) const;
 
 	/**
 	 * Start building EXP specification from the DFT specified
@@ -356,6 +370,8 @@ public:
 	int createSyncRuleGateVoting(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateVoting& node, unsigned int nodeID);
 	int createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateFDEP& node, unsigned int nodeID);
 	int createSyncRuleRepairUnit(vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, const DFT::Nodes::RepairUnit& node, unsigned int nodeID);
+    int createSyncRuleInspection(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::Inspection& node, unsigned int nodeID);
+    int createSyncRuleReplacement(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::Replacement& node, unsigned int nodeID);
 
 	/**
 	 * Generate synchronization rules for the Top Node.

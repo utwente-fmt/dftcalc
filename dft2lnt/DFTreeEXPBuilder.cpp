@@ -114,6 +114,34 @@ std::string DFT::DFTreeEXPBuilder::getRUProc(const DFT::Nodes::Gate& ru) const {
 	return ss.str();
 }
 
+std::string DFT::DFTreeEXPBuilder::getINSPProc(const DFT::Nodes::Inspection& insp) const {
+    std::stringstream ss;
+    
+    ss << "total rename ";
+    // Insert lambda value
+    ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_INSPECTION << " !1 !" << "\" -> \"rate " << insp.getLambda() << "\"";
+    
+    ss << " in \"";
+    ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(insp);
+    ss << ".bcg\" end rename";
+    
+    return ss.str();
+}
+
+std::string DFT::DFTreeEXPBuilder::getREPProc(const DFT::Nodes::Replacement& rep) const {
+    std::stringstream ss;
+    
+    ss << "total rename ";
+    // Insert lambda value
+    ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_PERIOD << " !1 !" << "\" -> \"rate " << rep.getLambda() << "\"";
+    
+    ss << " in \"";
+    ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(rep);
+    ss << ".bcg\" end rename";
+    
+    return ss.str();
+}
+
 void DFT::DFTreeEXPBuilder::printSyncLine(const EXPSyncRule& rule, const vector<unsigned int>& columnWidths) {
 	std::map<unsigned int,EXPSyncItem*>::const_iterator it = rule.label.begin();
 	size_t c=0;
@@ -633,6 +661,22 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 	int DFT::DFTreeEXPBuilder::createSyncRuleRepairUnit(vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, const DFT::Nodes::RepairUnit& node, unsigned int nodeID) {
 		return 0;
 	}
+
+    /**
+     * Add INSP Specific syncRules
+     * The INSP needs to synchronize with multiple nodes: namely its dependers.
+     */
+    int DFT::DFTreeEXPBuilder::createSyncRuleInspection(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::Inspection& node, unsigned int nodeID) {
+        return 0;
+    }
+
+    /**
+     * Add REP Specific syncRules
+     * The REP needs to synchronize with multiple nodes: namely its dependers.
+     */
+    int DFT::DFTreeEXPBuilder::createSyncRuleReplacement(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::Replacement& node, unsigned int nodeID) {
+        return 0;
+    }
 
 	int DFT::DFTreeEXPBuilder::createSyncRuleTop(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules) {
 		std::stringstream ss;
@@ -1505,6 +1549,16 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 				createSyncRuleRepairUnit(repairRules,repairedRules,repairingRules,*g,nodeID);
 				break;
 			}
+            case DFT::Nodes::InspectionType: {
+                const DFT::Nodes::Inspection* g = static_cast<const DFT::Nodes::Inspection*>(&node);
+                createSyncRuleInspection(activationRules,failRules,*g,nodeID);
+                break;
+            }
+            case DFT::Nodes::ReplacementType: {
+                const DFT::Nodes::Replacement* g = static_cast<const DFT::Nodes::Replacement*>(&node);
+                createSyncRuleReplacement(activationRules,failRules,*g,nodeID);
+                break;
+            }
 			default: {
 				cc->reportError("UnknownNode");
 				break;
