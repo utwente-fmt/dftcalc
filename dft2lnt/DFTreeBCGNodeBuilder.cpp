@@ -57,6 +57,10 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 	if(node.getType()==DFT::Nodes::GateVotingType) {
 		ss << "v";
 	}
+    
+    if(node.getType()==DFT::Nodes::InspectionType) {
+        ss << "i";
+    }
 	
 	ss << node.getTypeStr();
 	ss << "_p" << (node.getParents().size()>0?node.getParents().size():1);
@@ -93,7 +97,11 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		} if(node.getType()==DFT::Nodes::GateFDEPType) {
 			const DFT::Nodes::GateFDEP& gateFDEP = *static_cast<const DFT::Nodes::GateFDEP*>(&node);
 			ss << "_d" << gateFDEP.getDependers().size();
-		}
+        } if(node.getType()==DFT::Nodes::InspectionType) {
+            const DFT::Nodes::Inspection& inspection = *static_cast<const DFT::Nodes::Inspection*>(&node);
+            ss << "_p" << inspection.getPhases();
+            ss << "_l" << inspection.getLambda();
+        }
 		if(node.isRepairable()) {
 			// FIXME: add this directly as gate information
 			int repairable=0;
@@ -552,8 +560,8 @@ int DFT::DFTreeBCGNodeBuilder::generateRU_Nd(FileWriter& out, const DFT::Nodes::
 
 int DFT::DFTreeBCGNodeBuilder::generateInspection(FileWriter& out, const DFT::Nodes::Inspection& gate) {
     int total = gate.getChildren().size();
-    // TODO: define how to set and get phases for Inspection and Replacement
-    int phases = 1;
+    int phases = gate.getPhases();
+    //double lambda = gate.getLambda();
     out << out.applyprefix << " * Generating Inspection(dependers=" << total << ")" << out.applypostfix;
     generateHeaderClose(out);
     
