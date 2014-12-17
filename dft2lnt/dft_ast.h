@@ -40,6 +40,7 @@ enum NodeType {
     AttributeLabelType,
     ASTGateTypeType,
     ASTVotingGateTypeType,
+    ASTInspectionTypeType,
 
     AnyType,
     NUMBEROF
@@ -441,6 +442,30 @@ public:
 	
 	int getThreshold() const {return threshold;}
 	int getTotal() const {return total;}
+};
+    
+    
+/**
+ * The Inspection GateType is the second rule that has node specific date in the
+ * gate type identifier
+ */
+class ASTInspectionType: public ASTGateType {
+private:
+    int phases; // phases
+    double lambda; // lambda
+    DFT::Nodes::NodeType nodeType;
+public:
+    ASTInspectionType(Location location, int phases, double lambda):
+    ASTGateType(ASTInspectionTypeType,location,"insp",DFT::Nodes::GateVotingType),
+    phases(phases),
+    lambda(lambda) {
+    }
+        
+    virtual ~ASTInspectionType() {
+    }
+    
+    int getPhases() const {return phases;}
+    int getLambda() const {return lambda;}
 };
 
 /**

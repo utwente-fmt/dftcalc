@@ -20,12 +20,14 @@ namespace DFT {
         class Inspection: public Gate {
         private:
             vector<DFT::Nodes::Node*> dependers;
+            int phases;
+            double lambda;
+            mutable std::string cachedName;
         public:
-            Inspection(Location loc, std::string name):
-            Gate(loc,name,InspectionType) {
-            }
-            Inspection(Location loc, std::string name, NodeType type):
-            Gate(loc,name,type) {
+            Inspection(Location loc, std::string name, int phases, double lambda):
+                Gate(loc,name,InspectionType),
+                phases(phases),
+                lambda(lambda) {
             }
             virtual ~Inspection() {
             }
@@ -44,6 +46,20 @@ namespace DFT {
             DFT::Nodes::Node* getEventSource() const {
                 if(getChildren().size()!=1) return NULL;
                 else return getChildren()[0];
+            }
+            
+            int getPhases() const {return phases;}
+            double getLambda() const {return lambda;}
+            
+            virtual const std::string& getTypeStr() const {
+                if(cachedName.empty()) {
+                    std::stringstream ss;
+                    ss << phases;
+                    ss << "insp";
+                    ss << lambda;
+                    cachedName = ss.str();
+                }
+                return cachedName;
             }
         };
         
