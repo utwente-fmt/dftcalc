@@ -108,6 +108,7 @@ rate          ({posnumber}|{posnumber}[.]{posnumber})
 number_exp    e|E
 voting        {number}of{number}
 inspection    {number}insp{rate}
+replacement   {number}rep{rate}
 hexdigit	  {digit}|[A-F]
 newline       \r?\n
 whitespace    [ \t]+
@@ -254,6 +255,30 @@ transfer      "accepts transfers from"
     
     return INSPECTION;
 }
+{replacement} {
+    char buffer[101];
+    
+    // Read first number (phases)
+    char* dst = buffer;
+    char* src = yytext;
+    while(isdigit(*src)) {
+        *dst++ = *src++;
+    }
+    *dst = '\0';
+    yylval->replacement.n = atoi(buffer);
+    
+    // Read second number (lambda)
+    dst = buffer;
+    src+=4;
+    while(ispunct(*src) || isdigit(*src)) {
+        *dst++ = *src++;
+    }
+    *dst = '\0';
+    yylval->replacement.k = atof(buffer);
+    
+    return REPLACEMENT;
+}
+
 {real_exp} {
 	double in;
 	sscanf(yytext,"%lf",&in);

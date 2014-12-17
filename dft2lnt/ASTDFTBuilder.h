@@ -95,9 +95,11 @@ public:
             gate = new DFT::Nodes::Inspection(astgate->getLocation(), astgate->getName()->getString(),insp->getPhases(),insp->getLambda());
             break;
         }
-        case DFT::Nodes::ReplacementType:
-            gate = new DFT::Nodes::Replacement(astgate->getLocation(), astgate->getName()->getString(), DFT::Nodes::ReplacementType);
+        case DFT::Nodes::ReplacementType:{
+            DFT::AST::ASTReplacementType* rep = static_cast<DFT::AST::ASTReplacementType*>(astgate->getGateType());
+            gate = new DFT::Nodes::Replacement(astgate->getLocation(), astgate->getName()->getString(),rep->getPhases(),rep->getLambda());
             break;
+        }
 		case DFT::Nodes::GateTransferType:
 			break;
 		default:

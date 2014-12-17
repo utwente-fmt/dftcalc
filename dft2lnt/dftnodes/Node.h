@@ -108,8 +108,6 @@ public:
 			return RepairUnitPrioStr;
 		case RepairUnitNdType:
 			return RepairUnitNdStr;
-        case ReplacementType:
-            return ReplacementStr;
 		default:
 			return UnknownStr;
 		}

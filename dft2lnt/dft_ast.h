@@ -41,6 +41,7 @@ enum NodeType {
     ASTGateTypeType,
     ASTVotingGateTypeType,
     ASTInspectionTypeType,
+    ASTReplacementTypeType,
 
     AnyType,
     NUMBEROF
@@ -464,6 +465,29 @@ public:
     virtual ~ASTInspectionType() {
     }
     
+    int getPhases() const {return phases;}
+    double getLambda() const {return lambda;}
+};
+    
+/**
+ * The Inspection GateType is the second rule that has node specific date in the
+ * gate type identifier
+ */
+class ASTReplacementType: public ASTGateType {
+private:
+    int phases; // phases
+    double lambda; // lambda
+    DFT::Nodes::NodeType nodeType;
+public:
+    ASTReplacementType(Location location, int phases, double lambda):
+    ASTGateType(ASTReplacementTypeType,location,"replacement",DFT::Nodes::ReplacementType),
+    phases(phases),
+    lambda(lambda) {
+    }
+        
+    virtual ~ASTReplacementType() {
+    }
+        
     int getPhases() const {return phases;}
     double getLambda() const {return lambda;}
 };
