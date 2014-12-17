@@ -100,7 +100,6 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
         } if(node.getType()==DFT::Nodes::InspectionType) {
             const DFT::Nodes::Inspection& inspection = *static_cast<const DFT::Nodes::Inspection*>(&node);
             ss << "_p" << inspection.getPhases();
-            ss << "_l" << inspection.getLambda();
         }
 		if(node.isRepairable()) {
 			// FIXME: add this directly as gate information
@@ -561,8 +560,8 @@ int DFT::DFTreeBCGNodeBuilder::generateRU_Nd(FileWriter& out, const DFT::Nodes::
 int DFT::DFTreeBCGNodeBuilder::generateInspection(FileWriter& out, const DFT::Nodes::Inspection& gate) {
     int total = gate.getChildren().size();
     int phases = gate.getPhases();
-    //double lambda = gate.getLambda();
-    out << out.applyprefix << " * Generating Inspection(dependers=" << total << ")" << out.applypostfix;
+    double lambda = gate.getLambda();
+    out << out.applyprefix << " * Generating Inspection(dependers=" << total << ") with lambda = " << lambda << out.applypostfix;
     generateHeaderClose(out);
     
     out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_INSPECTION) is" << out.applypostfix;

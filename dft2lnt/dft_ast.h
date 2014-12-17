@@ -465,7 +465,7 @@ public:
     }
     
     int getPhases() const {return phases;}
-    int getLambda() const {return lambda;}
+    double getLambda() const {return lambda;}
 };
 
 /**

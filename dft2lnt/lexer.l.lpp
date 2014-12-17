@@ -104,9 +104,10 @@ digit         [0-9]
 letter        [A-Za-z]
 posnumber     {digit}+
 number        [-+]?{posnumber}
+rate          ({posnumber}|{posnumber}[.]{posnumber})
 number_exp    e|E
 voting        {number}of{number}
-inspection    {number}insp{number}
+inspection    {number}insp{rate}
 hexdigit	  {digit}|[A-F]
 newline       \r?\n
 whitespace    [ \t]+
@@ -240,16 +241,16 @@ transfer      "accepts transfers from"
         *dst++ = *src++;
     }
     *dst = '\0';
-    yylval->inspection.k = atoi(buffer);
+    yylval->inspection.n = atoi(buffer);
     
     // Read second number (lambda)
     dst = buffer;
     src+=4;
-    while(isdigit(*src) || *src == '.') {
+    while(ispunct(*src) || isdigit(*src)) {
         *dst++ = *src++;
     }
     *dst = '\0';
-    yylval->inspection.n = atof(buffer);
+    yylval->inspection.k = atof(buffer);
     
     return INSPECTION;
 }

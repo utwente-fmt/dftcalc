@@ -492,8 +492,8 @@ gate //{
 	|	RU_F      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitFcfsType); free($1); }
 	|	RU_P      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitPrioType); free($1); }
 	|	RU_ND     { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitNdType  ); free($1); }
-    |	INSPECTION{ $$ = new DFT::AST::ASTInspectionType(@$,$1.k,$1.n);                                          }
-    |	REP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::ReplacementType); free($1); }
+    |	INSPECTION{ $$ = new DFT::AST::ASTInspectionType(@$,$1.n,$1.k);                                          }
+    |	REP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::ReplacementType); free($1);    }
 	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType  ); free($1); }
 	;
 //}
