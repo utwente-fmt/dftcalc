@@ -456,7 +456,7 @@ private:
     DFT::Nodes::NodeType nodeType;
 public:
     ASTInspectionType(Location location, int phases, double lambda):
-    ASTGateType(ASTInspectionTypeType,location,"insp",DFT::Nodes::GateVotingType),
+    ASTGateType(ASTInspectionTypeType,location,"inspection",DFT::Nodes::GateVotingType),
     phases(phases),
     lambda(lambda) {
     }

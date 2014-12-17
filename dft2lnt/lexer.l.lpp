@@ -106,6 +106,7 @@ posnumber     {digit}+
 number        [-+]?{posnumber}
 number_exp    e|E
 voting        {number}of{number}
+inspection    {number}insp{number}
 hexdigit	  {digit}|[A-F]
 newline       \r?\n
 whitespace    [ \t]+
@@ -228,6 +229,29 @@ transfer      "accepts transfers from"
 	yylval->voting.n = atoi(buffer);
 
 	return VOTING;
+}
+{inspection} {
+    char buffer[101];
+    
+    // Read first number (phases)
+    char* dst = buffer;
+    char* src = yytext;
+    while(isdigit(*src)) {
+        *dst++ = *src++;
+    }
+    *dst = '\0';
+    yylval->inspection.k = atoi(buffer);
+    
+    // Read second number (lambda)
+    dst = buffer;
+    src+=4;
+    while(isdigit(*src) || *src == '.') {
+        *dst++ = *src++;
+    }
+    *dst = '\0';
+    yylval->inspection.n = atof(buffer);
+    
+    return INSPECTION;
 }
 {real_exp} {
 	double in;

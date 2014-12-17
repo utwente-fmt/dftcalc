@@ -52,6 +52,11 @@
 		int n;
 		int k;
 	} Voting;
+    
+    typedef struct Inspection {
+        int n;
+        double k;
+    } Inspection;
 
 }
 
@@ -63,6 +68,7 @@
 		char* address;
 		NumberSuffix numbersuffix;
 		Voting voting;
+        Inspection inspection;
 		DFT::AST::ASTNodes* nodes;
 		DFT::AST::ASTNode* node;
 		DFT::DFTree* dft;
@@ -87,6 +93,7 @@
 %token <number> NUMBER
 %token <numbersuffix> NUMBERSUFFIX
 %token <voting> VOTING
+%token <inspection> INSPECTION
 
 // Gate names
 %token<c_string> PHASEDOR
@@ -485,7 +492,7 @@ gate //{
 	|	RU_F      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitFcfsType); free($1); }
 	|	RU_P      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitPrioType); free($1); }
 	|	RU_ND     { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitNdType  ); free($1); }
-    |	INSP      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::InspectionType); free($1); }
+    |	INSPECTION{ $$ = new DFT::AST::ASTInspectionType(@$,$1.k,$1.n);                                          }
     |	REP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::ReplacementType); free($1); }
 	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType  ); free($1); }
 	;
