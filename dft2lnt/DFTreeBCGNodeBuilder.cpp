@@ -401,7 +401,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 	generateHeaderClose(out);
 	out << out.applyprefix << "module " << getFileForNode(be) << "(TEMPLATE_BE";
 	// use repair template if  repairable
-	out << (repair?"_REPAIR) is":maintain?"_MAINTAIN) is":aph_repair?"_APH_REPAIR) is":aph?"_APH) is":") is") << out.applypostfix;
+	out << (repair?"_REPAIR) is":maintain?"_MAINTAIN_APH) is":aph_repair?"_APH_REPAIR) is":aph?"_APH) is":") is") << out.applypostfix;
 	out.appendLine("");
 	out.indent();
 		if(repair)
@@ -421,7 +421,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 			if(repair)
 				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_ONLINE <<
 				"](" << nr_parents << " of NAT";
-			else if(maintain)
+			else if(maintain & not(aph))
                 out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << ", MAINTAIN, " << GATE_RATE_FAIL << "," << GATE_RATE_MAINTAIN << "](" << nr_parents << " of NAT";
 			else if(aph_repair)
 				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_INSPECT << "," << GATE_INSPECTED <<

@@ -72,7 +72,11 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		}
         if(be.getMaintain()>0) {
             ss << ", ";
-            ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_MAINTAIN << " !1 !1\" -> \"rate " << be.getMaintain()     << "\"";
+            ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !4\" -> \"rate " << be.getMaintain()     << "\"";
+            if(be.getMu()>0) {
+                ss << ", ";
+                ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !3\" -> \"rate " << be.getMaintain() << "\"";
+            }
         }
 		ss << " in \"";
 		ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
@@ -229,8 +233,8 @@ int DFT::DFTreeEXPBuilder::build() {
 		//buildEXPBody(activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules);
         
         parseDFT(activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules,inspectionRules);
-        buildEXPHeader(activationRules,failRules,repairRules,repairedRules,onlineRules);
-        buildEXPBody(activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules);
+        buildEXPHeader(activationRules,failRules,repairRules,repairedRules,onlineRules,inspectionRules);
+        buildEXPBody(activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules,inspectionRules);
 
 		
 		// Build SVL file
@@ -290,6 +294,11 @@ int DFT::DFTreeEXPBuilder::buildEXPHeader(vector<DFT::EXPSyncRule*>& activationR
 int DFT::DFTreeEXPBuilder::buildEXPHeader(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules,
 		vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& onlineRules) {
 	return 0;
+}
+
+int DFT::DFTreeEXPBuilder::buildEXPHeader(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules,
+                                          vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules) {
+    return 0;
 }
 
 int DFT::DFTreeEXPBuilder::parseDFT(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules) {
@@ -609,6 +618,188 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 	return 0;
 }
 
+int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules,
+                                        vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules) {
+    
+    /* Generate the EXP based on the generated synchronization rules */
+    exp_body.clearAll();
+    exp_body << exp_body.applyprefix << "(* Number of rules: " << (activationRules.size()+failRules.size()+repairRules.size()+repairedRules.size()+repairingRules.size()+onlineRules.size()) << "*)" << exp_body.applypostfix;
+    exp_body << exp_body.applyprefix << "hide" << exp_body.applypostfix;
+    exp_body.indent();
+    
+    // Hide rules
+    for(size_t s=0; s<activationRules.size(); ++s) {
+        EXPSyncRule& rule = *activationRules.at(s);
+        if(rule.hideToLabel) {
+            exp_body << exp_body.applyprefix << rule.toLabel << "," << exp_body.applypostfix;
+        }
+    }
+    for(size_t s=0; s<repairRules.size(); ++s) {
+        EXPSyncRule& rule = *repairRules.at(s);
+        if(rule.hideToLabel) {
+            exp_body << exp_body.applyprefix << rule.toLabel << "," << exp_body.applypostfix;
+        }
+    }
+    for(size_t s=0; s<repairedRules.size(); ++s) {
+        EXPSyncRule& rule = *repairedRules.at(s);
+        if(rule.hideToLabel) {
+            exp_body << exp_body.applyprefix << rule.toLabel << "," << exp_body.applypostfix;
+        }
+    }
+    for(size_t s=0; s<onlineRules.size(); ++s) {
+        EXPSyncRule& rule = *onlineRules.at(s);
+        if(rule.hideToLabel) {
+            exp_body << exp_body.applyprefix << rule.toLabel << "," << exp_body.applypostfix;
+        }
+    }
+    for(size_t s=0; s<inspectionRules.size(); ++s) {
+        EXPSyncRule& rule = *inspectionRules.at(s);
+        if(rule.hideToLabel) {
+            exp_body << exp_body.applyprefix << rule.toLabel << "," << exp_body.applypostfix;
+        }
+    }
+    for(size_t s=0; s<failRules.size(); ++s) {
+        EXPSyncRule& rule = *failRules.at(s);
+        if(rule.hideToLabel) {
+            exp_body << exp_body.applyprefix << rule.toLabel;
+            if(s<failRules.size()-1) exp_body << ",";
+            exp_body << exp_body.applypostfix;
+        }
+    }
+    
+    exp_body.outdent();
+    exp_body.appendLine("in");
+    exp_body.indent();
+    {
+        // Synchronization rules
+        vector<unsigned int> columnWidths(dft->getNodes().size(),0);
+        calculateColumnWidths(columnWidths,activationRules);
+        calculateColumnWidths(columnWidths,failRules);
+        calculateColumnWidths(columnWidths,repairRules);
+        calculateColumnWidths(columnWidths,repairedRules);
+        calculateColumnWidths(columnWidths,onlineRules);
+        calculateColumnWidths(columnWidths,inspectionRules);
+        
+        exp_body << exp_body.applyprefix << "label par using" << exp_body.applypostfix;
+        exp_body << exp_body.applyprefix << "(*\t";
+        std::vector<DFT::Nodes::Node*>::const_iterator it = dft->getNodes().begin();
+        for(int c=0;it!=dft->getNodes().end();++it,++c) {
+            if(c>0) exp_body << "   ";
+            exp_body.outlineLeftNext(columnWidths[c],' ');
+            exp_body << exp_body._push << (*it)->getTypeStr() << getIDOfNode(**it) << exp_body._pop;
+        }
+        exp_body << " *)" << exp_body.applypostfix;
+        
+        exp_body.indent();
+        // Generate activation rules
+        {
+            for(size_t s=0; s<activationRules.size(); ++s) {
+                exp_body << exp_body.applyprefix;
+                printSyncLine(*activationRules.at(s),columnWidths);
+                exp_body << ",";
+                exp_body << exp_body.applypostfix;
+            }
+        }
+        // Generate repair rules
+        {
+            for(size_t s=0; s<repairRules.size(); ++s) {
+                exp_body << exp_body.applyprefix;
+                printSyncLine(*repairRules.at(s),columnWidths);
+                exp_body << ",";
+                exp_body << exp_body.applypostfix;
+            }
+        }
+        if(!repairingRules.empty()){
+            // Generate repairing rules
+            {
+                for(size_t s=0; s<repairRules.size(); ++s) {
+                    exp_body << exp_body.applyprefix;
+                    printSyncLine(*repairingRules.at(s),columnWidths);
+                    exp_body << ",";
+                    exp_body << exp_body.applypostfix;
+                }
+            }
+        }
+        // Generate repaired rules
+        {
+            for(size_t s=0; s<repairedRules.size(); ++s) {
+                exp_body << exp_body.applyprefix;
+                printSyncLine(*repairedRules.at(s),columnWidths);
+                exp_body << ",";
+                exp_body << exp_body.applypostfix;
+            }
+        }
+        // Generate online rules
+        {
+            for(size_t s=0; s<onlineRules.size(); ++s) {
+                exp_body << exp_body.applyprefix;
+                printSyncLine(*onlineRules.at(s),columnWidths);
+                exp_body << ",";
+                exp_body << exp_body.applypostfix;
+            }
+        }
+        // Generate inspection rules
+        {
+            for(size_t s=0; s<inspectionRules.size(); ++s) {
+                exp_body << exp_body.applyprefix;
+                printSyncLine(*inspectionRules.at(s),columnWidths);
+                exp_body << ",";
+                exp_body << exp_body.applypostfix;
+            }
+        }
+        // Generate fail rules
+        {
+            for(size_t s=0; s<failRules.size(); ++s) {
+                exp_body << exp_body.applyprefix;
+                printSyncLine(*failRules.at(s),columnWidths);
+                if(s<failRules.size()-1) exp_body << ",";
+                exp_body << exp_body.applypostfix;
+            }
+        }
+        exp_body.outdent();
+        
+        // Generate the parallel composition of all the nodes
+        exp_body << exp_body.applyprefix << "in" << exp_body.applypostfix;
+        exp_body.indent();
+        {
+            int c=0;
+            {
+                std::vector<DFT::Nodes::Node*>::iterator it = dft->getNodes().begin();
+                for(;it!=dft->getNodes().end();++it,++c) {
+                    const DFT::Nodes::Node& node = **it;
+                    if(c>0) exp_body << exp_body.applyprefix << "||" << exp_body.applypostfix;
+                    if(node.isBasicEvent()) {
+                        const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
+                        exp_body << exp_body.applyprefix << getBEProc(be) << exp_body.applypostfix;
+                    } else if(node.isGate()) {
+                        if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitType) || DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitFcfsType)
+                           || DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitPrioType) || DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::RepairUnitNdType)){
+                            const DFT::Nodes::Gate& ru = *static_cast<const DFT::Nodes::Gate*>(&node);
+                            exp_body << exp_body.applyprefix << getRUProc(ru) << exp_body.applypostfix;
+                        }else if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::InspectionType)){
+                            const DFT::Nodes::Inspection& insp = *static_cast<const DFT::Nodes::Inspection*>(&node);
+                            exp_body << exp_body.applyprefix << getINSPProc(insp) << exp_body.applypostfix;
+                        } else if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::ReplacementType)){
+                            const DFT::Nodes::Replacement& rep = *static_cast<const DFT::Nodes::Replacement*>(&node);
+                            exp_body << exp_body.applyprefix << getREPProc(rep) << exp_body.applypostfix;
+                        } else {
+                            exp_body << exp_body.applyprefix << "\"" << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(node) << ".bcg\"" << exp_body.applypostfix;
+                        }
+                    } else {
+                        assert(0 && "buildEXPBody(): Unknown node type");
+                    }
+                }
+            }
+        }
+        exp_body.outdent();
+        exp_body << exp_body.applyprefix << "end par" << exp_body.applypostfix;
+    }
+    exp_body.outdent();
+    exp_body.appendLine("end hide");
+    return 0;
+}
+
+
 	int DFT::DFTreeEXPBuilder::createSyncRuleBE(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::BasicEvent& node, unsigned int nodeID) {
 		return 0;
 	}
@@ -696,7 +887,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
      * Add INSP Specific syncRules
      * The INSP needs to synchronize with multiple nodes: namely its dependers.
      */
-    int DFT::DFTreeEXPBuilder::createSyncRuleInspection(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::Inspection& node, unsigned int nodeID) {
+    int DFT::DFTreeEXPBuilder::createSyncRuleInspection(vector<DFT::EXPSyncRule*>& inspectionRules, vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, const DFT::Nodes::Inspection& node, unsigned int nodeID) {
         return 0;
     }
 
@@ -704,7 +895,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
      * Add REP Specific syncRules
      * The REP needs to synchronize with multiple nodes: namely its dependers.
      */
-    int DFT::DFTreeEXPBuilder::createSyncRuleReplacement(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::Replacement& node, unsigned int nodeID) {
+    int DFT::DFTreeEXPBuilder::createSyncRuleReplacement(vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, const DFT::Nodes::Replacement& node, unsigned int nodeID) {
         return 0;
     }
 
@@ -1579,16 +1770,6 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 				createSyncRuleRepairUnit(repairRules,repairedRules,repairingRules,*g,nodeID);
 				break;
 			}
-            case DFT::Nodes::InspectionType: {
-                const DFT::Nodes::Inspection* g = static_cast<const DFT::Nodes::Inspection*>(&node);
-                createSyncRuleInspection(activationRules,failRules,*g,nodeID);
-                break;
-            }
-            case DFT::Nodes::ReplacementType: {
-                const DFT::Nodes::Replacement* g = static_cast<const DFT::Nodes::Replacement*>(&node);
-                createSyncRuleReplacement(activationRules,failRules,*g,nodeID);
-                break;
-            }
 			default: {
 				cc->reportError("UnknownNode");
 				break;
@@ -1833,7 +2014,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
                     }
                 }
                 
-            }else {
+            }else if(!DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::InspectionType) && !DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::ReplacementType)){
                 
                 /* REPAIR rule */
                 {
@@ -1856,7 +2037,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
                             // FIXME: Possibly this is actually never wanted,
                             // as it could allow multiple senders to synchronize
                             // with each other.
-                            (*itf)->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncFail(n+1)) );
+                            (*itf)->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncRepair(n+1)) );
                             cc->reportAction3("THIS Node added to existing sync rule",VERBOSITY_RULEORIGINS);
                         }
                     }
@@ -2016,7 +2197,222 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
                     repairedRules.push_back(ruleRP);
                 }
                 
+            } else if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::InspectionType)){
+                /* INSPECTION rules */
+                {
+                    // Go through all the existing repair rules
+                    std::vector<EXPSyncRule*>::iterator itf = inspectionRules.begin();
+                    bool areOtherRules = false;
+                    for(;itf != inspectionRules.end();++itf) {
+                        
+                        // If there is a rule that also synchronizes on the same node,
+                        // we have come across a child with another parent.
+                        if((*itf)->syncOnNode == &child) {
+                            cc->reportAction3("Detected earlier inspection rule",VERBOSITY_RULEORIGINS);
+                            if(areOtherRules) {
+                                cc->reportError("There should be only one INSPECTION rule per node, bailing...");
+                                return 1;
+                            }
+                            areOtherRules = true;
+                            // We can simply add the THIS node as a sender to
+                            // the other synchronization rule.
+                            // FIXME: Possibly this is actually never wanted,
+                            // as it could allow multiple senders to synchronize
+                            // with each other.
+                            (*itf)->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncInspection(n+1)) );
+                            cc->reportAction3("THIS Node added to existing sync rule",VERBOSITY_RULEORIGINS);
+                        }
+                    }
+                    
+                    // If there are other rules that synchronize on the same node,
+                    // we do not need to synchronize any further
+                    // FIXME: This is probably not true!
+                    if(!areOtherRules) {
+                        // Add the child Node to the synchronization rule
+                        // Create synchronization rules a_<nodetype><nodeid>_<childtype><childid>
+                        std::stringstream ss;
+                        ss << "insp_" << child.getTypeStr() << childID;
+                        EXPSyncRule* ruleI = new EXPSyncRule(ss.str());
+                        ruleI->syncOnNode = &child;
+                        ruleI->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncInspection(n+1)) );
+                        ruleI->label.insert( pair<unsigned int,EXPSyncItem*>(childID,syncInspection(0)) );
+                        {
+                            std::stringstream report;
+                            report << "Added new inspection sync rule: ";
+                            printSyncLineShort(report,*ruleI);
+                            cc->reportAction2(report.str(),VERBOSITY_RULES);
+                        }
+                        inspectionRules.push_back(ruleI);
+                    }
+                }
+
+
+            } else if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::ReplacementType)){
+                
+                /* REPAIR rule */
+                {
+                    // Go through all the existing repair rules
+                    std::vector<EXPSyncRule*>::iterator itf = repairRules.begin();
+                    bool areOtherRules = false;
+                    for(;itf != repairRules.end();++itf) {
+                        
+                        // If there is a rule that also synchronizes on the same node,
+                        // we have come across a child with another parent.
+                        if((*itf)->syncOnNode == &child) {
+                            cc->reportAction3("Detected earlier repair rule",VERBOSITY_RULEORIGINS);
+                            if(areOtherRules) {
+                                cc->reportError("There should be only one REPAIR rule per node, bailing...");
+                                return 1;
+                            }
+                            areOtherRules = true;
+                            // We can simply add the THIS node as a sender to
+                            // the other synchronization rule.
+                            // FIXME: Possibly this is actually never wanted,
+                            // as it could allow multiple senders to synchronize
+                            // with each other.
+                            (*itf)->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncRepair(n+1)) );
+                            cc->reportAction3("THIS Node added to existing sync rule",VERBOSITY_RULEORIGINS);
+                        }
+                    }
+                    
+                    // If there are other rules that synchronize on the same node,
+                    // we do not need to synchronize any further
+                    // FIXME: This is probably not true!
+                    if(!areOtherRules) {
+                        // Add the child Node to the synchronization rule
+                        // Create synchronization rules a_<nodetype><nodeid>_<childtype><childid>
+                        std::stringstream ss;
+                        ss << "r_" << child.getTypeStr() << childID;
+                        EXPSyncRule* ruleR = new EXPSyncRule(ss.str());
+                        ruleR->syncOnNode = &child;
+                        ruleR->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncRepair(n+1)) );
+                        ruleR->label.insert( pair<unsigned int,EXPSyncItem*>(childID,syncRepair(0)) );
+                        {
+                            std::stringstream report;
+                            report << "Added new repair     sync rule: ";
+                            printSyncLineShort(report,*ruleR);
+                            cc->reportAction2(report.str(),VERBOSITY_RULES);
+                        }
+                        repairRules.push_back(ruleR);
+                    }
+                }
+                
+                /** REPAIRED RULE **/
+                {
+                    // Create labelTo string
+                    std::stringstream ss;
+                    ss << "rp_" << node.getTypeStr() << nodeID << "_" << child.getTypeStr() << childID;
+                    EXPSyncRule* ruleRP = new EXPSyncRule(ss.str());
+                    
+                    std::stringstream report;
+                    report << "New EXPSyncRule " << ss.str();
+                    cc->reportAction3(report.str(),VERBOSITY_RULEORIGINS);
+                    
+                    // Set synchronization node
+                    ruleRP->syncOnNode = &child;
+                    
+                    // Add synchronization of THIS node to the synchronization rule
+                    ruleRP->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncRepaired(n+1,true)) );
+                    cc->reportAction3("THIS node added to sync rule",VERBOSITY_RULEORIGINS);
+                    
+                    // Go through all the existing repaired rules
+                    std::vector<DFT::EXPSyncRule*>::iterator ita = repairedRules.begin();
+                    for(;ita != repairedRules.end();++ita) {
+                        
+                        // If there is a rule that also synchronizes on the same node,
+                        // we have come across a child with another parent.
+                        // Note: this can be interesting if we allow assining several RUs to a BE
+                        if((*ita)->syncOnNode == &child) {
+                            EXPSyncRule* otherRuleRP = *ita;
+                            std::stringstream report;
+                            report << "Detected earlier maintenance rule: ";
+                            printSyncLineShort(report,*otherRuleRP);
+                            cc->reportAction3(report.str(),VERBOSITY_RULEORIGINS);
+                            
+                            // First, we look up the sending Node of the
+                            // current activation rule...
+                            int otherNodeID = -1;
+                            int otherLocalNodeID = -1;
+                            for(auto& syncItem: otherRuleRP->label) {
+                                if(syncItem.second->getArg(1)) {
+                                    otherNodeID = syncItem.first;
+                                    otherLocalNodeID = syncItem.second->getArg(0);
+                                    break;
+                                }
+                            }
+                            if(otherNodeID<0) {
+                                cc->reportError("Could not find sender of the other rule, bailing...");
+                                return 1;
+                            }
+                            const DFT::Nodes::Node* otherNode = getNodeWithID(otherNodeID);
+                            assert(otherNode);
+                            
+                            // The synchronization depends if THIS node uses
+                            // dynamic activation or not. The prime example of
+                            // this is the Spare gate.
+                            // It also depends on the sending Node of the current
+                            // activation rule (otherNode). Both have to use
+                            // dynamic activation, because otherwise a Spare gate
+                            // will not activate a child if it's activated by a
+                            // static node, which is what is required.
+                            // The fundamental issue is that the semantics of
+                            // "using" or "claiming" a node is implicitely within
+                            // activating it. This should be covered more
+                            // thoroughly in the theory first, thus:
+                            /// @todo Fix "using" semantics in activation"
+                            if(node.usesDynamicActivation() && otherNode->usesDynamicActivation()) {
+                                
+                                
+                                // If the THIS node used dynamic activation, the
+                                // node is activated by an other parent.
+                                
+                                // Thus, add a synchronization item to the
+                                // existing synchronization rule, specifying that
+                                // the THIS node also receives a sent Activate.
+                                otherRuleRP->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncActivate(n+1,false)) );
+                                cc->reportAction3("THIS node added, repaired listening synchronization",VERBOSITY_RULEORIGINS);
+                                
+                                // This is not enough, because the other way
+                                // around also has to be added: the other node
+                                // wants to listen to Activates of the THIS node
+                                // as well.
+                                // Thus, we add a synchronization item to the
+                                // new rule we create for the THIS node, specifying
+                                // the other node wants to listen to activates of
+                                // the THIS node.
+                                ruleRP->label.insert( pair<unsigned int,EXPSyncItem*>(otherNodeID,syncActivate(otherLocalNodeID,false)) );
+                                cc->reportAction3("Detected (other) dynamic repaired `" + otherNode->getName() + "', added to sync rule",VERBOSITY_RULEORIGINS);
+                                
+                                // TODO: primary is a special case??????
+                            } else {
+                                
+                                // If the THIS node does not use dynamic
+                                // activation, we can simply add the THIS node
+                                // as a sender to the other synchronization rule.
+                                // FIXME: Possibly this is actually never wanted,
+                                // as it could allow multiple senders to synchronize
+                                // with each other.
+                                //otherRuleA->label.insert( pair<unsigned int,EXPSyncItem*>(nodeID,syncActivate(n+1,true)) );
+                            }
+                        }
+                    }
+                    
+                    // Add the child Node to the synchronization rule
+                    // Create synchronization rules a_<nodetype><nodeid>_<childtype><childid>
+                    ruleRP->label.insert( pair<unsigned int,EXPSyncItem*>(childID,syncRepaired(0,false)) );
+                    cc->reportAction3("Child added to sync rule",VERBOSITY_RULEORIGINS);
+                    
+                    {
+                        std::stringstream report;
+                        report << "Added new repaired sync rule: ";
+                        printSyncLineShort(report,*ruleRP);
+                        cc->reportAction2(report.str(),VERBOSITY_RULES);
+                    }
+                    repairedRules.push_back(ruleRP);
+                }
+                
             }
+
             
         }
         
@@ -2109,12 +2505,12 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
             }
             case DFT::Nodes::InspectionType: {
                 const DFT::Nodes::Inspection* g = static_cast<const DFT::Nodes::Inspection*>(&node);
-                createSyncRuleInspection(activationRules,failRules,*g,nodeID);
+                createSyncRuleInspection(inspectionRules,repairRules,repairedRules,*g,nodeID);
                 break;
             }
             case DFT::Nodes::ReplacementType: {
                 const DFT::Nodes::Replacement* g = static_cast<const DFT::Nodes::Replacement*>(&node);
-                createSyncRuleReplacement(activationRules,failRules,*g,nodeID);
+                createSyncRuleReplacement(repairRules,repairedRules,*g,nodeID);
                 break;
             }
             default: {
