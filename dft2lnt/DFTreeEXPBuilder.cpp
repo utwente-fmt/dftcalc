@@ -623,7 +623,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
     
     /* Generate the EXP based on the generated synchronization rules */
     exp_body.clearAll();
-    exp_body << exp_body.applyprefix << "(* Number of rules: " << (activationRules.size()+failRules.size()+repairRules.size()+repairedRules.size()+repairingRules.size()+onlineRules.size()) << "*)" << exp_body.applypostfix;
+    exp_body << exp_body.applyprefix << "(* Number of rules: " << (activationRules.size()+failRules.size()+repairRules.size()+repairedRules.size()+repairingRules.size()+onlineRules.size()+inspectionRules.size()) << "*)" << exp_body.applypostfix;
     exp_body << exp_body.applyprefix << "hide" << exp_body.applypostfix;
     exp_body.indent();
     
