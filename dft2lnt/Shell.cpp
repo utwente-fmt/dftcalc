@@ -337,7 +337,7 @@ bool Shell::readSvlStatisticsFromLog(File logFile, Shell::SvlStatistics& stats) 
         
         // Read the stats from the current line
         if(!Shell::readSvlStatistics(buffer,statsTemp)) {
-            stats.addInitial(statsTemp);
+            stats.maxValues(statsTemp);
         }
         
         // Abort if EOF found

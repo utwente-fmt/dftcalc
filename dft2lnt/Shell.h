@@ -93,12 +93,6 @@ public:
             
     }
         
-        void addInitial(const SvlStatistics& other) {
-            max_states    += other.max_states;
-            max_transitions  += other.max_transitions;
-            max_memory += other.max_memory;
-        }
-        
         void maxValues(const SvlStatistics& other) {
             max_states = max_states > other.max_states ? max_states : other.max_states;
             max_transitions = max_transitions > other.max_transitions ? max_transitions : other.max_transitions;

@@ -1107,7 +1107,7 @@ int main(int argc, char** argv) {
         messageFormatter->reportWarning("Could not read from svl log file `" + svlLogFile.getFileRealPath() + "'");
     } else {
         messageFormatter->reportAction2("Read from svl log file `" + svlLogFile.getFileRealPath() + "'",VERBOSITY_DATA);
-        std::cout << "Max States: " << svlStats.max_states << ", Max Transitions: " << svlStats.max_transitions << ", Max Memory of File: " << svlStats.max_memory << " Kbytes" << endl;
+        std::cout << "Max States: " << svlStats.max_states << ", Max Transitions: " << svlStats.max_transitions << ", Max Memory by SVL: " << svlStats.max_memory << " Kbytes" << endl;
     }
     }
 	
