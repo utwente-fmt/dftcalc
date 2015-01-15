@@ -831,7 +831,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 	 * of failing dependers is nondeterministic.
 	 */
 	int DFT::DFTreeEXPBuilder::createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateFDEP& node, unsigned int nodeID) {
-		
+        
 		// Loop over all the dependers
 		cc->reportAction3("FDEP Dependencies of THIS node...",VERBOSITY_RULEORIGINS);
 		for(int dependerLocalID=0; dependerLocalID<(int)node.getDependers().size(); ++dependerLocalID) {
@@ -912,6 +912,19 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 		DFT::EXPSyncRule* ruleA = new EXPSyncRule(ss.str(),false);
 		ss.str("");
 		ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncActivate(0,false)) );
+        
+        // Generate the FDEP Node Activate rule
+        int c=0;
+        {
+            std::vector<DFT::Nodes::Node*>::iterator it = dft->getNodes().begin();
+            for(;it!=dft->getNodes().end();++it,++c) {
+                const DFT::Nodes::Node& node = **it;
+                if(node.isGate()) {
+                    if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::GateFDEPType))
+                        ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(c,syncActivate(0,false)) );
+                }
+            }
+        }
 		
 		std::stringstream report;
 		report << "New EXPSyncRule " << ss.str();
@@ -957,6 +970,19 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 		DFT::EXPSyncRule* ruleA = new EXPSyncRule(ss.str(),false);
 		ss.str("");
 		ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncActivate(0,false)) );
+        
+        // Generate the FDEP Node Activate rule
+        int c=0;
+        {
+            std::vector<DFT::Nodes::Node*>::iterator it = dft->getNodes().begin();
+            for(;it!=dft->getNodes().end();++it,++c) {
+                const DFT::Nodes::Node& node = **it;
+                if(node.isGate()) {
+                    if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::GateFDEPType))
+                        ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(c,syncActivate(0,false)) );
+                }
+            }
+        }
 
 		std::stringstream report;
 		report << "New EXPSyncRule " << ss.str();
