@@ -571,6 +571,13 @@ int main(int argc, char** argv) {
 		compilerContext->flush();
 		dft->addRepairInfo();
 	}
+    
+    /* Remove superflous FDEP edges */
+    if(dft) {
+        compilerContext->reportAction("Applying FDEP cleanup to DFT gates...",VERBOSITY_FLOW);
+        compilerContext->flush();
+        dft->checkFDEPInfo();
+    }
 
 	/* Printing DFT */
 	if(dftValid && outputDFTFileSet) {

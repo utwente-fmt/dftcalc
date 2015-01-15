@@ -157,7 +157,6 @@ int DFT::DFTreeBCGNodeBuilder::lntIsValid(std::string lntFilePath) {
 	return res==0;
 }
 
-
 int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::GateAnd& gate) {
 	int nr_parents = gate.getParents().size();
 	int total = gate.getChildren().size();

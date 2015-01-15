@@ -318,6 +318,39 @@ public:
 			findRepairInfo(gate);
 		}
 	}
+    
+    /**
+     * Find FDEP information
+     * @param Gate to start
+     */
+    void findFDEPInfo(DFT::Nodes::Gate* gate) {
+        for(size_t n = 0; n<gate->getChildren().size(); ++n) {
+            // Get the current child and associated childID
+            DFT::Nodes::Node* child = gate->getChildren().at(n);
+            if(child->isGate()) {
+                DFT::Nodes::Gate* g = static_cast<DFT::Nodes::Gate*>(child);
+                if(child->outputIsDumb()) {
+                    gate->delChild(n);
+                    n--;
+                }else{
+                    findFDEPInfo(g);
+                }
+            }
+        }
+    }
+
+    
+    /**
+     * Apply FDEP checks
+     */
+    void checkFDEPInfo() {
+        DFT::Nodes::Node* node=getTopNode();
+        if(node->isGate()){
+            DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*>(node);
+            findFDEPInfo(gate);
+        }
+    }
+    
 };
 } // Namespace: DFT
 
