@@ -202,6 +202,30 @@ int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::Ga
 	return 0;
 }
 
+int DFT::DFTreeBCGNodeBuilder::generateSAnd(FileWriter& out, const DFT::Nodes::GateSAnd& gate) {
+    int nr_parents = gate.getParents().size();
+    int total = gate.getChildren().size();
+    
+    out << out.applyprefix << " * Generating SAnd(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
+    generateHeaderClose(out);
+    
+    if(!gate.isRepairable()){
+        out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_SEQUENCE_AND) is" << out.applypostfix;
+        out.indent();
+        
+        out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
+        out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
+        out.indent();
+        out << out.applyprefix << "SEQUENCE_AND [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+        out.outdent();
+        out << out.applyprefix << "end process" << out.applypostfix;
+    }
+    out.outdent();
+    out << out.applyprefix << "end module" << out.applypostfix;
+    
+    return 0;
+}
+
 int DFT::DFTreeBCGNodeBuilder::generateOr(FileWriter& out, const DFT::Nodes::GateOr& gate) {
 	int nr_parents = gate.getParents().size();
 	int total = gate.getChildren().size();
@@ -880,6 +904,14 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 				generateAnd(lntOut,gate);
 				break;
 			}
+            case DFT::Nodes::GateSAndType: {
+                const DFT::Nodes::GateSAnd& gate = static_cast<const DFT::Nodes::GateSAnd&>(node);
+                FileWriter report;
+                report << "Generating " << getFileForNode(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
+                cc->reportAction(report.toString(),VERBOSE_GENERATION);
+                generateSAnd(lntOut,gate);
+                break;
+            }
 			case DFT::Nodes::GateHSPType: {
 				break;
 			}

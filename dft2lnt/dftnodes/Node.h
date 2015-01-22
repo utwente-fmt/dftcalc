@@ -32,6 +32,7 @@ enum NodeType {
 	GatePhasedOrType,
 	GateOrType,
 	GateAndType,
+    GateSAndType,
 	GateHSPType,
 	GateWSPType,
 	GateCSPType,
@@ -65,6 +66,7 @@ class Node {
 public:
 	static const std::string BasicEventStr;
 	static const std::string GateAndStr;
+    static const std::string GateSAndStr;
 	static const std::string GateOrStr;
 	static const std::string GateWSPStr;
 	static const std::string GatePAndStr;
@@ -89,6 +91,8 @@ public:
 			return BasicEventStr;
 		case GateAndType:
 			return GateAndStr;
+        case GateSAndType:
+            return GateSAndStr;
 		case GateOrType:
 			return GateOrStr;
 		case GateWSPType:

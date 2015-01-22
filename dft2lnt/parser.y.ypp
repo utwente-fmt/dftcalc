@@ -106,6 +106,7 @@
 %token<c_string> PHASEDOR
 %token<c_string> OR
 %token<c_string> AND
+%token<c_string> SAND
 %token<c_string> HSP
 %token<c_string> WSP
 %token<c_string> CSP
@@ -487,6 +488,7 @@ gate //{
 	:	PHASEDOR  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GatePhasedOrType  ); free($1); }
 	|	OR        { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateOrType        ); free($1); }
 	|	AND       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateAndType       ); free($1); }
+	|	SAND      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateSAndType      ); free($1); }
 	|	HSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateHSPType       ); free($1); }
 	|	WSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateWSPType       ); free($1); }
 	|	CSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateCSPType       ); free($1); }
