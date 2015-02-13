@@ -44,6 +44,15 @@ int DFT::DFTreePrinter::printBasicEvent(std::ostream& out, const DFT::Nodes::Bas
 	out.precision(10);
 	out << " lambda=" << fixed << basicEvent->getLambda();
 	out << " dorm=" << basicEvent->getDorm();
+    if(basicEvent->getPhases()>0){
+        out << " phases=" << basicEvent->getPhases();
+    }
+    if(basicEvent->getInterval()>0){
+        out << " interval=" << basicEvent->getInterval();
+    }
+    if(basicEvent->getMaintain()>0){
+        out << " maintain=" << basicEvent->getMaintain();
+    }
 	if(basicEvent->isRepairable())
 		out << " repair=" << basicEvent->getRepair();
 	out.precision(ss_old);

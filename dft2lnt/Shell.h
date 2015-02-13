@@ -80,6 +80,26 @@ public:
 		}
 	};
 	
+    class SvlStatistics {
+    public:
+        int max_states;
+        int max_transitions;
+        float max_memory;
+        
+    SvlStatistics():
+        max_states(0),
+        max_transitions(0),
+        max_memory(0.0f){
+            
+    }
+        
+        void maxValues(const SvlStatistics& other) {
+            max_states = max_states > other.max_states ? max_states : other.max_states;
+            max_transitions = max_transitions > other.max_transitions ? max_transitions : other.max_transitions;
+            max_memory = max_memory > other.max_memory ? max_memory : other.max_memory;
+        }
+    };
+    
 	class RunStatistics {
 	public:
 		float time_user;
@@ -152,6 +172,11 @@ public:
 		return n>0;
 	}
 	
+    static bool readSvlStatisticsFromLog(File logFile, Shell::SvlStatistics& stats);
+    static bool readSvlStatistics(File file, SvlStatistics& stats);
+    static bool readSvlStatistics(const string& contents, SvlStatistics& stats);
+    static bool readSvlStatistics(const char* contents, SvlStatistics& stats);
+    
 	static bool readMemtimeStatisticsFromLog(File logFile, Shell::RunStatistics& stats);
 	static bool readMemtimeStatistics(File file, RunStatistics& stats);
 	static bool readMemtimeStatistics(const string& contents, RunStatistics& stats);

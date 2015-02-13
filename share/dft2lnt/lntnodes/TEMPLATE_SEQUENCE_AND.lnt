@@ -1,13 +1,17 @@
-module TEMPLATE_VOTING(TEMPLATE_COMMON) is
+module TEMPLATE_SEQUENCE_AND(TEMPLATE_COMMON) is
 
-	process VOTING [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (threshold : NAT, total : NAT, received : BOOL_ARRAY) is
+	process SEQUENCE_AND [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (threshold : NAT, total : NAT, received : BOOL_ARRAY) is
 	var
 		nr : NAT,
 		done : BOOL,
-		nr_act : NAT
+		nr_act : NAT,
+		active : BOOL,
+		activated : BOOL_ARRAY
 	in
 		nr_act := 0;
 		done := FALSE;
+		active := FALSE;
+		activated := BOOL_ARRAY(FALSE);
 		loop
 			select
 
@@ -16,10 +20,14 @@ module TEMPLATE_VOTING(TEMPLATE_COMMON) is
 			 * If this happens, we remember this by setting the boolean
 			 * in the received array to TRUE. We also decrement the threshold.
 			 *)
-				FAIL (?nr) where (0 < nr) and (nr <= total);
-				if not (received[nr]) and (threshold > 0)  and not (done) then
+				FAIL (?nr) where (nr > 0) and (nr == nr_act) and (nr <= total) and (active);
+				if not (received[nr]) and (threshold > 0)  and not (done) and (active) then
 					received[nr] := TRUE;
-					threshold := threshold - 1
+					nr_act := nr_act+1;
+					threshold := threshold - 1;
+					if(nr_act <= total) then
+						ACTIVATE (!nr_act,TRUE)
+					end if
 				end if
 
 			(*
@@ -47,14 +55,11 @@ module TEMPLATE_VOTING(TEMPLATE_COMMON) is
 			 * from left to right.
 			 *)
 			[]
-				if (nr_act > 0) and not (done) and (threshold > 0) then
-					if not (received[nr_act]) then
-						ACTIVATE (!nr_act,TRUE)
-					end if;
-					if nr_act < total and not (done) then
-						nr_act := nr_act + 1
-					else
-						nr_act := 0
+				if (nr_act == 1) and not (done) and (threshold > 0) then
+					if not (activated[nr_act]) then
+						ACTIVATE (!nr_act,TRUE);
+						activated[nr_act] := TRUE;
+						active := TRUE
 					end if
 				end if
 			end select

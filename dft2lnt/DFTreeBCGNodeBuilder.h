@@ -34,7 +34,11 @@ public:
 	static const std::string GATE_RATE_FAIL;
     static const std::string GATE_RATE_MAINTAIN;
 	static const std::string GATE_RATE_REPAIR;
+    static const std::string GATE_RATE_PERIOD;
+    static const std::string GATE_RATE_INSPECTION;
 	static const std::string GATE_REPAIRING;
+    static const std::string GATE_INSPECT;
+    static const std::string GATE_INSPECTED;
 private:
 	static const unsigned int VERSION;
 	static const int VERBOSE_LNTISVALID;
@@ -54,6 +58,7 @@ private:
 	int generateHeaderClose(FileWriter& out);
 
 	int generateAnd(FileWriter& out, const DFT::Nodes::GateAnd& gate);
+    int generateSAnd(FileWriter& out, const DFT::Nodes::GateSAnd& gate);
 	int generateOr(FileWriter& out, const DFT::Nodes::GateOr& gate);
 	int generateVoting(FileWriter& out, const DFT::Nodes::GateVoting& gate);
 	int generatePAnd(FileWriter& out, const DFT::Nodes::GatePAnd& gate);
@@ -65,6 +70,9 @@ private:
 	int generateRU_FCFS(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 	int generateRU_Prio(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 	int generateRU_Nd(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
+    
+    int generateInspection(FileWriter& out, const DFT::Nodes::Inspection& gate);
+    int generateReplacement(FileWriter& out, const DFT::Nodes::Replacement& gate);
 
 	int generateSVLBuilder(FileWriter& out, std::string fileName);
 	int executeSVL(std::string root, std::string fileName);

@@ -36,7 +36,11 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRED    ("REPAIRED");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL   ("RATE_FAIL");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_MAINTAIN   ("RATE_MAINTAIN");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR ("RATE_REPAIR");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_INSPECTION ("RATE_INSPECTION");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_PERIOD ("RATE_PERIOD");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING   ("REPAIRING");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECT   ("INSPECT");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECTED   ("INSPECTED");
 
 const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 6;
 
@@ -53,6 +57,14 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 	if(node.getType()==DFT::Nodes::GateVotingType) {
 		ss << "v";
 	}
+    
+    if(node.getType()==DFT::Nodes::InspectionType) {
+        ss << "i";
+    }
+    
+    if(node.getType()==DFT::Nodes::ReplacementType) {
+        ss << "r";
+    }
 	
 	ss << node.getTypeStr();
 	ss << "_p" << (node.getParents().size()>0?node.getParents().size():1);
@@ -74,6 +86,12 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		if(be.getFailed()) {
 			ss << "_failed";
 		}
+		if(be.getPhases()>1){
+			ss << "_aph_" << be.getPhases();
+		}
+		if(be.getInterval()>0){
+			ss << "_interval_" << be.getInterval();
+		}
 	} else if(node.isGate()) {
 		const DFT::Nodes::Gate& gate = *static_cast<const DFT::Nodes::Gate*>(&node);
 		ss << "_c" << gate.getChildren().size();
@@ -83,7 +101,13 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		} if(node.getType()==DFT::Nodes::GateFDEPType) {
 			const DFT::Nodes::GateFDEP& gateFDEP = *static_cast<const DFT::Nodes::GateFDEP*>(&node);
 			ss << "_d" << gateFDEP.getDependers().size();
-		}
+        } if(node.getType()==DFT::Nodes::InspectionType) {
+            const DFT::Nodes::Inspection& inspection = *static_cast<const DFT::Nodes::Inspection*>(&node);
+            ss << "_p" << inspection.getPhases();
+        } if(node.getType()==DFT::Nodes::ReplacementType) {
+            const DFT::Nodes::Replacement& replacement = *static_cast<const DFT::Nodes::Replacement*>(&node);
+            ss << "_p" << replacement.getPhases();
+        }
 		if(node.isRepairable()) {
 			// FIXME: add this directly as gate information
 			int repairable=0;
@@ -133,7 +157,6 @@ int DFT::DFTreeBCGNodeBuilder::lntIsValid(std::string lntFilePath) {
 	return res==0;
 }
 
-
 int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::GateAnd& gate) {
 	int nr_parents = gate.getParents().size();
 	int total = gate.getChildren().size();
@@ -177,6 +200,30 @@ int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::Ga
 	out << out.applyprefix << "end module" << out.applypostfix;
 
 	return 0;
+}
+
+int DFT::DFTreeBCGNodeBuilder::generateSAnd(FileWriter& out, const DFT::Nodes::GateSAnd& gate) {
+    int nr_parents = gate.getParents().size();
+    int total = gate.getChildren().size();
+    
+    out << out.applyprefix << " * Generating SAnd(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
+    generateHeaderClose(out);
+    
+    if(!gate.isRepairable()){
+        out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_SEQUENCE_AND) is" << out.applypostfix;
+        out.indent();
+        
+        out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
+        out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
+        out.indent();
+        out << out.applyprefix << "SEQUENCE_AND [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+        out.outdent();
+        out << out.applyprefix << "end process" << out.applypostfix;
+    }
+    out.outdent();
+    out << out.applyprefix << "end module" << out.applypostfix;
+    
+    return 0;
 }
 
 int DFT::DFTreeBCGNodeBuilder::generateOr(FileWriter& out, const DFT::Nodes::GateOr& gate) {
@@ -358,8 +405,9 @@ int DFT::DFTreeBCGNodeBuilder::generateFDEP(FileWriter& out, const DFT::Nodes::G
 int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::BasicEvent& be) {
 	int nr_parents = be.getParents().size();
 	bool cold = be.getMu()==0;
-    bool dummy = be.getLambda()==0;
-
+	bool dummy = be.getLambda()==0;
+	bool aph = be.getPhases()>1;
+	bool aph_repair = (be.getInterval()>0 && aph);
 	// new boolean variable for repairable BE
 	bool repair = be.getRepair() > 0;
     
@@ -369,13 +417,14 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 	std::string initialState;
 	if(be.getFailed()) initialState = "FAILING";
 	else if(repair) initialState = "UP";
+	else if(aph_repair) initialState = "UP";
 	else initialState = "DORMANT";
     if(!dummy){
 	out << out.applyprefix << " * Generating BE(parents=" << nr_parents << ")" << out.applypostfix;
 	generateHeaderClose(out);
 	out << out.applyprefix << "module " << getFileForNode(be) << "(TEMPLATE_BE";
 	// use repair template if  repairable
-	out << (repair?"_REPAIR) is":maintain?"_MAINTAIN) is":") is") << out.applypostfix;
+	out << (repair?"_REPAIR) is":maintain?"_MAINTAIN_APH) is":aph_repair?"_APH_REPAIR) is":aph?"_APH) is":") is") << out.applypostfix;
 	out.appendLine("");
 	out.indent();
 		if(repair)
@@ -383,18 +432,32 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 			<< GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
 		else if(maintain)
             out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << "MAINTAIN : NAT_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, " << GATE_RATE_MAINTAIN << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
-        else
+        else if(aph)
+			if(!aph_repair)
+				out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
+			else
+				out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, "
+			<< GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_INSPECT << " : NAT_CHANNEL, " << GATE_INSPECTED << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
+		else
 			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
 		out.indent();
 			if(repair)
 				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_ONLINE <<
 				"](" << nr_parents << " of NAT";
-			else if(maintain)
+			else if(maintain & not(aph))
                 out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << ", MAINTAIN, " << GATE_RATE_FAIL << "," << GATE_RATE_MAINTAIN << "](" << nr_parents << " of NAT";
-            else
+			else if(aph_repair)
+				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_INSPECT << "," << GATE_INSPECTED <<
+				"," << GATE_ONLINE << "](" << nr_parents << " of NAT";
+			// Normal BE abd BE APH have the same call for BEProc
+			else
 				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "](" << nr_parents << " of NAT";
 			out << ", " << (cold?"TRUE":"FALSE");
 			out << ", " << initialState;
+			if(aph)
+				out << ", " << be.getPhases() << " of NAT";
+			if(aph_repair)
+				out << ", " << be.getInterval() << " of NAT";
 			out << ")" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
@@ -522,6 +585,53 @@ int DFT::DFTreeBCGNodeBuilder::generateRU_Nd(FileWriter& out, const DFT::Nodes::
 	out << out.applyprefix << "end module" << out.applypostfix;
 
 	return 0;
+}
+
+int DFT::DFTreeBCGNodeBuilder::generateInspection(FileWriter& out, const DFT::Nodes::Inspection& gate) {
+    int total = gate.getChildren().size();
+    int phases = gate.getPhases();
+    out << out.applyprefix << " * Generating Inspection(dependers=" << total << ")" << out.applypostfix;
+    generateHeaderClose(out);
+    
+    out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_INSPECTION) is" << out.applypostfix;
+    out.indent();
+
+        out << out.applyprefix << "process MAIN [" << GATE_INSPECT << " : NAT_CHANNEL, " << GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED  << " : NAT_BOOL_CHANNEL, " <<
+            GATE_RATE_INSPECTION << " : NAT_CHANNEL, " << GATE_INSPECTED << " : NAT_CHANNEL ] is" << out.applypostfix;
+        out.indent();
+    
+            out << out.applyprefix << "INSPECTION [" << GATE_INSPECT << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_RATE_INSPECTION << "," << GATE_INSPECTED << "] (" << total << " of NAT," << phases << " of NAT)" << out.applypostfix;
+    
+        out.outdent();
+        out << out.applyprefix << "end process" << out.applypostfix;
+    
+    out.outdent();
+    out << out.applyprefix << "end module" << out.applypostfix;
+
+    return 0;
+}
+
+int DFT::DFTreeBCGNodeBuilder::generateReplacement(FileWriter& out, const DFT::Nodes::Replacement& gate) {
+    int total = gate.getChildren().size();
+    int phases = gate.getPhases();
+    out << out.applyprefix << " * Generating Replacement(dependers=" << total << ")" << out.applypostfix;
+    generateHeaderClose(out);
+
+    out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_PERIODIC_REPAIRUNIT) is" << out.applypostfix;
+    out.indent();
+    
+        out << out.applyprefix << "process MAIN [" << GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_RATE_PERIOD << " : NAT_CHANNEL ] is" << out.applypostfix;
+        out.indent();
+    
+            out << out.applyprefix << "REPLACEMENT [" << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_RATE_PERIOD << "] (" << total << " of NAT," << phases << " of NAT)" << out.applypostfix;
+    
+        out.outdent();
+        out << out.applyprefix << "end process" << out.applypostfix;
+    
+    out.outdent();
+    out << out.applyprefix << "end module" << out.applypostfix;
+    
+    return 0;
 }
 
 int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string>& triedToGenerate) {
@@ -794,6 +904,14 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 				generateAnd(lntOut,gate);
 				break;
 			}
+            case DFT::Nodes::GateSAndType: {
+                const DFT::Nodes::GateSAnd& gate = static_cast<const DFT::Nodes::GateSAnd&>(node);
+                FileWriter report;
+                report << "Generating " << getFileForNode(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
+                cc->reportAction(report.toString(),VERBOSE_GENERATION);
+                generateSAnd(lntOut,gate);
+                break;
+            }
 			case DFT::Nodes::GateHSPType: {
 				break;
 			}
@@ -875,6 +993,22 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 				generateRU_Nd(lntOut,gate);
 				break;
 			}
+            case DFT::Nodes::InspectionType: {
+                const DFT::Nodes::Inspection& gate = static_cast<const DFT::Nodes::Inspection&>(node);
+                FileWriter report;
+                report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+                cc->reportAction(report.toString(),VERBOSE_GENERATION);
+                generateInspection(lntOut,gate);
+                break;
+            }
+            case DFT::Nodes::ReplacementType: {
+                const DFT::Nodes::Replacement& gate = static_cast<const DFT::Nodes::Replacement&>(node);
+                FileWriter report;
+                report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+                cc->reportAction(report.toString(),VERBOSE_GENERATION);
+                generateReplacement(lntOut,gate);
+                break;
+            }
 			case DFT::Nodes::GateTransferType: {
 				break;
 			}

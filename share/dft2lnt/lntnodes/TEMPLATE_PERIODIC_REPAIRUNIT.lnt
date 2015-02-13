@@ -1,0 +1,39 @@
+module TEMPLATE_PERIODIC_REPAIRUNIT(TEMPLATE_COMMON_REPAIR) is
+
+	process REPLACEMENT [REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, RATE_PERIOD : NAT_CHANNEL] (total : NAT, phases : NAT) is
+	var
+		nr : NAT,
+		signal : BOOL,
+		counter : NAT
+	in
+		signal := FALSE;
+		counter := 0;
+		loop
+			select
+				-- listen for repaire signal
+					REPAIR (?nr) where (0 < nr) and (nr <= total);
+					if (not (signal)) then
+						signal := TRUE
+					end if
+
+
+				[]
+					if((counter == phases) or signal) then
+						REPAIRED(!1 of NAT,TRUE);
+						counter := 0;
+						signal := FALSE
+					end if
+
+				-- phases
+				[]
+					if((counter < phases) and not(signal)) then
+						RATE_PERIOD(!1 of NAT);
+						counter := counter + 1
+					end if
+
+			end select
+		end loop
+	end var
+	end process
+
+end module

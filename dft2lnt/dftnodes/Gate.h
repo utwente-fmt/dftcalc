@@ -45,6 +45,12 @@ public:
 	 * @param child The Node to add to this Node's list of children.
 	 */
 	void addChild(Node* child) { children.push_back(child); }
+    
+    /**
+     * Adds the specified Node to this Node's list of children.
+     * @param child The Node to add to this Node's list of children.
+     */
+    void delChild(int n) { children.erase(children.begin()+n); }
 	
 	/**
 	 * Adds the specified Node to this Node's list of repairable children.

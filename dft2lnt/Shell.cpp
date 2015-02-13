@@ -316,6 +316,83 @@ int Shell::execute(const SystemOptions& options, RunStatistics* stats, unordered
 	return result;
 }
 
+bool Shell::readSvlStatisticsFromLog(File logFile, Shell::SvlStatistics& stats) {
+    if(!FileSystem::exists(logFile)) {
+        return true;
+    }
+    
+    std::ifstream log(logFile.getFileRealPath());
+    if(!log.is_open()) {
+        return true;
+    }
+    
+    static const int MAX_CHARS = 200;
+    
+    char buffer[MAX_CHARS];
+    Shell::SvlStatistics statsTemp;
+    while(true) {
+        
+        // Read the next line
+        log.getline(buffer,MAX_CHARS);
+        
+        // Read the stats from the current line
+        if(!Shell::readSvlStatistics(buffer,statsTemp)) {
+            stats.maxValues(statsTemp);
+        }
+        
+        // Abort if EOF found
+        if(log.eof()) {
+            break;
+        }
+        
+        // Handle a fail
+        if(log.fail()) {
+            
+            // If the fail is caused by a line that is too long
+            if(log.gcount()==MAX_CHARS-1) {
+                
+                // Clear the error and continue
+                log.clear();
+                
+                // If the fail was because of something else
+            } else {
+                
+                // Abort
+                break;
+            }
+        }
+        
+    }
+    return false;
+}
+
+bool Shell::readSvlStatistics(File file, SvlStatistics& stats) {
+    string* contents = FileSystem::load(file);
+    
+    if(contents) {
+        bool result = readSvlStatistics(*contents,stats);
+        delete contents;
+        return result;
+    } else {
+        return true;
+    }
+}
+
+bool Shell::readSvlStatistics(const string& contents, SvlStatistics& stats) {
+    return readSvlStatistics(contents.c_str(),stats);
+}
+
+bool Shell::readSvlStatistics(const char* contents, SvlStatistics& stats) {
+    // Format example:     (* 5 states, 9 transitions, 3.0 Kbytes *)
+    int result = sscanf(contents,"    (* %d states, %d transitions, %f Kbytes *)",
+                        &stats.max_states,
+                        &stats.max_transitions,
+                        &stats.max_memory
+                        );
+    return result != 3;
+}
+
+
 bool Shell::readMemtimeStatisticsFromLog(File logFile, Shell::RunStatistics& stats) {
 	if(!FileSystem::exists(logFile)) {
 		return true;

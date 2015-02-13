@@ -57,6 +57,9 @@ public:
 		case DFT::Nodes::GateAndType:
 			gate = new DFT::Nodes::GateAnd(astgate->getLocation(), astgate->getName()->getString());
 			break;
+        case DFT::Nodes::GateSAndType:
+            gate = new DFT::Nodes::GateSAnd(astgate->getLocation(), astgate->getName()->getString());
+            break;
 		case DFT::Nodes::GateHSPType:
 		case DFT::Nodes::GateWSPType:
 		case DFT::Nodes::GateCSPType:
@@ -90,6 +93,16 @@ public:
 		case DFT::Nodes::RepairUnitNdType:
 			gate = new DFT::Nodes::RepairUnit(astgate->getLocation(), astgate->getName()->getString(), DFT::Nodes::RepairUnitNdType);
 			break;
+        case DFT::Nodes::InspectionType:{
+            DFT::AST::ASTInspectionType* insp = static_cast<DFT::AST::ASTInspectionType*>(astgate->getGateType());
+            gate = new DFT::Nodes::Inspection(astgate->getLocation(), astgate->getName()->getString(),insp->getPhases(),insp->getLambda());
+            break;
+        }
+        case DFT::Nodes::ReplacementType:{
+            DFT::AST::ASTReplacementType* rep = static_cast<DFT::AST::ASTReplacementType*>(astgate->getGateType());
+            gate = new DFT::Nodes::Replacement(astgate->getLocation(), astgate->getName()->getString(),rep->getPhases(),rep->getLambda());
+            break;
+        }
 		case DFT::Nodes::GateTransferType:
 			break;
 		default:
@@ -196,6 +209,27 @@ public:
 				}
 			}
 		}
+        // Find phases
+        {
+            std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+            for(; it!=basicEvent->getAttributes()->end(); ++it) {
+                if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelPhases) {
+                    double v = (*it)->getValue()->getNumberValue();
+                    be->setPhases(v);
+                }
+            }
+        }
+        // Find interval
+        {
+            std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
+            for(; it!=basicEvent->getAttributes()->end(); ++it) {
+                if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelInterval) {
+                    double v = (*it)->getValue()->getNumberValue();
+                    be->setInterval(v);
+					be->setRepairable(true);
+                }
+            }
+        }
 		// Find priority
 		{
 			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();

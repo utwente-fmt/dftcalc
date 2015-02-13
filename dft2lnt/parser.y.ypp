@@ -52,6 +52,16 @@
 		int n;
 		int k;
 	} Voting;
+    
+    typedef struct Inspection {
+        int n;
+        double k;
+    } Inspection;
+    
+    typedef struct Replacement {
+        int n;
+        double k;
+    } Replacement;
 
 }
 
@@ -63,6 +73,8 @@
 		char* address;
 		NumberSuffix numbersuffix;
 		Voting voting;
+        Replacement replacement;
+        Inspection inspection;
 		DFT::AST::ASTNodes* nodes;
 		DFT::AST::ASTNode* node;
 		DFT::DFTree* dft;
@@ -87,11 +99,14 @@
 %token <number> NUMBER
 %token <numbersuffix> NUMBERSUFFIX
 %token <voting> VOTING
+%token <inspection> INSPECTION
+%token <replacement> REPLACEMENT
 
 // Gate names
 %token<c_string> PHASEDOR
 %token<c_string> OR
 %token<c_string> AND
+%token<c_string> SAND
 %token<c_string> HSP
 %token<c_string> WSP
 %token<c_string> CSP
@@ -104,6 +119,8 @@
 %token<c_string> RU_F
 %token<c_string> RU_P
 %token<c_string> RU_ND
+%token<c_string> INSP
+%token<c_string> REP
 %token<c_string> TRANSFER
 
 // Attribute names
@@ -119,8 +136,10 @@
 %token<c_string> DORM
 %token<c_string> MAINTAIN
 %token<c_string> APH
+%token<c_string> PHASES
 %token<c_string> REPAIR
 %token<c_string> PRIO
+%token<c_string> INTERVAL
 
 // Other
 %token ENDLINE
@@ -325,9 +344,11 @@ be_attrib_name //{
 	|	REPL   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepl  ); free($1); }
 	|	DORM   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelDorm  ); free($1); }
 	|	MAINTAIN{ $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelMaintain); free($1); }
+	|	PHASES { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelPhases); free($1); }
 	|	APH    { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelAph   ); free($1); }
 	|	REPAIR { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelRepair); free($1); }
 	|	PRIO   { $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelPrio); free($1); }
+	|	INTERVAL{ $$ = new DFT::AST::ASTAttribute(@1,std::string($1),DFT::Nodes::BE::AttrLabelInterval); free($1); }
 	;
 //}
 
@@ -467,6 +488,7 @@ gate //{
 	:	PHASEDOR  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GatePhasedOrType  ); free($1); }
 	|	OR        { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateOrType        ); free($1); }
 	|	AND       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateAndType       ); free($1); }
+	|	SAND      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateSAndType      ); free($1); }
 	|	HSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateHSPType       ); free($1); }
 	|	WSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateWSPType       ); free($1); }
 	|	CSP       { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateCSPType       ); free($1); }
@@ -479,6 +501,8 @@ gate //{
 	|	RU_F      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitFcfsType); free($1); }
 	|	RU_P      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitPrioType); free($1); }
 	|	RU_ND     { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitNdType  ); free($1); }
+    |	INSPECTION{ $$ = new DFT::AST::ASTInspectionType(@$,$1.n,$1.k);                                          }
+    |	REPLACEMENT{ $$ = new DFT::AST::ASTReplacementType(@$,$1.n,$1.k);                                        }
 	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType  ); free($1); }
 	;
 //}

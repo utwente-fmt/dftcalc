@@ -104,8 +104,11 @@ digit         [0-9]
 letter        [A-Za-z]
 posnumber     {digit}+
 number        [-+]?{posnumber}
+rate          ({posnumber}|{posnumber}[.]{posnumber})
 number_exp    e|E
 voting        {number}of{number}
+inspection    {number}insp{rate}
+replacement   {number}rep{rate}
 hexdigit	  {digit}|[A-F]
 newline       \r?\n
 whitespace    [ \t]+
@@ -229,6 +232,53 @@ transfer      "accepts transfers from"
 
 	return VOTING;
 }
+{inspection} {
+    char buffer[101];
+    
+    // Read first number (phases)
+    char* dst = buffer;
+    char* src = yytext;
+    while(isdigit(*src)) {
+        *dst++ = *src++;
+    }
+    *dst = '\0';
+    yylval->inspection.n = atoi(buffer);
+    
+    // Read second number (lambda)
+    dst = buffer;
+    src+=4;
+    while(ispunct(*src) || isdigit(*src)) {
+        *dst++ = *src++;
+    }
+    *dst = '\0';
+    yylval->inspection.k = atof(buffer);
+    
+    return INSPECTION;
+}
+{replacement} {
+    char buffer[101];
+    
+    // Read first number (phases)
+    char* dst = buffer;
+    char* src = yytext;
+    while(isdigit(*src)) {
+        *dst++ = *src++;
+    }
+    *dst = '\0';
+    yylval->replacement.n = atoi(buffer);
+    
+    // Read second number (lambda)
+    dst = buffer;
+    src+=4;
+    while(ispunct(*src) || isdigit(*src)) {
+        *dst++ = *src++;
+    }
+    *dst = '\0';
+    yylval->replacement.k = atof(buffer);
+    
+    return REPLACEMENT;
+}
+
 {real_exp} {
 	double in;
 	sscanf(yytext,"%lf",&in);
@@ -326,6 +376,7 @@ phase                   return PHASE;
 phasedor                { yylval->c_string=my_strdup(yytext); return PHASEDOR; }
 or                      { yylval->c_string=my_strdup(yytext); return OR;       }
 and                     { yylval->c_string=my_strdup(yytext); return AND;      }
+sand                    { yylval->c_string=my_strdup(yytext); return SAND;     }
 hsp                     { yylval->c_string=my_strdup(yytext); return HSP;      }
 wsp                     { yylval->c_string=my_strdup(yytext); return WSP;      }
 csp                     { yylval->c_string=my_strdup(yytext); return CSP;      }
@@ -338,6 +389,8 @@ ru                      { yylval->c_string=my_strdup(yytext); return RU;       }
 ru_f                    { yylval->c_string=my_strdup(yytext); return RU_F;     }
 ru_p                    { yylval->c_string=my_strdup(yytext); return RU_P;     }
 ru_nd                   { yylval->c_string=my_strdup(yytext); return RU_ND;    }
+insp                    { yylval->c_string=my_strdup(yytext); return INSP;     }
+rep                     { yylval->c_string=my_strdup(yytext); return REP;      }
 {transfer}              { yylval->c_string=my_strdup(yytext); return TRANSFER; }
 
  /* Attributes */
@@ -352,9 +405,11 @@ res                     { yylval->c_string=my_strdup(yytext); return RES;    }
 repl                    { yylval->c_string=my_strdup(yytext); return REPL;   }
 dorm                    { yylval->c_string=my_strdup(yytext); return DORM;   }
 aph                     { yylval->c_string=my_strdup(yytext); return APH;    }
-maintain                  { yylval->c_string=my_strdup(yytext); return MAINTAIN; }
+phases                  { yylval->c_string=my_strdup(yytext); return PHASES; }
+maintain                { yylval->c_string=my_strdup(yytext); return MAINTAIN;}
 repair                  { yylval->c_string=my_strdup(yytext); return REPAIR; }
-prio                    { yylval->c_string=my_strdup(yytext); return PRIO; }
+prio                    { yylval->c_string=my_strdup(yytext); return PRIO;   }
+interval                { yylval->c_string=my_strdup(yytext); return INTERVAL;}
 
 {identifier} {
 	yylval->c_string=my_strdup(yytext);

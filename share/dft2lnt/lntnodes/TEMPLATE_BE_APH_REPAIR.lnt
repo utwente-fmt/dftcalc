@@ -1,0 +1,185 @@
+module TEMPLATE_BE_APH_REPAIR(TEMPLATE_COMMON_APH_REPAIR) is
+
+	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL, REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, INSPECT : NAT_CHANNEL, INSPECTED : NAT_BOOL_CHANNEL, ONLINE : NAT_CHANNEL] (total: NAT, cold: BOOL, initial: STATUS, phases: NAT, threshold : NAT) is
+	var
+		status : STATUS,
+		nr : NAT,
+		degenerated : NAT
+	in
+		status := initial;
+		nr := 0;
+		degenerated := phases;
+		loop
+			select
+
+			(*
+			 * When this BE is activated, it will set the status to ACTIVE,
+			 * but only if it was UP (not active and not failed and not under repair)
+			 *)
+			 -- have to send down signals if it can't be activated, because the component is down
+				ACTIVATE (?nr,FALSE) where (nr==0 of NAT);
+				if (status == UP) then
+					status := ACTIVE
+				end if;
+				if (status == DOWN_INACTIVE) then
+					status := DOWN_ACTIVE
+				end if;
+				if (status == UNAVAILABLE_INACTIVE) then
+					status := UNAVAILABLE_ACTIVE
+				end if;
+				if (status == FAILED_INACTIVE) then
+					status := FAILED_ACTIVE
+				end if;
+				if (status == AVAILABLE_INACTIVE) then
+					status := AVAILABLE_ACTIVE
+				end if;
+				if (status == REPAIRING_INACTIVE) then
+					status := REPAIRING_ACTIVE
+				end if;
+				if (status == INSPECTING_INACTIVE) then
+					status := INSPECTING_ACTIVE
+				end if;
+				nr := 0
+
+			(*
+			 * When this BE is in the UP state, it can fail with the
+			 * failure rate associated with this state. The rate is later
+			 * introduced using renaming of RATE_FAIL !1 !1.
+			 * If the failure event is triggered, go into the FAILED state.
+			 *)
+			[]
+				if ((not (cold)) and ((status == UP) or (status == INSPECTING_INACTIVE))) then
+					RATE_FAIL (!1 of NAT,1 of NAT);
+					degenerated := degenerated-1;
+					if (degenerated < 1) then
+						status := FAILED_INACTIVE
+					end if
+				end if
+
+
+			[]
+				if ((not (cold)) and (status == UP) and ((phases-degenerated) >= threshold)) then
+					INSPECT (!0 of NAT);
+					status := INSPECTING_INACTIVE
+				end if
+
+			(*
+			 * When this BE is in the ACTIVE state, it can fail with the
+			 * failure rate associated with this state. The rate is later
+			 * introduced using renaming of RATE_FAIL !1 !2.
+			 * If the failure event is triggered, go into the FAILED state.
+			 *)
+			[]
+				if ((status == ACTIVE) or (status == INSPECTING_ACTIVE)) then
+					RATE_FAIL (!1 of NAT,2 of NAT);
+					degenerated := degenerated-1;
+					if (degenerated < 1) then
+						status := FAILED_ACTIVE
+					end if
+				end if
+
+			[]
+				if ((status == ACTIVE) and ((phases-degenerated) >= threshold)) then
+					INSPECT (!0 of NAT);
+					status := INSPECTING_ACTIVE
+				end if
+
+			(*
+			 * When this BE is in the FAILED state (caused by one of the
+			 * failure rates), signal this to the repair unit using REP !0.
+			 * After this, go into the DOWN state.
+			 *)
+			[]
+				if (status == FAILED_ACTIVE) then
+					FAIL (!0 of NAT);
+					status := DOWN_ACTIVE
+				end if
+
+			-- same for inactive branch
+			[]
+				if (status == FAILED_INACTIVE) then
+					FAIL (!0 of NAT);
+					status := DOWN_INACTIVE
+				end if
+
+			-- if component is DOWN send a repair request
+			[]
+				if(status == DOWN_ACTIVE) then
+					REPAIR (!0 of NAT);
+					status := REPAIRING_ACTIVE
+				end if
+
+			-- same for inactive branch
+			[]
+				if(status == DOWN_INACTIVE) then
+					REPAIR (!0 of NAT);
+					status := REPAIRING_INACTIVE
+				end if
+
+			-- listen if repair is finished active branch
+			[]
+				REPAIRED (?nr,FALSE) where (nr==0 of NAT);
+				if ((status == REPAIRING_ACTIVE)) then
+					status := AVAILABLE_ACTIVE
+				end if;
+			-- listen if repair is finished inactive branch
+				if ((status == REPAIRING_INACTIVE)) then
+					status := AVAILABLE_INACTIVE
+				end if;
+			-- listen if there was a replacement due to inspection active branch
+				if ((status == ACTIVE) or (status == INSPECTING_ACTIVE)) then
+					degenerated := phases;
+					status := ACTIVE
+				end if;
+			-- listen if there was a replacement due to inspection inactive branch
+				if ((status == UP) or (status == INSPECTING_INACTIVE)) then
+					degenerated := phases;
+					status := UP
+				end if;
+				nr := 0
+
+
+			(*
+			 * When this BE is in the UNAVAILABLE state,
+			 * wait until it is repaired using REP ?0.
+			 * After this, go into the AILABLE state.
+			 *)
+			[]
+				if (status == UNAVAILABLE_ACTIVE) then
+					FAIL (!0 of NAT);
+					status := REPAIRING_ACTIVE
+				end if
+
+			-- same for inactive branch
+			[]
+				if (status == UNAVAILABLE_INACTIVE) then
+					FAIL (!0 of NAT);
+					status := REPAIRING_INACTIVE
+				end if
+
+			(*
+			 * When this BE is in the ACTIVE state,
+			 * signal this to the system using BACK !0.
+			 * After this, go into the UP state.
+			 *)
+			[]
+				if (status == AVAILABLE_INACTIVE) then
+					ONLINE (!0 of NAT);
+					status := UP;
+					degenerated := phases
+				end if
+
+			-- if repaired in active branch go back to the Active state
+			[]
+				if (status == AVAILABLE_ACTIVE) then
+					ONLINE (!0 of NAT);
+					status := ACTIVE;
+					degenerated := phases
+				end if
+
+			end select
+		end loop
+	end var
+	end process
+
+end module
