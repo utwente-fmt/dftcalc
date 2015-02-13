@@ -4,16 +4,18 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 	var
 		nr_failed : NAT,
 		done : BOOL,
+		never_fail: BOOL,
 		nr : NAT,
 		last : NAT,
 		nr_act: NAT
 	in
 		done := FALSE;
-		nr_failed := 0 of NAT;
+		nr_failed := 1 of NAT;
 		nr_act := 0 of NAT;
+		never_fail := FALSE;
 		loop
 			select
-			
+
 			(*
 			 * Listen for any child to be triggered.
 			 * If this happens, we add the localNodeID of the failing node to
@@ -26,52 +28,24 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 			 *   - Repair B
 			 *   - Fail B
 			 *)
-				FAIL (?nr) where (0 < nr) and (nr <= total);
-				last := 1 of NAT;
-				loop chkorder in
-					if failed[last] == nr then
-						break chkorder
-					end if;
-					last := last + 1;
-					if last > total  then
-						nr_failed := nr_failed + 1;
-						failed[nr_failed] := nr;
-						break chkorder
-					end if
-				end loop;
+				FAIL (?nr) where (0 < nr) and (nr <= total) and not(never_fail);
+				if(nr == nr_failed) then
+					nr_failed:=nr_failed+1
+				else
+					never_fail:=TRUE
+				end if;
 				nr := 0
-			
+
 			(*
 			 * Checks if all the children have failed and if they failed in
 			 * the right order. If this is the case, the PAnd fails and
 			 * notifies its parents.
 			 *)
 			[]
-				nr := 1 of NAT;
-				
-				(* Loop through the list of failed nodes.
-				 * Break as soon as one is out of order.
-				 *)
-				loop chkorder in
-					last := failed[nr];
-					nr := nr + 1;
-					if nr > total  then
-						break chkorder
-					end if;
-					if last >= failed[nr] then
-						break chkorder
-					end if
-				end loop;
-				
-				(* If we went through the entire list without breaking, this
-				 * means all the children have failed in order, thus the PAnd
-				 * should notify the failure.
-				 *)
-				if (nr > total) and not (done) then
+				if (nr_failed > total) and not (done) and not(never_fail) then
 					FAIL (!0 of NAT); done := TRUE
-				end if;
-				nr := 0
-			
+				end if
+
 			(*
 			 * If this node is activated, enable the activation of the source.
 			 *)
@@ -80,7 +54,7 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 				if (nr_act == 0 of NAT) then
 					nr_act := 1 of NAT
 				end if
-			
+
 			(*
 			 * If the children should be activated, do so, one by one,
 			 * from left to right.
@@ -100,5 +74,4 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 	end process
 
 
-end module 
-
+end module
