@@ -58,6 +58,7 @@ private:
 	int generateHeaderClose(FileWriter& out);
 
 	int generateAnd(FileWriter& out, const DFT::Nodes::GateAnd& gate);
+    int generateSAnd(FileWriter& out, const DFT::Nodes::GateSAnd& gate);
 	int generateOr(FileWriter& out, const DFT::Nodes::GateOr& gate);
 	int generateVoting(FileWriter& out, const DFT::Nodes::GateVoting& gate);
 	int generatePAnd(FileWriter& out, const DFT::Nodes::GatePAnd& gate);

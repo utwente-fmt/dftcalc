@@ -809,6 +809,9 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 	int DFT::DFTreeEXPBuilder::createSyncRuleGateAnd(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateAnd& node, unsigned int nodeID) {
 		return 0;
 	}
+    int DFT::DFTreeEXPBuilder::createSyncRuleGateSAnd(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateSAnd& node, unsigned int nodeID) {
+        return 0;
+    }
 	int DFT::DFTreeEXPBuilder::createSyncRuleGateWSP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateWSP& node, unsigned int nodeID) {
 		return 0;
 	}
@@ -831,7 +834,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 	 * of failing dependers is nondeterministic.
 	 */
 	int DFT::DFTreeEXPBuilder::createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateFDEP& node, unsigned int nodeID) {
-		
+        
 		// Loop over all the dependers
 		cc->reportAction3("FDEP Dependencies of THIS node...",VERBOSITY_RULEORIGINS);
 		for(int dependerLocalID=0; dependerLocalID<(int)node.getDependers().size(); ++dependerLocalID) {
@@ -878,7 +881,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 	/**
 	 * Add RU Specific syncRules
 	 * The RU needs to synchronize with multiple nodes: namely its dependers.
-	 */
+	 */ 
 	int DFT::DFTreeEXPBuilder::createSyncRuleRepairUnit(vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, const DFT::Nodes::RepairUnit& node, unsigned int nodeID) {
 		return 0;
 	}
@@ -912,6 +915,19 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 		DFT::EXPSyncRule* ruleA = new EXPSyncRule(ss.str(),false);
 		ss.str("");
 		ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncActivate(0,false)) );
+        
+        // Generate the FDEP Node Activate rule
+        int c=0;
+        {
+            std::vector<DFT::Nodes::Node*>::iterator it = dft->getNodes().begin();
+            for(;it!=dft->getNodes().end();++it,++c) {
+                const DFT::Nodes::Node& node = **it;
+                if(node.isGate()) {
+                    if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::GateFDEPType))
+                        ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(c,syncActivate(0,false)) );
+                }
+            }
+        }
 		
 		std::stringstream report;
 		report << "New EXPSyncRule " << ss.str();
@@ -957,6 +973,19 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 		DFT::EXPSyncRule* ruleA = new EXPSyncRule(ss.str(),false);
 		ss.str("");
 		ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(it->second,syncActivate(0,false)) );
+        
+        // Generate the FDEP Node Activate rule
+        int c=0;
+        {
+            std::vector<DFT::Nodes::Node*>::iterator it = dft->getNodes().begin();
+            for(;it!=dft->getNodes().end();++it,++c) {
+                const DFT::Nodes::Node& node = **it;
+                if(node.isGate()) {
+                    if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::GateFDEPType))
+                        ruleA->label.insert( pair<unsigned int,EXPSyncItem*>(c,syncActivate(0,false)) );
+                }
+            }
+        }
 
 		std::stringstream report;
 		report << "New EXPSyncRule " << ss.str();
@@ -1213,6 +1242,11 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 			createSyncRuleGateAnd(activationRules,failRules,*g,nodeID);
 			break;
 		}
+        case DFT::Nodes::GateSAndType: {
+            const DFT::Nodes::GateSAnd* g = static_cast<const DFT::Nodes::GateSAnd*>(&node);
+            createSyncRuleGateSAnd(activationRules,failRules,*g,nodeID);
+            break;
+        }
 		case DFT::Nodes::GateHSPType: {
 			cc->reportErrorAt(node.getLocation(),"DFTreeEXPBuilder: unsupported gate: " + node.getTypeStr());
 			break;
@@ -1709,6 +1743,11 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 				createSyncRuleGateAnd(activationRules,failRules,*g,nodeID);
 				break;
 			}
+            case DFT::Nodes::GateSAndType: {
+                const DFT::Nodes::GateSAnd* g = static_cast<const DFT::Nodes::GateSAnd*>(&node);
+                createSyncRuleGateSAnd(activationRules,failRules,*g,nodeID);
+                break;
+            }
 			case DFT::Nodes::GateHSPType: {
 				cc->reportErrorAt(node.getLocation(),"DFTreeEXPBuilder: unsupported gate: " + node.getTypeStr());
 				break;
@@ -2440,6 +2479,11 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
             case DFT::Nodes::GateAndType: {
                 const DFT::Nodes::GateAnd* g = static_cast<const DFT::Nodes::GateAnd*>(&node);
                 createSyncRuleGateAnd(activationRules,failRules,*g,nodeID);
+                break;
+            }
+            case DFT::Nodes::GateSAndType: {
+                const DFT::Nodes::GateSAnd* g = static_cast<const DFT::Nodes::GateSAnd*>(&node);
+                createSyncRuleGateSAnd(activationRules,failRules,*g,nodeID);
                 break;
             }
             case DFT::Nodes::GateHSPType: {

@@ -15,6 +15,7 @@
 #include "dftnodes/BasicEvent.h"
 #include "dftnodes/Gate.h"
 #include "dftnodes/GateAnd.h"
+#include "dftnodes/GateSAnd.h"
 #include "dftnodes/GateOr.h"
 #include "dftnodes/GateVoting.h"
 #include "dftnodes/GateWSP.h"

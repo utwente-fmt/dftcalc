@@ -1,0 +1,71 @@
+module TEMPLATE_SEQUENCE_AND(TEMPLATE_COMMON) is
+
+	process SEQUENCE_AND [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (threshold : NAT, total : NAT, received : BOOL_ARRAY) is
+	var
+		nr : NAT,
+		done : BOOL,
+		nr_act : NAT,
+		active : BOOL,
+		activated : BOOL_ARRAY
+	in
+		nr_act := 0;
+		done := FALSE;
+		active := FALSE;
+		activated := BOOL_ARRAY(FALSE);
+		loop
+			select
+
+			(*
+			 * Listen for any child to be triggered.
+			 * If this happens, we remember this by setting the boolean
+			 * in the received array to TRUE. We also decrement the threshold.
+			 *)
+				FAIL (?nr) where (nr > 0) and (nr == nr_act) and (nr <= total) and (active);
+				if not (received[nr]) and (threshold > 0)  and not (done) and (active) then
+					received[nr] := TRUE;
+					nr_act := nr_act+1;
+					threshold := threshold - 1;
+					if(nr_act <= total) then
+						ACTIVATE (!nr_act,TRUE)
+					end if
+				end if
+
+			(*
+			 * If the threshold reaches 0, this means the threshold number
+			 * of children have failed out of the total number of children.
+			 * Thus, the Voting node fails and notifies its parents.
+			 *)
+			[]
+				if (threshold == 0) and not (done) then
+					FAIL (!0 of NAT); done := TRUE
+				end if;
+				nr := 0
+
+			(*
+			 * If this node is activated, enable the activation procedure.
+			 *)
+			[]
+				ACTIVATE (?nr,FALSE) where nr == (0 of NAT);
+				if (nr_act == 0 of NAT) and not (done) and (threshold > 0) then
+					nr_act := 1 of NAT
+				end if
+
+			(*
+			 * If the children should be activated, do so, one by one,
+			 * from left to right.
+			 *)
+			[]
+				if (nr_act == 1) and not (done) and (threshold > 0) then
+					if not (activated[nr_act]) then
+						ACTIVATE (!nr_act,TRUE);
+						activated[nr_act] := TRUE;
+						active := TRUE
+					end if
+				end if
+			end select
+		end loop
+	end var
+	end process
+
+
+end module

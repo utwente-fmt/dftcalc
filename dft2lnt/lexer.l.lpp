@@ -376,6 +376,7 @@ phase                   return PHASE;
 phasedor                { yylval->c_string=my_strdup(yytext); return PHASEDOR; }
 or                      { yylval->c_string=my_strdup(yytext); return OR;       }
 and                     { yylval->c_string=my_strdup(yytext); return AND;      }
+sand                    { yylval->c_string=my_strdup(yytext); return SAND;     }
 hsp                     { yylval->c_string=my_strdup(yytext); return HSP;      }
 wsp                     { yylval->c_string=my_strdup(yytext); return WSP;      }
 csp                     { yylval->c_string=my_strdup(yytext); return CSP;      }
