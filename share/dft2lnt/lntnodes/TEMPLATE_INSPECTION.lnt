@@ -13,8 +13,8 @@ module TEMPLATE_INSPECTION(TEMPLATE_COMMON) is
 		loop
 			select
 					-- listen for inspection
-					INSPECT (?nr) where (0 < nr) and (nr <= total);
-					if (not (signal)) then
+					if (not (signal) and (counter < phases)) then
+						INSPECT (?nr) where (0 < nr) and (nr <= total);
 						signal := TRUE
 					end if
 
@@ -27,7 +27,6 @@ module TEMPLATE_INSPECTION(TEMPLATE_COMMON) is
 
 				[]
 					if((counter == phases) and not(signal)) then
-						INSPECTED(!1 of NAT);
 						counter := 0
 					end if
 
@@ -38,11 +37,12 @@ module TEMPLATE_INSPECTION(TEMPLATE_COMMON) is
 					end if
 
 				[]
-					REPAIRED (?nr,FALSE) where (nr==0 of NAT);
 					if(signal and repair) then
+						REPAIRED (?nr,FALSE) where (nr==0 of NAT);
 						counter := 0;
 						repair := FALSE;
-						signal := FALSE
+						signal := FALSE;
+						INSPECTED(!0 of NAT)
 					end if
 
 			end select
