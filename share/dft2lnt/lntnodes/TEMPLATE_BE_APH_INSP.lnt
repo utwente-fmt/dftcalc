@@ -1,6 +1,6 @@
-module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_REPAIR) is
+module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_INSP) is
 
-	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL, REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, INSPECTION : NAT_CHANNEL, INSPECTED : NAT_BOOL_CHANNEL, ONLINE : NAT_CHANNEL] (total: NAT, cold: BOOL, initial: STATUS, phases: NAT, threshold : NAT) is
+	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL, INSPECT : NAT_CHANNEL, INSPECTED : NAT_CHANNEL, ONLINE : NAT_CHANNEL] (cold: BOOL, initial: STATUS, phases: NAT, threshold : NAT) is
 	var
 		status : STATUS,
 		nr : NAT,
@@ -8,7 +8,6 @@ module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_REPAIR) is
 		activated : BOOL
 	in
 		status := initial;
-		nr := 0;
 		degenerated := phases;
 		activated := FALSE;
 		loop
@@ -37,14 +36,10 @@ module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_REPAIR) is
 					if (status == AVAILABLE_INACTIVE) then
 						status := AVAILABLE_ACTIVE
 					end if;
-					if (status == REPAIRING_INACTIVE) then
-						status := REPAIRING_ACTIVE
-					end if;
 					if (status == INSPECTING_INACTIVE) then
 						status := INSPECTING_ACTIVE
 					end if
-				end if;
-				nr := 0
+				end if
 
 			(*
 			 * When this BE is in the UP state, it can fail with the
@@ -53,7 +48,7 @@ module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_REPAIR) is
 			 * If the failure event is triggered, go into the FAILED state.
 			 *)
 			[]
-				if ((not (cold)) and ((status == UP) or (status == INSPECTING_INACTIVE))) then
+				if ((not (cold)) and (((status == UP) and not ((phases-degenerated) == threshold)) or (status == INSPECTING_INACTIVE))) then
 					RATE_FAIL (!1 of NAT,1 of NAT);
 					degenerated := degenerated-1;
 					if (degenerated < 1) then
@@ -63,8 +58,8 @@ module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_REPAIR) is
 
 
 			[]
-				if ((not (cold)) and (status == UP) and ((phases-degenerated) >= threshold)) then
-					INSPECTION (!0 of NAT);
+				if ((not (cold)) and (status == UP) and ((phases-degenerated) == threshold)) then
+					INSPECT (!0 of NAT);
 					status := INSPECTING_INACTIVE
 				end if
 
@@ -75,7 +70,7 @@ module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_REPAIR) is
 			 * If the failure event is triggered, go into the FAILED state.
 			 *)
 			[]
-				if ((status == ACTIVE) or (status == INSPECTING_ACTIVE)) then
+				if (((status == ACTIVE) and not ((phases-degenerated) == threshold)) or (status == INSPECTING_ACTIVE)) then
 					RATE_FAIL (!1 of NAT,2 of NAT);
 					degenerated := degenerated-1;
 					if (degenerated < 1) then
@@ -84,8 +79,8 @@ module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_REPAIR) is
 				end if
 
 			[]
-				if ((status == ACTIVE) and ((phases-degenerated) >= threshold)) then
-					INSPECTION (!0 of NAT);
+				if ((status == ACTIVE) and ((phases-degenerated) == threshold)) then
+					INSPECT (!0 of NAT);
 					status := INSPECTING_ACTIVE
 				end if
 
@@ -107,39 +102,31 @@ module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_REPAIR) is
 					status := DOWN_INACTIVE
 				end if
 
-			-- if component is DOWN send a repair request
+			-- listen if inspection is finished active branch
 			[]
-				if(status == DOWN_ACTIVE) then
-					REPAIR (!0 of NAT);
-					status := REPAIRING_ACTIVE
-				end if
-
-			-- same for inactive branch
-			[]
-				if(status == DOWN_INACTIVE) then
-					REPAIR (!0 of NAT);
-					status := REPAIRING_INACTIVE
-				end if
-
-			-- listen if repair is finished active branch
-			[]
-				REPAIRED (?nr,FALSE) where (nr==0 of NAT);
-				if ((status == REPAIRING_ACTIVE)) then
-					status := AVAILABLE_ACTIVE
-				end if;
-			-- listen if repair is finished inactive branch
-				if ((status == REPAIRING_INACTIVE)) then
-					status := AVAILABLE_INACTIVE
-				end if;
-			-- listen if there was a replacement due to inspection active branch
-				if ((status == ACTIVE)) then
+				if ((status == INSPECTING_ACTIVE)) then
+					INSPECTED (?nr) where (nr==0 of NAT);
+					status := ACTIVE;
 					degenerated := phases
 				end if;
-			-- listen if there was a replacement due to inspection inactive branch
-				if ((status == UP)) then
+				-- listen if inspection is finished inactive branch
+				if ((status == INSPECTING_INACTIVE)) then
+					INSPECTED (?nr) where (nr==0 of NAT);
+					status := UP;
 					degenerated := phases
 				end if;
-				nr := 0
+				-- listen if inspection is finished failed active branch
+				if ((status == DOWN_ACTIVE)) then
+					INSPECTED (?nr) where (nr==0 of NAT);
+					status := AVAILABLE_ACTIVE;
+					degenerated := phases
+				end if;
+				-- listen if inspection is finished in failed inactive branch
+				if ((status == DOWN_INACTIVE)) then
+					INSPECTED (?nr) where (nr==0 of NAT);
+					status := AVAILABLE_INACTIVE;
+					degenerated := phases
+				end if
 
 
 			(*
@@ -150,14 +137,14 @@ module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_REPAIR) is
 			[]
 				if (status == UNAVAILABLE_ACTIVE) then
 					FAIL (!0 of NAT);
-					status := REPAIRING_ACTIVE
+					status := FAILED_ACTIVE
 				end if
 
 			-- same for inactive branch
 			[]
 				if (status == UNAVAILABLE_INACTIVE) then
 					FAIL (!0 of NAT);
-					status := REPAIRING_INACTIVE
+					status := FAILED_INACTIVE
 				end if
 
 			(*

@@ -1,49 +1,60 @@
 module TEMPLATE_INSPECTION(TEMPLATE_COMMON) is
 
-	process INSPECTION [INSPECT : NAT_CHANNEL, REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, RATE_INSPECTION : NAT_CHANNEL, INSPECTED : NAT_CHANNEL] (total: NAT, phases: NAT) is
+	process INSPECTION [ACTIVATE : NAT_BOOL_CHANNEL, INSPECT : NAT_CHANNEL, REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, RATE_INSPECTION : NAT_CHANNEL, INSPECTED : NAT_CHANNEL] (total: NAT, phases: NAT) is
 	var
 		nr : NAT,
 		counter : NAT,
 		signal : BOOL,
-		repair : BOOL
+		repair : BOOL,
+		active: BOOL
 	in
 		counter := 0;
 		signal := FALSE;
 		repair := FALSE;
+		active:=FALSE;
 		loop
 			select
 					-- listen for inspection
-					if (not (signal) and (counter < phases)) then
+				if (not (signal) and (counter < phases) and active) then
 						INSPECT (?nr) where (0 < nr) and (nr <= total);
 						signal := TRUE
 					end if
 
 				-- phases
 				[]
-					if(counter < phases) then
+					if(active and (counter < phases)) then
 						RATE_INSPECTION(!1 of NAT);
 						counter := counter + 1
 					end if
 
 				[]
-					if((counter == phases) and not(signal)) then
+					if(active and (counter == phases) and not(signal)) then
 						counter := 0
 					end if
 
 				[]
-					if((counter == phases) and signal and not(repair)) then
+					if(active and (counter == phases) and signal and not(repair)) then
 						REPAIR (!0 of NAT);
 						repair := TRUE
 					end if
 
 				[]
-					if(signal and repair) then
+					if(active and signal and repair) then
 						REPAIRED (?nr,FALSE) where (nr==0 of NAT);
 						counter := 0;
 						repair := FALSE;
 						signal := FALSE;
-						INSPECTED(!0 of NAT)
+						INSPECTED (?nr) where (nr==0 of NAT)
 					end if
+					
+			(*
+			 * If this node is activated.
+			 *)
+			[]
+				if (not(active)) then
+					ACTIVATE (?nr,FALSE) where nr == (0 of NAT);
+					active:=TRUE
+				end if
 
 			end select
 		end loop
