@@ -39,6 +39,7 @@ public:
 	static const std::string GATE_REPAIRING;
     static const std::string GATE_INSPECT;
     static const std::string GATE_INSPECTED;
+    static const std::string GATE_RESET;
 private:
 	static const unsigned int VERSION;
 	static const int VERBOSE_LNTISVALID;

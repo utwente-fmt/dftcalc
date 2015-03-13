@@ -41,6 +41,7 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_PERIOD ("RATE_PERIOD");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING   ("REPAIRING");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECT   ("INSPECT");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECTED   ("INSPECTED");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_RESET   ("RESET");
 
 const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 6;
 
@@ -424,7 +425,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 	generateHeaderClose(out);
 	out << out.applyprefix << "module " << getFileForNode(be) << "(TEMPLATE_BE";
 	// use repair template if  repairable
-	out << (repair?"_REPAIR) is":maintain?"_MAINTAIN_APH) is":aph_repair?"_APH_REPAIR) is":aph?"_APH) is":") is") << out.applypostfix;
+	out << (repair?"_REPAIR) is":maintain?"_MAINTAIN_APH) is":aph_repair?"_APH_INSP) is":aph?"_APH) is":") is") << out.applypostfix;
 	out.appendLine("");
 	out.indent();
 		if(repair)
@@ -437,7 +438,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 				out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
 			else
 				out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, "
-			<< GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_INSPECT << " : NAT_CHANNEL, " << GATE_INSPECTED << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
+			<< GATE_INSPECT << " : NAT_CHANNEL, " << GATE_INSPECTED << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
 		else
 			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
 		out.indent();
@@ -447,8 +448,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 			else if(maintain & not(aph))
                 out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << ", MAINTAIN, " << GATE_RATE_FAIL << "," << GATE_RATE_MAINTAIN << "](" << nr_parents << " of NAT";
 			else if(aph_repair)
-				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_INSPECT << "," << GATE_INSPECTED <<
-				"," << GATE_ONLINE << "](" << nr_parents << " of NAT";
+				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "," << GATE_INSPECT << "," << GATE_INSPECTED << "," << GATE_ONLINE << "](" << nr_parents << " of NAT";
 			// Normal BE abd BE APH have the same call for BEProc
 			else
 				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "](" << nr_parents << " of NAT";
@@ -595,12 +595,12 @@ int DFT::DFTreeBCGNodeBuilder::generateInspection(FileWriter& out, const DFT::No
     
     out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_INSPECTION) is" << out.applypostfix;
     out.indent();
-
-        out << out.applyprefix << "process MAIN [" << GATE_INSPECT << " : NAT_CHANNEL, " << GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED  << " : NAT_BOOL_CHANNEL, " <<
-            GATE_RATE_INSPECTION << " : NAT_CHANNEL, " << GATE_INSPECTED << " : NAT_CHANNEL ] is" << out.applypostfix;
+        out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
+        out << out.applyprefix << "process MAIN [" << GATE_ACTIVATE << ": NAT_BOOL_CHANNEL," << GATE_INSPECT << " : NAT_CHANNEL, " << GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED  << " : NAT_BOOL_CHANNEL, " <<
+            GATE_RATE_INSPECTION << " : NAT_CHANNEL, " << GATE_INSPECTED << " : NAT_CHANNEL, " << GATE_RESET << " : NAT_CHANNEL ] is" << out.applypostfix;
         out.indent();
     
-            out << out.applyprefix << "INSPECTION [" << GATE_INSPECT << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_RATE_INSPECTION << "," << GATE_INSPECTED << "] (" << total << " of NAT," << phases << " of NAT)" << out.applypostfix;
+            out << out.applyprefix << "INSPECTION [" << GATE_ACTIVATE << "," << GATE_INSPECT << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_RATE_INSPECTION << "," << GATE_INSPECTED << "," << GATE_RESET << "] (" << total << " of NAT," << phases << " of NAT,(BOOL_ARRAY(FALSE)))" << out.applypostfix;
     
         out.outdent();
         out << out.applyprefix << "end process" << out.applypostfix;
