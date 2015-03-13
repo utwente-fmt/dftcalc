@@ -1,6 +1,6 @@
 module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_INSP) is
 
-	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL, INSPECT : NAT_CHANNEL, INSPECTED : NAT_CHANNEL, ONLINE : NAT_CHANNEL] (cold: BOOL, initial: STATUS, phases: NAT, threshold : NAT) is
+	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL, INSPECT : NAT_CHANNEL, INSPECTED : NAT_CHANNEL, ONLINE : NAT_CHANNEL] (total: NAT, cold: BOOL, initial: STATUS, phases: NAT, threshold : NAT) is
 	var
 		status : STATUS,
 		nr : NAT,
@@ -26,9 +26,6 @@ module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_INSP) is
 					end if;
 					if (status == DOWN_INACTIVE) then
 						status := DOWN_ACTIVE
-					end if;
-					if (status == UNAVAILABLE_INACTIVE) then
-						status := UNAVAILABLE_ACTIVE
 					end if;
 					if (status == FAILED_INACTIVE) then
 						status := FAILED_ACTIVE
@@ -104,47 +101,35 @@ module TEMPLATE_BE_APH_INSP(TEMPLATE_COMMON_APH_INSP) is
 
 			-- listen if inspection is finished active branch
 			[]
+				INSPECTED (?nr) where (nr==0 of NAT);
 				if ((status == INSPECTING_ACTIVE)) then
-					INSPECTED (?nr) where (nr==0 of NAT);
 					status := ACTIVE;
 					degenerated := phases
 				end if;
 				-- listen if inspection is finished inactive branch
 				if ((status == INSPECTING_INACTIVE)) then
-					INSPECTED (?nr) where (nr==0 of NAT);
 					status := UP;
 					degenerated := phases
 				end if;
 				-- listen if inspection is finished failed active branch
 				if ((status == DOWN_ACTIVE)) then
-					INSPECTED (?nr) where (nr==0 of NAT);
 					status := AVAILABLE_ACTIVE;
 					degenerated := phases
 				end if;
 				-- listen if inspection is finished in failed inactive branch
 				if ((status == DOWN_INACTIVE)) then
-					INSPECTED (?nr) where (nr==0 of NAT);
 					status := AVAILABLE_INACTIVE;
 					degenerated := phases
-				end if
-
-
-			(*
-			 * When this BE is in the UNAVAILABLE state,
-			 * wait until it is repaired using REP ?0.
-			 * After this, go into the AILABLE state.
-			 *)
-			[]
-				if (status == UNAVAILABLE_ACTIVE) then
-					FAIL (!0 of NAT);
-					status := FAILED_ACTIVE
-				end if
-
-			-- same for inactive branch
-			[]
-				if (status == UNAVAILABLE_INACTIVE) then
-					FAIL (!0 of NAT);
-					status := FAILED_INACTIVE
+				end if;
+				-- listen if inspection is finished failed active branch
+				if ((status == FAILED_ACTIVE)) then
+					status := ACTIVE;
+					degenerated := phases
+				end if;
+				-- listen if inspection is finished in failed inactive branch
+				if ((status == FAILED_INACTIVE)) then
+					status := UP;
+					degenerated := phases
 				end if
 
 			(*

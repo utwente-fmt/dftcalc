@@ -1,59 +1,93 @@
 module TEMPLATE_INSPECTION(TEMPLATE_COMMON) is
 
-	process INSPECTION [ACTIVATE : NAT_BOOL_CHANNEL, INSPECT : NAT_CHANNEL, REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, RATE_INSPECTION : NAT_CHANNEL, INSPECTED : NAT_CHANNEL] (total: NAT, phases: NAT) is
+	process INSPECTION [ACTIVATE : NAT_BOOL_CHANNEL, INSPECT : NAT_CHANNEL, REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, RATE_INSPECTION : NAT_CHANNEL, INSPECTED : NAT_CHANNEL, RESET :NAT_CHANNEL] (total: NAT, phases: NAT, signals : BOOL_ARRAY) is
 	var
 		nr : NAT,
 		counter : NAT,
-		signal : BOOL,
+		active: BOOL,
 		repair : BOOL,
-		active: BOOL
+		idx : NAT
 	in
 		counter := 0;
-		signal := FALSE;
-		repair := FALSE;
 		active:=FALSE;
+		repair:=FALSE;
+		idx:=0;
 		loop
 			select
-					-- listen for inspection
-				if (not (signal) and (counter < phases) and active) then
-						INSPECT (?nr) where (0 < nr) and (nr <= total);
-						signal := TRUE
+				-- listen for inspection
+				INSPECT (?nr) where (0 < nr) and (nr <= total);
+				if ((counter <= phases) and active and not(repair)) then
+					if((nr<=total) and (0<nr)) then
+						if(not (signals[nr])) then
+							signals[nr]:=TRUE
+						end if
 					end if
+				end if
 
 				-- phases
 				[]
-					if(active and (counter < phases)) then
+					if(active and (counter < phases) and not(repair)) then
 						RATE_INSPECTION(!1 of NAT);
 						counter := counter + 1
 					end if
 
 				[]
-					if(active and (counter == phases) and not(signal)) then
-						counter := 0
+					if(active and (counter == phases) and not(repair)) then
+						for idx := 1 while idx <= (total+1) by idx := idx + 1 loop
+							if(idx>total) then
+								counter := 0;
+								RESET(!0 of NAT)
+							end if;
+							if((idx<=total) and (0<idx)) then
+								if(signals[idx])then
+									idx:=total+1
+								end if
+							end if
+						end loop;
+						idx:=0
 					end if
 
 				[]
-					if(active and (counter == phases) and signal and not(repair)) then
-						REPAIR (!0 of NAT);
-						repair := TRUE
+					if(active and (counter == phases) and not(repair)) then
+						for idx := 1 while idx <= total by idx := idx + 1 loop
+							if((idx<=total)  and (0<idx)) then
+								if(signals[idx])then
+									repair := TRUE;
+									REPAIR (!0 of NAT);
+									idx:=total+1
+								end if
+							end if
+						end loop;
+						idx:=0
 					end if
 
 				[]
-					if(active and signal and repair) then
-						REPAIRED (?nr,FALSE) where (nr==0 of NAT);
+					if(active and repair and (counter == phases)) then
 						counter := 0;
-						repair := FALSE;
-						signal := FALSE;
-						INSPECTED (?nr) where (nr==0 of NAT)
+						REPAIRED (?nr,FALSE) where (nr==0 of NAT)
 					end if
-					
+
+				[]
+					if(active and repair and (counter == 0))then
+						for idx := 1 while idx <= total by idx := idx + 1 loop
+						if((idx<=total) and (0<idx)) then
+							if(signals[idx])then
+								signals[idx]:=FALSE;
+								INSPECTED (!idx) where (0 < idx) and (idx <= total)
+							end if
+						end if
+						end loop;
+						repair:=FALSE;
+						idx:=0
+					end if
+
 			(*
 			 * If this node is activated.
 			 *)
 			[]
 				if (not(active)) then
-					ACTIVATE (?nr,FALSE) where nr == (0 of NAT);
-					active:=TRUE
+					active:=TRUE;
+					ACTIVATE (?nr,FALSE) where nr == (0 of NAT)
 				end if
 
 			end select
