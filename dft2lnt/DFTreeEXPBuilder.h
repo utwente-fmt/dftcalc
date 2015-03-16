@@ -277,7 +277,7 @@ public:
      * @return UNDECIDED
      */
     int parseDFT(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules,
-                 vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules, vector<DFT::EXPSyncRule*>& inspectedRules);
+                 vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules, vector<DFT::EXPSyncRule*>& inspectedRules, vector<DFT::EXPSyncRule*>& resetRules);
 
 	/**
 	 * Affects FileWriters: exp_header
@@ -289,7 +289,7 @@ public:
      * Affects FileWriters: exp_header
      * @return UNDECIDED
      */
-    int buildEXPHeader(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules, vector<DFT::EXPSyncRule*>& inspectedRules);
+    int buildEXPHeader(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules, vector<DFT::EXPSyncRule*>& inspectedRules, vector<DFT::EXPSyncRule*>& resetRules);
 
 	/**
 	 * Builds the actual composition script from the DFT specification
@@ -305,7 +305,7 @@ public:
      * @return UNDECIDED
      */
     int buildEXPBody(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules,
-                     vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules, vector<DFT::EXPSyncRule*>& inspectedRules);
+                     vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules, vector<DFT::EXPSyncRule*>& inspectedRules, vector<DFT::EXPSyncRule*>& resetRules);
 
 	/**
 	 * Return the Node ID (index in the dft->getNodes() vector) of the
@@ -391,6 +391,16 @@ public:
      */
     EXPSyncItem* syncInspection(unsigned int localNodeID) {
         return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_INSPECT,localNodeID);
+    }
+    
+    /**
+     * Create a new EXPSyncItem instance reflecting a Inspection action
+     * based on the specified localNodeID.
+     * @param localNodeID This is the ID of the Node seen from the actor.
+     * @return A new EXPSyncItem instance.
+     */
+    EXPSyncItem* syncInspected(unsigned int localNodeID) {
+        return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_INSPECTED,localNodeID);
     }
 
 	int createSyncRuleBE(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::BasicEvent& node, unsigned int nodeID);

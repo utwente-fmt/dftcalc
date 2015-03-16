@@ -596,11 +596,11 @@ int DFT::DFTreeBCGNodeBuilder::generateInspection(FileWriter& out, const DFT::No
     out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_INSPECTION) is" << out.applypostfix;
     out.indent();
         out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
-        out << out.applyprefix << "process MAIN [" << GATE_ACTIVATE << ": NAT_BOOL_CHANNEL," << GATE_INSPECT << " : NAT_CHANNEL, " << GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED  << " : NAT_BOOL_CHANNEL, " <<
+        out << out.applyprefix << "process MAIN [" << GATE_ACTIVATE << ": NAT_BOOL_CHANNEL," << GATE_INSPECT << " : NAT_CHANNEL, " <<
             GATE_RATE_INSPECTION << " : NAT_CHANNEL, " << GATE_INSPECTED << " : NAT_CHANNEL, " << GATE_RESET << " : NAT_CHANNEL ] is" << out.applypostfix;
         out.indent();
     
-            out << out.applyprefix << "INSPECTION [" << GATE_ACTIVATE << "," << GATE_INSPECT << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_RATE_INSPECTION << "," << GATE_INSPECTED << "," << GATE_RESET << "] (" << total << " of NAT," << phases << " of NAT,(BOOL_ARRAY(FALSE)))" << out.applypostfix;
+            out << out.applyprefix << "INSPECTION [" << GATE_ACTIVATE << "," << GATE_INSPECT << "," << GATE_RATE_INSPECTION << "," << GATE_INSPECTED << "," << GATE_RESET << "] (" << total << " of NAT," << phases << " of NAT,(BOOL_ARRAY(FALSE)))" << out.applypostfix;
     
         out.outdent();
         out << out.applyprefix << "end process" << out.applypostfix;
