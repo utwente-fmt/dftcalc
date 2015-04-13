@@ -402,6 +402,16 @@ public:
     EXPSyncItem* syncInspected(unsigned int localNodeID) {
         return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_INSPECTED,localNodeID);
     }
+    
+    /**
+     * Create a new EXPSyncItem instance reflecting a Inspection action
+     * based on the specified localNodeID.
+     * @param localNodeID This is the ID of the Node seen from the actor.
+     * @return A new EXPSyncItem instance.
+     */
+    EXPSyncItem* syncReset(unsigned int localNodeID) {
+        return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_RESET,localNodeID);
+    }
 
 	int createSyncRuleBE(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::BasicEvent& node, unsigned int nodeID);
 	int createSyncRuleGateOr(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateOr& node, unsigned int nodeID);
@@ -431,7 +441,7 @@ public:
 	int createSyncRule(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules,
 			vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, const DFT::Nodes::Gate& node, unsigned int nodeID);
     int createSyncRule(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules,
-                       vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules, vector<DFT::EXPSyncRule*>& inspectedRules, const DFT::Nodes::Gate& node, unsigned int nodeID);
+                       vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules, vector<DFT::EXPSyncRule*>& inspectedRules, vector<DFT::EXPSyncRule*>& resetRules, const DFT::Nodes::Gate& node, unsigned int nodeID);
 
 	/**
 	 * Modifies the specified columnWidths to reflect the width needed by the
