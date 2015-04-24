@@ -1,0 +1,42 @@
+module TEMPLATE_VOTING(TEMPLATE_COMMON) is
+
+	process VOTING [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (threshold : NAT, total : NAT, received : BOOL_ARRAY) is
+	var
+		nr : NAT,
+		done : BOOL,
+		nr_act : NAT
+	in
+		nr_act := 0;
+		done := FALSE;
+		loop
+			select
+
+			(*
+			 * Listen for any child to be triggered.
+			 * If this happens, we remember this by setting the boolean
+			 * in the received array to TRUE. We also decrement the threshold.
+			 *)
+				FAIL (?nr) where (0 < nr) and (nr <= total);
+				if not (received[nr]) and (threshold > 0)  and not (done) then
+					received[nr] := TRUE;
+					threshold := threshold - 1
+				end if
+
+			(*
+			 * If the threshold reaches 0, this means the threshold number
+			 * of children have failed out of the total number of children.
+			 * Thus, the Voting node fails and notifies its parents.
+			 *)
+			[]
+				if (threshold == 0) and not (done) then
+					FAIL (!0 of NAT); done := TRUE
+				end if;
+				nr := 0
+    
+			end select
+		end loop
+	end var
+	end process
+
+
+end module

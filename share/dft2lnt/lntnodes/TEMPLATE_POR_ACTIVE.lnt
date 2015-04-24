@@ -1,0 +1,54 @@
+module TEMPLATE_POR(TEMPLATE_COMMON) is
+
+	process POR [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (total : NAT, received : BOOL_ARRAY) is
+	var
+		done : BOOL,
+		failed : BOOL,
+		failed_before : BOOL,
+		nr : NAT,
+		nr_act: NAT
+	in
+		done := FALSE;
+		failed := FALSE;
+		failed_before := FALSE;
+		nr_act := 0 of NAT;
+		loop
+			select
+
+			(*
+			 * Listen for any child to be triggered.
+			 * If the first child fails before all others, start the failure procedure of the gate
+			 *)
+			FAIL (?nr) where (1 < nr) and (nr <= total);
+			if ((not(failed)) and (not(received[nr]))) then
+				received[nr] := TRUE;
+				failed_before := TRUE
+			end if;
+			nr := 0
+
+			(*
+			 * If the first child fails before all others, start the failure procedure of the gate
+			 *)
+			[]
+				FAIL (?nr) where (nr == 1);
+				if ((not(failed_before)) and (not(received[nr]))) then
+					received[nr] := TRUE;
+					failed := TRUE
+				end if;
+				nr := 0
+
+			(*
+			 * Failure Procedure for the POR gate
+			 *)
+			[]
+				if ((failed) and (not(done))) then
+					FAIL (!0 of NAT);
+					done := TRUE
+				end if
+			end select
+		end loop
+	end var
+	end process
+
+
+end module

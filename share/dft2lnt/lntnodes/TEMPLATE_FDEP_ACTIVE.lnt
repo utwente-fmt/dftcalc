@@ -1,0 +1,66 @@
+module TEMPLATE_FDEP(TEMPLATE_COMMON) is
+
+	process FDEP [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (total : NAT, notified : BOOL_ARRAY) is
+	var
+		nr : NAT,
+		done : BOOL,
+		act : NAT,
+		failed : BOOL
+	in
+		failed := FALSE;
+		done := FALSE;
+		act := 0;
+		loop
+			select
+
+			(*
+			 * Listen for the source (trigger) event to be triggered.
+			 * Set failed to TRUE, to enable the propagation of
+			 * the event to the dependers.
+			 *)
+				FAIL (?nr) where (nr == (1));
+				failed := TRUE
+
+			(*
+			 * If the dependers should be notified of the failure of the
+			 * source, do this one at a time, in a nondeterministic fashion.
+			 * Array notified holds which dependers are notified.
+			 *)
+			[]
+				if (failed) then
+					nr := 1 of NAT;
+					loop fail in
+						select
+
+						(* In the loop we either notify the current depender,
+						 * associated with the current value of nr ...
+						 *)
+							if( nr <= (total) ) then
+								if not (notified[nr]) then
+									FAIL (!(nr+1));
+									notified[nr] := TRUE;
+									break fail
+								end if
+							end if
+
+						(* ... or we continue with the next depender.
+						 * Reaching the end is always possible, but doesn't
+						 * generate a transition in the resulting system.
+						 *)
+						[]
+							if nr < total  then
+								nr := nr + 1
+							else
+								break fail
+							end if
+						end select
+					end loop
+				end if
+
+			end select
+		end loop
+	end var
+	end process
+
+
+end module
