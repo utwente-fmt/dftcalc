@@ -385,17 +385,7 @@ public:
 		this->failed = failed;
 	}
 
-	/**
-	 * Returns whether or not this Basic Event is marked as being failed.
-	 * @return Whether or not this Basic Event is marked as being failed.
-	 */
-	bool getFailed() const {
-		return failed;
-	}
-
-	virtual bool isBasicEvent() const { return true; }
-	virtual bool isGate() const { return false; }
-  bool isActive(){
+  void setActive(){
     if(!initialized){
       active=!repairable;
       std::vector<Nodes::Node*> parents = this->getParents();
@@ -411,6 +401,19 @@ public:
       }
       initialized=true;
     }
+  }
+
+	/**
+	 * Returns whether or not this Basic Event is marked as being failed.
+	 * @return Whether or not this Basic Event is marked as being failed.
+	 */
+	bool getFailed() const {
+		return failed;
+	}
+
+	virtual bool isBasicEvent() const { return true; }
+	virtual bool isGate() const { return false; }
+  bool isActive() const{
     return active;
   }
 };

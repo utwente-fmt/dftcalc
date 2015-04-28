@@ -571,7 +571,12 @@ int main(int argc, char** argv) {
 		compilerContext->flush();
 		dft->addRepairInfo();
 	}
-    
+
+	if(dft){
+		compilerContext->reportAction("Applying smart semantics to DFT...",VERBOSITY_FLOW);
+		compilerContext->flush();
+		dft->applySmartSemantics();
+    	}
     /* Remove superflous FDEP edges */
     if(dft) {
         compilerContext->reportAction("Applying FDEP cleanup to DFT gates...",VERBOSITY_FLOW);

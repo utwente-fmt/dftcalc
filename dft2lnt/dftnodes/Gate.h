@@ -68,7 +68,8 @@ public:
 	}
 	virtual bool isBasicEvent() const { return false; }
 	virtual bool isGate() const { return true; }
-	bool isActive(){
+
+	void setActive(){
 		if(!initialized){
 			active= !this->isRepairable();
 			for(size_t n = 0; n<this->getParents().size() &&active; ++n) {
@@ -84,6 +85,9 @@ public:
 			}
 			initialized=true;
 		}
+	}
+	bool isActive() const{
+
 		return active;
 	}
 };

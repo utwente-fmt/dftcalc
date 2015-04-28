@@ -1,9 +1,9 @@
 /*
  * DFTree.h
- * 
+ *
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
- * 
+ *
  * @author Freark van der Berg and extended by Dennis Guck
  */
 
@@ -27,21 +27,21 @@ namespace DFT {
 
 /**
  * Dynamic Fault Tree. Contains all the data about a DFT.
- * To keep a DFTree consistent, make sure all Node object referenced by 
+ * To keep a DFTree consistent, make sure all Node object referenced by
  * Nodes in a DFTree are added to the DFTree object using addNode().
  */
 class DFTree {
 private:
-	
+
 	/// The nodes of the DFT
 	std::vector<Nodes::Node*> nodes;
-	
+
 	/// The mapping from name (e.g. "A") to a Node
 	std::map<std::string,DFT::Nodes::Node*> nodeTable;
-	
+
 	/// The Top (root) Node of the DFT
 	Nodes::Node* topNode;
-	
+
 	/**
 	 * Sets the Top node without any checks
 	 */
@@ -49,17 +49,17 @@ private:
 		this->topNode = node;
 		return 0;
 	}
-	
+
 	DFTree(const DFTree& d) {
 	}
-	
+
 	DFTree& operator=(const DFTree& other) {
 		return *this;
 	}
-	
+
 public:
 	DFTree(): nodes(0), topNode(NULL) {
-	
+
 	}
 	virtual ~DFTree() {
 		for(int i=nodes.size(); i--;) {
@@ -67,7 +67,7 @@ public:
 			delete nodes.at(i);
 		}
 	}
-	
+
 	/**
 	 * Adds the specified node to this DFT.
 	 * NOTE: it claims ownership of the Node; do not delete
@@ -76,7 +76,7 @@ public:
 	void addNode(Nodes::Node* node) {
 		nodes.push_back(node);
 	}
-	
+
 	/**
 	 * Removed the specified node from this DFT.
 	 * All references to this node are removed as well.
@@ -84,31 +84,31 @@ public:
 	 * @param node The Node to remove from the DFT.
 	 */
 	vector<DFT::Nodes::Node*>::iterator removeNode(Nodes::Node* node) {
-		
+
 		// Loop over all the nodes in the DFT
 		for(DFT::Nodes::Node* n: nodes) {
-			
+
 			// If current the node is a gate...
 			if(n->isGate()) {
 				DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*>(n);
-				
+
 				// Remove all its child-references to the node to be removed
 				vector<DFT::Nodes::Node*>::iterator it = std::remove(gate->getChildren().begin(),gate->getChildren().end(),node);
 				gate->getChildren().resize(it-gate->getChildren().begin());
 			}
-			
+
 			// Remove all the parent-references of the current node to the node to be removed
 			vector<DFT::Nodes::Node*>::iterator it = std::remove(n->getParents().begin(),n->getParents().end(),node);
 			n->getParents().resize(it-n->getParents().begin());
 		}
-		
+
 		// Remove the node from the DFT
 		vector<DFT::Nodes::Node*>::iterator it = std::remove(nodes.begin(),nodes.end(),node);
 		nodes.resize(it-nodes.begin());
-		
+
 		// Delete the node
 		delete node;
-		
+
 		// Return the iterator to the next valid node (or end())
 		return it;
 	}
@@ -150,7 +150,7 @@ public:
 		}
 		return true; // FIXME: ERROR HANDLING
 	}
-	
+
 	/**
 	 * Returns the Top Node.
 	 * @return The Top Node.
@@ -158,34 +158,34 @@ public:
 	Nodes::Node* getTopNode() {
 		return topNode;
 	}
-	
+
 	/**
 	 * Translates this DFTree so that all FDEP nodes are removed and Or nodes
 	 * are inserted, such that the meaning of the DFTree is unaltered.
 	 */
 	void transformFDEPNodes() {
-		
+
 		// Copy the current list of nodes
 		const auto nodes = this->nodes;
-		
+
 		// Loop over all the nodes in the DFT
 		for(DFT::Nodes::Node* node: nodes) {
-			
+
 			// If we find an FDEP Gate...
 			if(DFT::Nodes::Node::typeMatch(node->getType(),DFT::Nodes::GateFDEPType)) {
 				DFT::Nodes::GateFDEP* fdep = static_cast<DFT::Nodes::GateFDEP*>(node);
-				
+
 				// ... loop over all its dependers (the nodes that will fail if the FDEP fails)
 				for(DFT::Nodes::Node* fdepChild: fdep->getDependers()) {
 					assert(fdepChild && "fdepChild should not be NULL");
-					
+
 					// We will now build an OR node for this depender of the FDEP gate.
-					
+
 					// Set a name based on the depender
 					std::string fdeporName = "FDEPOR_" + fdepChild->getName();
-					
+
 					DFT::Nodes::GateOr* gate = NULL;
-					
+
 					// Check if there already is an OR originating from the FDEP
 					{
 						DFT::Nodes::Node* gaten = getNode(fdeporName);
@@ -196,53 +196,53 @@ public:
 								assert(0 && "For some reason one of the FDEPOR_ gates is not an OR");
 							}
 						}
-						
+
 					}
-					
+
 					// If there was not already an OR originating from the FDEP gate...
 					if(!gate) {
-						
+
 						// ... create a new OR node
 						gate = new DFT::Nodes::GateOr(node->getLocation(), fdeporName);
-						
+
 						// Add it to the DFT
 						addNode(gate);
-						
+
 						// Create the child (depender) --> parent (OR-node) relationship
 						fdepChild->getParents().push_back(gate);
-						
+
 						// Create the child (depender) <-- parent (OR-node) relationship
 						gate->addChild(fdepChild);
-						
+
 						// Loop over all the parents of the depender
 						for(DFT::Nodes::Node* parent: fdepChild->getParents()) {
-							
+
 							// Add the parent to the OR-node's parents
 							gate->getParents().push_back(parent);
 							assert(DFT::Nodes::Node::typeMatch(parent->getType(),DFT::Nodes::GateType) && "A parent should be a gate...");
-							
+
 							// Add the OR-node to the list of children of the parent
 							DFT::Nodes::Gate* parentGate = static_cast<DFT::Nodes::Gate*>(parent);
 							parentGate->getChildren().push_back(gate);
 						}
 					}
-					
+
 					// At this point we have created a new OR-node or are using an existing one.
 					// We only need to add the source (trigger) of the FDEP to the mix.
-					
+
 					// Create the child (source) --> parent (OR-node) relationship
 					fdep->getEventSource()->getParents().push_back(gate);
-					
+
 					// Create the child (source) <-- parent (OR-node) relationship
 					gate->addChild(fdep->getEventSource());
 				}
-				
+
 				// Remove the original FDEP node
 				removeNode(node);
 			}
 		}
 	}
-	
+
 	/**
 	 * Apply evidence to the DFT. This means that the basic events, specified
 	 * by the list of names, will be marked as failed. This means that they
@@ -267,6 +267,32 @@ public:
 		}
 		if(!errors.empty()) {
 			throw errors;
+		}
+	}
+
+	void applySmartSemantics(){
+		DFT::Nodes::Node* node=getTopNode();
+		if(node->isBasicEvent()){
+			DFT::Nodes::BasicEvent* be = static_cast<DFT::Nodes::BasicEvent*>(node);
+			be->setActive();
+		} else if(node->isGate()){
+			DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*>(node);
+			gate->setActive();
+			for(size_t n; n <gate->getChildren().size(); ++n){
+				applySmartSemantics(gate->getChildren().at(n));
+			}
+		}
+	}
+	void applySmartSemantics(DFT::Nodes::Node* node){
+		if(node->isBasicEvent()){
+			DFT::Nodes::BasicEvent* be = static_cast<DFT::Nodes::BasicEvent*>(node);
+			be->setActive();
+		} else if(node->isGate()){
+			DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*>(node);
+			gate->setActive();
+			for(size_t n; n <gate->getChildren().size(); ++n){
+				applySmartSemantics(gate->getChildren().at(n));
+			}
 		}
 	}
 
@@ -318,7 +344,7 @@ public:
 			findRepairInfo(gate);
 		}
 	}
-    
+
     /**
      * Find FDEP information
      * @param Gate to start
@@ -339,7 +365,7 @@ public:
         }
     }
 
-    
+
     /**
      * Apply FDEP checks
      */
@@ -350,7 +376,7 @@ public:
             findFDEPInfo(gate);
         }
     }
-    
+
 };
 } // Namespace: DFT
 
