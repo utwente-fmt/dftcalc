@@ -395,7 +395,7 @@ public:
 
 	virtual bool isBasicEvent() const { return true; }
 	virtual bool isGate() const { return false; }
-  virtual bool isActive(){
+  bool isActive(){
     if(!initialized){
       active=!repairable;
       std::vector<Nodes::Node*> parents = this->getParents();
