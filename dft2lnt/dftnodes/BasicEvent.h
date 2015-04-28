@@ -1,9 +1,9 @@
 /*
  * BasicEvent.h
- * 
+ *
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
- * 
+ *
  * @author Freark van der Berg and extended by Dennis Guck
  */
 
@@ -13,6 +13,7 @@ class BasicEvent;
 #define BASICEVENT_H
 
 #include "Node.h"
+#include "Gate.h"
 
 namespace DFT {
 namespace Nodes {
@@ -51,7 +52,7 @@ enum class CalculationMode {
 	WEIBULL, // not supported
 	APH,
 	NUMBER_OF
-	
+
 };
 
 const std::string& getCalculationModeStr(CalculationMode mode);
@@ -73,7 +74,7 @@ public:
 		labelType(labelType),
 		label(label) {
 	}
-	
+
 	/**
 	 * Returns the label name of this label.
 	 * @return The label name of this label.
@@ -81,7 +82,7 @@ public:
 	const std::string& getLabel() const {
 		return label;
 	}
-	
+
 	/**
 	 * Returns the label type of this label.
 	 * @return The label type of this label.
@@ -107,7 +108,7 @@ public:
 		name(name) {
 
 	}
-	
+
 	/**
 	 * Returns the label type of this attribute.
 	 * @return The label type of this attribute.
@@ -115,7 +116,7 @@ public:
 	const AttributeLabelType& getLabel() const {
 		return label;
 	}
-	
+
 	/**
 	 * Returns the label name of this attribute.
 	 * @return The label name of this attribute.
@@ -123,7 +124,7 @@ public:
 	std::string getName() {
 		return name;
 	}
-	
+
 	/**
 	 * Sets the label name of this attribute.
 	 * @param The label name to be set.
@@ -254,8 +255,10 @@ private:
 	bool repairable;
 	bool failed;
 	std::string fileToEmbed;
+  bool active;
+  bool initialized;
 public:
-	
+
 	void setLambda(double lambda) {
 		this->lambda = lambda;
 	}
@@ -289,19 +292,19 @@ public:
 	void setMode(const DFT::Nodes::BE::CalculationMode& mode) {
 		this->mode = mode;
 	}
-	
+
 	/**
 	 * Returns the lambda failure probability of this Basic Event.
 	 * @return The lambda failure probability of this Basic Event.
 	 */
 	double getLambda() const { return lambda; }
-	
+
 	/**
 	 * Returns the mu failure probability of this Basic Event.
 	 * @return The mu failure probability of this Basic Event.
 	 */
 	double getMu()     const { return mu; }
-	
+
 	/**
 	 * Returns the dormancy factor (mu/lambda) of this Basic Event.
 	 * @return The dormancy factor (mu/lambda) of this Basic Event.
@@ -313,19 +316,19 @@ public:
      * @return The repair rate of this Basic Event.
      */
     double getMaintain()     const { return maintain_rate; }
-    
+
 	/**
 	 * Returns the repair rate of this Basic Event.
 	 * @return The repair rate of this Basic Event.
 	 */
 	double getRepair()     const { return repair_rate; }
-    
+
     /**
      * Returns the Erlang phases of this Basic Event.
      * @return The phases of this Basic Event.
      */
     int getPhases()     const { return phases; }
-    
+
     /**
      * Returns the inspection interval of this Basic Event.
      * @return The interval of this Basic Event.
@@ -347,7 +350,7 @@ public:
 	const DFT::Nodes::BE::CalculationMode& getMode() const {
 		return mode;
 	}
-	
+
 	/**
 	 * Creates a new Basic Event instance, originating from the specified
 	 * location and with the specified name.
@@ -362,15 +365,16 @@ public:
         maintain_rate(0),
 		repair_rate(-1),
 		priority(0),
+    interval(0),
 		rate(-1),
         phases(1),
 		shape(-1),
-		interval(0),
-		failed(false) {
+    failed(false),
+    initialized(false) {
 	}
 	virtual ~BasicEvent() {
 	}
-	
+
 	/**
 	 * Mark this Basic Event as failed or not. Being marked as failed means the
 	 * Basic Event will fail at t=0, the moment the system starts. Otherwise
@@ -380,7 +384,7 @@ public:
 	void setFailed(bool failed) {
 		this->failed = failed;
 	}
-	
+
 	/**
 	 * Returns whether or not this Basic Event is marked as being failed.
 	 * @return Whether or not this Basic Event is marked as being failed.
@@ -388,9 +392,27 @@ public:
 	bool getFailed() const {
 		return failed;
 	}
-	
+
 	virtual bool isBasicEvent() const { return true; }
 	virtual bool isGate() const { return false; }
+  virtual bool isActive(){
+    if(!initialized){
+      active=!repairable;
+      std::vector<Nodes::Node*> parents = this->getParents();
+      for(size_t n=0; n < parents.size() && active; ++n){
+        if(parents.at(n)->isGate()){
+          DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*> (parents.at(n));
+          active=gate->isActive();
+          if(active && (typeMatch(gate->getType(), DFT::Nodes::GateHSPType) || typeMatch(gate->getType(), DFT::Nodes::GateWSPType), typeMatch(gate->getType(), DFT::Nodes::GateCSPType))){
+              active= this == gate->getChildren().at(0);
+          }
+        }
+
+      }
+      initialized=true;
+    }
+    return active;
+  }
 };
 
 } // Namespace: Nodes
