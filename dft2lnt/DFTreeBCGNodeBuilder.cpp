@@ -71,7 +71,7 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 	ss << "_p" << (node.getParents().size()>0?node.getParents().size():1);
 	if(node.isBasicEvent()) {
 		const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
-		if(be.isActive()){//} &&be.getMu()!=0) {
+		if(be.isActive()){
 			ss << "_active";
 			if(be.getMaintain()>0 ||be.getRepair()>0||be.getFailed()>0||be.getPhases()>1||be.getInterval()>0){
 				printf("You are using the always active mode while your BE is not suitable for this mode ");
@@ -448,7 +448,7 @@ int DFT::DFTreeBCGNodeBuilder::generateFDEP(FileWriter& out, const DFT::Nodes::G
 	if(gate.isActive()){
 		out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_FDEP_ACTIVE) is" << out.applypostfix;
 	} else{
-		out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_FDEP_ACTIVE) is" << out.applypostfix;
+		out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_FDEP) is" << out.applypostfix;
 	}
 	out.indent();
 
