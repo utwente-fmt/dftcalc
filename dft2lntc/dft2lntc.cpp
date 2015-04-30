@@ -571,7 +571,7 @@ int main(int argc, char** argv) {
 		compilerContext->flush();
 		dft->addRepairInfo();
 	}
-
+	/* Add smart semantics to the dft */
 	if(dft){
 		compilerContext->reportAction("Applying smart semantics to DFT...",VERBOSITY_FLOW);
 		compilerContext->flush();

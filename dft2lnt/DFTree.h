@@ -269,7 +269,10 @@ public:
 			throw errors;
 		}
 	}
-
+	/*
+	 * Applies smart semantics to the topnode of the dft, and calls
+	 * applySmartSemantics(node) for all his children
+	 */
 	void applySmartSemantics(){
 		DFT::Nodes::Node* node=getTopNode();
 		if(node->isBasicEvent()){
@@ -294,6 +297,10 @@ public:
 			}
 		}
 	}
+	
+	/**
+	 * Applies recursively smart semantics to the dft
+	 */
 	void applySmartSemantics(DFT::Nodes::Node* node){
 		if(node->isBasicEvent()){
 			DFT::Nodes::BasicEvent* be = static_cast<DFT::Nodes::BasicEvent*>(node);

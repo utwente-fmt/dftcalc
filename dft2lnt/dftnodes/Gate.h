@@ -68,7 +68,9 @@ public:
 	}
 	virtual bool isBasicEvent() const { return false; }
 	virtual bool isGate() const { return true; }
-
+	/**
+	* Determines whether or not smart semantics are applicabel for the Gate
+	*/
 	void setActive(){
 		if(!initialized){
 			active= !this->isRepairable();
@@ -83,13 +85,26 @@ public:
 			initialized=true;
 		}
 	}
+	/**
+   * Returns whether or not this Gate is marked as being active.
+   * @return whether or not this Gate is marked as being active.
+   */
 	bool isActive() const{
-		}
 		return active;
 	}
+
+	/**
+   * Returns whether or not this Gate is a the spare type.
+   * @return whether or not this Gate is a spare type.
+   */
 	bool isSpare() const{
 		return typeMatch(this->getType(), DFT::Nodes::GateWSPType) ||typeMatch(this->getType(), DFT::Nodes::GateCSPType) || typeMatch(this->getType(), DFT::Nodes::GateHSPType)  ;
 	}
+
+	/**
+   * Marks this Basic Event as not active. This means smart semantics cannot be
+   * applied to this Basic Event
+   */
 	void setNotActive(){
 		active=false;
 		initialized = true;

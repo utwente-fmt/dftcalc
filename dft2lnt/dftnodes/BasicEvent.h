@@ -385,11 +385,18 @@ public:
 		this->failed = failed;
 	}
 
+  /**
+   * Marks this Basic Event as not active. This means smart semantics cannot be
+   * applied to this Basic Event
+   */
+
   void setNotActive(){
     active=false;
     initialized = true;
   }
-
+  /**
+   * Determines whether or not smart semantics are applicabel for the Basic Event
+   */
   void setActive(){
     if(!initialized){
       active=!repairable;
@@ -415,6 +422,10 @@ public:
 
 	virtual bool isBasicEvent() const { return true; }
 	virtual bool isGate() const { return false; }
+  /**
+   * Returns whether or not this Basic Event is marked as being active.
+   * @return whether or not this Basic Event is marked as being active.
+   */
   bool isActive() const{
     return active;
   }
