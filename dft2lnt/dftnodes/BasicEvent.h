@@ -404,6 +404,7 @@ public:
       for(size_t n=0; n < parents.size() && active; ++n){
         if(parents.at(n)->isGate()){
           DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*> (parents.at(n));
+          gate->setActive();
           active=gate->isActive();
         }
 

@@ -76,6 +76,7 @@ public:
 			active= !this->isRepairable();
 			for(size_t n = 0; n<this->getParents().size() &&active; ++n) {
 				DFT::Nodes::Gate* parent = static_cast<DFT::Nodes::Gate*>(this->getParents().at(n));
+				parent->isActive();
 				active=parent->isActive();
 			}
 			for(size_t n=0; n < this->getChildren().size() && active; ++n){
