@@ -1,6 +1,6 @@
 module TEMPLATE_BE_ACTIVE(TEMPLATE_COMMON) is
 
-	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL] (total: NAT, cold: BOOL) is
+	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL] (total: NAT, cold: BOOL, initial: STATUS) is
 	var
 		status : STATUS,
 		nr : NAT

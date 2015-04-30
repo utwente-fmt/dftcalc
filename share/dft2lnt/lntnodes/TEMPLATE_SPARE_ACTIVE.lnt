@@ -11,7 +11,6 @@ module TEMPLATE_SPARE_ACTIVE(TEMPLATE_COMMON) is
 		nr_available := total;
 		using := 0;
 		done := FALSE;
-		activated := TRUE;
 		loop
 			select
 			(*
@@ -74,7 +73,7 @@ module TEMPLATE_SPARE_ACTIVE(TEMPLATE_COMMON) is
 			 * we activate it and remember that we use this node (using).
 			 *)
 			[]
-				if using == 0 and activated then
+				if using == 0 then
 					using := using + 1;
 					loop findav in
 						if available[using] then
