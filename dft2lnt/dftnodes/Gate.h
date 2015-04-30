@@ -75,9 +75,6 @@ public:
 			for(size_t n = 0; n<this->getParents().size() &&active; ++n) {
 				DFT::Nodes::Gate* parent = static_cast<DFT::Nodes::Gate*>(this->getParents().at(n));
 				active=parent->isActive();
-				if(active && (typeMatch(parent->getType(), DFT::Nodes::GateHSPType) || typeMatch(parent->getType(), DFT::Nodes::GateWSPType), typeMatch(parent->getType(), DFT::Nodes::GateCSPType))){
-						active= this == parent->getChildren().at(0);
-				}
 			}
 			for(size_t n=0; n < this->getChildren().size() && active; ++n){
 				DFT::Nodes::Node* child = (this->getChildren().at(n));
@@ -87,8 +84,15 @@ public:
 		}
 	}
 	bool isActive() const{
-
+		}
 		return active;
+	}
+	bool isSpare() const{
+		return typeMatch(this->getType(), DFT::Nodes::GateWSPType) ||typeMatch(this->getType(), DFT::Nodes::GateCSPType) || typeMatch(this->getType(), DFT::Nodes::GateHSPType)  ;
+	}
+	void setNotActive(){
+		active=false;
+		initialized = true;
 	}
 };
 

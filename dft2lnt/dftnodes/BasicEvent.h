@@ -385,6 +385,11 @@ public:
 		this->failed = failed;
 	}
 
+  void setNotActive(){
+    active=false;
+    initialized = true;
+  }
+
   void setActive(){
     if(!initialized){
       active=!repairable;
@@ -393,9 +398,6 @@ public:
         if(parents.at(n)->isGate()){
           DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*> (parents.at(n));
           active=gate->isActive();
-          if(active && (typeMatch(gate->getType(), DFT::Nodes::GateHSPType) || typeMatch(gate->getType(), DFT::Nodes::GateWSPType), typeMatch(gate->getType(), DFT::Nodes::GateCSPType))){
-              active= this == gate->getChildren().at(0);
-          }
         }
 
       }
