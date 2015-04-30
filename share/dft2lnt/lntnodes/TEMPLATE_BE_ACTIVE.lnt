@@ -5,7 +5,7 @@ module TEMPLATE_BE_ACTIVE(TEMPLATE_COMMON) is
 		status : STATUS,
 		nr : NAT
 	in
-		status := active;
+		status := ACTIVE;
 		nr := 0;
 		loop
 			select
