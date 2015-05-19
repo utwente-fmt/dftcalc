@@ -25,6 +25,7 @@ See the [CADP website](http://www.inrialpes.fr/vasy/cadp/) on how to obtain a li
 
 **Coral/imc2ctmdp**
 Download Coral containing a 64bit binary version of imc2ctmdp for Linux from [here](http://fmt.ewi.utwente.nl/tools/dftcalc/coral_64bit_cadp2009h.tar.gz). If you experience problems or need a source version of imc2ctmdp please contact us.
+Since the 2015 version of CADP you have to compile imc2ctmdp yourself. You can get the code from [here] (https://github.com/buschko/imc2ctmdp).
 
 **MRMC Backend**
 Download MRMC from [the MRMC homepage](http://www.mrmc-tool.org/).
