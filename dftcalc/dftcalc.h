@@ -31,7 +31,6 @@ namespace DFT {
 		std::string imcaRoot;
 		std::string cadpRoot;
 		File dft2lntcExec;
-		File coralExec;
 		File imc2ctmdpExec;
 		File bcg2imcaExec;
 		File svlExec;
@@ -86,7 +85,6 @@ namespace DFT {
 			dft2lntcExec = File(dft2lntRoot+"/bin/dft2lntc");
 			imc2ctmdpExec = File(coralRoot+"/bin/imc2ctmdp");
 			bcg2imcaExec = File(imcaRoot+"/bin/bcg2imca");
-			coralExec = File(coralRoot+"/coral");
 			svlExec = File(cadpRoot+"/com/svl");
 			
 			/* Find dft2lntc executable (based on DFT2LNTROOT environment variable) */
@@ -106,7 +104,7 @@ namespace DFT {
 				messageFormatter->reportAction("Using dft2lntc [" + dft2lntcExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 			}
 			
-			/* Find imc2ctmdpi and coral executables (based on CORAL environment variable) */
+			/* Find imc2ctmdpi executable (based on CORAL environment variable) */
 			if(coralRoot.empty()) {
 				messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
 				ok = false;
@@ -131,15 +129,6 @@ namespace DFT {
 					ok = false;
 				} else {
 					messageFormatter->reportAction("Using bcg2imca [" + bcg2imcaExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-				}
-				if(!FileSystem::hasAccessTo(coralExec,F_OK)) {
-					messageFormatter->reportError("coral not found (in " + coralRoot+"/bin)");
-					ok = false;
-				} else if(!FileSystem::hasAccessTo(coralExec,X_OK)) {
-					messageFormatter->reportError("coral not executable (in " + coralRoot+"/bin)");
-					ok = false;
-				} else {
-					messageFormatter->reportAction("Using coral [" + coralExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 				}
 			}
 			
