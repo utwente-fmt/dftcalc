@@ -7,7 +7,7 @@ module TEMPLATE_COMMON_APH_REPAIR is
 
 	-- The status of the DFT components
 	type STATUS is
-		UP, ACTIVE, FAILED, DOWN
+		UP, FAILED, FAILING, DOWN
 		with "==", "!="
 	end type
 

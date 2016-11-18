@@ -18,7 +18,6 @@ module TEMPLATE_BE_DUMMY(TEMPLATE_COMMON) is
 				if (status == DORMANT) then
 					status := ACTIVE
 				end if;
-				nr := 0
 
 			(*
 			* When this BE is ACTIVE or DORMANT, it can fail with the

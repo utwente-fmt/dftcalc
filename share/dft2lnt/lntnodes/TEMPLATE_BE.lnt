@@ -1,64 +1,104 @@
-module TEMPLATE_BE(TEMPLATE_COMMON) is
+module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 
-	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL] (total: NAT, cold: BOOL, initial: STATUS) is
+	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, INSPECT : NAT_CHANNEL, ONLINE : NAT_CHANNEL] (cold: BOOL, initial: STATUS, phases: NAT, threshold : NAT) is
 	var
 		status : STATUS,
-		nr : NAT
+		isactive : BOOL,
+		emit_fail : BOOL,
+		emit_online : BOOL,
+		emit_inspect : BOOL,
+		degenerated : NAT
 	in
 		status := initial;
-		nr := 0;
+		emit_fail := FALSE;
+		emit_inspect := FALSE;
+		if (initial == FAILING) then
+			emit_fail := TRUE;
+			if (threshold >= 0 of NAT) then
+				emit_inspect := TRUE
+			end if;
+			status := UP
+		end if;
+		isactive := FALSE;
+		degenerated := phases;
+		emit_online := FALSE;
 		loop
 			select
-			
+
 			(*
 			 * When this BE is activated, it will set the status to ACTIVE,
-			 * but only if it was DORMANT (not active and not failed)
+			 * but only if it was UP (not active and not failed and not under repair)
 			 *)
-				ACTIVATE (?nr,FALSE) where (nr==0 of NAT);
-				if (status == DORMANT) then
-					status := ACTIVE
-				end if;
-				nr := 0
-			
+			 -- have to send down signals if it can't be activated, because the component is down
+				ACTIVATE (!0 of NAT, FALSE);
+				isactive := TRUE
+
 			(*
-			 * When this BE is in the DORMANT state, it can fail with the
+			 * When this BE is in the UP state, it can fail with the
 			 * failure rate associated with this state. The rate is later
 			 * introduced using renaming of RATE_FAIL !1 !1.
-			 * If the failure event is trigger, go into the FAILING state.
+			 * If the failure event is triggered, go into the FAILED state.
 			 *)
 			[]
-
-				if ((not (cold)) and (status == DORMANT)) then
+				if ((not (cold)) and (status == UP) and (not(isactive))) then
 					RATE_FAIL (!1 of NAT,1 of NAT);
-					status := FAILING
+					degenerated := degenerated-1;
+					if (degenerated < 1) then
+						emit_fail := TRUE;
+						status := DOWN
+					end if;
+					if ((phases-degenerated) == threshold) then
+						emit_inspect := TRUE
+					end if
 				end if
-			
+			[]
+				if (emit_inspect) then
+					INSPECT (!0 of NAT);
+					emit_inspect := false
+				end if
+
+			[]
+			(* Always emit the fail signal before a repair, to
+			   avoid strange behaviour in the gates
+			 *)
+				if (emit_fail) then
+					FAIL (!0 of NAT);
+					emit_fail := FALSE
+				elsif (emit_online) then
+					ONLINE (!0 of NAT);
+					emit_online := FALSE
+				end if
+
 			(*
 			 * When this BE is in the ACTIVE state, it can fail with the
 			 * failure rate associated with this state. The rate is later
 			 * introduced using renaming of RATE_FAIL !1 !2.
-			 * If the failure event is trigger, go into the FAILING state.
+			 * If the failure event is triggered, go into the FAILED state.
 			 *)
 			[]
-				if (status == ACTIVE) then
+				if (isactive and (status == UP)) then
 					RATE_FAIL (!1 of NAT,2 of NAT);
-					status := FAILING
+					degenerated := degenerated-1;
+					if (degenerated < 1 of NAT) then
+						emit_fail := TRUE;
+						status := DOWN
+					end if;
+					if ((phases-degenerated) == threshold) then
+						emit_inspect := TRUE
+					end if
 				end if
-			
-			(*
-			 * When this BE is in the FAILING state (caused by one of the
-			 * failure rates), signal this to the system using FAIL !0.
-			 * After this, go into the FAILED state.
-			 *)
+
+			-- listen if repair is finished active branch
 			[]
-				if (status == FAILING) then
-					FAIL (!0 of NAT);
-					status := FAILED
-				end if
+				REPAIRED (!0 of NAT,FALSE);
+				degenerated := phases;
+				if (status == DOWN) then
+					emit_online := TRUE;
+					emit_inspect := FALSE
+				end if;
+				status := UP
 			end select
 		end loop
 	end var
 	end process
-
-end module 
-
+end module
