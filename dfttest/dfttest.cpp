@@ -202,34 +202,6 @@ void print_version(MessageFormatter* messageFormatter) {
 	messageFormatter->flush();
 }
 
-std::string getCoralRoot(MessageFormatter* messageFormatter) {
-	
-	char* root = getenv((const char*)"CORAL");
-	std::string coralRoot = root?string(root):"";
-	
-	if(coralRoot=="") {
-		if(messageFormatter) messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
-		goto end;
-	}
-	
-	// \ to /
-	{
-		char buf[coralRoot.length()+1];
-		for(int i=coralRoot.length();i--;) {
-			if(coralRoot[i]=='\\')
-				buf[i] = '/';
-			else
-				buf[i] = coralRoot[i];
-		}
-		buf[coralRoot.length()] = '\0';
-		if(buf[coralRoot.length()-1]=='/') {
-			buf[coralRoot.length()-1] = '\0';
-		}
-		coralRoot = string(buf);
-	}
-end:
-	return coralRoot;
-}
 
 std::string getRoot(MessageFormatter* messageFormatter) {
 	
@@ -446,10 +418,8 @@ int main(int argc, char** argv) {
 	}
 	
 	string dft2lntRoot = getRoot(messageFormatter);
-	string coralRoot = getCoralRoot(messageFormatter);
 	
 	if(dft2lntRoot.empty()) return 1;
-	if(coralRoot.empty()) return 1;
 	
 	DFTTestSuite suite(messageFormatter);
 	suite.setUseCachedOnly(useCachedOnly);
@@ -537,7 +507,7 @@ int main(int argc, char** argv) {
 		} else if(outputMode=="latex") {
 			outputFormatter = new Test::OutputFormatterLaTeX();
 		}
-		DFTTestRun run(outputFormatter,messageFormatter,dft2lntRoot,coralRoot);
+		DFTTestRun run(outputFormatter,messageFormatter,dft2lntRoot);
 		run.setHideOutput(verbosity<0);
 		run.run(suite);
 		messageFormatter->notify("Done.",VERBOSITY_FLOW);
@@ -590,8 +560,11 @@ Test::TestSpecification* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& no
 		/* The evidence should be a sequence of strings */
 		if(itemNode.Type()==YAML::NodeType::Sequence) {
 			try {
-				evidence.push_back(itemNode.as<std::string>());
+				for (YAML::const_iterator it = itemNode.begin(); it != itemNode.end(); it++) {
+					evidence.push_back(it->as<std::string>());
+				}
 			} catch(YAML::Exception& e) {
+				fprintf(stderr, "Error pushing back or converting.\n");
 				reportYAMLException(e);
 				wentOK = false;
 			}
@@ -730,7 +703,6 @@ DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 	}
 	
 	// Read memory usage from SVL log file
-	// FIXME: this is the wrong SVL log file... where to find one for coral?
 	Shell::RunStatistics svlStats;
 	if(Shell::readMemtimeStatisticsFromLog(svlLogFile,svlStats)) {
 		messageFormatter->reportWarning("Could not read from svl log file `" + svlLogFile.getFileRealPath() + "'");
@@ -747,91 +719,6 @@ DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 		result->bcgInfo = bcgInfo;
 		messageFormatter->reportAction2("Read from BCG file `" + bcgFile.getFileRealPath() + "'",VERBOSITY_DATA);
 	}
-	
-	return result;
-}
-
-DFTTestResult* DFTTestRun::runCoral(DFTTest* test) {
-	// Result
-	DFTTestResult* result = new DFTTestResult();
-	
-	File outputDir("output_coral");
-	outputDir.fix();
-	FileSystem::mkdir(outputDir);
-	File coralResultFile = File(outputDir.getFilePath(),test->getFile().getFileBase(),"result.coral");
-	File bcgFile  = File(outputDir.getFilePath(),test->getFile().getFileBase()+".coral","bcg");
-	File statFile = File(outputDir.getFilePath(),test->getFile().getFileBase()+".stats","log");
-	File svlLogFile = File(outputDir.getFilePath(),"uniformizer_error","log");
-	File mrmcLogFile = File(outputDir.getFilePath(),"mrmc_error","log");
-	File dft2bcgLogFile = File(outputDir.getFilePath(),"conversion_error","log");
-	File compositionLogFile = File(outputDir.getFilePath(),"composition_error","log");
-	File activateLogFile = File(outputDir.getFilePath(),"activate_error","log");
-	File imc2ctmdpLogFile = File(outputDir.getFilePath(),"imc2ctmdp_error","log");
-	
-	set<File> logList = { svlLogFile, mrmcLogFile, dft2bcgLogFile, compositionLogFile, activateLogFile, imc2ctmdpLogFile};
-	
-	FileSystem::remove(coralResultFile);
-	string coral = coralRoot + "/coral -f '" + test->getFile().getFileRealPath() + "'"
-	                                         + " "   + test->getTimeCoral()
-	                                         + " -C " + bcgFile.getPathTo() + "/" + bcgFile.getFileBase()
-	                                         + " -M " + outputDir.getFilePath()
-	                                         + " -l " + outputDir.getFilePath()
-	                                         + " -O " + coralResultFile.getFileRealPath()
-	                                         ;
-	Shell::SystemOptions options;
-	options.command = coral;
-	options.verbosity = VERBOSITY_EXECUTIONS;
-	if(Shell::memtimeAvailable()) {
-		messageFormatter->reportAction("Using memtime for resource statistics",VERBOSITY_DATA);
-		options.statProgram = "memtime";
-		options.statFile = statFile.getFileRealPath();
-	}
-	Shell::RunStatistics stats;
-	Shell::system(options,&stats);//,".",coralResultFile.getFileRealPath());
-
-	std::ifstream fin(coralResultFile.getFileRealPath());
-	char buffer[1000];
-	result->failprob = -1;
-	switch(0) default: {
-		// Skip the header
-		fin.getline(buffer,1000);
-		//cerr << "NOW: " << string(buffer) << endl;
-		if(strncmp("Time",buffer,4)) {
-			break;
-		}
-		//cerr << "CONTINUE" << endl;
-		
-		// FIXME: make sure it's the correct one?
-		fin.getline(buffer,1000);
-		char* c = buffer;
-		while(*c && *c!=',') c++;
-		if(*c==',') {
-			c+=2;
-			//cerr << "SCANNING" << string(c) << endl;
-			sscanf(c,"%lf",&result->failprob);
-			break;
-		}
-	}
-	
-	// Read memory usage from SVL log file
-	// FIXME: this is the wrong SVL log file... where to find one for coral?
-	for(File logFile: logList) {
-		Shell::RunStatistics logStats;
-		if(Shell::readMemtimeStatisticsFromLog(logFile,logStats)) {
-			messageFormatter->reportWarning("Could not read from svl log file `" + logFile.getFileRealPath() + "'");
-		} else {
-			stats.maxMem(logStats);
-		}
-	}
-	
-	result->stats = stats;
-	
-	// Read statistics of BCG file
-	DFT::CADP::BCGInfo bcgInfo;
-	if(DFT::CADP::BCG_Info(bcgFile,bcgInfo)) {
-		messageFormatter->reportWarning("Could not read from BCG file `" + bcgFile.getFileRealPath() + "'");
-	}
-	result->bcgInfo = bcgInfo;
 	
 	return result;
 }
@@ -913,10 +800,5 @@ void DFTTestRun::fillDisplayMap(Test::TestSpecification* testGeneric, string tim
 Test::TestResult* DFTTestRun::runSpecific(Test::TestSpecification* testGeneric, const string& timeStamp, const string& iteration) {
 	DFTTest* test = static_cast<DFTTest*>(testGeneric);
 	
-	if(iteration=="dftcalc") {
-		return runDftcalc(test);
-	} else {
-		return runCoral(test);
-	}
-	
+	return runDftcalc(test);
 }

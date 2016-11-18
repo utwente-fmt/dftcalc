@@ -71,12 +71,6 @@ public:
 	virtual ~DFTTest() {
 	}
 	
-	std::string getTimeCoral() {
-		std::stringstream out;
-		out << "-t " << timeUnits;
-		return out.str();
-	}
-	
 	std::string getTimeDftcalc() {
 		std::stringstream out;
 		out << "-t " << timeUnits;
@@ -148,16 +142,13 @@ public:
 class DFTTestRun: public Test::TestRun {
 private:
 	string dft2lntRoot;
-	string coralRoot;
 	std::map<std::string,double> results;
 	string compareBase;
 public:
-	DFTTestRun(Test::OutputFormatter* outputFormatter, MessageFormatter* messageFormatter, string dft2lntRoot, string coralRoot):
+	DFTTestRun(Test::OutputFormatter* outputFormatter, MessageFormatter* messageFormatter, string dft2lntRoot):
 		TestRun(outputFormatter,messageFormatter),
-		compareBase("coral"),
-		dft2lntRoot(dft2lntRoot),
-		coralRoot(coralRoot) {
-			iterations.push_back("coral");
+		dft2lntRoot(dft2lntRoot)
+	{
 			iterations.push_back("dftcalc");
 			reportColumns.push_back(Test::TestResultColumn("failprob"   , "P(fail)"    , "" , false));
 			reportColumns.push_back(Test::TestResultColumn("states"     , "States"     , "" , true ));
@@ -166,7 +157,6 @@ public:
 	}
 	
 	DFTTestResult* runDftcalc(DFTTest* test);
-	DFTTestResult* runCoral(DFTTest* test);
 	
 	int handleSignal(int signal);
 	
