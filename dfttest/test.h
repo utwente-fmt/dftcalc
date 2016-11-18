@@ -118,7 +118,7 @@ protected:
 	bool forcedRunning;
 	bool useCachedOnly;
 	vector<TestSpecification*> limitTests;
-	bool loadTests(YAML::Parser& parser, vector<TestSpecification*>& tests);
+	bool loadTests(vector<YAML::Node> docs, vector<TestSpecification*>& tests);
 	bool mergeTestLists(vector<TestSpecification*>& main, vector<TestSpecification*>& tba);
 public:
 	

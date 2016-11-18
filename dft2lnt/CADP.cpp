@@ -1,11 +1,11 @@
 #include "CADP.h"
 
 const YAML::Node& operator>>(const YAML::Node& node, DFT::CADP::BCGInfo& bcgInfo) {
-	if(const YAML::Node* itemNode = node.FindValue("states")) {
-		*itemNode >> bcgInfo.states;
+	if(const YAML::Node itemNode = node["states"]) {
+		bcgInfo.states = itemNode.as<int>();
 	}
-	if(const YAML::Node* itemNode = node.FindValue("transitions")) {
-		*itemNode >> bcgInfo.transitions;
+	if(const YAML::Node itemNode = node["transitions"]) {
+		bcgInfo.transitions = itemNode.as<int>();
 	}
 	return node;
 }

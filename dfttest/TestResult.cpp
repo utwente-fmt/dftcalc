@@ -2,8 +2,8 @@
 
 const YAML::Node& Test::TestResult::readYAMLNode(const YAML::Node& node) {
 	readYAMLNodeSpecific(node);
-	if(const YAML::Node* itemNode = node.FindValue("stats")) {
-		*itemNode >> stats;
+	if(const YAML::Node itemNode = node["stats"]) {
+		itemNode >> stats;
 	}
 	return node;
 }

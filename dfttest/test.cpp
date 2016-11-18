@@ -84,11 +84,11 @@ TestSpecification* TestSuite::readYAMLNode(const YAML::Node& node) {
 	
 	// Determine what format the YAML content is in
 	int format = 0;
-	if(const YAML::Node* generalNode = node.FindValue("general")) {
+	if(const YAML::Node generalNode = node["general"]) {
 		format = 1;
-		if(const YAML::Node* itemNode = generalNode->FindValue("format")) {
+		if(const YAML::Node itemNode = generalNode["format"]) {
 			try {
-				*itemNode >> format;
+				format = itemNode.as<int>();
 			} catch(YAML::Exception& e) {
 				// could not determine error
 			}
@@ -126,51 +126,51 @@ void TestSuite::writeYAMLNode(TestSpecification* test, YAML::Emitter& out) {
 
 void TestSuite::readYAMLNodeV1(TestSpecification* test, const YAML::Node& node) {
 	if(!test) return;
-	if(const YAML::Node* generalNode = node.FindValue("general")) {
-		if(const YAML::Node* itemNode = generalNode->FindValue("fullname")) {
+	if(const YAML::Node generalNode = node["general"]) {
+		if(const YAML::Node itemNode = generalNode["fullname"]) {
 			std::string fullname;
-			try { *itemNode >> fullname; }
+			try { fullname = itemNode.as<std::string>(); }
 			catch(YAML::Exception& e) { reportYAMLException(e); }
 			test->setFullname(fullname);
 		}
-		if(const YAML::Node* itemNode = generalNode->FindValue("uuid")) {
+		if(const YAML::Node itemNode = generalNode["uuid"]) {
 			std::string sdesc;
-			try { *itemNode >> sdesc; }
+			try { sdesc = itemNode.as<std::string>(); }
 			catch(YAML::Exception& e) { reportYAMLException(e); }
 			test->setUUID(sdesc);
 			test->setHadUUIDOnLoad(true);
 		} else {
 			test->setHadUUIDOnLoad(false);
 		}
-		if(const YAML::Node* itemNode = generalNode->FindValue("longdesc")) {
+		if(const YAML::Node itemNode = generalNode["longdesc"]) {
 			std::string ldesc;
-			try { *itemNode >> ldesc; }
+			try { ldesc = itemNode.as<std::string>(); }
 			catch(YAML::Exception& e) { reportYAMLException(e); }
 			test->setLongDescription(ldesc);
 		}
 	}
-	if(const YAML::Node* itemNode = node.FindValue("results")) {
-		if(itemNode->Type()==YAML::NodeType::Sequence) {
+	if(const YAML::Node itemNode = node["results"]) {
+		if(itemNode.Type()==YAML::NodeType::Sequence) {
 			
 			// Iterate over the testruns
-			for(YAML::Iterator itR = itemNode->begin(); itR!=itemNode->end(); ++itR) {
+			for(YAML::const_iterator itR = itemNode.begin(); itR!=itemNode.end(); ++itR) {
 				
 				// 
-				for(YAML::Iterator it = itR->begin(); it!=itR->end(); ++it) {
+				for(YAML::const_iterator it = itR->begin(); it!=itR->end(); ++it) {
 					string resultTime;
 					try {
-						it.first() >> resultTime;
+						resultTime = it->first.as<std::string>();
 						//cerr << "Found result: " << resultTime << it.second().Type() << endl;
 						std::map<std::string,TestResult*>& results = test->getResults()[resultTime];
-						if(it.second().Type()==YAML::NodeType::Map) {
+						if(it->second.Type()==YAML::NodeType::Map) {
 							
 							// Iterate over individual results of a testrun
-							for(YAML::Iterator it2 = it.second().begin(); it2!=it.second().end(); ++it2) {
+							for(YAML::const_iterator it2 = it->second.begin(); it2!=it->second.end(); ++it2) {
 								string iteration;
 								TestResult* iterationResults = newTestResult();
 								try {
-									it2.first() >> iteration;
-									iterationResults->readYAMLNode(it2.second());
+									iteration = it2->first.as<std::string>();
+									iterationResults->readYAMLNode(it2->second);
 									results.insert(pair<std::string,TestResult*>(iteration,iterationResults));
 								} catch(YAML::Exception& e) {
 									reportYAMLException(e);
@@ -184,14 +184,14 @@ void TestSuite::readYAMLNodeV1(TestSpecification* test, const YAML::Node& node) 
 			}
 		}
 	}
-	if(const YAML::Node* itemNode = node.FindValue("verified")) {
-		if(itemNode->Type()==YAML::NodeType::Map) {
-			for(YAML::Iterator it = itemNode->begin(); it!=itemNode->end(); ++it) {
+	if(const YAML::Node itemNode = node["verified"]) {
+		if(itemNode.Type()==YAML::NodeType::Map) {
+			for(YAML::const_iterator it = itemNode.begin(); it!=itemNode.end(); ++it) {
 				string motive;
 				TestResult* iterationResults = newTestResult();
 				try {
-					it.first() >> motive;
-					iterationResults->readYAMLNode(it.second());
+					motive = it->first.as<string>();
+					iterationResults->readYAMLNode(it->second);
 					test->getVerifiedResults().insert(pair<std::string,TestResult*>(motive,iterationResults));
 				} catch(YAML::Exception& e) {
 					reportYAMLException(e);
@@ -243,35 +243,35 @@ void TestSuite::writeYAMLNodeV1(TestSpecification* test, YAML::Emitter& out) {
 
 void TestSuite::readYAMLNodeV0(TestSpecification* test, const YAML::Node& node) {
 	if(!test) return;
-	if(const YAML::Node* itemNode = node.FindValue("fullname")) {
+	if(const YAML::Node itemNode = node["fullname"]) {
 		std::string fullname;
-		try { *itemNode >> fullname; }
+		try { fullname = itemNode.as<std::string>(); }
 		catch(YAML::Exception& e) { reportYAMLException(e); }
 		test->setFullname(fullname);
 	}
-	if(const YAML::Node* itemNode = node.FindValue("uuid")) {
+	if(const YAML::Node itemNode = node["uuid"]) {
 		std::string sdesc;
-		try { *itemNode >> sdesc; }
+		try { sdesc = itemNode.as<std::string>(); }
 		catch(YAML::Exception& e) { reportYAMLException(e); }
 		test->setUUID(sdesc);
 		test->setHadUUIDOnLoad(true);
 	} else {
 		test->setHadUUIDOnLoad(false);
 	}
-	if(const YAML::Node* itemNode = node.FindValue("longdesc")) {
+	if(const YAML::Node itemNode = node["longdesc"]) {
 		std::string ldesc;
-		try { *itemNode >> ldesc; }
+		try { ldesc = itemNode.as<std::string>(); }
 		catch(YAML::Exception& e) { reportYAMLException(e); }
 		test->setLongDescription(ldesc);
 	}
-	if(const YAML::Node* itemNode = node.FindValue("verified")) {
-		if(itemNode->Type()==YAML::NodeType::Map) {
-			for(YAML::Iterator it = itemNode->begin(); it!=itemNode->end(); ++it) {
+	if(const YAML::Node itemNode = node["verified"]) {
+		if(itemNode.Type()==YAML::NodeType::Map) {
+			for(YAML::const_iterator it = itemNode.begin(); it!=itemNode.end(); ++it) {
 				string motive;
 				TestResult* iterationResults = newTestResult();
 				try {
-					it.first() >> motive;
-					iterationResults->readYAMLNodeSpecific(it.second());
+					motive = it->first.as<string>();
+					iterationResults->readYAMLNodeSpecific(it->second);
 					test->getVerifiedResults().insert(pair<std::string,TestResult*>(motive,iterationResults));
 				} catch(YAML::Exception& e) {
 					reportYAMLException(e);
@@ -279,47 +279,47 @@ void TestSuite::readYAMLNodeV0(TestSpecification* test, const YAML::Node& node) 
 			}
 		}
 	}
-	if(const YAML::Node* itemNode = node.FindValue("results")) {
-		if(itemNode->Type()==YAML::NodeType::Sequence) {
+	if(const YAML::Node itemNode = node["results"]) {
+		if(itemNode.Type()==YAML::NodeType::Sequence) {
 			
 			// Iterate over the testruns
-			for(YAML::Iterator itR = itemNode->begin(); itR!=itemNode->end(); ++itR) {
+			for(YAML::const_iterator itR = itemNode.begin(); itR!=itemNode.end(); ++itR) {
 				
 				// 
-				for(YAML::Iterator it = itR->begin(); it!=itR->end(); ++it) {
+				for(YAML::const_iterator it = itR->begin(); it!=itR->end(); ++it) {
 					string resultTime;
 					try {
-						it.first() >> resultTime;
+						resultTime = it->first.as<string>();
 						//cerr << "Found result: " << resultTime << it.second().Type() << endl;
 						std::map<std::string,TestResult*>& results = test->getResults()[resultTime];
-						if(it.second().Type()==YAML::NodeType::Map) {
+						if(it->second.Type()==YAML::NodeType::Map) {
 							
 							// Iterate over individual results of a testrun
-							for(YAML::Iterator it2 = it.second().begin(); it2!=it.second().end(); ++it2) {
+							for(YAML::const_iterator it2 = it->second.begin(); it2!=it->second.end(); ++it2) {
 								string iteration;
 								TestResult* iterationResults = newTestResult();
 								try {
-									it2.first() >> iteration;
-									const YAML::Node& node = it2.second();
-									if(const YAML::Node* itemNode = node.FindValue("time_monraw")) {
-										*itemNode >> iterationResults->stats.time_monraw;
+									iteration = it2->first.as<string>();
+									const YAML::Node& node = it2->second;
+									if(const YAML::Node itemNode = node["time_monraw"]) {
+										iterationResults->stats.time_monraw = itemNode.as<float>();
 									}
-									if(const YAML::Node* itemNode = node.FindValue("time_user")) {
-										*itemNode >> iterationResults->stats.time_user;
+									if(const YAML::Node itemNode = node["time_user"]) {
+										iterationResults->stats.time_user = itemNode.as<float>();
 									}
-									if(const YAML::Node* itemNode = node.FindValue("time_system")) {
-										*itemNode >> iterationResults->stats.time_system;
+									if(const YAML::Node itemNode = node["time_system"]) {
+										iterationResults->stats.time_system = itemNode.as<float>();
 									}
-									if(const YAML::Node* itemNode = node.FindValue("time_elapsed")) {
-										*itemNode >> iterationResults->stats.time_elapsed;
+									if(const YAML::Node itemNode = node["time_elapsed"]) {
+										iterationResults->stats.time_elapsed = itemNode.as<float>();
 									}
-									if(const YAML::Node* itemNode = node.FindValue("mem_virtual")) {
-										*itemNode >> iterationResults->stats.mem_virtual;
+									if(const YAML::Node itemNode = node["mem_virtual"]) {
+										iterationResults->stats.mem_virtual = itemNode.as<float>();
 									}
-									if(const YAML::Node* itemNode = node.FindValue("mem_resident")) {
-										*itemNode >> iterationResults->stats.mem_resident;
+									if(const YAML::Node itemNode = node["mem_resident"]) {
+										iterationResults->stats.mem_resident = itemNode.as<float>();
 									}
-									iterationResults->readYAMLNodeSpecific(it2.second());
+									iterationResults->readYAMLNodeSpecific(it2->second);
 									results.insert(pair<std::string,TestResult*>(iteration,iterationResults));
 								} catch(YAML::Exception& e) {
 									reportYAMLException(e);
@@ -439,8 +439,8 @@ bool TestSuite::readAndAppendTestFile(File file) {
 	if(fin.is_open()) {
 		fin.seekg(0);
 		try {
-			YAML::Parser parser(fin);
-			error = loadTests(parser,loadedTests) ? true : error ;
+			vector<YAML::Node> docs = YAML::LoadAll(fin);
+			error = loadTests(docs,loadedTests) ? true : error ;
 		} catch(YAML::Exception e) {
 			error = true;
 			reportYAMLException(e);
@@ -469,8 +469,8 @@ bool TestSuite::readAndAppendToTestFile(File file) {
 	if(fin.is_open()) {
 		fin.seekg(0);
 		try {
-			YAML::Parser parser(fin);
-			error = loadTests(parser,loadedTests) ? true : error ;
+			vector<YAML::Node> docs = YAML::LoadAll(fin);
+			error = loadTests(docs,loadedTests) ? true : error ;
 		} catch(YAML::Exception e) {
 			error = true;
 			reportYAMLException(e);
@@ -514,12 +514,13 @@ bool TestSuite::mergeTestLists(vector<TestSpecification*>& main, vector<TestSpec
 	return false;
 }
 
-bool TestSuite::loadTests(YAML::Parser& parser, vector<TestSpecification*>& tests) {
-	YAML::Node doc;
+bool TestSuite::loadTests(vector<YAML::Node> docs, vector<TestSpecification*>& tests) {
 	bool error = false;
-	while(parser.GetNextDocument(doc)) {
+	std::vector<YAML::Node>::iterator it;
+	for (it = docs.begin(); it != docs.end(); it++) {
+		YAML::Node doc = *it;
 		if(doc.Type()==YAML::NodeType::Sequence) {
-			for(YAML::Iterator it = doc.begin(); it!=doc.end(); ++it) {
+			for(YAML::const_iterator it = doc.begin(); it!=doc.end(); ++it) {
 					messageFormatter->reportAction2("Loading test...",VERBOSITY_DATA);
 				string key;
 				string value;

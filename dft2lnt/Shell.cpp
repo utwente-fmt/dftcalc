@@ -11,23 +11,23 @@
 MessageFormatter* Shell::messageFormatter = NULL;
 
 const YAML::Node& operator>>(const YAML::Node& node, Shell::RunStatistics& stats) {
-	if(const YAML::Node* itemNode = node.FindValue("time_monraw")) {
-		*itemNode >> stats.time_monraw;
+	if(const YAML::Node itemNode = node["time_monraw"]) {
+		stats.time_monraw = itemNode.as<float>();
 	}
-	if(const YAML::Node* itemNode = node.FindValue("time_user")) {
-		*itemNode >> stats.time_user;
+	if(const YAML::Node itemNode = node["time_user"]) {
+		stats.time_user = itemNode.as<float>();
 	}
-	if(const YAML::Node* itemNode = node.FindValue("time_system")) {
-		*itemNode >> stats.time_system;
+	if(const YAML::Node itemNode = node["time_system"]) {
+		stats.time_system = itemNode.as<float>();
 	}
-	if(const YAML::Node* itemNode = node.FindValue("time_elapsed")) {
-		*itemNode >> stats.time_elapsed;
+	if(const YAML::Node itemNode = node["time_elapsed"]) {
+		stats.time_elapsed = itemNode.as<float>();
 	}
-	if(const YAML::Node* itemNode = node.FindValue("mem_virtual")) {
-		*itemNode >> stats.mem_virtual;
+	if(const YAML::Node itemNode = node["mem_virtual"]) {
+		stats.mem_virtual = itemNode.as<float>();
 	}
-	if(const YAML::Node* itemNode = node.FindValue("mem_resident")) {
-		*itemNode >> stats.mem_resident;
+	if(const YAML::Node itemNode = node["mem_resident"]) {
+		stats.mem_resident = itemNode.as<float>();
 	}
 	return node;
 }

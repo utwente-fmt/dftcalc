@@ -1,19 +1,17 @@
 #include "DFTCalculationResult.h"
 
 const YAML::Node& operator>>(const YAML::Node& node, DFT::DFTCalculationResult& result) {
-	if(const YAML::Node* itemNode = node.FindValue("dft")) {
-		std::string dft;
-		*itemNode >> dft;
-		result.dftFile = dft;
+	if(const YAML::Node itemNode = node["dft"]) {
+		result.dftFile = itemNode.as<std::string>();
 	}
-	if(const YAML::Node* itemNode = node.FindValue("failprobs")) {
+	if(const YAML::Node itemNode = node["failprobs"]) {
 		std::vector<DFT::DFTCalculationResultItem> failprobs;
-		*itemNode >> failprobs;
+		itemNode >> failprobs;
 		result.failprobs = failprobs;
 	}
-	if(const YAML::Node* itemNode = node.FindValue("stats")) {
+	if(const YAML::Node itemNode = node["stats"]) {
 		Shell::RunStatistics stats;
-		*itemNode >> stats;
+		itemNode >> stats;
 		result.stats = stats;
 	}
 	return node;
@@ -35,11 +33,11 @@ YAML::Emitter& operator<<(YAML::Emitter& out, const DFT::DFTCalculationResult& r
 }
 
 const YAML::Node& operator>>(const YAML::Node& node, map<std::string,DFT::DFTCalculationResult>& resultMap) {
-	for(YAML::Iterator it = node.begin(); it!=node.end(); ++it) {
+	for(YAML::const_iterator it = node.begin(); it!=node.end(); ++it) {
 		std::string dft;
 		DFT::DFTCalculationResult result;
-		it.first() >> dft;
-		it.second() >> result;
+		dft = it->first.as<std::string>();
+		it->second >> result;
 		resultMap.insert(std::pair<std::string,DFT::DFTCalculationResult>(dft,result));
 	}
 	return node;
@@ -56,20 +54,14 @@ YAML::Emitter& operator<<(YAML::Emitter& out, const map<std::string,DFT::DFTCalc
 }
 
 const YAML::Node& operator>>(const YAML::Node& node, DFT::DFTCalculationResultItem& result) {
-	if(const YAML::Node* itemNode = node.FindValue("missionTime")) {
-		std::string missionTime;
-		*itemNode >> missionTime;
-		result.missionTime = missionTime;
+	if(const YAML::Node itemNode = node["missionTime"]) {
+		result.missionTime = itemNode.as<std::string>();
 	}
-	if(const YAML::Node* itemNode = node.FindValue("mrmcCommand")) {
-		std::string mrmcCommand;
-		*itemNode >> mrmcCommand;
-		result.mrmcCommand = mrmcCommand;
+	if(const YAML::Node itemNode = node["mrmcCommand"]) {
+		result.mrmcCommand = itemNode.as<std::string>();
 	}
-	if(const YAML::Node* itemNode = node.FindValue("failprob")) {
-		double failprob;
-		*itemNode >> failprob;
-		result.failprob = failprob;
+	if(const YAML::Node itemNode = node["failprob"]) {
+		result.failprob = itemNode.as<double>();
 	}
 	return node;
 }
@@ -84,7 +76,7 @@ YAML::Emitter& operator<<(YAML::Emitter& out, const DFT::DFTCalculationResultIte
 }
 
 const YAML::Node& operator>>(const YAML::Node& node, vector<DFT::DFTCalculationResultItem>& resultVector) {
-	for(YAML::Iterator it = node.begin(); it!=node.end(); ++it) {
+	for(YAML::const_iterator it = node.begin(); it!=node.end(); ++it) {
 		DFT::DFTCalculationResultItem result;
 		*it >> result;
 		resultVector.push_back(result);

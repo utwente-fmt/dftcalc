@@ -39,11 +39,11 @@ const int VERBOSITY_DATA = 2;
 const int VERBOSITY_FILE_SEARCH = 2;
 
 void DFTTestResult::readYAMLNodeSpecific(const YAML::Node& node) {
-	if(const YAML::Node* itemNode = node.FindValue("failprob")) {
-		*itemNode >> failprob;
+	if(const YAML::Node itemNode = node["failprob"]) {
+		failprob = itemNode.as<double>();
 	}
-	if(const YAML::Node* itemNode = node.FindValue("bcginfo")) {
-		*itemNode >> bcgInfo;
+	if(const YAML::Node itemNode = node["bcginfo"]) {
+		itemNode >> bcgInfo;
 	}
 }
 void DFTTestResult::writeYAMLNodeSpecific(YAML::Emitter& out) const {
@@ -573,45 +573,30 @@ Test::TestSpecification* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& no
 	
 	//node << YAML::
 	
-	if(const YAML::Node* itemNode = node.FindValue("timeunits")) {
+	if(const YAML::Node itemNode = node["timeunits"]) {
 		unsigned int value;
-		try { *itemNode >> value; }
+		try { value = itemNode.as<unsigned int>(); }
 		catch(YAML::Exception& e) { reportYAMLException(e); wentOK = false; }
 		test->setTimeUnits(value);
 	}
-	if(const YAML::Node* itemNode = node.FindValue("dft")) {
+	if(const YAML::Node itemNode = node["dft"]) {
 		std::string dft;
-		try { *itemNode >> dft; }
+		try { dft = itemNode.as<std::string>(); }
 		catch(YAML::Exception& e) { reportYAMLException(e); wentOK = false; }
 		test->setFile(File(dft).fixWithOrigin(getOrigin().getPathTo()));
 	}
-	if(const YAML::Node* itemNode = node.FindValue("evidence")) {
+	if(const YAML::Node itemNode = node["evidence"]) {
 		std::vector<std::string>& evidence = test->getEvidence();
-		/* The evidence should be a sequence... */
-		if(itemNode->Type()==YAML::NodeType::Sequence) {
-			
-			/* It can be a sequence of sequences of strings */
-//			YAML::Iterator itR = itemNode->begin();
-//			if(itR!=itemNode->end() && itR->Type()==YAML::NodeType::Sequence) {
-//				messageFormatter->message("Sequence of sequences of strings");
-//				try {
-//					*itemNode >> evidence;
-//				} catch(YAML::Exception& e) {
-//					reportYAMLException(e);
-//					wentOK = false;
-//				}
-			
-			/* Or just a sequence of strings */
-//			} else {
-				try {
-					*itemNode >> evidence;
-				} catch(YAML::Exception& e) {
-					reportYAMLException(e);
-					wentOK = false;
-				}
-//			}
+		/* The evidence should be a sequence of strings */
+		if(itemNode.Type()==YAML::NodeType::Sequence) {
+			try {
+				evidence.push_back(itemNode.as<std::string>());
+			} catch(YAML::Exception& e) {
+				reportYAMLException(e);
+				wentOK = false;
+			}
 		} else {
-			messageFormatter->reportErrorAt(Location(origin.getFileRealPath(),node.GetMark().line),"expected sequence of node names");
+			messageFormatter->reportErrorAt(Location(origin.getFileRealPath(),node.Mark().line),"expected sequence of node names");
 		}
 	}
 	
@@ -728,10 +713,9 @@ DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 	std::map<string,DFT::DFTCalculationResult> dftcalcResults;
 	{
 		std::ifstream fin(dftcalcResultFile.getFileRealPath());
-		YAML::Parser parser(fin);
-		YAML::Node doc;
-		if(parser.GetNextDocument(doc)) {
-			doc >> dftcalcResults;
+		std::vector<YAML::Node> docs = YAML::LoadAll(fin);
+		if(!docs.empty()) {
+			docs[0] >> dftcalcResults;
 		}
 	}
 	map<string,DFT::DFTCalculationResult>::iterator res = dftcalcResults.find(test->getFile().getFileName());
