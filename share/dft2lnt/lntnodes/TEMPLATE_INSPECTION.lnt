@@ -4,50 +4,46 @@ module TEMPLATE_INSPECTION(TEMPLATE_COMMON) is
 	var
 		nr : NAT,
 		counter : NAT,
-		signal : BOOL,
-		repair : BOOL
+		repaired : NAT,
+		signal : BOOL
 	in
 		counter := 0;
+		repaired := 1;
 		signal := FALSE;
-		repair := FALSE;
 		loop
 			select
-					-- listen for inspection
-					INSPECT (?nr) where (0 < nr) and (nr <= total);
-					if (not (signal)) then
-						signal := TRUE
-					end if
+				-- listen for inspection
+				INSPECT (?nr) where (0 < nr) and (nr <= total);
+				if (not (signal)) then
+					signal := TRUE
+				end if
 
 				-- phases
-				[]
-					if(counter < phases) then
-						RATE_INSPECTION(!1 of NAT);
-						counter := counter + 1
-					end if
+			[]
+				if(counter < phases) then
+					RATE_INSPECTION(!1 of NAT);
+					counter := counter + 1
+				end if
 
-				[]
-					if((counter == phases) and not(signal)) then
-						INSPECTED(!1 of NAT);
-						counter := 0
-					end if
+			[]
+				if((counter == phases) and not(signal)) then
+					counter := 0
+				end if
 
-				[]
-					if((counter == phases) and signal and not(repair)) then
-						REPAIR (!0 of NAT);
-						repair := TRUE
-					end if
-
-				[]
-					REPAIRED (?nr,FALSE) where (nr==0 of NAT);
-					if(signal and repair) then
+			[]
+				if((counter == phases) and signal) then
+					REPAIR (!repaired);
+					repaired := repaired + 1;
+					if (repaired > total) then
+						repaired := 1;
 						counter := 0;
-						repair := FALSE;
 						signal := FALSE
 					end if
+				end if
 
 			end select
 		end loop
 	end var
-	end process
+end process
 
 end module

@@ -419,69 +419,92 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out, const DFT::Nodes::Bas
 	else if(repair) initialState = "UP";
 	else if(aph_repair) initialState = "UP";
 	else initialState = "DORMANT";
+
     if(!dummy){
-	out << out.applyprefix << " * Generating BE(parents=" << nr_parents << ")" << out.applypostfix;
-	generateHeaderClose(out);
-	out << out.applyprefix << "module " << getFileForNode(be) << "(TEMPLATE_BE";
-	// use repair template if  repairable
-	out << (repair?"_REPAIR) is":maintain?"_MAINTAIN_APH) is":aph_repair?"_APH_REPAIR) is":aph?"_APH) is":") is") << out.applypostfix;
-	out.appendLine("");
-	out.indent();
-		if(repair)
-			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, "
-			<< GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
-		else if(maintain)
-            out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << "MAINTAIN : NAT_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, " << GATE_RATE_MAINTAIN << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
-        else if(aph)
-			if(!aph_repair)
-				out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
-			else
-				out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, "
-			<< GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_INSPECT << " : NAT_CHANNEL, " << GATE_INSPECTED << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
-		else
-			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL] is" << out.applypostfix;
+		out << out.applyprefix << " * Generating BE(";
+		out << "parents=" << nr_parents;
+		out << ", repair=" << be.getRepair();
+		out << ", phases=" << be.getPhases();
+		out << ", interval=" << be.getInterval();
+		out << ")" << out.applypostfix;
+		generateHeaderClose(out);
+		out << out.applyprefix << "module " << getFileForNode(be) << "(TEMPLATE_BE";
+		// use repair template if  repairable
+		if (aph_repair)
+			out << "_APH_REPAIR";
+		else if (repair)
+			out << "_REPAIR";
+		else if (maintain)
+			out << "_MAINTAIN_APH";
+		else if (aph)
+			out << "_APH";
+		out << ") is" << out.applypostfix;
+		out.appendLine("");
 		out.indent();
-			if(repair)
-				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_ONLINE <<
-				"](" << nr_parents << " of NAT";
-			else if(maintain & not(aph))
-                out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << ", MAINTAIN, " << GATE_RATE_FAIL << "," << GATE_RATE_MAINTAIN << "](" << nr_parents << " of NAT";
-			else if(aph_repair)
-				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_INSPECT << "," << GATE_INSPECTED <<
-				"," << GATE_ONLINE << "](" << nr_parents << " of NAT";
-			// Normal BE abd BE APH have the same call for BEProc
-			else
-				out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL << "](" << nr_parents << " of NAT";
-			out << ", " << (cold?"TRUE":"FALSE");
-			out << ", " << initialState;
-			if(aph)
-				out << ", " << be.getPhases() << " of NAT";
-			if(aph_repair)
-				out << ", " << be.getInterval() << " of NAT";
-			out << ")" << out.applypostfix;
+
+		out << out.applyprefix << "process MAIN [";
+		out << GATE_FAIL << " : NAT_CHANNEL, ";
+		out << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, ";
+		out << GATE_RATE_FAIL << " : NAT_NAT_CHANNEL";
+		if (repair) {
+			out << ", " << GATE_REPAIR << " : NAT_CHANNEL, ";
+			out << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, ";
+			if (aph_repair) {
+				out << GATE_INSPECT << " : NAT_CHANNEL, ";
+				out << GATE_INSPECTED << " : NAT_BOOL_CHANNEL, ";
+			}
+			out << GATE_ONLINE << " : NAT_CHANNEL";
+		} else if (maintain) {
+			/* Someone should probably figure out how the maintain APH
+			 * should work and implement that.
+			 */
+		} else if (aph) {
+			/* 'aph' needs no additional signals. */
+		}
+		out << "] is" << out.applypostfix;
+
+		out.indent();
+
+		out << out.applyprefix << "BEproc [";
+		out << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_RATE_FAIL;
+		if(repair) {
+			out << "," << GATE_REPAIR << "," << GATE_REPAIRED;
+			if (aph_repair)
+				out << "," << GATE_INSPECT << "," << GATE_INSPECTED;
+			out << "," << GATE_ONLINE;
+		}
+		/* For some reason the nr_parents is ignored in the actual template. */
+		out << "](" << nr_parents << " of NAT";
+		out << ", " << (cold?"TRUE":"FALSE");
+		out << ", " << initialState;
+		if(aph)
+			out << ", " << be.getPhases() << " of NAT";
+		if(aph_repair)
+			out << ", " << be.getInterval() << " of NAT";
+		out << ")" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
-	out.outdent();
-	out.appendLine("");
-	out << out.applyprefix << "end module" << out.applypostfix;
-    }else{
-        out << out.applyprefix << " * Generating BE(parents=" << nr_parents << ")" << out.applypostfix;
-        generateHeaderClose(out);
-        out << out.applyprefix << "module " << getFileForNode(be) << "(TEMPLATE_BE_DUMMY) is" << out.applypostfix;
-        out.appendLine("");
-        out.indent();
-			out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
+		out.outdent();
+		out.appendLine("");
+		out << out.applyprefix << "end module" << out.applypostfix;
+	} else {
+		out << out.applyprefix << " * Generating BE(parents=" << nr_parents << ")" << out.applypostfix;
+		generateHeaderClose(out);
+		out << out.applyprefix << "module " << getFileForNode(be) << "(TEMPLATE_BE_DUMMY) is" << out.applypostfix;
+		out.appendLine("");
 		out.indent();
-            out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "](" << nr_parents << " of NAT";
-        //out << ", " << (cold?"TRUE":"FALSE");
-        out << ", " << initialState;
-        out << ")" << out.applypostfix;
+		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
+		out.indent();
+		out << out.applyprefix << "BEproc [" << GATE_FAIL << "," << GATE_ACTIVATE << "](" << nr_parents << " of NAT";
+		//out << ", " << (cold?"TRUE":"FALSE");
+		out << ", " << initialState;
+		out << ")" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
-        out.outdent();
-        out.appendLine("");
-        out << out.applyprefix << "end module" << out.applypostfix;
-    }
+		out.outdent();
+		out.appendLine("");
+		out << out.applyprefix << "end module" << out.applypostfix;
+	}
 	return 0;
 }
 

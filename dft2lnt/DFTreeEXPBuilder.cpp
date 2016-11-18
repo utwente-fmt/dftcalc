@@ -123,7 +123,7 @@ std::string DFT::DFTreeEXPBuilder::getINSPProc(const DFT::Nodes::Inspection& ins
     
     ss << "total rename ";
     // Insert lambda value
-    ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_INSPECTION << " !1 !" << "\" -> \"rate " << insp.getLambda() << "\"";
+    ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_INSPECTION << " !1" << "\" -> \"rate " << insp.getLambda() << "\"";
     
     ss << " in \"";
     ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(insp);
@@ -1817,6 +1817,26 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
 			return 0;
     }
 
+void DFT::DFTreeEXPBuilder::addInspectionRepairRules(
+	const DFT::Nodes::Gate& node,
+	const DFT::Nodes::Node& child,
+	size_t childNum,
+	vector<DFT::EXPSyncRule*>& repairRules)
+{
+	std::stringstream ss;
+	unsigned int nodeID = nodeIDs[&node];
+	unsigned int childID = nodeIDs[&child];
+	ss << "rep_" << child.getTypeStr() << childID;
+	EXPSyncRule* rule = new EXPSyncRule(ss.str());
+	rule->syncOnNode = &child;
+	rule->label.insert(pair<unsigned,EXPSyncItem*>(nodeID,syncRepair(childNum + 1)));
+	rule->label.insert(pair<unsigned,EXPSyncItem*>(childID,syncRepaired(0, false)));
+	std::stringstream report;
+	report << "Added new inspection repair rule: ";
+	printSyncLineShort(report,*rule);
+	cc->reportAction2(report.str(),VERBOSITY_RULES);
+	repairRules.push_back(rule);
+}
 
     int DFT::DFTreeEXPBuilder::createSyncRule(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules,
                                                vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules, const DFT::Nodes::Gate& node, unsigned int nodeID) {
@@ -2053,7 +2073,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
                 }
                 
             }else if(!DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::InspectionType) && !DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::ReplacementType)){
-                
+
                 /* REPAIR rule */
                 {
                     // Go through all the existing repair rules
@@ -2236,6 +2256,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(vector<DFT::EXPSyncRule*>& activationRul
                 }
                 
             } else if(DFT::Nodes::Node::typeMatch(node.getType(),DFT::Nodes::InspectionType)){
+		addInspectionRepairRules(node, child, n, repairRules);
                 /* INSPECTION rules */
                 {
                     // Go through all the existing repair rules

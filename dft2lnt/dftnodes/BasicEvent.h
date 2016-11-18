@@ -249,7 +249,7 @@ private:
 	int interval;
 //	double dorm;
 	double rate;
-    int phases;
+	int phases;
 	int shape;
 	bool repairable;
 	bool failed;
@@ -359,13 +359,13 @@ public:
 		mode(DFT::Nodes::BE::CalculationMode::UNDEFINED),
 		lambda(-1),
 		mu(0),
-        maintain_rate(0),
+		maintain_rate(0),
 		repair_rate(-1),
 		priority(0),
-		rate(-1),
-        phases(1),
-		shape(-1),
 		interval(0),
+		rate(-1),
+		phases(1),
+		shape(-1),
 		failed(false) {
 	}
 	virtual ~BasicEvent() {
