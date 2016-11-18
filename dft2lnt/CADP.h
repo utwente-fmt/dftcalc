@@ -56,11 +56,9 @@ public:
 		}
 		
 		File statFile;
-		do {
-			char buffer[L_tmpnam];
-			tmpnam(buffer);
-			statFile = File(string(buffer));
-		} while(FileSystem::exists(statFile));
+		char tempfilename[] = P_tmpdir "/cadpXXXXXX";
+		close(mkstemp(tempfilename));
+		statFile = File(string(tempfilename));
 
 		Shell::system("bcg_info " + bcgFile.getFileRealPath(),".",statFile.getFileRealPath(),"",5,NULL);
 		

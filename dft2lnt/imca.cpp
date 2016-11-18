@@ -26,7 +26,7 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 	}
 
 	FILE* fp;
-	long len, n;
+	long len;
 	char* buffer;
 
 	fp = fopen(file.getFileRealPath().c_str(),"rb");
@@ -35,7 +35,7 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 	fseek(fp,0,SEEK_SET);
 	buffer = (char *)malloc(len);
 	memset(buffer, 0, len);
-	n = fread(buffer,len,1,fp); //read into buffer
+	fread(buffer,len,1,fp); //read into buffer
 	fclose(fp);
 
 	//fprintf(stdout, "imca buffer info (%ld,%ld):\n", len, n);

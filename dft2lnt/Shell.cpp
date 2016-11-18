@@ -103,8 +103,11 @@ int Shell::system(const SystemOptions& options, RunStatistics* stats) {
 	// If no statFile was specified, use a temporary
 	File statFile = File(options.statFile);
 	if(options.statFile.empty()) {
-		char buffer[L_tmpnam];
-		tmpnam(buffer);
+		char buffer[] = P_tmpdir"/XXXXXX";
+		int ret = mkstemp(buffer);
+		if (ret < 0)
+			return -1;
+		close(ret);
 		statFile = File(string(buffer));
 		removeTmpFile = true;
 	}
@@ -224,8 +227,8 @@ int Shell::execute(const SystemOptions& options, RunStatistics* stats, unordered
 	// If no statFile was specified, use a temporary
 	File statFile = File(options.statFile);
 	if(options.statFile.empty()) {
-		char buffer[L_tmpnam];
-		tmpnam(buffer);
+		char buffer[] = P_tmpdir "/XXXXXX";
+		close(mkstemp(buffer));
 		statFile = File(string(buffer));
 		removeTmpFile = true;
 	}
