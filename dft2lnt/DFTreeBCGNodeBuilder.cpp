@@ -370,9 +370,21 @@ int DFT::DFTreeBCGNodeBuilder::generateSpare(FileWriter& out, const DFT::Nodes::
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
 
-		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
+		out << out.applyprefix << "process MAIN ["
+			<< GATE_FAIL << " : NAT_CHANNEL, "
+			<< GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, "
+			<< GATE_ONLINE << " : NAT_CHANNEL, "
+			<< GATE_DEACTIVATE << " : NAT_BOOL_CHANNEL, "
+			<< GATE_REPAIRED << " : NAT_BOOL_CHANNEL"
+			<< "] is" << out.applypostfix;
 		out.indent();
-			out << out.applyprefix << "SPARE [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, (BOOL_ARRAY(TRUE)))" << out.applypostfix;
+		out << out.applyprefix << "SPARE ["
+			<< GATE_FAIL << ","
+			<< GATE_ACTIVATE << ","
+			<< GATE_ONLINE << ","
+			<< GATE_DEACTIVATE << ","
+			<< GATE_REPAIRED
+			<< "] (" << total << " of NAT)" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	out.outdent();
@@ -434,7 +446,8 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
 			<< GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, "
 			<< GATE_REPAIRED << " : NAT_BOOL_CHANNEL, "
 			<< GATE_INSPECT << " : NAT_CHANNEL, "
-			<< GATE_ONLINE << " : NAT_CHANNEL"
+			<< GATE_ONLINE << " : NAT_CHANNEL, "
+			<< GATE_DEACTIVATE << " : NAT_CHANNEL"
 			<< "] is" << out.applypostfix;
 
 		out.indent();
@@ -445,7 +458,8 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
 			<< GATE_RATE_FAIL << ","
 			<< GATE_REPAIRED << ","
 			<< GATE_INSPECT << ","
-			<< GATE_ONLINE << "]";
+			<< GATE_ONLINE << ","
+			<< GATE_DEACTIVATE << "]";
 		out << "(" << (cold?"TRUE":"FALSE")
 			<< ", " << initialState
 			<< ", " << be.getPhases() << " of NAT"

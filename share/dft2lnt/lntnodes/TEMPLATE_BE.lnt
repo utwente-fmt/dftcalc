@@ -1,6 +1,6 @@
 module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 
-	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, INSPECT : NAT_CHANNEL, ONLINE : NAT_CHANNEL] (cold: BOOL, initial: STATUS, phases: NAT, threshold : NAT) is
+	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, INSPECT : NAT_CHANNEL, ONLINE : NAT_CHANNEL, DEACTIVATE : NAT_BOOL_CHANNEL] (cold: BOOL, initial: STATUS, phases: NAT, threshold : NAT) is
 	var
 		status : STATUS,
 		isactive : BOOL,
@@ -24,14 +24,17 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 		emit_online := FALSE;
 		loop
 			select
-
-			(*
-			 * When this BE is activated, it will set the status to ACTIVE,
-			 * but only if it was UP (not active and not failed and not under repair)
+			(* Note: Activation/deactivation logic will get
+			 *       really screwy if a BE has multiple
+			 *       parents that disagree about the status.
 			 *)
-			 -- have to send down signals if it can't be activated, because the component is down
+
 				ACTIVATE (!0 of NAT, FALSE);
 				isactive := TRUE
+
+			[]
+				DEACTIVATE (!0 of NAT, FALSE);
+				isactive := FALSE
 
 			(*
 			 * When this BE is in the UP state, it can fail with the

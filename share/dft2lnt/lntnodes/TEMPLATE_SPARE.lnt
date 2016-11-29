@@ -1,109 +1,184 @@
 module TEMPLATE_SPARE(TEMPLATE_COMMON) is
+	type SSET_NAT is sorted set of NAT with "remove","inter","empty","head" end type
 
-	process SPARE [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (total : NAT, available : BOOL_ARRAY) is
+	(* Find the first available element given the arrays of failed
+	 * and claimed children.
+	 *)
+	process SPARE [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, ONLINE : NAT_CHANNEL, DEACTIVATE : NAT_BOOL_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL]
+		(total : NAT) is
 	var
-		nr_available : NAT,
+		unfailed : SSET_NAT,
+		unclaimed : SSET_NAT,
 		done : BOOL,
+		repairing : BOOL,
+		repairing_deactivate : NAT,
 		nr : NAT,
 		using : NAT,
+		prev_using : NAT, (* was using, should be deactivated *)
 		activated : BOOL
 	in
-		nr_available := total;
-		using := 0;
 		done := FALSE;
 		activated := FALSE;
+		repairing := FALSE;
+		repairing_deactivate := 0;
+		using := 0;
+		prev_using := 0;
+		(* Initially everything is unfailed and unclaimed *)
+		unfailed := nil;
+		for nr := 1 while nr <= total by nr := nr + 1 loop
+			unfailed := insert(nr, unfailed)
+		end loop;
+		unclaimed := unfailed;
 		loop
 			select
 			(*
-			 * Listen for any child to be triggered.
-			 * If this happens, we remember this by setting the boolean
-			 * in the available array to FALSE. We also decrement the
-			 * nr_available (the number of available children).
-			 * If the failing node was the one we were currently 'using',
-			 * initiate the search to find another node to use.
+			 * Listen for any child to fail.
+			 * If this happens, we remember this by setting the
+			 * boolean in the failed array to TRUE. If the failing
+			 * node was the one we were currently 'using', initiate
+			 * the search to find another node to use.
 			 *)
 				FAIL (?nr) where (0 < nr) and (nr <= total);
-				if (available[nr]) and (nr_available > 0) then
-					available[nr] := FALSE;
-					nr_available := nr_available - 1
-				end if;
+				unfailed := remove(nr, unfailed);
 				
-				(* If the failing node was the one we were currently 'using',
-				 * initiate the search to find another node to use.
+				(* If the failing node was the one we were
+				 * currently 'using', initiate the search to
+				 * find another node to use.
 				 *)
 				if nr == using then
+					prev_using := using
+				end if
+
+			[]
+				if prev_using > 0 then
+					DEACTIVATE(!prev_using, TRUE);
+					prev_using := 0;
 					using := 0
-				end if;
-				nr := 0
-			
+				end if
+
 			(*
-			 * If the number of available nodes reaches 0, this means there
-			 * are no children left to use.
+			 * Listen for any child to be repaired.
+			 * If this happens, we remember this by setting the
+			 * boolean in the failed array to FALSE.
+			 *)
+			 []
+				ONLINE (?nr) where (0 < nr) and (nr <= total);
+				unfailed := insert(nr, unfailed)
+
+			(*
+			 * If the number of available nodes reaches 0, this
+			 * means there are no children left to use.
 			 * Thus, the Voting node fails and notifies its parents.
 			 *)
 			[]
-				if (nr_available == 0) and not (done) then
-					FAIL (!0 of NAT); done := TRUE
+				if not(done)
+				   and empty(inter(unclaimed, unfailed))
+				then
+					FAIL (!0 of NAT);
+					done := TRUE
+				end if
+
+			(*
+			 * If we are now using a node and were previously done,
+			 * that means our children have been repaired and we
+			 * should notify our parent that we have been repaired
+			 * as well.
+			[]
+				if ((using != 0) and done) then
+					ONLINE (!0 of NAT);
+					done := FALSE
 				end if
 			
 			(*
-			 * If this node is activated, enable the activation procedure.
+			 * If this node is activated, enable the activation
+			 * procedure.
 			 *)
 			[]
-				ACTIVATE (?nr,FALSE) where (nr == (0 of NAT));
-				if not (done) then
-					activated := TRUE
-				end if;
-				nr := 0
+				ACTIVATE (!0 of NAT, FALSE);
+				activated := TRUE
+
+			[]
+				DEACTIVATE (!0 of NAT, FALSE);
+				prev_using := using;
+				activated := FALSE
 			
 			(*
-			 * Listen to activation commands coming from OTHER nodes, given to
-			 * one of the children of THIS node. If this happens, we must
-			 * remember that that child was activated.
-			 * Skip the node we are currently using, because that one should
-			 * NOT be listed as unavailable, as this Spare node is currently
-			 * using that node.
-			 * NOTE: the second argument to the ACTIVATE gate enables the
-			 * ability for a node to have two Spare parents. The SENDER of an
-			 * ACTIVATE command has the argument set to TRUE, while the
-			 * RECEIVER has the argument set to FALSE.
+			 * Listen to activation commands coming from OTHER
+			 * nodes, given to one of the children of THIS node.
+			 * If this happens, we must remember that that child
+			 * was activated. Skip the node we are currently using,
+			 * because that one should NOT be listed as unavailable,
+			 * as this Spare node is currently using that node.
+			 *
+			 * NOTE: the second argument to the ACTIVATE gate
+			 * enables the ability for a node to have multiple Spare
+			 * parents. The SENDER of an ACTIVATE command has the
+			 * argument set to TRUE, while the RECEIVER has the
+			 * argument set to FALSE.
 			 *)
 			[]
-				ACTIVATE (?nr,FALSE) where ((nr > 0) and (nr <= total) and (nr <> using));
-				if (available[nr]) and (nr_available > 0) then
-					available[nr] := FALSE;
-					nr_available := nr_available - 1
-				end if;
-				nr := 0
+				ACTIVATE (?nr,FALSE)
+					where ((nr > 0)
+					       and (nr <= total)
+					       and (nr <> using));
+				unclaimed := remove(nr, unclaimed)
+
+			[]
+				DEACTIVATE (?nr,FALSE)
+					where ((nr > 0)
+					       and (nr <= total));
+				unclaimed := insert(nr, unclaimed)
 			
 			(*
-			 * If we are currently not using a node, but we are in the middle
-			 * of the activation procedure, try to find another node.
-			 * We do this from left to right; when we find an available node,
-			 * we activate it and remember that we use this node (using).
+			 * If we are currently not using a node, but we are in
+			 * the middle of the activation procedure, try to find
+			 * another node. We do this from left to right; when we
+			 * find an available node, we activate it and remember
+			 * that we use this node (using).
 			 *)
 			[]
-				if using == 0 and activated then
-					using := using + 1;
-					loop findav in
-						if available[using] then
-							ACTIVATE (!using,TRUE);
-							break findav
-						end if;
-						using := using + 1;
-						if using > total  then
-							(* FIXME: should there be using:=0; here?*)
-							break findav
+				var avail : SSET_NAT in
+					avail := inter(unclaimed, unfailed);
+					if using == 0 and not(empty(avail)) then
+						if (activated) then
+							using := head(avail);
+							ACTIVATE (!using,TRUE)
 						end if
-					end loop;
-					nr := using
-				end if;
-				nr := 0
+					end if
+				end var
+
+			(* If we are repaired, we try to return to the leftmost
+			 * available child. Of course, this has to be done in a
+			 * way to avoid racing with other gates, as we don't
+			 * want situations where repairing a gate leads it to
+			 * fail because other gates took the only available
+			 * spares.
+			 *)
+			[]
+				REPAIRED (?0, FALSE);
+				repairing := TRUE
+
+			[]
+				var avail : SSET_NAT, new_using : NAT in
+					avail := inter(unclaimed, unfailed);
+					if (repairing and activated
+					    and not(empty(avail)))
+					then
+						new_using := head(avail);
+						ACTIVATE (!new_using, TRUE);
+						repairing_deactivate := using;
+						using := new_using
+					end if;
+					repairing := FALSE
+				end var
+			[]
+				if (repairing_deactivate > 0) then
+					DEACTIVATE(repairing_deactivate, TRUE);
+					repairing_deactivate := 0
+				end if
 			end select
 		end loop
 	end var
 	end process
-
-
 end module 
 
