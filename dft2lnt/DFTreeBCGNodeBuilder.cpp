@@ -157,19 +157,15 @@ int DFT::DFTreeBCGNodeBuilder::lntIsValid(std::string lntFilePath) {
 	return res==0;
 }
 
-int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::GateAnd& gate) {
-	int nr_parents = gate.getParents().size();
+int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out,
+											  const DFT::Nodes::Gate &gate,
+											  int threshold)
+{
 	int total = gate.getChildren().size();
-
-	out << out.applyprefix << " * Generating And(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
-	generateHeaderClose(out);
-
 	if(gate.isRepairable()){
 		// FIXME: add this directly as gate information
 		int repairable = 0;
-
 		for(size_t n = 0; n<gate.getChildren().size(); ++n) {
-
 			// Get the current child and associated childID
 			const DFT::Nodes::Node& child = *gate.getChildren().at(n);
 			if(child.isRepairable())
@@ -180,9 +176,17 @@ int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::Ga
 		out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
-		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
+		out << out.applyprefix << "process MAIN ["
+		    << GATE_FAIL << " : NAT_CHANNEL, "
+			<< GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, "
+			<< GATE_DEACTIVATE << " : NAT_BOOL_CHANNEL, "
+			<< GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
 		out.indent();
-		out << out.applyprefix << "VOTING_K [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_ONLINE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)), (BOOL_ARRAY(FALSE)), " << repairable << " of NAT)" << out.applypostfix;
+		out << out.applyprefix << "VOTING_K ["
+		    << GATE_FAIL << ","
+			<< GATE_ACTIVATE << ","
+			<< GATE_DEACTIVATE << ","
+			<< GATE_ONLINE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)), (BOOL_ARRAY(FALSE)), " << repairable << " of NAT)" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	} else {
@@ -190,9 +194,15 @@ int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::Ga
 		out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
-		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
+		out << out.applyprefix << "process MAIN ["
+		    << GATE_FAIL << " : NAT_CHANNEL, "
+			<< GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, "
+			<< GATE_DEACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
 		out.indent();
-		out << out.applyprefix << "VOTING [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+		out << out.applyprefix << "VOTING ["
+		    << GATE_FAIL << ","
+			<< GATE_ACTIVATE << ","
+			<< GATE_DEACTIVATE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	}
@@ -200,6 +210,15 @@ int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::Ga
 	out << out.applyprefix << "end module" << out.applypostfix;
 
 	return 0;
+}
+
+int DFT::DFTreeBCGNodeBuilder::generateAnd(FileWriter& out, const DFT::Nodes::GateAnd& gate) {
+	int nr_parents = gate.getParents().size();
+	int total = gate.getChildren().size();
+
+	out << out.applyprefix << " * Generating And(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
+	generateHeaderClose(out);
+	return generateVoting(out, gate, total);
 }
 
 int DFT::DFTreeBCGNodeBuilder::generateSAnd(FileWriter& out, const DFT::Nodes::GateSAnd& gate) {
@@ -231,46 +250,7 @@ int DFT::DFTreeBCGNodeBuilder::generateOr(FileWriter& out, const DFT::Nodes::Gat
 	int total = gate.getChildren().size();
 	out << out.applyprefix << " * Generating Or(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
-
-	if(gate.isRepairable()){
-		// FIXME: add this directly as gate information
-		int repairable = 0;
-
-		for(size_t n = 0; n<gate.getChildren().size(); ++n) {
-
-			// Get the current child and associated childID
-			const DFT::Nodes::Node& child = *gate.getChildren().at(n);
-			if(child.isRepairable())
-				repairable++;
-		}
-
-		out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING_REPAIR) is" << out.applypostfix;
-		out.indent();
-
-		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
-		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
-		out.indent();
-		out << out.applyprefix << "VOTING_K [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_ONLINE << "] (" << 1 << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)), (BOOL_ARRAY(FALSE)), " << repairable << " of NAT)" << out.applypostfix;
-		out.outdent();
-		out << out.applyprefix << "end process" << out.applypostfix;
-	} else {
-
-		out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING) is" << out.applypostfix;
-		out.indent();
-
-		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
-
-		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
-		out.indent();
-			out << out.applyprefix << "VOTING [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << "1 of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
-		out.outdent();
-		out << out.applyprefix << "end process" << out.applypostfix;
-	}
-
-	out.outdent();
-	out << out.applyprefix << "end module" << out.applypostfix;
-
-	return 0;
+	return generateVoting(out, gate, 1);
 }
 
 int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out, const DFT::Nodes::GateVoting& gate) {
@@ -279,46 +259,7 @@ int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out, const DFT::Nodes:
 	int threshold = gate.getThreshold();
 	out << out.applyprefix << " * Generating Voting(parents=" << nr_parents << ", setting= " << threshold << "/" << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
-
-	if(gate.isRepairable()){
-		// FIXME: add this directly as gate information
-		int repairable = 0;
-
-		for(size_t n = 0; n<gate.getChildren().size(); ++n) {
-
-			// Get the current child and associated childID
-			const DFT::Nodes::Node& child = *gate.getChildren().at(n);
-			if(child.isRepairable())
-				repairable++;
-		}
-
-		out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING_REPAIR) is" << out.applypostfix;
-		out.indent();
-
-		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
-		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
-		out.indent();
-		out << out.applyprefix << "VOTING_K [" << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_ONLINE << "] (" << threshold << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)), (BOOL_ARRAY(FALSE)), " << repairable << " of NAT)" << out.applypostfix;
-		out.outdent();
-		out << out.applyprefix << "end process" << out.applypostfix;
-	} else {
-
-		out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING) is" << out.applypostfix;
-		out.indent();
-
-		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
-
-		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
-		out.indent();
-			out << out.applyprefix << "VOTING [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << threshold << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
-		out.outdent();
-		out << out.applyprefix << "end process" << out.applypostfix;
-
-	}
-	out.outdent();
-	out << out.applyprefix << "end module" << out.applypostfix;
-
-	return 0;
+	return generateVoting(out, gate, threshold);
 }
 
 int DFT::DFTreeBCGNodeBuilder::generatePAnd(FileWriter& out, const DFT::Nodes::GatePAnd& gate) {

@@ -257,6 +257,8 @@ public:
 	 * @return true/false: whether this node has a dummy output.
 	 */
 	virtual bool outputIsDumb() const { return false; }
+
+	bool matchesType(NodeType otherType) const {return typeMatch(type, otherType);}
 };
 
 } // Namespace: Nodes

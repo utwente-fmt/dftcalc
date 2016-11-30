@@ -1,6 +1,6 @@
 module TEMPLATE_VOTING_REPAIR(TEMPLATE_COMMON_REPAIR) is
 
-	process VOTING_K [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, ONLINE : NAT_CHANNEL] (threshold : NAT, total : NAT, received : BOOL_ARRAY, activated : BOOL_ARRAY, repairable : NAT) is
+	process VOTING_K [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, DEACTIVATE : NAT_BOOL_CHANNEL, ONLINE : NAT_CHANNEL] (threshold : NAT, total : NAT, received : BOOL_ARRAY, activated : BOOL_ARRAY, repairable : NAT) is
 	var
 		nr : NAT,
 		done : BOOL,
@@ -67,6 +67,10 @@ module TEMPLATE_VOTING_REPAIR(TEMPLATE_COMMON_REPAIR) is
 					nr_act := 1 of NAT;
 					running := TRUE
 				end if
+
+			(* TODO: Proper forwarding *)
+			[]
+				DEACTIVATE (0 of NAT,FALSE)
 			
 			(*
 			 * If the children should be activated, do so, one by one,

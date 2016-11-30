@@ -196,11 +196,19 @@ private:
 	void printSyncLine(const EXPSyncRule& rule, const vector<unsigned int>& columnWidths);
 	void printSyncLineShort(std::ostream& stream, const EXPSyncRule& rule);
 
-void addInspectionRepairRules(
-	const DFT::Nodes::Gate& node,
-	const DFT::Nodes::Node& child,
-	size_t childNum,
-	vector<DFT::EXPSyncRule*>& repairRules);
+	void addBroadcastRule(vector<DFT::EXPSyncRule*> &rules,
+						  const DFT::Nodes::Gate &node,
+						  EXPSyncItem *nodeSignal,
+						  EXPSyncItem *childSignal,
+						  std::string name_prefix,
+						  unsigned int childNum);
+
+	void addAnycastRule(vector<DFT::EXPSyncRule*> &rules,
+						const DFT::Nodes::Gate &node,
+						EXPSyncItem *nodeSignal,
+						EXPSyncItem *childSignal,
+						std::string name_prefix,
+						unsigned int childNum);
 
 public:
 
