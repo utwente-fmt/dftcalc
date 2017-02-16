@@ -22,12 +22,10 @@ module TEMPLATE_INSPECTION(TEMPLATE_COMMON) is
 			[]
 				if(counter < phases) then
 					RATE_INSPECTION(!1 of NAT);
-					counter := counter + 1
-				end if
-
-			[]
-				if((counter == phases) and not(signal)) then
-					counter := 0
+					counter := counter + 1;
+					if((counter == phases) and not(signal)) then
+						counter := 0
+					end if
 				end if
 
 			[]

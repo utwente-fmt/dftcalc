@@ -30,6 +30,16 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 		end loop;
 		unclaimed := unfailed;
 		loop
+			var avail : SSET_NAT in
+				avail := inter(unclaimed, unfailed);
+				if (repairing and not(empty(avail)))
+				then
+					if (head(avail) == using) then
+						repairing := FALSE
+					end if
+				end if
+			end var;
+
 			select
 			(*
 			 * Listen for any child to fail.
@@ -83,8 +93,9 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 			 * that means our children have been repaired and we
 			 * should notify our parent that we have been repaired
 			 * as well.
+			 *)
 			[]
-				if ((using != 0) and done) then
+				if ((using > 0) and done) then
 					ONLINE (!0 of NAT);
 					done := FALSE
 				end if

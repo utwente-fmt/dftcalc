@@ -277,7 +277,7 @@ public:
 	void addRepairInfo(DFT::Nodes::Gate* gate) {
 		gate->setRepairable(true);
 		for(size_t n = 0; n<gate->getParents().size(); ++n) {
-			DFT::Nodes::Node* parent = gate->getChildren().at(n);
+			DFT::Nodes::Node* parent = gate->getParents().at(n);
 			if(parent->isGate()){
 				DFT::Nodes::Gate* p = static_cast<DFT::Nodes::Gate*>(parent);
 				addRepairInfo(p);

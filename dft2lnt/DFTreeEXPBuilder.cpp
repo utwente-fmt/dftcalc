@@ -676,6 +676,7 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 
 			// Set synchronization node
 			ruleA->syncOnNode = &child;
+			ruleD->syncOnNode = &child;
 
 			// Add synchronization of THIS node to the synchronization rule
 			ruleA->label[nodeID] = syncActivate(n+1,true);
@@ -750,7 +751,7 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 					// the other node wants to listen to activates of
 					// the THIS node.
 					ruleA->label[otherNodeID] = syncActivate(otherLocalNodeID,false);
-					ruleD->label[otherNodeID] = syncActivate(otherLocalNodeID,false);
+					ruleD->label[otherNodeID] = syncDeactivate(otherLocalNodeID,false);
 					cc->reportAction3("Detected (other) dynamic activator `" + otherNode->getName() + "', added to sync rule",VERBOSITY_RULEORIGINS);
 
 					// TODO: primary is a special case??????
@@ -789,7 +790,7 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 							 syncRepaired(0, false), "repd_", n);
 		} else if(node.matchesType(DFT::Nodes::InspectionType)) {
 			addBroadcastRule(inspectionRules, node, syncInspection(n+1),
-							 syncRepairing(0), "insp_", n);
+							 syncInspection(0), "insp_", n);
 			addBroadcastRule(failRules, node, syncInspection(n+1),
 							 syncFail(0), "inspf_", n);
 			addAnycastRule(repairRules, node, syncRepair(n + 1),
