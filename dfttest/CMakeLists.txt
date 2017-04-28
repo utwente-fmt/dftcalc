@@ -52,14 +52,7 @@ if(UNIX AND NOT APPLE AND NOT WIN32)
 	target_link_libraries(dfttest rt)
 endif()
 
-## POST_BUILD: copy the executable to the bin/ folder
-GET_TARGET_PROPERTY(BIN_LOCATION   dfttest LOCATION)
-SET(NEW_LIB_NAME ${CMAKE_CURRENT_BINARY_DIR}/../bin/dfttest${CMAKE_EXECUTABLE_SUFFIX})
-ADD_CUSTOM_COMMAND(
-  TARGET dfttest
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy ${BIN_LOCATION} ${NEW_LIB_NAME}
-)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 ## Installation
 install (TARGETS dfttest DESTINATION bin)
