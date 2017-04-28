@@ -570,6 +570,7 @@ int main(int argc, char** argv) {
 		compilerContext->reportAction("Applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
 		compilerContext->flush();
 		dft->addRepairInfo();
+		compilerContext->reportAction("Done applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
 	}
     
     /* Remove superflous FDEP edges */

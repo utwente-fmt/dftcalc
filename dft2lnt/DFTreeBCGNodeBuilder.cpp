@@ -186,7 +186,7 @@ int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out,
 		    << GATE_FAIL << ","
 			<< GATE_ACTIVATE << ","
 			<< GATE_DEACTIVATE << ","
-			<< GATE_ONLINE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)), (BOOL_ARRAY(FALSE)), " << repairable << " of NAT)" << out.applypostfix;
+			<< GATE_ONLINE << "] (" << threshold << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)), (BOOL_ARRAY(FALSE)), " << repairable << " of NAT)" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	} else {
@@ -202,7 +202,7 @@ int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out,
 		out << out.applyprefix << "VOTING ["
 		    << GATE_FAIL << ","
 			<< GATE_ACTIVATE << ","
-			<< GATE_DEACTIVATE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+			<< GATE_DEACTIVATE << "] (" << threshold << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	}

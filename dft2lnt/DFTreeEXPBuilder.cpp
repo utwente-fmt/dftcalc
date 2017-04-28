@@ -736,10 +736,10 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 					// Thus, add a synchronization item to the
 					// existing synchronization rule, specifying that
 					// the THIS node also receives a sent Activate.
-					if (otherRule->toLabel[0] == 'a')
-						otherRule->label[nodeID] = syncActivate(n+1,false);
-					else
+					if (otherRule->toLabel[0] == 'd')
 						otherRule->label[nodeID] = syncDeactivate(n+1,false);
+					else
+						otherRule->label[nodeID] = syncActivate(n+1,false);
 					cc->reportAction3("THIS node added, activation listening synchronization",VERBOSITY_RULEORIGINS);
 
 					// This is not enough, because the other way

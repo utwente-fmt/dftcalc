@@ -10,7 +10,6 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 		unfailed : SSET_NAT,
 		unclaimed : SSET_NAT,
 		done : BOOL,
-		repairing : BOOL,
 		repairing_deactivate : NAT,
 		nr : NAT,
 		using : NAT,
@@ -19,7 +18,6 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 	in
 		done := FALSE;
 		activated := FALSE;
-		repairing := FALSE;
 		repairing_deactivate := 0;
 		using := 0;
 		prev_using := 0;
@@ -30,16 +28,6 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 		end loop;
 		unclaimed := unfailed;
 		loop
-			var avail : SSET_NAT in
-				avail := inter(unclaimed, unfailed);
-				if (repairing and not(empty(avail)))
-				then
-					if (head(avail) == using) then
-						repairing := FALSE
-					end if
-				end if
-			end var;
-
 			select
 			(*
 			 * Listen for any child to fail.
@@ -154,33 +142,30 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 						if (activated) then
 							using := head(avail);
 							ACTIVATE (!using,TRUE)
+						end if;
+						if repairing_deactivate == using then
+							repairing_deactivate := 0
 						end if
 					end if
 				end var
 
-			(* If we are repaired, we try to return to the leftmost
-			 * available child. Of course, this has to be done in a
-			 * way to avoid racing with other gates, as we don't
-			 * want situations where repairing a gate leads it to
-			 * fail because other gates took the only available
-			 * spares.
+			(* Ignore any repair signals.
 			 *)
 			[]
-				REPAIRED (?0, FALSE);
-				repairing := TRUE
+				REPAIRED (?0, FALSE)
 
 			[]
 				var avail : SSET_NAT, new_using : NAT in
 					avail := inter(unclaimed, unfailed);
-					if (repairing and activated
-					    and not(empty(avail)))
+					if (activated and not(empty(avail)) and (prev_using == 0) and (repairing_deactivate == 0))
 					then
 						new_using := head(avail);
-						ACTIVATE (!new_using, TRUE);
-						repairing_deactivate := using;
-						using := new_using
-					end if;
-					repairing := FALSE
+						if (new_using <> using) then
+							ACTIVATE (!new_using, TRUE);
+							repairing_deactivate := using;
+							using := new_using
+						end if
+					end if
 				end var
 			[]
 				if (repairing_deactivate > 0) then
