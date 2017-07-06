@@ -77,9 +77,8 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
             ss << "_maintain";
         }
 		// extension for a repairable BE
-		if(be.getRepair()>0) {
+		if(be.isRepairable())
             ss << "_repair";
-        }
         if(be.getLambda()==0) {
             ss << "_dummy";
         }
@@ -92,6 +91,8 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		if(be.getInterval()>0){
 			ss << "_interval_" << be.getInterval();
 		}
+		if (be.isAlwaysActive())
+			ss << "_aa";
 	} else if(node.isGate()) {
 		const DFT::Nodes::Gate& gate = *static_cast<const DFT::Nodes::Gate*>(&node);
 		ss << "_c" << gate.getChildren().size();
@@ -405,6 +406,8 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
 			<< ", " << initialState
 			<< ", " << be.getPhases() << " of NAT"
 			<< ", " << be.getInterval() << " of NAT"
+			<< ", " << (be.isRepairable() ? "TRUE" : "FALSE")
+			<< ", " << (be.isAlwaysActive() ? "TRUE" : "FALSE")
 			<< ")" << out.applypostfix;
 
 		out.outdent();

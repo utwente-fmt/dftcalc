@@ -1,7 +1,15 @@
 module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 
-	process BEproc [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, RATE_FAIL : NAT_NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, INSPECT : NAT_CHANNEL, ONLINE : NAT_CHANNEL, DEACTIVATE : NAT_BOOL_CHANNEL] (cold: BOOL, initial: STATUS, phases: NAT, threshold : NAT) is
-	var
+	process BEproc [FAIL : NAT_CHANNEL,
+	                ACTIVATE : NAT_BOOL_CHANNEL,
+	                RATE_FAIL : NAT_NAT_CHANNEL,
+	                REPAIRED : NAT_BOOL_CHANNEL,
+	                INSPECT : NAT_CHANNEL,
+	                ONLINE : NAT_CHANNEL,
+	                DEACTIVATE : NAT_BOOL_CHANNEL]
+		(cold: BOOL, initial: STATUS, phases: NAT,
+		 threshold : NAT, repairable: BOOL, always_active: BOOL)
+	is var
 		status : STATUS,
 		isactive : BOOL,
 		emit_fail : BOOL,
@@ -19,7 +27,7 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 			end if;
 			status := UP
 		end if;
-		isactive := FALSE;
+		isactive := always_active;
 		degenerated := phases;
 		emit_online := FALSE;
 		loop
@@ -28,13 +36,16 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 			 *       really screwy if a BE has multiple
 			 *       parents that disagree about the status.
 			 *)
-
-				ACTIVATE (!0 of NAT, FALSE);
-				isactive := TRUE
+				if not(always_active) then
+					ACTIVATE (!0 of NAT, FALSE);
+					isactive := TRUE
+				end if
 
 			[]
-				DEACTIVATE (!0 of NAT, FALSE);
-				isactive := FALSE
+				if not(always_active) then
+					DEACTIVATE (!0 of NAT, FALSE);
+					isactive := FALSE
+				end if
 
 			(*
 			 * When this BE is in the UP state, it can fail with the
@@ -93,13 +104,15 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 
 			-- listen if repair is finished active branch
 			[]
-				REPAIRED (!0 of NAT,FALSE);
-				degenerated := phases;
-				if (status == DOWN) then
-					emit_online := TRUE;
-					emit_inspect := FALSE
-				end if;
-				status := UP
+				if repairable then
+					REPAIRED (!0 of NAT,FALSE);
+					degenerated := phases;
+					if (status == DOWN) then
+						emit_online := TRUE;
+						emit_inspect := FALSE
+					end if;
+					status := UP
+				end if
 			end select
 		end loop
 	end var

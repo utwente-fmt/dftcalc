@@ -42,6 +42,8 @@ namespace DFT {
                 return dependers;
             }
             virtual bool outputIsDumb() const { return true; }
+
+            virtual bool repairsChildren() const { return true; }
             
             DFT::Nodes::Node* getEventSource() const {
                 if(getChildren().size()!=1) return NULL;
@@ -61,8 +63,16 @@ namespace DFT {
                 }
                 return cachedName;
             }
+
+            virtual void setChildRepairs()
+            {
+	            for (size_t i = 0; i < getChildren().size(); i++) {
+					DFT::Nodes::Node *child = getChildren().at(i);
+					if (child->isBasicEvent())
+						child->setRepairable(true);
+				}
+            }
         };
-        
     } // Namespace: Nodes
 } // Namespace: DFT
 

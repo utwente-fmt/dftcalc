@@ -379,6 +379,8 @@ public:
 		ASTVisitor<int>::visit();
 		delete pass1;
 		//dft->transformFDEPNodes();
+		dft->addRepairInfo();
+		dft->addAlwaysActiveInfo();
 		return dft;
 	}
 	

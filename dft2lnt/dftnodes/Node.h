@@ -36,6 +36,7 @@ enum NodeType {
 	GateHSPType,
 	GateWSPType,
 	GateCSPType,
+	GateSpareType,
 	GatePAndType,
 	GateSeqType,
     GatePorType,
@@ -133,6 +134,8 @@ public:
 		} else if(matchType==GateType) {
 		//	return type==GateAndType;
 			return GATES_FIRST <= type && type <= GATES_LAST;
+		} else if (matchType == GateSpareType) {
+			return type == GateWSPType || type == GateCSPType || type == GateHSPType;
 		} else {
 			return false;
 		}
@@ -142,6 +145,7 @@ private:
 	string name;
 	NodeType type;
 	bool repairable;
+	bool alwaysActive;
 	
 	/// List of parents, instances are freed by DFTree instance.
 	std::vector<Nodes::Node*> parents;
@@ -158,11 +162,11 @@ public:
 		repairable(false){
 	}
 	Node(Location location, std::string name, NodeType type, bool repairable):
-			location(location),
-			name(name),
-			type(type),
-			repairable(repairable){
-		}
+		location(location),
+		name(name),
+		type(type),
+		repairable(repairable){
+	}
 	Node() {
 	}
 	virtual ~Node() {
@@ -217,12 +221,35 @@ public:
 	void setRepairable(bool repair) { repairable=repair; }
 	const void setRepairable(bool repair) const { setRepairable(repairable); }
 
+	void setAlwaysActive(bool isAlwaysActive) { alwaysActive = isAlwaysActive; }
+	const void setAlwaysActive(bool AA) const { setAlwaysActive(AA); }
+
 	/**
 	 * returns if gate is repairable
 	 * @return True if repairable, otherwise false
 	 */
 	virtual bool isRepairable() const {
 		return repairable;
+	}
+
+	/**
+	 * returns if gate repairs (any of) its children.
+	 */
+	virtual bool repairsChildren() const {
+		return false;
+	}
+
+	/**
+	 * Set children's information that they are repaired.
+	 */
+	virtual void setChildRepairs() const {
+	}
+
+	/**
+	 * returns if gate is always active.
+	 */
+	virtual bool isAlwaysActive() const {
+		return alwaysActive;
 	}
 
 	/**

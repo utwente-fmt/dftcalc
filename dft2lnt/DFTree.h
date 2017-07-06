@@ -302,7 +302,7 @@ public:
 				DFT::Nodes::Gate* g = static_cast<DFT::Nodes::Gate*>(child);
 				findRepairInfo(g);
 				if(child->isRepairable())
-                    gate->setRepairable(true);
+					gate->setRepairable(true);
 			}
 		}
 	}
@@ -312,10 +312,56 @@ public:
 	 * Apply repair information to all gates
 	 */
 	void addRepairInfo() {
+		for (size_t i = 0; i < nodes.size(); i++) {
+			if (nodes.at(i)->repairsChildren()) {
+				nodes.at(i)->setChildRepairs();
+			}
+		}
+
 		DFT::Nodes::Node* node=getTopNode();
 		if(node->isGate()){
 			DFT::Nodes::Gate* gate = static_cast<DFT::Nodes::Gate*>(node);
 			findRepairInfo(gate);
+		}
+	}
+
+	/**
+	 * Set this gate to be always active, and apply to children as
+	 * needed.
+	 */
+	void addAlwaysActiveInfo(DFT::Nodes::Gate *gate)
+	{
+		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateSpareType))
+			return; /* Children of SPAREs are dynamically activated. */
+
+		size_t n = gate->getChildren().size();
+		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateFDEPType))
+			n = 1; /* Of FDEPs, avoid activating non-trigger children. */
+
+		while (n-- > 0) {
+			// Get the current child and associated childID
+			DFT::Nodes::Node *child = gate->getChildren().at(n);
+			child->setAlwaysActive(true);
+			if(child->isGate()) {
+				DFT::Nodes::Gate *g = static_cast<DFT::Nodes::Gate*>(child);
+				addAlwaysActiveInfo(g);
+			}
+		}
+	}
+	/**
+	 * Apply information about always-active gates (Smart Semantics) to
+	 * entire tree.
+	 */
+	void addAlwaysActiveInfo()
+	{
+		DFT::Nodes::Node *node=getTopNode();
+		if (node->isGate()) {
+			DFT::Nodes::Gate *gate = static_cast<DFT::Nodes::Gate*>(node);
+			gate->setAlwaysActive(true);
+			addAlwaysActiveInfo(gate);
+		} else if (node->isBasicEvent()) {
+			DFT::Nodes::BasicEvent *be = static_cast<DFT::Nodes::BasicEvent*>(node);
+			be->setAlwaysActive(true);
 		}
 	}
     
