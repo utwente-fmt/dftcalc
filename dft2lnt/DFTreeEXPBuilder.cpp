@@ -238,10 +238,9 @@ int DFT::DFTreeEXPBuilder::build() {
 
 		
 		// Build SVL file
-		svl_body << "% BCG_MIN_OPTIONS=\"-self\";" << svl_body.applypostfix;
+		svl_body << "%EXP_OPEN_OPTIONS=\"-rate\";" << svl_body.applypostfix;
+		svl_body << "%BCG_MIN_OPTIONS=\"-self\";" << svl_body.applypostfix;
 		svl_body << "\"" << nameBCG << "\" = smart stochastic branching reduction of \"" << nameEXP << "\";" << svl_body.applypostfix;
-		svl_body << "% BCG_MIN_OPTIONS=\"\"" << svl_body.applypostfix;
-		
 	}
 	return !ok;
 }
