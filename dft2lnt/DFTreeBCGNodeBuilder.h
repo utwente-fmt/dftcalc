@@ -97,6 +97,7 @@ public:
 	
 	int generate(const DFT::Nodes::Node& node, set<string>& triedToGenerate);
 	int generate();
+	int generateTopLevel();
 	
 	/**
 	 * Checks is the BCG file at the specified file is a valid BCG file.

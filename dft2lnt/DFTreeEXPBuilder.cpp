@@ -35,11 +35,15 @@ void DFT::DFTreeEXPBuilder::printSyncLineShort(std::ostream& stream, const EXPSy
 	for(auto syncIdx: rule.label) {
 		if(first) first = false;
 		else stream << " | ";
-		const DFT::Nodes::Node* node = getNodeWithID(syncIdx.first);
-		if(node)
-			stream << node->getName();
-		else
-			stream << "error";
+		if (syncIdx.first > 0) {
+			const DFT::Nodes::Node* node = getNodeWithID(syncIdx.first);
+			if(node)
+				stream << node->getName();
+			else
+				stream << "error";
+		} else {
+			stream << "TopLevel";
+		}
 		stream << ":";
 		stream << *syncIdx.second;
 	}
@@ -161,7 +165,7 @@ void DFT::DFTreeEXPBuilder::printSyncLine(const EXPSyncRule& rule, const vector<
 		exp_body << it->second->toStringQuoted();
 		++c;
 	}
-	while(c<dft->getNodes().size()) {
+	while(c<dft->getNodes().size() + 1) {
 		if(c>0) exp_body << " * ";
 		exp_body.outlineLeftNext(columnWidths[c],' ');
 		exp_body << "_";
@@ -203,9 +207,9 @@ int DFT::DFTreeEXPBuilder::build() {
 			cc->reportErrorAt(node->getLocation(),"DFTreeEXPBuilder cannot handles this node");
 			ok = false;
 		}
-		nodeIDs.insert( pair<const DFT::Nodes::Node*, unsigned int>(node,i) );
+		nodeIDs.insert(pair<const DFT::Nodes::Node*, unsigned int>(node, i + 1));
 	}
-	
+
 	if(ok) {
 		// Build the EXP file
 		svl_header.clearAll();
@@ -267,8 +271,8 @@ int DFT::DFTreeEXPBuilder::getLocalIDOfNode(const DFT::Nodes::Node* parent, cons
 }
 
 const DFT::Nodes::Node* DFT::DFTreeEXPBuilder::getNodeWithID(unsigned int id) {
-	assert(0 <= id && id < dft->getNodes().size());
-	return dft->getNodes().at(id);
+	assert(0 < id && id <= dft->getNodes().size());
+	return dft->getNodes().at(id - 1);
 }
 
 int DFT::DFTreeEXPBuilder::parseDFT(
@@ -359,7 +363,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
     exp_body.indent();
 
 	// Synchronization rules
-	vector<unsigned int> columnWidths(dft->getNodes().size(),0);
+	vector<unsigned int> columnWidths(dft->getNodes().size() + 1, 0);
 	calculateColumnWidths(columnWidths,activationRules);
 	calculateColumnWidths(columnWidths,failRules);
 	calculateColumnWidths(columnWidths,repairRules);
@@ -369,11 +373,13 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 	
 	exp_body << exp_body.applyprefix << "label par using" << exp_body.applypostfix;
 	exp_body << exp_body.applyprefix << "(*\t";
+	exp_body.outlineLeftNext(columnWidths[0],' ');
+	exp_body << exp_body._push << "tle" << exp_body._pop;
+
 	std::vector<DFT::Nodes::Node*>::const_iterator it = dft->getNodes().begin();
 	for(int c = 0; it!=dft->getNodes().end(); ++it,++c) {
-		if(c > 0)
-			exp_body << "   ";
-		exp_body.outlineLeftNext(columnWidths[c],' ');
+		exp_body << "   ";
+		exp_body.outlineLeftNext(columnWidths[c + 1],' ');
 		exp_body << exp_body._push << (*it)->getTypeStr() << getIDOfNode(**it)
 			<< exp_body._pop;
 	}
@@ -399,12 +405,14 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 	// Generate the parallel composition of all the nodes
 	exp_body << exp_body.applyprefix << "in" << exp_body.applypostfix;
 	exp_body.indent();
+	exp_body << exp_body.applyprefix;
+	exp_body << "\"" << bcgRoot << "toplevel.bcg\"";
+	exp_body << exp_body.applypostfix;
 	int c=0;
 	it = dft->getNodes().begin();
 	for(it = dft->getNodes().begin(); it!=dft->getNodes().end(); ++it, ++c) {
 		const DFT::Nodes::Node& node = **it;
-		if(c>0)
-			exp_body << exp_body.applyprefix << "||" << exp_body.applypostfix;
+		exp_body << exp_body.applyprefix << "||" << exp_body.applypostfix;
 		if(node.isBasicEvent()) {
 			const DFT::Nodes::BasicEvent *be;
 		   	be = static_cast<const DFT::Nodes::BasicEvent*>(&node);
@@ -520,9 +528,10 @@ int DFT::DFTreeEXPBuilder::createSyncRuleTop(
 	ss << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE;
 	if(!nameTop.empty())
 		ss << "_" << nameTop;
-	DFT::EXPSyncRule* ruleA = new EXPSyncRule(ss.str(),false);
+	DFT::EXPSyncRule* ruleA = new EXPSyncRule(ss.str(), true);
 
 	ruleA->label[topNode] = syncActivate(0,false);
+	ruleA->label[0] = syncActivate(0,true);
 
 	// Generate the FDEP Node Activate rule
 	int c=0;
@@ -610,11 +619,11 @@ void DFT::DFTreeEXPBuilder::addAnycastRule(vector<DFT::EXPSyncRule*> &rules,
 }
 /** Add a rule broadcast from a child to all its parents. */
 void DFT::DFTreeEXPBuilder::addBroadcastRule(vector<DFT::EXPSyncRule*> &rules,
-											 const DFT::Nodes::Gate &node,
-											 EXPSyncItem *nodeSignal,
-											 EXPSyncItem *childSignal,
-											 std::string name_prefix,
-											 unsigned int childNum)
+					     const DFT::Nodes::Gate &node,
+					     EXPSyncItem *nodeSignal,
+					     EXPSyncItem *childSignal,
+					     std::string name_prefix,
+					     unsigned int childNum)
 {
 	const DFT::Nodes::Node &child = *node.getChildren().at(childNum);
 	unsigned int nodeID = nodeIDs[&node];

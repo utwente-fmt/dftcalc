@@ -606,8 +606,6 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 	std::fstream svlFile;
 	std::fstream bcgFile;
 	
-	//std::cerr << "Generating: " << node.getName() << std::endl;
-	
 	bool lntGenerationNeeded = false;
 	bool bcgGenerationNeeded = false;
 	
@@ -1047,7 +1045,282 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 	return !(lntGenerationOK && bcgGenerationOK);
 }
 
+static int tryToOpen(std::fstream &file, const std::string fileName)
+{
+	file.open(fileName);
+	if(!file.is_open()) {
+		FILE *f = fopen(fileName.c_str(),"wb");
+		if (f) {
+			fflush(f);
+			fclose(f);
+		}
+		file.clear();
+		file.open(fileName);
+	}
+	return file.is_open();
+}
+
+int DFT::DFTreeBCGNodeBuilder::generateTopLevel()
+{
+	ConsoleWriter out(std::cout);
+
+	bool lntGenerationNeeded = false, bcgGenerationNeeded = false;
+
+	std::string fileName("toplevel.");
+	std::string lntFileName = fileName + DFT::FileExtensions::LOTOSNT;
+	std::string svlFileName = fileName + DFT::FileExtensions::SVL;
+	std::string bcgFileName = fileName + DFT::FileExtensions::BCG;
+	std::string lntFilePath = lntRoot + lntFileName;
+	std::string svlFilePath = lntRoot + svlFileName;
+	std::string bcgFilePath = bcgRoot + bcgFileName;
+
+	// Check if the LNT or BCG files need regeneration based on
+	// the modification times of the files.
+	// Check the size of the BCG file as well.
+	switch(0) {
+	default:
+		struct stat lntStat, bcgStat, lntValidStat, bcgValidStat;
+
+		// Get the info if the BCG file, enable (re)generation on error
+		if (stat(lntFilePath.c_str(), &lntStat)) {
+			lntGenerationNeeded = true;
+			cc->reportAction("LNT file `" + lntFileName + "' not found",VERBOSE_GENERATION);
+			break;
+		}
+
+		// Get the info if the LNT Valid file, enable (re)generation on error
+		if (stat((lntFilePath+".valid").c_str(), &lntValidStat)) {
+			lntGenerationNeeded = true;
+			cc->reportAction("LNT file `" + lntFileName + "' is invalid",VERBOSE_GENERATION);
+			break;
+		}
+
+		// If the LNT file is newer than the LNT Valid file, validation
+		// is needed.
+		if (lntStat.st_mtime > lntValidStat.st_mtime) {
+			// If the LNT file is valid
+			if (lntIsValid(lntFilePath)) {
+				// Update the timestamp of the .valid file to the
+				// current time
+				utime((lntFilePath+".valid").c_str(), NULL);
+			} else {
+				lntGenerationNeeded = true;
+				cc->reportAction("LNT file `" + lntFileName + "' is invalid",VERBOSE_GENERATION);
+				break;
+			}
+		}
+
+		// Get the info if the BCG file, enable (re)generation on error
+		if (stat(bcgFilePath.c_str(), &bcgStat)) {
+			bcgGenerationNeeded = true;
+			cc->reportAction("BCG file `" + bcgFileName + "' not found",VERBOSE_GENERATION);
+			break;
+		}
+
+		// Get the info if the BCG Valid file, enable (re)generation on error
+		if (stat((bcgFilePath+".valid").c_str(), &bcgValidStat)) {
+			bcgGenerationNeeded = true;
+			cc->reportAction("BCG file `" + bcgFileName + "' is invalid",VERBOSE_GENERATION);
+			break;
+		}
+
+		// If the LNT file is newer than the BCG file, regeneration is needed
+		if (lntStat.st_mtime > bcgStat.st_mtime) {
+			bcgGenerationNeeded = true;
+			cc->reportAction("BCG file `" + bcgFileName + "' is out of date",VERBOSE_GENERATION);
+			break;
+		}
+
+		// If the BCG file is newer than the BCG Valid file, validation is
+		// needed.
+		if (bcgStat.st_mtime > bcgValidStat.st_mtime) {
+			// If the BCG file is valid
+			if (bcgIsValid(bcgFilePath)) {
+				// Update the timestamp of the .valid file to the
+				// current time.
+				utime((bcgFilePath+".valid").c_str(), NULL);
+			} else {
+				bcgGenerationNeeded = true;
+				cc->reportAction("BCG file `toplevel.bcg' is invalid",VERBOSE_GENERATION);
+				break;
+			}
+		}
+	}
+
+	// Check if the LNT file needs regeneration based on the version info in
+	// the LNT header
+	if (!lntGenerationNeeded) {
+		char header_c[12] = {0};
+		std::fstream lntFile;
+
+		if (!tryToOpen(lntFile, lntFilePath)) {
+			cc->reportError("could not open LNT file: " + lntFilePath);
+			return 1;
+		}
+
+		lntFile.read(header_c, 11);
+		
+		// If failed to read 11 characters from the LNT file
+		if (lntFile.rdstate() & ifstream::failbit) {
+			lntFile.clear();
+			lntGenerationNeeded = true;
+			cc->reportAction("LNT file `toplevel.lnt' is invalid",VERBOSE_GENERATION); 
+		// If successfully read 11 characters from the LNT file
+		} else {
+			std::string header(header_c);
+			// If the header does not match
+			if(memcmp("(** V", header_c, 5)) {
+				lntGenerationNeeded = true;
+				cc->reportAction("LNT file `toplevel.lnt' has invalid header",VERBOSE_GENERATION);
+			
+			// If the header matches, compare the versions
+			} else {
+				unsigned int version = atoi(&header_c[5]);
+				//std::cout << "File: " << version << ", mine: " << VERSION << endl;
+				if(version < VERSION) {
+					lntGenerationNeeded = true;
+					cc->reportAction("LNT file `toplevel.lnt' out of date",VERBOSE_GENERATION);
+				}
+			}
+
+			char buffer[200];
+			vector<string> dependencies;
+			while (lntFile.getline(buffer, sizeof(buffer))) {
+				char *deps = buffer;
+				if(!strncasecmp("module", deps, 6)) {
+					// Skip 'module.*('
+					deps += 7;
+					while (*deps != '\0' && *deps != '(')
+						++deps;
+					deps++;
+
+					// Read the list of dependencies until ')'
+					// is reached.
+					while (*deps != '\0' && *deps != ')') {
+						while (isspace(*deps))
+							++deps;
+						if (*deps==')' || *deps == '\0')
+							break;
+						char *enddep = deps;
+						while (!isspace(*enddep) && *enddep != ')' && *enddep != '\0')
+							++enddep;
+						dependencies.push_back(string(deps,
+						                              enddep));
+						deps = enddep;
+					}
+
+					// We have found the module list
+					break;
+				}
+			}
+		}
+	}
+
+	// If the LNT file needs (re)generation
+	if(lntGenerationNeeded) {
+		FileWriter lntOut;
+		// Generate header (header comment is not closed!)
+		generateHeader(lntOut);
+		cc->reportAction(std::string("Generating toplevel", VERBOSE_GENERATION));
+		lntOut << lntOut.applyprefix << " *Generating TopLevel";
+		lntOut << lntOut.applypostfix;
+
+		generateHeaderClose(lntOut);
+		lntOut << lntOut.applyprefix << "module TOPLEVEL is";
+		lntOut << lntOut.applypostfix;
+		lntOut.appendLine("");
+		lntOut.indent();
+
+		lntOut << lntOut.applyprefix;
+		lntOut << "channel NAT_BOOL_CHANNEL is (NAT, BOOL) end channel";
+		lntOut << lntOut.applypostfix;
+		lntOut.appendLine("");
+
+		lntOut << lntOut.applyprefix;
+		lntOut << "process MAIN [ACTIVATE : NAT_BOOL_CHANNEL] () is";
+		lntOut << lntOut.applypostfix;
+		lntOut.indent();
+
+		lntOut << lntOut.applyprefix;
+		lntOut << "ACTIVATE (!0 of NAT, TRUE)";
+		lntOut << lntOut.applypostfix;
+
+		lntOut.outdent();
+		lntOut << lntOut.applyprefix << "end process" << lntOut.applypostfix;
+		lntOut.outdent();
+		lntOut << lntOut.applyprefix << "end module" << lntOut.applypostfix;
+
+		fancyFileWrite(lntFilePath, lntOut);
+
+		// If LNT file generation went OK
+		if (lntIsValid(lntFilePath)) {
+			// Open and close .valid file, making sure it exists
+			std::ofstream lntValidFile(lntFilePath+".valid");
+
+			// Update the timestamp of the .valid file to the current time
+			utime((lntFilePath+".valid").c_str(), NULL);
+
+			// Report
+			cc->reportSuccess("Generated: " + lntFilePath,VERBOSE_GENERATION);
+			cc->reportFile(lntFileName, lntOut.toString(),VERBOSE_FILE_LNT);
+		// If generation failed for some reason, report
+		} else {
+			cc->reportError("Could not generate LNT file `" + lntFileName +  "' for Top Level");
+			return 1;
+		}
+	// If regeneration of LNT file is not needed
+	} else {
+		cc->reportAction("LNT file up to date: " + lntFileName,VERBOSE_GENERATION);
+	}
+
+	// If the LNT file needed (re)generation
+	// or the BCG file needs (re)generation
+	if (lntGenerationNeeded || bcgGenerationNeeded) {
+		std::fstream svlFile, bcgFile;
+		FileWriter svlOut, bcgOut;
+
+		if (!tryToOpen(svlFile, svlFilePath)) {
+			cc->reportError("could not open SVL file: " + svlFilePath);
+			return 1;
+		}
+
+		if (!tryToOpen(bcgFile, bcgFilePath)) {
+			cc->reportError("could not open BCG file: " + bcgFilePath);
+			return 1;
+		}
+	
+		cc->reportAction("Generating: " + bcgFileName, VERBOSE_GENERATION);
+		// Generate SVL
+		generateSVLBuilder(svlOut, std::string("toplevel"));
+		// call SVL
+		fancyFileWrite(svlFilePath, svlOut);
+		executeSVL(lntRoot, svlFileName);
+
+		// Check if the generation resulted in a valid BCGs file
+		if (bcgIsValid(bcgFilePath)) {
+			// Open and close .valid file, making sure it exists
+			std::ofstream bcgValidFile(bcgFilePath+".valid");
+			// Update the timestamp of the .valid file to the current time
+			utime((bcgFilePath+".valid").c_str(), NULL);
+			// Report
+			cc->reportSuccess("Generated: " + bcgFilePath,VERBOSE_GENERATION);
+		} else {
+			cc->reportError("Could not generate BCG file `" + bcgFileName +  "' for Top Level");
+			return 1;
+		}
+	// If regeneration of BCG file is not needed
+	} else {
+		cc->reportAction("BCG file up to date: " + bcgFileName,VERBOSE_GENERATION);
+	}
+
+	return 0;
+}
+
 int DFT::DFTreeBCGNodeBuilder::generate() {
+	if (generateTopLevel()) {
+		cc->reportError("Error generating Top Level BCG file");
+		return 1;
+	}
 	set<std::string> triedToGenerate;
 	std::vector<DFT::Nodes::Node*>::iterator it = dft->getNodes().begin();
 	for(;it!=dft->getNodes().end(); it++) {
@@ -1107,7 +1380,7 @@ int DFT::DFTreeBCGNodeBuilder::generateSVLBuilder(FileWriter& out, std::string f
 
 int DFT::DFTreeBCGNodeBuilder::fancyFileWrite(const std::string& filePath, FileWriter& fw) {
 	int err = 0;
-	std::fstream stream (filePath);
+	std::ofstream stream (filePath);
 	stream.seekp(0);
 	stream << fw.toString();
 	stream.flush();
