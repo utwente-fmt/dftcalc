@@ -329,7 +329,7 @@ bool hasHiddenLabels(const File& file) {
 	return res;
 }
 
-int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& calcCommands, unordered_map<string,string> settings, bool calcImca, bool warnNonDeterminism) {
+int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& calcCommands, unordered_map<string,string> settings, bool calcImca, bool warnNonDeterminism, bool expOnly) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File svlLog = dft.newWithExtension("log");
@@ -420,6 +420,9 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 	} else {
 		messageFormatter->reportAction("Reusing DFT to EXP translation result",VERBOSITY_FLOW);
 	}
+
+	if (expOnly)
+		return 0;
 
 	if (!reuse || !FileSystem::exists(bcg)) {
 		// svl, exp -> bcg
@@ -715,12 +718,13 @@ int main(int argc, char** argv) {
 	string imcaMinMax        = "-min";
 	string mrmcMinMax        = "{>1}";
 	int imcaMinMaxSet        = 0;
+	bool expOnly		 = false;
 	
 	std::vector<std::string> failedBEs;
 	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"C:e:E:f:mpqr:Rc:t:i:I:hv-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:e:E:f:mpqr:Rc:t:i:I:hxv-:")) >= 0 ) {
 		switch(c) {
 			
 			// -C FILE
@@ -754,6 +758,10 @@ int main(int argc, char** argv) {
 			// -p
 			case 'p':
 				print = 1;
+				break;
+
+			case 'x':
+				expOnly = true;
 				break;
 			
 			// -R
@@ -1060,13 +1068,15 @@ int main(int argc, char** argv) {
 	for(File dft: dfts) {
 		hasInput = true;
 		if(FileSystem::exists(dft)) {
-			bool res = calc.calculateDFT(reuse, outputFolderFile.getFileRealPath(),dft,(calcImca?imcaCommands:mrmcCommands),settings,calcImca, warnNonDeterminism);
+			bool res = calc.calculateDFT(reuse, outputFolderFile.getFileRealPath(),dft,(calcImca?imcaCommands:mrmcCommands),settings,calcImca, warnNonDeterminism, expOnly);
 			hasErrors = hasErrors || res;
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
 		}
 	}
 	workdir.popd();
+	if (expOnly)
+		return 0;
 
 	if (hasErrors) {
 		return(1);
