@@ -250,7 +250,7 @@ public:
 	 * @param evidence List of names of basic events that will fail at t=0
 	 * @throw std::vector<std::string> List of error messages
 	 */
-	void applyEvidence(std::vector<std::string>& evidence) throw(std::vector<std::string>) {
+	void applyEvidence(std::vector<std::string>& evidence) {
 		std::vector<std::string> errors;
 		for(std::string& nodeName: evidence) {
 			DFT::Nodes::Node* node = getNode(nodeName);

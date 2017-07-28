@@ -15,6 +15,7 @@
 #include "DFTCalculationResult.h"
 
 namespace DFT {
+	enum checker {STORM, MRMC, IMCA};
 
 	class DFTCalc {
 	public:
@@ -33,9 +34,11 @@ namespace DFT {
 		File dft2lntcExec;
 		File imc2ctmdpExec;
 		File bcg2imcaExec;
+		File bcg2janiExec;
 		File svlExec;
 		File bcgioExec;
 		File bcginfoExec;
+		File stormExec;
 		File mrmcExec;
 		File imcaExec;
 		File dotExec;
@@ -67,7 +70,7 @@ namespace DFT {
 		 * setMessageFormatter().
 		 * @return false: all tools found OK, true: error
 		 */
-		bool checkNeededTools() {
+		bool checkNeededTools(DFT::checker checker) {
 			
 			bool ok = true;
 			
@@ -75,16 +78,22 @@ namespace DFT {
 			
 			/* Obtain all needed root information from environment */
 			dft2lntRoot = getRoot(NULL);
-			coralRoot = getCoralRoot(NULL);
+			if (checker == MRMC) {
+				coralRoot = getCoralRoot(NULL);
+				imc2ctmdpExec = File(coralRoot+"/bin/imc2ctmdp");
+			} else if (checker == IMCA) {
+				imcaRoot = getImcaRoot(NULL);
+				bcg2imcaExec = File(imcaRoot+"/bin/bcg2imca");
+			} else if (checker == STORM) {
+				bcg2janiExec = File(dft2lntRoot+"/bin/bcg2jani");
+			}
+
 			cadpRoot = getCADPRoot(NULL);
-			imcaRoot = getImcaRoot(NULL);
 			
 			/* These tools should be easy to find in the roots. Note that an added
 			 * bonus would be to locate them using PATH as well.
 			 */
 			dft2lntcExec = File(dft2lntRoot+"/bin/dft2lntc");
-			imc2ctmdpExec = File(coralRoot+"/bin/imc2ctmdp");
-			bcg2imcaExec = File(imcaRoot+"/bin/bcg2imca");
 			svlExec = File(cadpRoot+"/com/svl");
 			
 			/* Find dft2lntc executable (based on DFT2LNTROOT environment variable) */
@@ -105,31 +114,32 @@ namespace DFT {
 			}
 			
 			/* Find imc2ctmdpi executable (based on CORAL environment variable) */
-			if(coralRoot.empty()) {
+			if(checker == MRMC && coralRoot.empty()) {
 				messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
 				ok = false;
-			} else if(!FileSystem::hasAccessTo(File(coralRoot),X_OK)) {
+			} else if(checker == MRMC && !FileSystem::hasAccessTo(File(coralRoot),X_OK)) {
 				messageFormatter->reportError("Could not enter coral directory (environment variable `CORAL'");
 				ok = false;
-			} else {
-				if(!FileSystem::hasAccessTo(imc2ctmdpExec,F_OK)) {
-					messageFormatter->reportError("imc2ctmdp not found (in " + coralRoot+"/bin)");
-					ok = false;
-				} else if(!FileSystem::hasAccessTo(imc2ctmdpExec,X_OK)) {
-					messageFormatter->reportError("imc2ctmdp not executable (in " + coralRoot+"/bin)");
-					ok = false;
-				} else {
-					messageFormatter->reportAction("Using imc2ctmdp [" + imc2ctmdpExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-				}
-				if(!FileSystem::hasAccessTo(bcg2imcaExec,F_OK)) {
-					messageFormatter->reportError("bcg2imca not found (in " + imcaRoot+"/bin)");
-					ok = false;
-				} else if(!FileSystem::hasAccessTo(bcg2imcaExec,X_OK)) {
-					messageFormatter->reportError("bcg2imca not executable (in " + imcaRoot+"/bin)");
-					ok = false;
-				} else {
-					messageFormatter->reportAction("Using bcg2imca [" + bcg2imcaExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-				}
+			} else if(checker == MRMC && !FileSystem::hasAccessTo(imc2ctmdpExec,F_OK)) {
+				messageFormatter->reportError("imc2ctmdp not found (in " + coralRoot+"/bin)");
+				ok = false;
+			} else if(checker == MRMC && !FileSystem::hasAccessTo(imc2ctmdpExec,X_OK)) {
+				messageFormatter->reportError("imc2ctmdp not executable (in " + coralRoot+"/bin)");
+				ok = false;
+			} else if (checker == MRMC) {
+				messageFormatter->reportAction("Using imc2ctmdp [" + imc2ctmdpExec.getFilePath() + "]",VERBOSITY_SEARCHING);
+			}
+
+			/* Find bcg2imca */
+
+			if(checker == IMCA && !FileSystem::hasAccessTo(bcg2imcaExec,F_OK)) {
+				messageFormatter->reportError("bcg2imca not found (in " + imcaRoot+"/bin)");
+				ok = false;
+			} else if(checker == IMCA && !FileSystem::hasAccessTo(bcg2imcaExec,X_OK)) {
+				messageFormatter->reportError("bcg2imca not executable (in " + imcaRoot+"/bin)");
+				ok = false;
+			} else if (checker == IMCA) {
+				messageFormatter->reportAction("Using bcg2imca [" + bcg2imcaExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 			}
 			
 			/* Find svl executable (based on CADP environment variable) */
@@ -150,9 +160,35 @@ namespace DFT {
 					messageFormatter->reportAction("Using svl [" + svlExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 				}
 			}
-			
+
+			/* Find a storm executable */
+			if (checker == STORM) {
+				bool exists = false;
+				bool accessible = false;
+				vector<File> storms;
+				int n = FileSystem::findInPath(storms,File("storm"));
+				for(File storm: storms) {
+					accessible = false;
+					exists = true;
+					if(FileSystem::hasAccessTo(storm,X_OK)) {
+						accessible = true;
+						stormExec = storm;
+						break;
+					} else {
+						messageFormatter->reportWarning("storm [" + storm.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
+						ok = false;
+					}
+				}
+				if(!accessible) {
+					messageFormatter->reportError("no runnable storm executable found in PATH");
+					ok = false;
+				} else {
+					messageFormatter->reportAction("Using storm [" + stormExec.getFilePath() + "]",VERBOSITY_SEARCHING);
+				}
+			}
+
 			/* Find an mrmc executable (based on PATH environment variable) */
-			{
+			if (checker == MRMC) {
 				bool exists = false;
 				bool accessible = false;
 				vector<File> mrmcs;
@@ -178,7 +214,7 @@ namespace DFT {
 			}
 			
 			/* Find an imca executable (based on PATH environment variable) */
-			{
+			if (checker == IMCA) {
 				bool exists = false;
 				bool accessible = false;
 				vector<File> imcas;
@@ -315,7 +351,7 @@ namespace DFT {
 		 * @return 0 if successful, non-zero otherwise
 		 */
 		int calculateDFT(const bool reuse, const std::string& cwd, const File& dft, const std::vector<std::pair<std::string,std::string>>& timeSpec,
-				unordered_map<string,string> settings,  bool calcImca, bool warnNonDeterminism, bool expOnly);
+				unordered_map<string,string> settings,  DFT::checker checker, bool warnNonDeterminism, bool expOnly);
 		
 		void setEvidence(const std::vector<std::string>& evidence) {this->evidence = evidence;}
 		const std::vector<std::string>& getEvidence() const {return evidence;}

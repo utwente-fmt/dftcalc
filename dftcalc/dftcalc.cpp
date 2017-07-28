@@ -4,7 +4,8 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg, extended by Dennis Guck and Axel Belinfante
+ * @author Freark van der Berg, extended by Dennis Guck,
+ * Axel Belinfante, and Enno Ruijters
  */
 
 #include <vector>
@@ -36,6 +37,7 @@ using namespace std;
 #include "compiletime.h"
 #include "yaml-cpp/yaml.h"
 #include "imca.h"
+#include "storm.h"
 
 const int DFT::DFTCalc::VERBOSITY_SEARCHING = 2;
 
@@ -57,7 +59,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  --version       Print version info and quit.");
 		messageFormatter->message("  -O<s>=<v>       Sets settings <s> to value <v>. (see --help=settings)");
 		messageFormatter->message("  -R              Reuse existing output files.");
-		messageFormatter->message("  --mrmc          Use MRMC. (standard setting)");
+		messageFormatter->message("  --storm         Use Storm. (standard setting)");
+		messageFormatter->message("  --mrmc          Use MRMC. instead of Storm.");
 		messageFormatter->message("  --imca          Use IMCA instead of MRMC.");
 		messageFormatter->message("  --no-nd-warning Do not warn (but give notice) for non-determinism.");
 		messageFormatter->message("");
@@ -78,8 +81,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -t xList        Calculate P(DFT fails in [0,x] time units) for each x in xList,");
 		messageFormatter->message("                  where xList is a whitespace-separated list of values, default is \"1\"");
 		messageFormatter->message("  -I l u          Calculate P(DFT fails in [l,u] time units) where l can be >= 0");
-		messageFormatter->message("  -f <command>    Raw Calculation formula for MRMC or IMCA. Overrules -t.");
-		messageFormatter->message("                  See --mrmc and --imca");
+		messageFormatter->message("  -f <command>    Raw Calculation formula for the model-checker. Overrules -t.");
 		messageFormatter->message("  -E errorbound   Error bound, to be passed to IMCA.");
 		messageFormatter->message("  -C DIR          Temporary output files will be in this directory");
 		messageFormatter->message("  --min           Compute minimum time-bounded reachability (default)");
@@ -100,6 +102,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("      mem_virtual: 13668");
 		messageFormatter->message("      mem_resident: 1752");
 		messageFormatter->message("  The Calculation command can be manually set using -f.");
+		messageFormatter->message("  For Storm the defaults is:");
+		messageFormatter->message("    P=? [F<=n failed=true ]             (default)");
 		messageFormatter->message("  For MRMC the defaults are:");
 		messageFormatter->message("    P{>1} [ tt U[0,n] reach ]             (default)");
 		messageFormatter->message("    P{<0} [ tt U[0,n] reach ]             (when --max is given)");
@@ -329,7 +333,7 @@ bool hasHiddenLabels(const File& file) {
 	return res;
 }
 
-int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& calcCommands, unordered_map<string,string> settings, bool calcImca, bool warnNonDeterminism, bool expOnly) {
+int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const File& dftOriginal, const std::vector<std::pair<std::string,std::string>>& calcCommands, unordered_map<string,string> settings, enum DFT::checker useChecker, bool warnNonDeterminism, bool expOnly) {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	File svl    = dft.newWithExtension("svl");
 	File svlLog = dft.newWithExtension("log");
@@ -338,6 +342,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 	File imc    = dft.newWithExtension("imc");
 	File ctmdpi = dft.newWithExtension("ctmdpi");
 	File ma     = dft.newWithExtension("ma");
+	File jani     = dft.newWithExtension("jani");
 	File lab    = ctmdpi.newWithExtension("lab");
 	File dot    = dft.newWithExtension("dot");
 	File png    = dot.newWithExtension("png");
@@ -478,8 +483,8 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 		messageFormatter->notify("No non-determinism detected.");
 	}
 
-		
-	if(!calcImca) {
+	switch (useChecker) {
+	case MRMC: {
 		if(!reuse || !FileSystem::exists(ctmdpi)) {
 			// bcg -> ctmdpi, lab
 			messageFormatter->reportAction("Translating IMC to CTMDPI...",VERBOSITY_FLOW);
@@ -557,7 +562,9 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 		calcResult.failprobs = resultItems;
 		calcResult.stats = stats;
 		results.insert(pair<string,DFT::DFTCalculationResult>(dft.getFileName(), calcResult));
-	} else {
+		break;
+	}
+	case IMCA: {
 		if(!reuse || !FileSystem::exists(ma)) {
 			// bcg -> ma
 			messageFormatter->reportAction("Translating IMC to IMCA format...",VERBOSITY_FLOW);
@@ -631,6 +638,75 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 		calcResult.failprobs = resultItems;
 		calcResult.stats = stats;
 		results.insert(pair<string,DFT::DFTCalculationResult>(dft.getFileName(), calcResult));
+		break;
+	}
+	case STORM:
+		if(!reuse || !FileSystem::exists(jani)) {
+			// bcg -> jani
+			messageFormatter->reportAction("Translating IMC to JANI format...",VERBOSITY_FLOW);
+			sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg2jani.report";
+			sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg2jani.err";
+			sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".bcg2jani.out";
+			sysOps.command    = bcg2janiExec.getFilePath()
+						+ " " + bcg.getFileRealPath()
+						+ " " + jani.getFileRealPath()
+						+ " FAIL"
+						;
+			result = Shell::system(sysOps);
+
+			if(!FileSystem::exists(jani)) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
+				return 1;
+			}
+		} else {
+			messageFormatter->reportAction("Reusing IMC to JANI format translation result",VERBOSITY_FLOW);
+		}
+		
+		std::vector<DFT::DFTCalculationResultItem> resultItems;
+		for(auto calcCommand: calcCommands) {
+			// -> imcainput
+			Storm::FileHandler fileHandler(calcCommand.first);
+
+			// storm -> calculation
+			messageFormatter->reportAction("Calculating probability with Storm...",VERBOSITY_FLOW);
+			sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".storm.report";
+			sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".storm.err";
+			sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".storm.out";
+
+			sysOps.command    =      stormExec.getFilePath()
+						+ " --jani " + jani.getFileRealPath()
+						+ " --prop '" + calcCommand.first + "'"
+						;
+			result = Shell::system(sysOps);
+
+			if(result) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
+				return 1;
+			} else if (messageFormatter->getVerbosity() >= 5) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
+			}
+
+			if(fileHandler.readOutputFile(File(sysOps.outFile))) {
+				messageFormatter->reportError("Could not calculate");
+				return 1;
+			} else {
+				double result = fileHandler.getResult();
+				DFT::DFTCalculationResultItem calcResultItem;
+				calcResultItem.missionTime = calcCommand.second;
+				calcResultItem.mrmcCommand = calcCommand.first;
+				calcResultItem.failprob = result;
+				resultItems.push_back(calcResultItem);
+			}
+		}
+		DFT::DFTCalculationResult calcResult;
+		calcResult.dftFile = dft.getFilePath();
+		calcResult.failprobs = resultItems;
+		calcResult.stats = stats;
+		results.insert(pair<string,DFT::DFTCalculationResult>(dft.getFileName(), calcResult));
+		break;
 	}
 
 	if(!buildDot.empty()) {
@@ -714,10 +790,11 @@ int main(int argc, char** argv) {
 	int printHelp            = 0;
 	string printHelpTopic    = "";
 	int printVersion         = 0;
-	bool calcImca            = false;
+	enum DFT::checker useChecker  = DFT::checker::STORM;
 	string imcaMinMax        = "-min";
 	string mrmcMinMax        = "{>1}";
-	int imcaMinMaxSet        = 0;
+	string stormMinMax       = "";
+	bool minMaxSet        = false;
 	bool expOnly		 = false;
 	
 	std::vector<std::string> failedBEs;
@@ -876,19 +953,22 @@ int main(int argc, char** argv) {
 				} else if(!strcmp("no-nd-warning",optarg)) {
 					warnNonDeterminism = false;
 				} else if(!strcmp("min",optarg)) {
-					imcaMinMaxSet = true;
+					minMaxSet = true;
 					imcaMinMax = "-min";
+					stormMinMax = "min";
 					mrmcMinMax = "{>1}";
 				} else if(!strcmp("max",optarg)) {
-					imcaMinMaxSet = true;
+					minMaxSet = true;
 					imcaMinMax = "-max";
+					stormMinMax = "max";
 					mrmcMinMax = "{<0}";
 				}
-				if(!strcmp("mrmc",optarg)) {
-					calcImca=false;
-				}else if(!strcmp("imca",optarg)) {
-					calcImca=true;
-				}
+				if (!strcmp("mrmc", optarg))
+					useChecker = DFT::checker::MRMC;
+				else if (!strcmp("imca", optarg))
+					useChecker = DFT::checker::IMCA;
+				else if (!strcmp("storm", optarg))
+					useChecker = DFT::checker::STORM;
 		}
 	}
 
@@ -910,12 +990,16 @@ int main(int argc, char** argv) {
 	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet || timeLwbUpbSet)) {
 		messageFormatter->reportWarningAt(Location("commandline"),"MTTF flag (-m) has been given: ignoring time specifications and calculation commands");
 	}
+	if (mttf && useChecker == DFT::checker::MRMC) {
+		messageFormatter->reportWarningAt(Location("commandline"), "MTTF flag cannot be used with MRMC model checker, defaulting to Storm.");
+		useChecker = DFT::checker::STORM;
+	}
 	if (mttf) {
-		calcImca = true;
 		calcCommandSet = true;
-		calcCommand = "-et " + imcaMinMax + imcaEb;
-		timeIntervalSet = false;
-		timeSpecSet = false;
+		if (useChecker == DFT::checker::IMCA)
+			calcCommand = "-et " + imcaMinMax + imcaEb;
+		else
+			calcCommand = "T" + stormMinMax + "=? [F failed=true]";
 	}
 	if (timeLwbUpbSet) {
 		double tl;
@@ -926,11 +1010,12 @@ int main(int argc, char** argv) {
 		if(!isReal(timeUpb, &tu) || tu<=0) {
 			messageFormatter->reportErrorAt(Location("commandline -I flag"),"Given interval upb is not a positive real: "+timeUpb);
 		}
-		calcImca = true;
-		calcCommandSet = true;
-		calcCommand = "" + imcaMinMax + " -tb -F " +timeLwb + " -T " + timeUpb + imcaEb;
-		timeIntervalSet = false;
-		timeSpecSet = false;
+		if (useChecker == DFT::checker::IMCA) {
+			calcCommandSet = true;
+			calcCommand = "" + imcaMinMax + " -tb -F " +timeLwb + " -T " + timeUpb + imcaEb;
+			timeIntervalSet = false;
+			timeSpecSet = false;
+		}
 	}
 
 	if (!calcCommandSet && !timeIntervalSet)
@@ -946,11 +1031,9 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 	
-	std::vector<std::pair<std::string,std::string>> mrmcCommands;
-	std::vector<std::pair<std::string,std::string>> imcaCommands;
+	std::vector<std::pair<std::string,std::string>> commands;
 	if(calcCommandSet) {
-		mrmcCommands.push_back(pair<string,string>(calcCommand,"?"));
-		imcaCommands.push_back(pair<string,string>(calcCommand,"?"));
+		commands.push_back(pair<string,string>(calcCommand,"?"));
 	} else if (timeSpecSet) {
 		std::string str = timeSpec;
 		size_t b, e;
@@ -977,8 +1060,16 @@ int main(int argc, char** argv) {
 				messageFormatter->reportErrorAt(Location("commandline -t flag"),"Given mission time value is not a non-negative real: "+s);
 			} else {
 				hasValidItems = true;
-				mrmcCommands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] reach ]", s));
-				imcaCommands.push_back(pair<string,string>("" + imcaMinMax + " -tb -T " + s + imcaEb, s));
+				switch (useChecker) {
+				case DFT::checker::MRMC:
+					commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] reach ]", s));
+					break;
+				case DFT::checker::IMCA:
+					commands.push_back(pair<string,string>("" + imcaMinMax + " -tb -T " + s + imcaEb, s));
+					break;
+				case DFT::checker::STORM:
+					commands.push_back(pair<string,string>("P" + stormMinMax + "=? [F<=" + s + " failed=true]", s));
+				}
 			}
 		}
 		if (!hasInvalidItems && !hasValidItems) {
@@ -1009,12 +1100,22 @@ int main(int argc, char** argv) {
 		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
 			hasItems = true;
 			std::string s = doubleToString(n);
-			mrmcCommands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] reach ]", s));
+			switch (useChecker) {
+			case DFT::checker::MRMC:
+				commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] reach ]", s));
+				break;
+			case DFT::checker::STORM:
+				commands.push_back(pair<string,string>("P"+stormMinMax+"=? [F<=" + s + " failed=true]", s));
+				break;
+			default:
+				assert(false); // IMCA has build-in command for ranges.
+			}
 		}
 		std::string s_from = doubleToString(lwb);
 		std::string s_to = doubleToString(upb);
 		std::string s_step = doubleToString(step);
-		imcaCommands.push_back(pair<string,string>("" + imcaMinMax + " -tb -b " + s_from + " -T " + s_to + " -i "+s_step + imcaEb, "?"));
+		if (useChecker == DFT::checker::IMCA)
+			commands.push_back(pair<string,string>("" + imcaMinMax + " -tb -b " + s_from + " -T " + s_to + " -i "+s_step + imcaEb, "?"));
 		if (!hasItems && !intervalErrorReported) {
 			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval is empty (lwb > upb)");
 		}
@@ -1045,13 +1146,13 @@ int main(int argc, char** argv) {
 	if(dotToTypeSet) calc.setBuildDOT(dotToType);
 	
 	/* Check if all needed tools are available */
-	if(calc.checkNeededTools()) {
+	if(calc.checkNeededTools(useChecker)) {
 		messageFormatter->reportError("There was an error with the environment");
 		return -1;
 	}
-	
+
 	calc.setEvidence(failedBEs);
-	
+
 	/* Check if all went OK so far */
 	if(messageFormatter->getErrors()>0) {
 		return -1;
@@ -1068,7 +1169,7 @@ int main(int argc, char** argv) {
 	for(File dft: dfts) {
 		hasInput = true;
 		if(FileSystem::exists(dft)) {
-			bool res = calc.calculateDFT(reuse, outputFolderFile.getFileRealPath(),dft,(calcImca?imcaCommands:mrmcCommands),settings,calcImca, warnNonDeterminism, expOnly);
+			bool res = calc.calculateDFT(reuse, outputFolderFile.getFileRealPath(),dft,commands,settings,useChecker, warnNonDeterminism, expOnly);
 			hasErrors = hasErrors || res;
 		} else {
 			messageFormatter->reportError("DFT File `" + dft.getFileRealPath() + "' does not exist");
@@ -1179,4 +1280,3 @@ int main(int argc, char** argv) {
 	
 	return 0;
 }
-
