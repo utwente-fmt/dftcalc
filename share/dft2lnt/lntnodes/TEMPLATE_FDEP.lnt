@@ -1,6 +1,6 @@
 module TEMPLATE_FDEP(TEMPLATE_COMMON) is
 
-	process FDEP [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (total : NAT, notified : BOOL_ARRAY) is
+	process FDEP [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (total : NAT, notified : BOOL_ARRAY, trigger_always_active : BOOL) is
 	var
 		nr : NAT,
 		done : BOOL,
@@ -71,7 +71,7 @@ module TEMPLATE_FDEP(TEMPLATE_COMMON) is
 			 * activation of the source.
 			 *)
 			[]
-				if (act == 1 of NAT) then
+				if ((act == 1 of NAT) and not(trigger_always_active)) then
 					ACTIVATE (!1 of NAT,TRUE);
 					act := 0 of NAT
 				end if

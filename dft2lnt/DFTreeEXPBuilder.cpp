@@ -204,12 +204,6 @@ DFT::DFTreeEXPBuilder::DFTreeEXPBuilder(std::string root, std::string tmp, std::
 	
 }
 
-static void deleteRules(vector<DFT::EXPSyncRule*> &rules) {
-	std::vector<DFT::EXPSyncRule *>::iterator it;
-	for (it = rules.begin(); it != rules.end(); ++it)
-		delete *it;
-	rules.clear();
-}
 int DFT::DFTreeEXPBuilder::build() {
 
 	bool ok = true;
@@ -242,28 +236,21 @@ int DFT::DFTreeEXPBuilder::build() {
 		exp_header.clearAll();
 		exp_body.clearAll();
 		
-		vector<DFT::EXPSyncRule*> activationRules;
-		vector<DFT::EXPSyncRule*> failRules;
+		vector<DFT::EXPSyncRule> activationRules;
+		vector<DFT::EXPSyncRule> failRules;
 		// new rules for repair, repaired and online
-		vector<DFT::EXPSyncRule*> repairRules;
-		vector<DFT::EXPSyncRule*> repairedRules;
-		vector<DFT::EXPSyncRule*> repairingRules;
-		vector<DFT::EXPSyncRule*> onlineRules;
+		vector<DFT::EXPSyncRule> repairRules;
+		vector<DFT::EXPSyncRule> repairedRules;
+		vector<DFT::EXPSyncRule> repairingRules;
+		vector<DFT::EXPSyncRule> onlineRules;
         // extra inspection rules
-        vector<DFT::EXPSyncRule*> inspectionRules;
-		
+        vector<DFT::EXPSyncRule> inspectionRules;
+		// Rules for detection of modelling errors.
+        vector<DFT::EXPSyncRule> impossibleRules;
 
-        parseDFT(activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules,inspectionRules);
-        buildEXPBody(activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules,inspectionRules);
+        parseDFT(impossibleRules, activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules,inspectionRules);
+        buildEXPBody(impossibleRules, activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules,inspectionRules);
 
-	deleteRules(activationRules);
-	deleteRules(failRules);
-	deleteRules(repairRules);
-	deleteRules(repairedRules);
-	deleteRules(repairingRules);
-	deleteRules(onlineRules);
-	deleteRules(inspectionRules);
-		
 		// Build SVL file
 		svl_body << "%EXP_OPEN_OPTIONS=\"-rate\";" << svl_body.applypostfix;
 		svl_body << "%BCG_MIN_OPTIONS=\"-rate -self -epsilon 5e-324\";" << svl_body.applypostfix;
@@ -308,13 +295,14 @@ const DFT::Nodes::Node* DFT::DFTreeEXPBuilder::getNodeWithID(unsigned int id) {
 }
 
 int DFT::DFTreeEXPBuilder::parseDFT(
-			vector<DFT::EXPSyncRule*>& activationRules,
-			vector<DFT::EXPSyncRule*>& failRules,
-			vector<DFT::EXPSyncRule*>& repairRules,
-			vector<DFT::EXPSyncRule*>& repairedRules,
-			vector<DFT::EXPSyncRule*>& repairingRules,
-			vector<DFT::EXPSyncRule*>& onlineRules,
-			vector<DFT::EXPSyncRule*>& inspectionRules)
+			vector<DFT::EXPSyncRule>& impossibleRules,
+			vector<DFT::EXPSyncRule>& activationRules,
+			vector<DFT::EXPSyncRule>& failRules,
+			vector<DFT::EXPSyncRule>& repairRules,
+			vector<DFT::EXPSyncRule>& repairedRules,
+			vector<DFT::EXPSyncRule>& repairingRules,
+			vector<DFT::EXPSyncRule>& onlineRules,
+			vector<DFT::EXPSyncRule>& inspectionRules)
 {
     
     /* Create synchronization rules for all nodes in the DFT */
@@ -329,42 +317,52 @@ int DFT::DFTreeEXPBuilder::parseDFT(
             if((*it)->isGate()) {
                 const DFT::Nodes::Gate& gate = static_cast<const DFT::Nodes::Gate&>(**it);
                 cc->reportAction("Creating synchronization rules for `" + gate.getName() + "' (THIS node)",VERBOSITY_FLOW);
-                createSyncRule(activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules,inspectionRules,gate,getIDOfNode(gate));
-            }
+                createSyncRule(impossibleRules, activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules,inspectionRules,gate,getIDOfNode(gate));
+            } else {
+				unsigned int nodeID = getIDOfNode(**it);
+				/* Impossible (model-error) rule */
+				std::string iName("IMPOSSIBLE_");
+				iName += (*it)->getTypeStr();
+				iName += std::to_string(nodeID);
+				DFT::EXPSyncRule ruleI(iName);
+				ruleI.insertLabel(nodeID, syncImpossible());
+				impossibleRules.push_back(ruleI);
+			}
         }
     }
     return 0;
 }
 
-void DFT::DFTreeEXPBuilder::writeHideLines(vector<DFT::EXPSyncRule*>& rules)
+void DFT::DFTreeEXPBuilder::writeHideLines(vector<DFT::EXPSyncRule>& rules)
 {
 	for(size_t s = 0; s < rules.size(); ++s) {
-		EXPSyncRule& rule = *rules[s];
+		EXPSyncRule& rule = rules[s];
 		if(rule.hideToLabel) {
 			exp_body << exp_body.applyprefix << rule.toLabel << "," << exp_body.applypostfix;
 		}
 	}
 }
 
-void DFT::DFTreeEXPBuilder::writeRules(vector<DFT::EXPSyncRule*>& rules,
+void DFT::DFTreeEXPBuilder::writeRules(vector<DFT::EXPSyncRule>& rules,
 									   vector<unsigned int> columnWidths)
 {
 	for(size_t s = 0; s < rules.size(); ++s) {
 		exp_body << exp_body.applyprefix;
-		printSyncLine(*rules[s],columnWidths);
+		printSyncLine(rules[s],columnWidths);
 		exp_body << ",";
 		exp_body << exp_body.applypostfix;
 	}
 }
 
 int DFT::DFTreeEXPBuilder::buildEXPBody(
-			vector<DFT::EXPSyncRule*>& activationRules,
-			vector<DFT::EXPSyncRule*>& failRules,
-			vector<DFT::EXPSyncRule*>& repairRules,
-			vector<DFT::EXPSyncRule*>& repairedRules,
-			vector<DFT::EXPSyncRule*>& repairingRules,
-			vector<DFT::EXPSyncRule*>& onlineRules,
-			vector<DFT::EXPSyncRule*>& inspectionRules)
+			vector<DFT::EXPSyncRule>& impossibleRules,
+			vector<DFT::EXPSyncRule>& activationRules,
+			vector<DFT::EXPSyncRule>& failRules,
+			vector<DFT::EXPSyncRule>& repairRules,
+			vector<DFT::EXPSyncRule>& repairedRules,
+			vector<DFT::EXPSyncRule>& repairingRules,
+			vector<DFT::EXPSyncRule>& onlineRules,
+			vector<DFT::EXPSyncRule>& inspectionRules)
 {
     /* Generate the EXP based on the generated synchronization rules */
     exp_body.clearAll();
@@ -382,7 +380,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 	 * comma.
 	 */
     for(size_t s=0; s<failRules.size(); ++s) {
-        EXPSyncRule& rule = *failRules.at(s);
+        EXPSyncRule& rule = failRules.at(s);
         if(rule.hideToLabel) {
             exp_body << exp_body.applyprefix << rule.toLabel;
             if(s<failRules.size()-1) exp_body << ",";
@@ -396,6 +394,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 
 	// Synchronization rules
 	vector<unsigned int> columnWidths(dft->getNodes().size() + 1, 0);
+	calculateColumnWidths(columnWidths,impossibleRules);
 	calculateColumnWidths(columnWidths,activationRules);
 	calculateColumnWidths(columnWidths,failRules);
 	calculateColumnWidths(columnWidths,repairRules);
@@ -424,10 +423,11 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 	writeRules(repairedRules, columnWidths);
 	writeRules(onlineRules, columnWidths);
 	writeRules(inspectionRules, columnWidths);
+	writeRules(impossibleRules, columnWidths);
 	// Generate fail rules (again omitting last trailing comma).
 	for(size_t s=0; s<failRules.size(); ++s) {
 		exp_body << exp_body.applyprefix;
-		printSyncLine(*failRules.at(s),columnWidths);
+		printSyncLine(failRules.at(s),columnWidths);
 		if(s<failRules.size()-1)
 			exp_body << ",";
 		exp_body << exp_body.applypostfix;
@@ -502,7 +502,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
  * dependers' parents will be notified, in a nondeterministic fashion. Thus, if the source fails, the order
  * of failing dependers is nondeterministic.
  */
-int DFT::DFTreeEXPBuilder::createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateFDEP& node, unsigned int nodeID) {
+int DFT::DFTreeEXPBuilder::createSyncRuleGateFDEP(vector<DFT::EXPSyncRule>& activationRules, vector<DFT::EXPSyncRule>& failRules, const DFT::Nodes::GateFDEP& node, unsigned int nodeID) {
 
 	// Loop over all the dependers
 	cc->reportAction3("FDEP Dependencies of THIS node...",VERBOSITY_RULEORIGINS);
@@ -515,10 +515,10 @@ int DFT::DFTreeEXPBuilder::createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& act
 		// Create a new failSyncRule
 		std::stringstream ss;
 		ss << "f_" << node.getTypeStr() << nodeID << "_" << depender->getTypeStr() << dependerID;
-		EXPSyncRule* ruleF = new EXPSyncRule(ss.str());
+		EXPSyncRule ruleF(ss.str());
 
 		// Add the depender to the synchronization (+2, because in LNT the depender list starts at 2)
-		ruleF->insertLabel(nodeID, syncFail(dependerLocalID + 2));
+		ruleF.insertLabel(nodeID, syncFail(dependerLocalID + 2));
 		cc->reportAction3("Added fail rule, notifying:",VERBOSITY_RULEORIGINS);
 
 		// Loop over the parents of the depender
@@ -530,7 +530,7 @@ int DFT::DFTreeEXPBuilder::createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& act
 
 			// Add the parent to the synchronization rule, hooking into the FAIL of the depender,
 			// making it appear to the parent that the child failed (+1, because in LNT the child list starts at 1)
-			ruleF->insertLabel(parentID, syncFail(localChildID + 1));
+			ruleF.insertLabel(parentID, syncFail(localChildID + 1));
 			cc->reportAction3("  Node `" + depParent->getName() + "'",VERBOSITY_RULEORIGINS);
 		}
 
@@ -539,7 +539,7 @@ int DFT::DFTreeEXPBuilder::createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& act
 		{
 			std::stringstream report;
 			report << "Added new fail       sync rule: ";
-			printSyncLineShort(report,*ruleF);
+			printSyncLineShort(report,ruleF);
 			cc->reportAction2(report.str(),VERBOSITY_RULES);
 		}
 	}
@@ -548,9 +548,9 @@ int DFT::DFTreeEXPBuilder::createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& act
 }
 
 int DFT::DFTreeEXPBuilder::createSyncRuleTop(
-		vector<DFT::EXPSyncRule*>& activationRules,
-		vector<DFT::EXPSyncRule*>& failRules,
-		vector<DFT::EXPSyncRule*>& onlineRules)
+		vector<DFT::EXPSyncRule>& activationRules,
+		vector<DFT::EXPSyncRule>& failRules,
+		vector<DFT::EXPSyncRule>& onlineRules)
 {
 	std::stringstream ss;
 
@@ -560,10 +560,10 @@ int DFT::DFTreeEXPBuilder::createSyncRuleTop(
 	ss << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE;
 	if(!nameTop.empty())
 		ss << "_" << nameTop;
-	DFT::EXPSyncRule* ruleA = new EXPSyncRule(ss.str(), true);
+	DFT::EXPSyncRule ruleA(ss.str(), true);
 
-	ruleA->insertLabel(topNode, syncActivate(0, false));
-	ruleA->insertLabel(0, syncActivate(0, true));
+	ruleA.insertLabel(topNode, syncActivate(0, false));
+	ruleA.insertLabel(0, syncActivate(0, true));
 
 	// Generate the FDEP Node Activate rule
 	int c=0;
@@ -572,7 +572,7 @@ int DFT::DFTreeEXPBuilder::createSyncRuleTop(
 		const DFT::Nodes::Node& node = **it;
 		if(node.isGate()) {
 			if(node.matchesType(DFT::Nodes::GateFDEPType)) {
-				ruleA->insertLabel(c, syncActivate(0, false));
+				ruleA.insertLabel(c, syncActivate(0, false));
 			}
 		}
 	}
@@ -586,46 +586,42 @@ int DFT::DFTreeEXPBuilder::createSyncRuleTop(
 	ss << DFT::DFTreeBCGNodeBuilder::GATE_FAIL;
 	if(!nameTop.empty())
 		ss << "_" << nameTop;
-	DFT::EXPSyncRule* ruleF = new EXPSyncRule(ss.str(),false);
-	ruleF->syncOnNode = dft->getTopNode();
-	ruleF->insertLabel(topNode, syncFail(0));
+	DFT::EXPSyncRule ruleF(ss.str(),false);
+	ruleF.syncOnNode = dft->getTopNode();
+	ruleF.insertLabel(topNode, syncFail(0));
 
-	DFT::EXPSyncRule* ruleO;
+	cc->reportAction("Creating synchronization rules for Top node",VERBOSITY_FLOW);
 	if(dft->getTopNode()->isRepairable()){
 		// Generate the Top Node Online rule
 		ss.str("");
 		ss << DFT::DFTreeBCGNodeBuilder::GATE_ONLINE;
-		ruleO = new EXPSyncRule(ss.str(),false);
+		DFT::EXPSyncRule ruleO(ss.str(),false);
 		if(!nameTop.empty())
 			ss << "_" << nameTop;
-		ruleO->insertLabel(topNode, syncOnline(0));
+		ruleO.insertLabel(topNode, syncOnline(0));
 		onlineRules.push_back(ruleO);
+		ss.str("Added new online     sync rule: ");
+		printSyncLineShort(ss, ruleO);
+		cc->reportAction2(ss.str(), VERBOSITY_RULES);
 	}
 
 	// Add the generated rules to the lists
 	activationRules.push_back(ruleA);
 	failRules.push_back(ruleF);
 
-	cc->reportAction("Creating synchronization rules for Top node",VERBOSITY_FLOW);
 	ss.str("Added new activation sync rule: ");
-	printSyncLineShort(ss, *ruleA);
+	printSyncLineShort(ss, ruleA);
 	cc->reportAction2(ss.str(), VERBOSITY_RULES);
 
 	ss.str("Added new fail       sync rule: ");
-	printSyncLineShort(ss, *ruleF);
+	printSyncLineShort(ss, ruleF);
 	cc->reportAction2(ss.str(), VERBOSITY_RULES);
-
-	if(dft->getTopNode()->isRepairable()){
-		ss.str("Added new online     sync rule: ");
-		printSyncLineShort(ss, *ruleO);
-		cc->reportAction2(ss.str(), VERBOSITY_RULES);
-	}
 
 	return 0;
 }
 
 /** Add a rule between a child and any of its parents. */
-void DFT::DFTreeEXPBuilder::addAnycastRule(vector<DFT::EXPSyncRule*> &rules,
+void DFT::DFTreeEXPBuilder::addAnycastRule(vector<DFT::EXPSyncRule> &rules,
 											 const DFT::Nodes::Gate &node,
 											 EXPSyncItem *nodeSignal,
 											 EXPSyncItem *childSignal,
@@ -638,32 +634,31 @@ void DFT::DFTreeEXPBuilder::addAnycastRule(vector<DFT::EXPSyncRule*> &rules,
 
 	std::stringstream ss;
 	ss << name_prefix << '_' << child.getTypeStr() << childID;
-	EXPSyncRule *rule = new EXPSyncRule(ss.str());
-	rule->syncOnNode = &child;
-	rule->insertLabel(nodeID, nodeSignal);
-	rule->insertLabel(childID, childSignal);
+	EXPSyncRule rule(ss.str());
+	rule.syncOnNode = &child;
+	rule.insertLabel(nodeID, nodeSignal);
+	rule.insertLabel(childID, childSignal);
 	std::stringstream report("Added new broadcast sync rule: ");
-	printSyncLineShort(report, *rule);
+	printSyncLineShort(report, rule);
 	cc->reportAction2(report.str(),VERBOSITY_RULES);
 	rules.push_back(rule);
 }
 /** Add a rule broadcast from a child to all its parents. */
-void DFT::DFTreeEXPBuilder::addBroadcastRule(vector<DFT::EXPSyncRule*> &rules,
+void DFT::DFTreeEXPBuilder::addBroadcastRule(vector<DFT::EXPSyncRule> &rules,
 					     const DFT::Nodes::Gate &node,
 					     EXPSyncItem *nodeSignal,
 					     EXPSyncItem *childSignal,
 					     std::string name_prefix,
 					     unsigned int childNum)
 {
-	const DFT::Nodes::Node &child = *node.getChildren().at(childNum);
+	const DFT::Nodes::Node *child = node.getChildren().at(childNum);
 	unsigned int nodeID = nodeIDs[&node];
-	std::vector<DFT::EXPSyncRule *>::iterator it;
-	for (it = rules.begin(); it != rules.end(); ++it) {
+	for (auto &rule : rules) {
 		// If there is a rule that also synchronizes on the same node,
 		// we have come across a child with another parent.
-		if((*it)->syncOnNode == &child) {
+		if(rule.syncOnNode == child) {
 			cc->reportAction3("Found earlier fail rule",VERBOSITY_RULEORIGINS);
-			(*it)->insertLabel(nodeID, nodeSignal);
+			rule.insertLabel(nodeID, nodeSignal);
 			return;
 		}
 	}
@@ -672,25 +667,25 @@ void DFT::DFTreeEXPBuilder::addBroadcastRule(vector<DFT::EXPSyncRule*> &rules,
 }
 
 int DFT::DFTreeEXPBuilder::createSyncRule(
-			vector<DFT::EXPSyncRule*>& activationRules,
-			vector<DFT::EXPSyncRule*>& failRules,
-			vector<DFT::EXPSyncRule*>& repairRules,
-			vector<DFT::EXPSyncRule*>& repairedRules,
-			vector<DFT::EXPSyncRule*>& repairingRules,
-			vector<DFT::EXPSyncRule*>& onlineRules,
-			vector<DFT::EXPSyncRule*>& inspectionRules,
+			vector<DFT::EXPSyncRule>& impossibleRules,
+			vector<DFT::EXPSyncRule>& activationRules,
+			vector<DFT::EXPSyncRule>& failRules,
+			vector<DFT::EXPSyncRule>& repairRules,
+			vector<DFT::EXPSyncRule>& repairedRules,
+			vector<DFT::EXPSyncRule>& repairingRules,
+			vector<DFT::EXPSyncRule>& onlineRules,
+			vector<DFT::EXPSyncRule>& inspectionRules,
 			const DFT::Nodes::Gate& node,
 			unsigned int nodeID)
 {
 	// Go through all the children
 	for(size_t n = 0; n<node.getChildren().size(); ++n) {
 		// Get the current child and associated childID
-		const DFT::Nodes::Node& child = *node.getChildren().at(n);
-		unsigned int childID = nodeIDs[&child];
-		std::vector<DFT::EXPSyncRule*>::iterator it;
+		const DFT::Nodes::Node *child = node.getChildren().at(n);
+		unsigned int childID = nodeIDs[child];
 
-		cc->reportAction2("Child `" + child.getName() + "'"
-						  + (child.usesDynamicActivation()?" (dynact)":"")
+		cc->reportAction2("Child `" + child->getName() + "'"
+						  + (child->usesDynamicActivation()?" (dynact)":"")
 						  + " ...",
 						  VERBOSITY_RULES);
 
@@ -704,43 +699,41 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 		{
 			/** ACTIVATION RULE **/
 			std::stringstream ss;
-			ss << node.getTypeStr() << nodeID << "_" << child.getTypeStr()
+			ss << node.getTypeStr() << nodeID << "_" << child->getTypeStr()
 			   << childID;
-			EXPSyncRule* ruleA = new EXPSyncRule("a_" + ss.str());
-			EXPSyncRule* ruleD = new EXPSyncRule("d_" + ss.str());
+			EXPSyncRule ruleA("a_" + ss.str());
+			EXPSyncRule ruleD("d_" + ss.str());
 
 			std::stringstream report;
 			report << "New EXPSyncRule " << ss.str();
 			cc->reportAction3(report.str(),VERBOSITY_RULEORIGINS);
 
 			// Set synchronization node
-			ruleA->syncOnNode = &child;
-			ruleD->syncOnNode = &child;
+			ruleA.syncOnNode = child;
+			ruleD.syncOnNode = child;
 
 			// Add synchronization of THIS node to the synchronization rule
-			ruleA->insertLabel(nodeID, syncActivate(n+1, true));
-			ruleD->insertLabel(nodeID, syncDeactivate(n+1, true));
+			ruleA.insertLabel(nodeID, syncActivate(n+1, true));
+			ruleD.insertLabel(nodeID, syncDeactivate(n+1, true));
 			cc->reportAction3("THIS node added to sync rule",
 							  VERBOSITY_RULEORIGINS);
 
 			// Go through all the existing activation rules
-			for(it = activationRules.begin(); it != activationRules.end(); ++it)
-			{
+			for (auto &otherRule : activationRules) {
 				// If there is a rule that also synchronizes on the same node,
 				// we have come across a child with another parent.
-				if((*it)->syncOnNode != &child)
+				if(otherRule.syncOnNode != child)
 					continue;
-				EXPSyncRule* otherRule = *it;
 				std::stringstream report;
 				report << "Detected earlier activation rule: ";
-				printSyncLineShort(report, *otherRule);
+				printSyncLineShort(report, otherRule);
 				cc->reportAction3(report.str(), VERBOSITY_RULEORIGINS);
 
 				// First, we look up the sending Node of the
 				// current activation rule...
 				int otherNodeID = -1;
 				int otherLocalNodeID = -1;
-				for(auto& syncItem: otherRule->label) {
+				for(auto& syncItem: otherRule.label) {
 					if(syncItem.second->getArg(1)) {
 						otherNodeID = syncItem.first;
 						otherLocalNodeID = syncItem.second->getArg(0);
@@ -775,10 +768,10 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 					// Thus, add a synchronization item to the
 					// existing synchronization rule, specifying that
 					// the THIS node also receives a sent Activate.
-					if (otherRule->toLabel[0] == 'd')
-						otherRule->insertLabel(nodeID, syncDeactivate(n+1, false));
+					if (otherRule.toLabel[0] == 'd')
+						otherRule.insertLabel(nodeID, syncDeactivate(n+1, false));
 					else
-						otherRule->insertLabel(nodeID, syncActivate(n+1, false));
+						otherRule.insertLabel(nodeID, syncActivate(n+1, false));
 					cc->reportAction3("THIS node added, activation listening synchronization",VERBOSITY_RULEORIGINS);
 
 					// This is not enough, because the other way
@@ -789,8 +782,8 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 					// new rule we create for the THIS node, specifying
 					// the other node wants to listen to activates of
 					// the THIS node.
-					ruleA->insertLabel(otherNodeID, syncActivate(otherLocalNodeID, false));
-					ruleD->insertLabel(otherNodeID, syncDeactivate(otherLocalNodeID, false));
+					ruleA.insertLabel(otherNodeID, syncActivate(otherLocalNodeID, false));
+					ruleD.insertLabel(otherNodeID, syncDeactivate(otherLocalNodeID, false));
 					cc->reportAction3("Detected (other) dynamic activator `" + otherNode->getName() + "', added to sync rule",VERBOSITY_RULEORIGINS);
 
 					// TODO: primary is a special case??????
@@ -799,11 +792,11 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 
 			// Add the child Node to the synchronization rule
 			// Create synchronization rules a_<nodetype><nodeid>_<childtype><childid>
-			ruleA->insertLabel(childID, syncActivate(0, false));
-			ruleD->insertLabel(childID, syncDeactivate(0, false));
+			ruleA.insertLabel(childID, syncActivate(0, false));
+			ruleD.insertLabel(childID, syncDeactivate(0, false));
 			cc->reportAction3("Child added to sync rule",VERBOSITY_RULEORIGINS);
 			report.str("Added new activation sync rule: ");
-			printSyncLineShort(report,*ruleA);
+			printSyncLineShort(report,ruleA);
 			cc->reportAction2(report.str(),VERBOSITY_RULES);
 			activationRules.push_back(ruleA);
 			activationRules.push_back(ruleD);
@@ -877,10 +870,9 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 
 void DFT::DFTreeEXPBuilder::calculateColumnWidths(
 		vector<unsigned int>& columnWidths,
-		const vector<DFT::EXPSyncRule*>& syncRules)
+		const vector<DFT::EXPSyncRule>& syncRules)
 {
-	for(size_t s=0; s<syncRules.size(); ++s) {
-		const DFT::EXPSyncRule& rule = *syncRules.at(s);
+	for (const DFT::EXPSyncRule &rule : syncRules) {
 		std::map<unsigned int, std::shared_ptr<EXPSyncItem>>::const_iterator it = rule.label.begin();
 		for(;it!=rule.label.end();++it) {
 			assert( (0<=it->first) );

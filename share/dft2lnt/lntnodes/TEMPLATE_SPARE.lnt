@@ -4,8 +4,13 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 	(* Find the first available element given the arrays of failed
 	 * and claimed children.
 	 *)
-	process SPARE [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL, ONLINE : NAT_CHANNEL, DEACTIVATE : NAT_BOOL_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL]
-		(total : NAT, always_active : BOOL) is
+	process SPARE [IMPOSSIBLE : none,
+	               FAIL : NAT_CHANNEL,
+	               ACTIVATE : NAT_BOOL_CHANNEL,
+	               ONLINE : NAT_CHANNEL,
+	               DEACTIVATE : NAT_BOOL_CHANNEL,
+	               REPAIRED : NAT_BOOL_CHANNEL]
+		(total : NAT, always_active : BOOL, repairable : BOOL) is
 	var
 		unfailed : SSET_NAT,
 		unclaimed : SSET_NAT,
@@ -19,11 +24,12 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 	in
 		done := FALSE;
 		activated := FALSE;
+		using := 0;
 		if always_active then
-			activated := TRUE
+			activated := TRUE;
+			using := 1
 		end if;
 		repairing_deactivate := 0;
-		using := 0;
 		prev_using := 0;
 		(* Initially everything is unfailed and unclaimed *)
 		unfailed := nil;
@@ -59,7 +65,7 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 					prev_using := 0;
 					using := 0
 				elsif (repairing_deactivate > 0) then
-					DEACTIVATE(repairing_deactivate, TRUE);
+					DEACTIVATE(!repairing_deactivate, TRUE);
 					repairing_deactivate := 0
 				elsif not(done) and empty(avail) then
 			(*
@@ -78,8 +84,13 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 			 *)
 			 []
 				ONLINE (?nr) where (0 < nr) and (nr <= total);
-				unfailed := insert(nr, unfailed);
-				avail := inter(unclaimed, unfailed)
+				if (not(repairable)) then
+					IMPOSSIBLE;
+					loop null end loop
+				else
+					unfailed := insert(nr, unfailed);
+					avail := inter(unclaimed, unfailed)
+				end if
 
 
 			(*
@@ -116,8 +127,13 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 
 			[]
 				DEACTIVATE (!0 of NAT, FALSE);
-				prev_using := using;
-				activated := FALSE
+				if (not(always_active)) then
+					prev_using := using;
+					activated := FALSE
+				else
+					IMPOSSIBLE;
+					loop null end loop
+				end if
 			
 			(*
 			 * Listen to activation commands coming from OTHER
@@ -138,6 +154,10 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 					where ((nr > 0)
 					       and (nr <= total)
 					       and (nr <> using));
+				if ((nr == 1) and always_active) then
+					IMPOSSIBLE;
+					loop null end loop
+				end if;
 				unclaimed := remove(nr, unclaimed);
 				avail := inter(unclaimed, unfailed)
 
@@ -145,6 +165,10 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 				DEACTIVATE (?nr,FALSE)
 					where ((nr > 0)
 					       and (nr <= total));
+				if ((nr == 1) and always_active) then
+					IMPOSSIBLE;
+					loop null end loop
+				end if;
 				unclaimed := insert(nr, unclaimed);
 				avail := inter(unclaimed, unfailed)
 			
@@ -177,13 +201,32 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 					then
 						new_using := head(avail);
 						if (new_using <> using) then
-							ACTIVATE (!new_using, TRUE);
+							if ((new_using > 1) or not(always_active)) then
+								ACTIVATE (!new_using,TRUE)
+							end if;
 							repairing_deactivate := using;
 							using := new_using
 						end if
 					end if
 				end var
-			end select
+			end select;
+
+			(* Special procedure for the always-active gate
+			 * since it needs to make changes without
+			 * sending signals.
+			 *)
+			if always_active then
+				if using == 0 and member(1, avail) then
+					using := 1;
+					if repairing_deactivate == 1 then
+						repairing_deactivate := 0
+					end if
+				end if;
+				if prev_using == 1 then	
+					prev_using := 0;
+					using := 0
+				end if
+			end if
 		end loop
 	end var
 	end process

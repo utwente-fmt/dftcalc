@@ -37,6 +37,9 @@ public:
 	std::string name;
 	vector<int> args;
 public:
+	EXPSyncItem(std::string name):
+		name(name) {
+	}
 	EXPSyncItem(std::string name, int arg1):
 		name(name) {
 		args.push_back(arg1);
@@ -163,8 +166,6 @@ public:
 		hideToLabel(hideToLabel),
 		syncOnNode(NULL) {
 	}
-	~EXPSyncRule() {
-	}
 
 	void insertLabel(unsigned int pos, EXPSyncItem *item) {
 		label.insert(std::pair<unsigned int, std::shared_ptr<EXPSyncItem>>(pos, std::shared_ptr<EXPSyncItem>(item)));
@@ -194,21 +195,21 @@ private:
 	std::vector<DFT::Nodes::Gate*> gates;
 	std::map<const DFT::Nodes::Node*, unsigned int> nodeIDs;
 	
-	void writeRules(vector<DFT::EXPSyncRule*>& rules,
+	void writeRules(vector<DFT::EXPSyncRule>& rules,
 					vector<unsigned int> columnWidths);
-	void writeHideLines(vector<DFT::EXPSyncRule*>& rules);
+	void writeHideLines(vector<DFT::EXPSyncRule>& rules);
 	int validateReferences();
 	void printSyncLine(const EXPSyncRule& rule, const vector<unsigned int>& columnWidths);
 	void printSyncLineShort(std::ostream& stream, const EXPSyncRule& rule);
 
-	void addBroadcastRule(vector<DFT::EXPSyncRule*> &rules,
+	void addBroadcastRule(vector<DFT::EXPSyncRule> &rules,
 						  const DFT::Nodes::Gate &node,
 						  EXPSyncItem *nodeSignal,
 						  EXPSyncItem *childSignal,
 						  std::string name_prefix,
 						  unsigned int childNum);
 
-	void addAnycastRule(vector<DFT::EXPSyncRule*> &rules,
+	void addAnycastRule(vector<DFT::EXPSyncRule> &rules,
 						const DFT::Nodes::Gate &node,
 						EXPSyncItem *nodeSignal,
 						EXPSyncItem *childSignal,
@@ -269,28 +270,28 @@ public:
 	 * Affects FileWriters: exp_header
 	 * @return UNDECIDED
 	 */
-	int buildEXPHeader(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules);
+	int buildEXPHeader(vector<DFT::EXPSyncRule>& activationRules, vector<DFT::EXPSyncRule>& failRules);
 
 	/**
 	 * Builds the actual composition script from the DFT specification
 	 * Affects FileWriters: exp_body
 	 * @return UNDECIDED
 	 */
-	int buildEXPBody(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules);
+	int buildEXPBody(vector<DFT::EXPSyncRule>& activationRules, vector<DFT::EXPSyncRule>& failRules);
 
     /**
      * Builds the rule system for the to be generated EXP file.
      * Calls to buildEXPBody() and buildEXPHeader() should be valid after this.
      * @return UNDECIDED
      */
-    int parseDFT(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules);
+    int parseDFT(vector<DFT::EXPSyncRule> &impossibleRules, vector<DFT::EXPSyncRule>& activationRules, vector<DFT::EXPSyncRule>& failRules, vector<DFT::EXPSyncRule>& repairRules, vector<DFT::EXPSyncRule>& repairedRules, vector<DFT::EXPSyncRule>& repairingRules, vector<DFT::EXPSyncRule>& onlineRules, vector<DFT::EXPSyncRule>& inspectionRules);
 
     /**
      * Builds the actual composition script from the DFT specification
      * Affects FileWriters: exp_body
      * @return UNDECIDED
      */
-    int buildEXPBody(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules);
+    int buildEXPBody(vector<DFT::EXPSyncRule> &impossibleRules, vector<DFT::EXPSyncRule>& activationRules, vector<DFT::EXPSyncRule>& failRules, vector<DFT::EXPSyncRule>& repairRules, vector<DFT::EXPSyncRule>& repairedRules, vector<DFT::EXPSyncRule>& repairingRules, vector<DFT::EXPSyncRule>& onlineRules, vector<DFT::EXPSyncRule>& inspectionRules);
 
 	/**
 	 * Return the Node ID (index in the dft->getNodes() vector) of the
@@ -330,6 +331,9 @@ public:
 		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_FAIL,localNodeID);
 	}
 
+	EXPSyncItem *syncImpossible() {
+		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_IMPOSSIBLE);
+	}
 	/**
 	 * Create a new EXPSyncItem instance reflecting a Repair action
 	 * based on the specified localNodeID.
@@ -382,7 +386,7 @@ public:
         return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_INSPECT,localNodeID);
     }
 
-	int createSyncRuleGateFDEP(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, const DFT::Nodes::GateFDEP& node, unsigned int nodeID);
+	int createSyncRuleGateFDEP(vector<DFT::EXPSyncRule>& activationRules, vector<DFT::EXPSyncRule>& failRules, const DFT::Nodes::GateFDEP& node, unsigned int nodeID);
 
 	/**
 	 * Generate synchronization rules for the Top Node.
@@ -392,8 +396,8 @@ public:
 	 * @param activationRules Generated fail rules will go here.
 	 * @return 0.
 	 */
-	int createSyncRuleTop(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& onlineRules);
-    int createSyncRule(vector<DFT::EXPSyncRule*>& activationRules, vector<DFT::EXPSyncRule*>& failRules, vector<DFT::EXPSyncRule*>& repairRules, vector<DFT::EXPSyncRule*>& repairedRules, vector<DFT::EXPSyncRule*>& repairingRules, vector<DFT::EXPSyncRule*>& onlineRules, vector<DFT::EXPSyncRule*>& inspectionRules, const DFT::Nodes::Gate& node, unsigned int nodeID);
+	int createSyncRuleTop(vector<DFT::EXPSyncRule>& activationRules, vector<DFT::EXPSyncRule>& failRules, vector<DFT::EXPSyncRule>& onlineRules);
+    int createSyncRule(vector<DFT::EXPSyncRule>& impossibleRules, vector<DFT::EXPSyncRule>& activationRules, vector<DFT::EXPSyncRule>& failRules, vector<DFT::EXPSyncRule>& repairRules, vector<DFT::EXPSyncRule>& repairedRules, vector<DFT::EXPSyncRule>& repairingRules, vector<DFT::EXPSyncRule>& onlineRules, vector<DFT::EXPSyncRule>& inspectionRules, const DFT::Nodes::Gate& node, unsigned int nodeID);
 
 	/**
 	 * Modifies the specified columnWidths to reflect the width needed by the
@@ -402,7 +406,7 @@ public:
 	 * Elements of columnWidths are only updated if the
 	 * existing value is smaller than the calculated value.
 	 */
-	void calculateColumnWidths(vector<unsigned int>& columnWidths, const vector<DFT::EXPSyncRule*>& syncRules);
+	void calculateColumnWidths(vector<unsigned int>& columnWidths, const vector<DFT::EXPSyncRule>& syncRules);
 
 	/**
 	 * Print the generated EXP output to the specified stream.

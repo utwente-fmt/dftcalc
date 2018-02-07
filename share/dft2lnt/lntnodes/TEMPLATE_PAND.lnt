@@ -1,6 +1,7 @@
 module TEMPLATE_PAND(TEMPLATE_COMMON) is
 
-	process PAND [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (total : NAT, failed : NAT_ARRAY) is
+	process PAND [IMPOSSIBLE : none, FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL]
+		(total : NAT, failed : NAT_ARRAY, always_active : BOOL) is
 	var
 		nr_failed : NAT,
 		done : BOOL,
@@ -51,8 +52,10 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 			 *)
 			[]
 				ACTIVATE (?nr,FALSE) where (nr == (0 of NAT));
-				if (nr_act == 0 of NAT) then
-					nr_act := 1 of NAT
+				if (not(always_active)) then
+					if (nr_act == 0 of NAT) then
+						nr_act := 1 of NAT
+					end if
 				end if
 
 			(*
@@ -72,6 +75,4 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 		end loop
 	end var
 	end process
-
-
 end module

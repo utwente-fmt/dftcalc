@@ -1,6 +1,7 @@
 module TEMPLATE_VOTING_REPAIR(TEMPLATE_COMMON_REPAIR) is
 
-	process VOTING_K [FAIL : NAT_CHANNEL,
+	process VOTING_K [IMPOSSIBLE : none,
+	                  FAIL : NAT_CHANNEL,
 	                  ACTIVATE : NAT_BOOL_CHANNEL,
 	                  DEACTIVATE : NAT_BOOL_CHANNEL,
 	                  ONLINE : NAT_CHANNEL]
@@ -58,12 +59,13 @@ module TEMPLATE_VOTING_REPAIR(TEMPLATE_COMMON_REPAIR) is
 				
 			-- increase decrease failed components if component gets repaired
 			[]
-				ONLINE (?nr) where (0 < nr) and (nr <= repairable) ;
-				if((received[nr])) then
+				ONLINE (?nr) where (0 < nr) and (nr <= total);
+				if ((nr > repairable) or (not(received[nr]))) then
+					IMPOSSIBLE;
+					loop null end loop
+				else
 					received[nr] := FALSE;
-					if(nr_failed > 0) then
-						nr_failed := nr_failed - 1
-					end if
+					nr_failed := nr_failed - 1
 				end if
 
 			-- send up signal if voting is working again
@@ -84,10 +86,13 @@ module TEMPLATE_VOTING_REPAIR(TEMPLATE_COMMON_REPAIR) is
 				end if
 
 			[]
+				DEACTIVATE (0 of NAT,FALSE);
 				if not(always_active) then
-					DEACTIVATE (0 of NAT,FALSE);
 					nr_act := total;
 					running := FALSE
+				else
+					IMPOSSIBLE;
+					loop null end loop
 				end if
 			
 			(*

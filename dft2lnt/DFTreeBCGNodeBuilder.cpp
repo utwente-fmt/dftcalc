@@ -41,6 +41,7 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_PERIOD ("RATE_PERIOD");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING   ("REPAIRING");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECT   ("INSPECT");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECTED   ("INSPECTED");
+const std::string DFT::DFTreeBCGNodeBuilder::GATE_IMPOSSIBLE   ("IMPOSSIBLE");
 
 const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 6;
 
@@ -184,12 +185,14 @@ int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out,
 	out << out.applypostfix;
 	
 	out << out.applyprefix << "process MAIN ["
+	    << GATE_IMPOSSIBLE << " : none, "
 	    << GATE_FAIL << " : NAT_CHANNEL, "
 	    << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, "
 	    << GATE_DEACTIVATE << " : NAT_BOOL_CHANNEL, "
 	    << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
 	out.indent();
 	out << out.applyprefix << "VOTING_K ["
+	    << GATE_IMPOSSIBLE << ","
 	    << GATE_FAIL << ","
 	    << GATE_ACTIVATE << ","
 	    << GATE_DEACTIVATE << ","
@@ -260,15 +263,16 @@ int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out, const DFT::Nodes:
 int DFT::DFTreeBCGNodeBuilder::generatePAnd(FileWriter& out, const DFT::Nodes::GatePAnd& gate) {
 	int nr_parents = gate.getParents().size();
 	int total = gate.getChildren().size();
+	bool alwaysActive = gate.isAlwaysActive();
 	out << out.applyprefix << " * Generating PAnd(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
 	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_PAND) is" << out.applypostfix;
 	out.indent();
 		out << out.applyprefix << "type NAT_ARRAY is array[1.." << total << "] of NAT end type" << out.applypostfix;
-		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_CHANNEL] is" << out.applypostfix;
+		out << out.applyprefix << "process MAIN [" << GATE_IMPOSSIBLE << ", " << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_CHANNEL] is" << out.applypostfix;
 		out.indent();
-			out << out.applyprefix << "PAND [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, (NAT_ARRAY(0 of NAT)))" << out.applypostfix;
+			out << out.applyprefix << "PAND [" << GATE_IMPOSSIBLE << ", " << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, (NAT_ARRAY(0 of NAT)), " << (alwaysActive ? "TRUE" : "FALSE") << ")" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	out.outdent();
@@ -298,6 +302,15 @@ int DFT::DFTreeBCGNodeBuilder::generatePor(FileWriter& out, const DFT::Nodes::Ga
 int DFT::DFTreeBCGNodeBuilder::generateSpare(FileWriter& out, const DFT::Nodes::GateWSP& gate) {
 	int nr_parents = gate.getParents().size();
 	int total = gate.getChildren().size();
+	// FIXME: add this directly as gate information
+	bool hasRepairableChildren = 0;
+	for (const DFT::Nodes::Node *child : gate.getChildren()) {
+		if (child->isRepairable()) {
+			hasRepairableChildren = true;
+			break;
+		}
+	}
+
 	out << out.applyprefix << " * Generating Spare(parents=" << nr_parents << ", setting= " << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
@@ -307,6 +320,7 @@ int DFT::DFTreeBCGNodeBuilder::generateSpare(FileWriter& out, const DFT::Nodes::
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
 
 		out << out.applyprefix << "process MAIN ["
+			<< GATE_IMPOSSIBLE << " : none, "
 			<< GATE_FAIL << " : NAT_CHANNEL, "
 			<< GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, "
 			<< GATE_ONLINE << " : NAT_CHANNEL, "
@@ -315,12 +329,13 @@ int DFT::DFTreeBCGNodeBuilder::generateSpare(FileWriter& out, const DFT::Nodes::
 			<< "] is" << out.applypostfix;
 		out.indent();
 		out << out.applyprefix << "SPARE ["
+			<< GATE_IMPOSSIBLE << ","
 			<< GATE_FAIL << ","
 			<< GATE_ACTIVATE << ","
 			<< GATE_ONLINE << ","
 			<< GATE_DEACTIVATE << ","
 			<< GATE_REPAIRED
-			<< "] (" << total << " of NAT, " << (gate.isAlwaysActive() ? "TRUE" : "FALSE") << ")" << out.applypostfix;
+			<< "] (" << total << " of NAT, " << (gate.isAlwaysActive() ? "TRUE" : "FALSE") << ", " << (hasRepairableChildren ? "TRUE" : "FALSE") << ")" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	out.outdent();
@@ -334,6 +349,7 @@ int DFT::DFTreeBCGNodeBuilder::generateFDEP(FileWriter& out, const DFT::Nodes::G
 	int dependers = gate.getDependers().size();
 	out << out.applyprefix << " * Generating FDEP(dependers= " << dependers << ")" << out.applypostfix;
 	generateHeaderClose(out);
+	bool triggerAA = gate.getChildren().at(0)->isAlwaysActive();
 
 	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_FDEP) is" << out.applypostfix;
 	out.indent();
@@ -341,7 +357,7 @@ int DFT::DFTreeBCGNodeBuilder::generateFDEP(FileWriter& out, const DFT::Nodes::G
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << dependers << "] of BOOL end type" << out.applypostfix;
 		out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
 		out.indent();
-			out << out.applyprefix << "FDEP [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << dependers << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+			out << out.applyprefix << "FDEP [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << dependers << " of NAT, (BOOL_ARRAY(FALSE)), " << (triggerAA ? "TRUE)" : "FALSE)") << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	out.outdent();
@@ -380,6 +396,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
 		out.indent();
 
 		out << out.applyprefix << "process MAIN ["
+			<< GATE_IMPOSSIBLE << " : none, "
 			<< GATE_FAIL << " : NAT_CHANNEL, "
 			<< GATE_ACTIVATE << " : NAT_BOOL_CHANNEL, "
 			<< GATE_RATE_FAIL << " : NAT_NAT_CHANNEL, "
@@ -392,6 +409,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
 		out.indent();
 
 		out << out.applyprefix << "BEproc ["
+			<< GATE_IMPOSSIBLE << ","
 			<< GATE_FAIL << ","
 			<< GATE_ACTIVATE << ","
 			<< GATE_RATE_FAIL << ","

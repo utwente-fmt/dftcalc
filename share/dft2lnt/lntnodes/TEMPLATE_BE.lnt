@@ -12,7 +12,8 @@
  * failsafe BE with remain failsafe after attempted repairs.
  *)
 module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
-	process BEproc [FAIL : NAT_CHANNEL,
+	process BEproc [IMPOSSIBLE : none,
+	                FAIL : NAT_CHANNEL,
 	                ACTIVATE : NAT_BOOL_CHANNEL,
 	                RATE_FAIL : NAT_NAT_CHANNEL,
 	                REPAIRED : NAT_BOOL_CHANNEL,
@@ -50,15 +51,16 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 			 *       really screwy if a BE has multiple
 			 *       parents that disagree about the status.
 			 *)
-				if not(always_active) then
-					ACTIVATE (!0 of NAT, FALSE);
-					isactive := TRUE
-				end if
+				ACTIVATE (!0 of NAT, FALSE);
+				isactive := TRUE
 
 			[]
+				DEACTIVATE (!0 of NAT, FALSE);
 				if not(always_active) then
-					DEACTIVATE (!0 of NAT, FALSE);
 					isactive := FALSE
+				else
+					IMPOSSIBLE;
+					loop null end loop
 				end if
 
 			(*
@@ -146,8 +148,8 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 
 			-- listen if repair is finished active branch
 			[]
+				REPAIRED (!0 of NAT,FALSE);
 				if repairable then
-					REPAIRED (!0 of NAT,FALSE);
 					degenerated := phases;
 					if (status == DOWN) then
 						emit_online := TRUE;
@@ -156,6 +158,9 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 					if (status != FAILSAFE) then
 						status := UP
 					end if
+				else
+					IMPOSSIBLE;
+					loop null end loop
 				end if
 			end select
 		end loop

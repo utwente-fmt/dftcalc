@@ -332,12 +332,25 @@ public:
 	 */
 	void addAlwaysActiveInfo(DFT::Nodes::Gate *gate)
 	{
-		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateSpareType))
-			return; /* Children of SPAREs are dynamically activated. */
 		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateSAndType))
 			return; /* Children of Sequential ANDs are dynamically activated. */
 
+		if (gate->matchesType(DFT::Nodes::RepairUnitType)
+			|| gate->matchesType(DFT::Nodes::RepairUnitFcfsType)
+			|| gate->matchesType(DFT::Nodes::RepairUnitPrioType)
+			|| gate->matchesType(DFT::Nodes::RepairUnitNdType)
+			|| gate->matchesType(DFT::Nodes::InspectionType)
+			|| gate->matchesType(DFT::Nodes::ReplacementType))
+		{
+			/* Inspections/repair should certainly not
+			 * activate their children.
+			 */
+			return;
+		}
+
 		size_t n = gate->getChildren().size();
+		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateSpareType))
+			n = 1; /* Of SPAREs, only the primary is always-active. */
 		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateFDEPType))
 			n = 1; /* Of FDEPs, avoid activating non-trigger children. */
 

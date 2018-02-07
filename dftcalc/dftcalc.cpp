@@ -326,11 +326,21 @@ void DFT::DFTCalc::printOutput(const File& file, int status) {
 	}
 }
 
-bool hasHiddenLabels(const File& file) {
+static bool hasHiddenLabels(const File& file) {
 	std::string* fileContents = FileSystem::load(file);
 	bool res = false;
 	if (fileContents) {
 		res = ((*fileContents).find("no transition with a hidden label", 0) ==  string::npos);
+		delete fileContents;
+	}
+	return res;
+}
+
+static bool hasImpossibleLabel(const File& file) {
+	std::string* fileContents = FileSystem::load(file);
+	bool res = false;
+	if (fileContents) {
+		res = ((*fileContents).find("IMPOSSIBLE", 0) != string::npos);
 		delete fileContents;
 	}
 	return res;
@@ -477,7 +487,6 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 		printOutput(File(sysOps.outFile), result);
 		printOutput(File(sysOps.errFile), result);
 	}
-
 	if (hasHiddenLabels(File(sysOps.outFile))) {
 		if (warnNonDeterminism) {
 			messageFormatter->reportWarning("Non-determinism detected... you will want to ask for both 'min' and 'max' analysis results!");
@@ -486,6 +495,33 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 		}
 	} else {
 		messageFormatter->notify("No non-determinism detected.");
+	}
+
+	// test for composition errors.
+	messageFormatter->reportAction("Testing for composition/modelling errors...",VERBOSITY_FLOW);
+	sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg_info.report";
+	sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg_info.err";
+	sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".bcg_info.out";
+	sysOps.command    = bcginfoExec.getFilePath()
+				+ " -labels"
+				+ " \""    + bcg.getFileRealPath() + "\""
+				;
+	result = Shell::system(sysOps);
+
+	if(result || !FileSystem::exists(sysOps.outFile)) {
+		printOutput(File(sysOps.outFile), result);
+		printOutput(File(sysOps.errFile), result);
+		return 1;
+	} else if (messageFormatter->getVerbosity() >= 5) {
+		printOutput(File(sysOps.outFile), result);
+		printOutput(File(sysOps.errFile), result);
+	}
+
+	if (hasImpossibleLabel(File(sysOps.outFile))) {
+		messageFormatter->reportError("Error composing model: 'IMPOSSIBLE' transitions reachable!");
+		return 1;
+	} else {
+		messageFormatter->notify("No impossible labels detected.");
 	}
 
 	switch (useChecker) {
