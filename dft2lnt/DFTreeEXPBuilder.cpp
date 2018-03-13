@@ -549,7 +549,7 @@ int DFT::DFTreeEXPBuilder::createSyncRuleTop(
 	cc->reportAction3(report.str(),VERBOSITY_RULEORIGINS);
 
 	// Generate the Top Node Fail rule
-	ss = std::stringstream();
+	ss.str(std::string());
 	ss << DFT::DFTreeBCGNodeBuilder::GATE_FAIL;
 	if(!nameTop.empty())
 		ss << "_" << nameTop;
@@ -560,7 +560,7 @@ int DFT::DFTreeEXPBuilder::createSyncRuleTop(
 	DFT::EXPSyncRule* ruleO;
 	if(dft->getTopNode()->isRepairable()){
 		// Generate the Top Node Online rule
-		ss = std::stringstream();
+		ss.str("");
 		ss << DFT::DFTreeBCGNodeBuilder::GATE_ONLINE;
 		ruleO = new EXPSyncRule(ss.str(),false);
 		if(!nameTop.empty())
@@ -574,19 +574,16 @@ int DFT::DFTreeEXPBuilder::createSyncRuleTop(
 	failRules.push_back(ruleF);
 
 	cc->reportAction("Creating synchronization rules for Top node",VERBOSITY_FLOW);
-	ss = std::stringstream();
-	ss << "Added new activation sync rule: ";
+	ss.str("Added new activation sync rule: ");
 	printSyncLineShort(ss, *ruleA);
 	cc->reportAction2(ss.str(), VERBOSITY_RULES);
 
-	ss = std::stringstream();
-	ss << "Added new fail       sync rule: ";
+	ss.str("Added new fail       sync rule: ");
 	printSyncLineShort(ss, *ruleF);
 	cc->reportAction2(ss.str(), VERBOSITY_RULES);
 
 	if(dft->getTopNode()->isRepairable()){
-		ss = std::stringstream();
-		ss << "Added new online     sync rule: ";
+		ss.str("Added new online     sync rule: ");
 		printSyncLineShort(ss, *ruleO);
 		cc->reportAction2(ss.str(), VERBOSITY_RULES);
 	}
@@ -772,7 +769,7 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 			ruleA->label[childID] = syncActivate(0,false);
 			ruleD->label[childID] = syncDeactivate(0,false);
 			cc->reportAction3("Child added to sync rule",VERBOSITY_RULEORIGINS);
-			report = std::stringstream("Added new activation sync rule: ");
+			report.str("Added new activation sync rule: ");
 			printSyncLineShort(report,*ruleA);
 			cc->reportAction2(report.str(),VERBOSITY_RULES);
 			activationRules.push_back(ruleA);

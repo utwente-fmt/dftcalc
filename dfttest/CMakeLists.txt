@@ -9,8 +9,7 @@ cmake_minimum_required (VERSION 2.6)
 
 ## Not sure if needed
 add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS )
-#add_definitions(-std=c++0x -D_GNU_SOURCE)
-add_definitions(-std=gnu++0x)
+add_definitions(-std=c++11)
 
 ## Include source directory, the build directory (for generated files) and the dft2lnt library path
 include_directories(
