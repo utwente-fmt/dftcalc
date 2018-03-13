@@ -292,7 +292,7 @@ namespace DFT {
 			}
 			
 			/* Find dot executable (based on PATH environment variable) */
-			{
+			if (!buildDot.empty()) {
 				bool exists = false;
 				bool accessible = false;
 				vector<File> dots;
