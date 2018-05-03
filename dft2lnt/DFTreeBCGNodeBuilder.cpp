@@ -121,6 +121,8 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 			}
 			ss << "_r" << repairable;//gate.getRepairableChildren();
 		}
+		if (node.isAlwaysActive())
+			ss << "_aa";
 	} else {
 		assert(0 && "getFileForNode(): Unknown node type");
 	}
@@ -318,7 +320,7 @@ int DFT::DFTreeBCGNodeBuilder::generateSpare(FileWriter& out, const DFT::Nodes::
 			<< GATE_ONLINE << ","
 			<< GATE_DEACTIVATE << ","
 			<< GATE_REPAIRED
-			<< "] (" << total << " of NAT)" << out.applypostfix;
+			<< "] (" << total << " of NAT, " << (gate.isAlwaysActive() ? "TRUE" : "FALSE") << ")" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	out.outdent();
