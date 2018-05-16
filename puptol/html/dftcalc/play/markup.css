@@ -1,0 +1,109 @@
+pre.example, pre.src {
+    background-color: white;
+    overflow: auto;
+    padding: 1ex 1em;
+    margin: 0.5ex 3em 0.5ex 1em;
+    border: thin dotted #AE0A00;
+    line-height: 130%;
+}
+
+h1, h2, h3, h4,
+#body ul > li:before {
+    color: #AE0A00;
+}
+
+h3, h4 {
+    margin-top: 2ex;
+    margin-bottom: 0.5ex;
+}
+
+h1 + p, h2 + p, h3 + p, h4 + p {
+    margin-top: 0;
+}
+
+p + p {
+    margin-top: 2ex;
+}
+
+/* Kludge around having to reset dl.contents */
+#make-targets-list dl {
+    margin-left: 2em;
+}
+
+#make-targets-list dt:after {
+    content: ":";
+    font-weight: bold;
+}
+
+#make-targets-list dl dd:empty + dt {
+    margin-top: 0;
+}
+
+#make-targets-list dl dd + dt {
+    margin-top: 1.5ex;
+}
+
+
+#content h2 {
+    padding-bottom: 0.2ex;
+    border-bottom: 2px solid #AE0A00;
+    clear: both;
+}
+
+#content div.contents:before {
+    content: "Contents";
+    font-weight: bolder;
+    text-align: center;
+    display: block;
+    color: white;
+    background-color: #AE0A00;
+    margin: 0;
+    padding: 0.4ex 0.5em;
+}
+
+#content .contents {
+    float: right;
+    margin: 0 0 0 1em;
+    padding: 0;
+    max-width: 50%;
+    font-size: smaller;
+    background-color: #e8e8ff;
+    border: thin solid #AE0A00;
+}
+
+#content .contents > dl {
+    padding: 0 1em;
+}
+
+/* */
+.verse {
+    font-size: smaller;
+}
+
+/* counters */
+body {
+    counter-reset: section subsection;
+}
+
+.counters .contents > dl {
+    counter-reset: toc-section;
+}
+
+.counters .contents > dl > dt:before {
+    counter-increment: toc-section;
+    content: counter(toc-section) ". ";
+}
+
+.counters h2:before {
+    counter-increment: section;
+    content: counter(section) ". ";
+}
+
+.counters h2 {
+    counter-reset: subsection;
+}
+
+.counters h3:before {
+    counter-increment: subsection;
+    content: counter(section) "." counter(subsection) ". ";
+}

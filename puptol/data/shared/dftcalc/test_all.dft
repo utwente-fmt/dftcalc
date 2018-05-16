@@ -1,0 +1,18 @@
+toplevel "A1";
+"A1" 2of3 "B" "B2" "C" "D";
+"B" fdep "B1" "B3" "B4";
+"B1" lambda=0.04 dorm=0;
+"B2" pand "B3" "B4";
+"B3" lambda=0.3 dorm=0;
+"B4" lambda=0.2 dorm=0;
+"C" or "C1" "C2" "C3";
+"C1" wsp "C1P" "CS";
+"C1P" lambda=0.1 dorm=0;
+"C2" wsp "C2P" "CS";
+"C2P" lambda=0.1 dorm=0;
+"C3" wsp "C3P" "CS";
+"C3P" lambda=0.1 dorm=0;
+"CS" wsp "CS1" "CS2";
+"CS1" lambda=0.2 dorm=0.5;
+"CS2" lambda=0.2 dorm=0.1;
+"D" aph="erl2_2.bcg";

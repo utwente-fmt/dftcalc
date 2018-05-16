@@ -1,0 +1,76 @@
+README file for examples of CORAL
+
+--------------------------------------------------------------------------------
+test1.dft
+
+A simple DFT consisting of a 2/3 voting gate and 3 exponentially distributed
+basic events.
+
+Example usage: coral -f test1.dft -t 1.0 2.0 3.0
+Computes the unreliabilities for timepoints 1.0, 2.0, and 3.0 and writes them
+to standard output.
+
+--------------------------------------------------------------------------------
+test2.dft
+
+A simple non-deterministic DFT.
+
+Example usage: coral -f test2.dft -t 1.0 2.0 3.0
+Computes the maximal* unreliabilities for timepoints 1.0, 2.0, and 3.0 and
+writes them to standard output.
+
+--------------------------------------------------------------------------------
+test3.dft
+
+A simple DFT consisting of a 2/3 voting gate, 2 exponentially distributed
+basic events and one PH-distributed basic event. Note: uses file erl2_2.bcg.
+
+Example usage: coral -f test3.dft -t 1.0 2.0 3.0
+Computes the unreliabilities for timepoints 1.0, 2.0, and 3.0 and writes them
+to standard output.
+
+--------------------------------------------------------------------------------
+test_all.dft
+
+A simple DFT which uses all DFT features. Note: uses file erl2_2.bcg.
+
+Example usage: coral -f test_all.dft -t 1.0 2.0 3.0
+Computes the maximal* unreliabilities for timepoints 1.0, 2.0, and 3.0 and
+writes them to standard output.
+
+--------------------------------------------------------------------------------
+ftpp4.dft
+
+A DFT from a case study modeling a fault-tolerant parallel processor system.
+
+Example usage: coral -f ftpp4.dft -i 100 10000 100 -O example.csv
+Computes the unreliabilities for timepoints 100 to 10000 in steps of 100
+time-units and writes the results to a comma-separated file example.csv.
+This file can be used to generate a plot using gnuplot. A sample gnuplot
+script is provided in the file example_plot.gp.
+Example usage: gnuplot example_plot.gp
+The resulting figure can be found in the file example_plot.ps.
+
+--------------------------------------------------------------------------------
+reuse.dft
+
+A DFT which reuses the "test1.dft" model. The DFT consists of an AND-gate with
+2 inputs which are 2 copies of the "test1.dft" model. To succesfully analyze
+this system the composed I/O-IMC for "test1.dft" has to be generated first.
+
+Example usage:
+coral -f test1.dft -C test1 -a
+coral -f reuse.dft -t 1.0 2.0 3.0
+
+Constructs first the composed model for "test1.dft" and uses it to compute
+the unreliabities of "reuse.dft" for timepoints 1.0, 2.0, and 3.0.
+
+--------------------------------------------------------------------------------
+test1_err.dft
+
+Example of a DFT-file with a syntax error.
+
+Example usage: coral -f test3.dft -t 1.0 2.0 3.0
+An error message should be generated.
+
+*Maximal for all untimed schedulers on the globally-uniformized CTMDP.

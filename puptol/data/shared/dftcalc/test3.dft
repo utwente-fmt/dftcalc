@@ -1,0 +1,5 @@
+toplevel "A1";
+"A1" 2of3 "B" "C" "D";
+"B" lambda=0.1 dorm=0;
+"C" lambda=0.2 dorm=0;
+"D" aph="erl2_2.bcg";

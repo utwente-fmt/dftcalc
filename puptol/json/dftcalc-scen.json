@@ -1,0 +1,1094 @@
+{ "Scenarios": [
+        {
+          "Type": "group",
+          "ToolName": "dftcalc",
+          "Title": "Tool Demo",
+          "Scenarios": [
+            {
+              "ToolName": "dftcalc",
+              "Title": "MTTF for Voting 2of3, without evidence",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test1.dft"
+                },
+                {
+                  "ParamName": "evidence"
+                },
+                {
+                  "ParamName": "mttfplotupb",
+                  "Value": "25"
+                },
+                {
+                  "ParamName": "mttfplotstep",
+                  "Value": ".1"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                },
+                {
+                  "ParamName": "datasetname",
+                  "Value": "Voting 2of3"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "MTTF for Voting 2of3, with evidence setting failed B",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test1.dft"
+                },
+                {
+                  "ParamName": "evidence",
+                  "Value": "B"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                },
+                {
+                  "ParamName": "datasetname",
+                  "Value": "Voting 2of3, failed B"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "MTTF for Voting 2of3, with evidence setting failed C",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test1.dft"
+                },
+                {
+                  "ParamName": "evidence",
+                  "Value": "C"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                },
+                {
+                  "ParamName": "datasetname",
+                  "Value": "Voting 2of3, failed C"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "MTTF for a 2 computing module system (ca. 35sec)",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs.dft"
+                },
+                {
+                  "ParamName": "mttfplotupb",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "mttfplotstep",
+                  "Value": "0.05"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                },
+                {
+                  "ParamName": "datasetname",
+                  "Value": "2CM system"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "MTTF for the cardiac assist system",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/cas.dft"
+                },
+                {
+                  "ParamName": "mttfplotupb",
+                  "Value": "40000"
+                },
+                {
+                  "ParamName": "mttfplotstep",
+                  "Value": "5"
+                },
+                {
+                  "ParamName": "errorbound",
+                  "Value": "0.0001"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                },
+                {
+                  "ParamName": "datasetname",
+                  "Value": "CAS"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "ToolName": "dftcalc",
+          "Title": "Multiprocessor computing system CM2",
+          "Scenarios": [
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times [0,1] step 0.01 using MRMC (scaled down from [0,100.000] for CM2)",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "0"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": "0.01"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "modelchecker",
+                  "Value": "--mrmc"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times [0,1] step 0.01 using IMCA (scaled down from [0,100.000] for CM2)",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "0"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": "0.01"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "modelchecker",
+                  "Value": "--imca"
+                },
+                {
+                  "ParamName": "errorbound",
+                  "Value": "0.0001"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute mean time to failure for CM2",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs.dft"
+                },
+                {
+                  "ParamName": "mttfplotupb",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "mttfplotstep",
+                  "Value": "0.05"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "ToolName": "dftcalc",
+          "Title": "Multiprocessor computing system CM4",
+          "Scenarios": [
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times [0,1] step 0.01 using IMCA (scaled down from [0,100.000] for CM4)",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs_4CM.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "0"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": "0.01"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "modelchecker",
+                  "Value": "--mrmc"
+                },
+                {
+                  "ParamName": "errorbound",
+                  "Value": "0.0001"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times [0,1] step 0.01 using MRMC (scaled down from [0,100.000] for CM4)",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs_4CM.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "0"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": "0.01"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "modelchecker",
+                  "Value": "--imca"
+                },
+                {
+                  "ParamName": "errorbound",
+                  "Value": "0.0001"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute mean time to failure for CM4",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs_4CM.dft"
+                },
+                {
+                  "ParamName": "mttfplotupb",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "mttfplotstep",
+                  "Value": "0.05"
+                },
+                {
+                  "ParamName": "errorbound",
+                  "Value": "0.0001"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "ToolName": "dftcalc",
+          "Title": "Cardiac assist system",
+          "Scenarios": [
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times [0,40000] step 1 with MRMC for CAS",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/cas.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "0"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "40000"
+                },
+                {
+                  "ParamName": "modelchecker",
+                  "Value": "--mrmc"
+                },
+                {
+                  "ParamName": "errorbound",
+                  "Value": "0.0001"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times [0,40000] step 1 with IMCA for CAS",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/cas.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "0"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "40000"
+                },
+                {
+                  "ParamName": "modelchecker",
+                  "Value": "--imca"
+                },
+                {
+                  "ParamName": "errorbound",
+                  "Value": "0.0001"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute mean time to failure for CAS",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/cas.dft"
+                },
+                {
+                  "ParamName": "mttfplotupb",
+                  "Value": "40000"
+                },
+                {
+                  "ParamName": "mttfplotstep",
+                  "Value": "5"
+                },
+                {
+                  "ParamName": "errorbound",
+                  "Value": "0.0001"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute mean time to failure for CAS with evidence setting failed MS",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "URL",
+                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/cas.dft"
+                },
+                {
+                  "ParamName": "evidence",
+                  "Value": "MS"
+                },
+                {
+                  "ParamName": "mttfplotupb",
+                  "Value": "40000"
+                },
+                {
+                  "ParamName": "mttfplotstep",
+                  "Value": "5"
+                },
+                {
+                  "ParamName": "errorbound",
+                  "Value": "0.0001"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "ToolName": "dftcalc",
+          "Title": "dft test1: A simple DFT consisting of a 2/3 voting gate and 3 exponentially distributed basic events",
+          "Scenarios": [
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability, using mission times: value list (choose between MRMC and IMCA)",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test1.dft"
+                },
+                {
+                  "ParamName": "evidence"
+                },
+                {
+                  "ParamName": "mtimesvalues",
+                  "Value": "1.0 2.0 3.0"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "valuelist"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability, using mission times: interval (choose between MRMC and IMCA)",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test1.dft"
+                },
+                {
+                  "ParamName": "evidence"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "3"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute mean time to failure, without evidence, using default plot parameters",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test1.dft"
+                },
+                {
+                  "ParamName": "evidence"
+                },
+                {
+                  "ParamName": "mtimesupb"
+                },
+                {
+                  "ParamName": "mttfplotupb"
+                },
+                {
+                  "ParamName": "mttfplotstep"
+                },
+                {
+                  "ParamName": "omitpoints"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute mean time to failure, without evidence, with given plot parameters",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test1.dft"
+                },
+                {
+                  "ParamName": "evidence"
+                },
+                {
+                  "ParamName": "mttfplotupb",
+                  "Value": "25"
+                },
+                {
+                  "ParamName": "mttfplotstep",
+                  "Value": ".1"
+                },
+                {
+                  "ParamName": "omitpoints",
+                  "Value": "omitpoints"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                },
+                {
+                  "ParamName": "datasetname",
+                  "Value": "test1"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute mean time to failure, with evidence setting failed B",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test1.dft"
+                },
+                {
+                  "ParamName": "evidence",
+                  "Value": "B"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                },
+                {
+                  "ParamName": "datasetname",
+                  "Value": "test1, failed B"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute mean time to failure, with evidence setting failed C",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test1.dft"
+                },
+                {
+                  "ParamName": "evidence",
+                  "Value": "C"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                },
+                {
+                  "ParamName": "datasetname",
+                  "Value": "test1, failed C"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute mean time to failure, with evidence setting failed B and failed C",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test1.dft"
+                },
+                {
+                  "ParamName": "evidence",
+                  "Value": "B C"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                },
+                {
+                  "ParamName": "datasetname",
+                  "Value": "test1, failed B C"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "ToolName": "dftcalc",
+          "Title": "dft test2, A simple non-deterministic DFT",
+          "Scenarios": [
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times in [0..3] step 1",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test2.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "0"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": "1"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "3"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times in [0..3] step 0.01 using IMCA",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test2.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "0"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": ".01"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "3"
+                },
+                {
+                  "ParamName": "modelchecker",
+                  "Value": "--imca"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times in [0..10] step 0.01 using IMCA",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test2.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "0"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": ".01"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "10"
+                },
+                {
+                  "ParamName": "modelchecker",
+                  "Value": "--imca"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times in [8..20] step 0.01 using IMCA",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test2.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "8"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": ".01"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "20"
+                },
+                {
+                  "ParamName": "modelchecker",
+                  "Value": "--imca"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute mean time to failure",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test2.dft"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "mttf"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times in [0..60] step 1.0 using IMCA",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test2.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "0"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": "1.0"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "60"
+                },
+                {
+                  "ParamName": "modelchecker",
+                  "Value": "--imca"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
+              "Title": "compute unreliability for mission times in [0..60] step 0.1 using IMCA",
+              "ResetForm": true,
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/test2.dft"
+                },
+                {
+                  "ParamName": "mtimeslwb",
+                  "Value": "0"
+                },
+                {
+                  "ParamName": "mtimesstep",
+                  "Value": "0.1"
+                },
+                {
+                  "ParamName": "mtimesupb",
+                  "Value": "60"
+                },
+                {
+                  "ParamName": "modelchecker",
+                  "Value": "--imca"
+                },
+                {
+                  "ParamName": "mtimessel",
+                  "Value": "interval"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "unreliability"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ToolName": "dftcalc",
+          "Title": "dft test3, A simple DFT consisting of a 2/3 voting gate, 2 exponentially distributed basic events and one PH-distributed basic event",
+          "Params": [
+            {
+              "ParamName": "dft",
+              "Type": "SHARED",
+              "Value": "dftcalc/test3.dft"
+            },
+            {
+              "ParamName": "computation",
+              "Value": "unreliability"
+            },
+            {
+              "ParamName": "mtimeslwb",
+              "Value": "1"
+            },
+            {
+              "ParamName": "mtimesupb",
+              "Value": "60"
+            },
+            {
+              "ParamName": "mtimesstep",
+              "Value": ".1"
+            },
+            {
+              "ParamName": "mtimessel",
+              "Value": "interval"
+            }
+          ]
+        },
+        {
+          "ToolName": "dftcalc",
+          "Title": "dft ftpp4, A DFT from a case study modeling a fault-tolerant parallel processor system (takes approx 12 minutes to compute)",
+          "Params": [
+            {
+              "ParamName": "dft",
+              "Type": "SHARED",
+              "Value": "dftcalc/ftpp4.dft"
+            },
+            {
+              "ParamName": "computation",
+              "Value": "unreliability"
+            },
+            {
+              "ParamName": "mtimeslwb",
+              "Value": "100"
+            },
+            {
+              "ParamName": "mtimesupb",
+              "Value": "15000"
+            },
+            {
+              "ParamName": "mtimesstep",
+              "Value": "100"
+            },
+            {
+              "ParamName": "mtimessel",
+              "Value": "interval"
+            }
+          ]
+        },
+        {
+          "ToolName": "dftcalc",
+          "Title": "dft test_all, A simple DFT which uses all DFT features",
+          "Params": [
+            {
+              "ParamName": "dft",
+              "Type": "SHARED",
+              "Value": "dftcalc/test_all.dft"
+            },
+            {
+              "ParamName": "computation",
+              "Value": "unreliability"
+            },
+            {
+              "ParamName": "mtimeslwb",
+              "Value": "1"
+            },
+            {
+              "ParamName": "mtimesupb",
+              "Value": "60"
+            },
+            {
+              "ParamName": "mtimesstep",
+              "Value": ".1"
+            },
+            {
+              "ParamName": "mtimessel",
+              "Value": "interval"
+            }
+          ]
+        }
+]
+}

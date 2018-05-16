@@ -1,0 +1,1623 @@
+{"Experiments":[{
+      "Type": "experiment",
+      "Title": "DFTCalc webpage sandbox",
+      "IndexURL": "http://fmt.ewi.utwente.nl/tools/dftcalc/webversion.html",
+      "Name": "dftcalc",
+      "MaxCPUSeconds": "0",
+      "Params": [
+        {
+          "Name": "dft",
+          "Type": "string"
+        },
+        {
+          "Name": "evidence",
+          "Type": "string"
+        },
+        {
+          "Name": "mtimesvalues",
+          "Type": "string"
+        },
+        {
+          "Name": "mtimeslwb",
+          "Type": "string"
+        },
+        {
+          "Name": "mtimesstep",
+          "Type": "string"
+        },
+        {
+          "Name": "mtimesupb",
+          "Type": "string"
+        },
+        {
+          "Name": "timelwb",
+          "Type": "string"
+        },
+        {
+          "Name": "timeupb",
+          "Type": "string"
+        },
+        {
+          "Name": "modelchecker",
+          "Type": "string"
+        },
+        {
+          "Name": "mttfplotupb",
+          "Type": "string"
+        },
+        {
+          "Name": "mttfplotstep",
+          "Type": "string"
+        },
+        {
+          "Name": "errorbound",
+          "Type": "string"
+        },
+        {
+          "Name": "minmaxprob",
+          "Type": "string"
+        },
+        {
+          "Name": "minmaxtime",
+          "Type": "string"
+        },
+        {
+          "Name": "at",
+          "Type": "string"
+        },
+        {
+          "Name": "verbose",
+          "Type": "string"
+        },
+        {
+          "Name": "color",
+          "Type": "string"
+        },
+        {
+          "Name": "omitpoints",
+          "Type": "string"
+        },
+        {
+          "Name": "eval",
+          "Type": "string"
+        },
+        {
+          "Name": "plot",
+          "Type": "string"
+        },
+        {
+          "Name": "mtimessel",
+          "Type": "string"
+        },
+        {
+          "Name": "dataset",
+          "Type": "string"
+        },
+        {
+          "Name": "datasets",
+          "Type": "collection"
+        },
+        {
+          "Name": "computation",
+          "Type": "string"
+        },
+        {
+          "Name": "plotandstore",
+          "Type": "string"
+        },
+        {
+          "Name": "datasetname",
+          "Type": "string"
+        },
+        {
+          "Name": "plotdatasets",
+          "Type": "string"
+        },
+        {
+          "Name": "downloaddatasets",
+          "Type": "string"
+        },
+        {
+          "Name": "version",
+          "Type": "string"
+        }
+      ],
+      "Form": [
+        {
+          "Type": "scenarios",
+          "Title": "Select Example",
+          "Value": "(select example)",
+          "NewPage": "false",
+          "ExperimentName": "dftcalc"
+        },
+        {
+          "Type": "group",
+          "NewPage": "false",
+          "Items": [
+            {
+              "Type": "textarea",
+              "Title": "DFT",
+              "Label": "DFT",
+              "Name": "edit",
+              "NewPage": "false",
+              "ParamName": "dft"
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "NewPage": "false",
+          "Items": [
+            {
+              "Type": "group",
+              "NewPage": "false",
+              "Items": [
+                {
+                  "Type": "radio",
+                  "Title": "Compute unreliability in interval [0,T]",
+                  "Label": "Compute unreliability in interval [0,T],",
+                  "Name": "computation",
+                  "Value": "unreliability",
+                  "NewPage": "false",
+                  "ParamName": "computation"
+                },
+                {
+                  "Type": "group",
+                  "Class": "unreliability",
+                  "NewPage": "false",
+                  "Items": [
+                    {
+                      "Type": "group",
+                      "NewPage": "false",
+                      "Items": [
+                        {
+                          "Type": "string",
+                          "Value": "for mission times T (T\u003e0), given as",
+                          "NewPage": "false"
+                        },
+                        {
+                          "Type": "group",
+                          "Class": "missiontimelist",
+                          "NewPage": "false",
+                          "Items": [
+                            {
+                              "Type": "radio",
+                              "Title": "list of values",
+                              "Label": "list of values",
+                              "Name": "mtimessel",
+                              "Value": "valuelist",
+                              "NewPage": "false",
+                              "ParamName": "mtimessel"
+                            },
+                            {
+                              "Type": "text",
+                              "Title": "Mission times as list of values",
+                              "Name": "mtv",
+                              "NewPage": "false",
+                              "ParamName": "mtimesvalues"
+                            }
+                          ]
+                        },
+                        {
+                          "Type": "group",
+                          "Class": "missiontimeinterval",
+                          "NewPage": "false",
+                          "Items": [
+                            {
+                              "Type": "radio",
+                              "Title": "range of values",
+                              "Label": "range",
+                              "Name": "mtimessel",
+                              "Value": "interval",
+                              "NewPage": "false",
+                              "ParamName": "mtimessel"
+                            },
+                            {
+                              "Type": "text",
+                              "Title": "Mission time range lowerbound",
+                              "Label": ", from",
+                              "Name": "mtilwb",
+                              "NewPage": "false",
+                              "ParamName": "mtimeslwb"
+                            },
+                            {
+                              "Type": "text",
+                              "Title": "Mission time range upperbound",
+                              "Label": "to",
+                              "Name": "mtiupb",
+                              "NewPage": "false",
+                              "ParamName": "mtimesupb"
+                            },
+                            {
+                              "Type": "text",
+                              "Title": "Mission time range step",
+                              "Label": "step",
+                              "Name": "mtistep",
+                              "NewPage": "false",
+                              "ParamName": "mtimesstep"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "Type": "group",
+                      "Class": "modelchecker",
+                      "NewPage": "false",
+                      "Items": [
+                        {
+                          "Type": "string",
+                          "Value": "Model checker: ",
+                          "NewPage": "false"
+                        },
+                        {
+                          "Type": "radio",
+                          "Title": "MRMC",
+                          "Label": "MRMC",
+                          "Name": "modelchecker",
+                          "Value": "--mrmc",
+                          "NewPage": "false",
+                          "ParamName": "modelchecker"
+                        },
+                        {
+                          "Type": "radio",
+                          "Title": "IMCA",
+                          "Label": "IMCA",
+                          "Name": "modelchecker",
+                          "Value": "--imca",
+                          "NewPage": "false",
+                          "ParamName": "modelchecker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Type": "group",
+              "NewPage": "false",
+              "Items": [
+                {
+                  "Type": "radio",
+                  "Title": "Compute unreliability in interval [T1,T2]",
+                  "Label": "Compute unreliability in interval [T1,T2]",
+                  "Name": "computation",
+                  "Value": "lwbupb",
+                  "NewPage": "false",
+                  "ParamName": "computation"
+                },
+                {
+                  "Type": "group",
+                  "Class": "lwbupb",
+                  "NewPage": "false",
+                  "Items": [
+                    {
+                      "Type": "text",
+                      "Title": "Time interval lowerbound",
+                      "Label": "T1",
+                      "Name": "timelwb",
+                      "NewPage": "false",
+                      "ParamName": "timelwb"
+                    },
+                    {
+                      "Type": "text",
+                      "Title": "Time interval upperbound",
+                      "Label": "T2",
+                      "Name": "timeupb",
+                      "NewPage": "false",
+                      "ParamName": "timeupb"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Type": "group",
+              "NewPage": "false",
+              "Items": [
+                {
+                  "Type": "radio",
+                  "Title": "Compute mean time to failure",
+                  "Label": "Compute MTTF",
+                  "Name": "computation",
+                  "Value": "mttf",
+                  "NewPage": "false",
+                  "ParamName": "computation"
+                },
+                {
+                  "Type": "group",
+                  "Class": "mttf",
+                  "NewPage": "false",
+                  "Container": "span",
+                  "Items": [
+                    {
+                      "Type": "string",
+                      "Value": " (for plot: ",
+                      "NewPage": "false"
+                    },
+                    {
+                      "Type": "text",
+                      "Title": "Upperbound to be used in plot (leave empty for default: 5 * mttf)",
+                      "Label": "to",
+                      "Name": "mttfplotupb",
+                      "NewPage": "false",
+                      "ParamName": "mttfplotupb"
+                    },
+                    {
+                      "Type": "text",
+                      "Title": "Step size to be used in plot (leave empty for default: upperbound / 20)",
+                      "Label": "step",
+                      "Name": "mttfplotstep",
+                      "NewPage": "false",
+                      "ParamName": "mttfplotstep"
+                    },
+                    {
+                      "Type": "string",
+                      "Value": ")",
+                      "NewPage": "false"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "Class": "evidence",
+          "NewPage": "false",
+          "Items": [
+            {
+              "Type": "text",
+              "Title": "Evidence",
+              "Label": "Evidence",
+              "Name": "edit",
+              "Class": "evidence",
+              "NewPage": "false",
+              "ParamName": "evidence"
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "Class": "errorbound",
+          "NewPage": "false",
+          "Items": [
+            {
+              "Type": "select",
+              "Title": "Error bound",
+              "Label": "Error bound",
+              "Name": "errorbound",
+              "NewPage": "false",
+              "ParamName": "errorbound",
+              "Values": [
+                {
+                  "Title": "E-6",
+                  "Value": "0.000001"
+                },
+                {
+                  "Title": "E-5",
+                  "Value": "0.00001"
+                },
+                {
+                  "Title": "E-4",
+                  "Value": "0.0001",
+                  "Selected": "1"
+                },
+                {
+                  "Title": "E-3",
+                  "Value": "0.001"
+                },
+                {
+                  "Title": "E-2",
+                  "Value": "0.01"
+                },
+                {
+                  "Title": "E-1",
+                  "Value": "0.1"
+                }
+              ]
+            },
+            {
+              "Type": "string",
+              "Value": "&nbsp;&nbsp;",
+              "NewPage": "false"
+            },
+            {
+              "Type": "select",
+              "Title": "When computing unreliability, resolve non-determinism by computing minimum resp. maximum time- and interval-bounded reachability",
+              "Label": "Prob",
+              "Name": "minmaxprob",
+              "NewPage": "false",
+              "ParamName": "minmaxprob",
+              "Values": [
+                {
+                  "Title": "min",
+                  "Value": "--min"
+                },
+                {
+                  "Title": "max",
+                  "Value": "--max"
+                }
+              ]
+            },
+            {
+              "Type": "string",
+              "Value": "&nbsp;&nbsp;",
+              "NewPage": "false"
+            },
+            {
+              "Type": "select",
+              "Title": "When computing time, like for MTTF, resolve non-determinism by computing minimum resp. maximum expected time",
+              "Label": "Time",
+              "Name": "minmaxtime",
+              "NewPage": "false",
+              "ParamName": "minmaxtime",
+              "Values": [
+                {
+                  "Title": "as Prob"
+                },
+                {
+                  "Title": "min",
+                  "Value": "--min"
+                },
+                {
+                  "Title": "max",
+                  "Value": "--max"
+                }
+              ]
+            },
+            {
+              "Type": "string",
+              "Value": "&nbsp;&nbsp;",
+              "NewPage": "false"
+            },
+            {
+              "Type": "select",
+              "Title": "Select DFT or AT (only available in experimental version)",
+              "Label": "DFT",
+              "Name": "at",
+              "NewPage": "false",
+              "ParamName": "at",
+              "Values": [
+                {
+                  "Title": "DFT"
+                },
+                {
+                  "Title": "AT",
+                  "Value": "--at"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "Class": "options",
+          "NewPage": "false",
+          "Items": [
+            {
+              "Type": "select",
+              "Title": "DFTCalc version",
+              "Label": "Version",
+              "Name": "version",
+              "NewPage": "false",
+              "ParamName": "version",
+              "Values": [
+                {
+                  "Title": "next",
+                  "Value": "smart-inspection"
+                },
+                {
+                  "Title": "stable",
+                  "Value": "master"
+                },
+                {
+                  "Title": "experimental",
+                  "Value": "merge"
+                }
+              ]
+            },
+            {
+              "Type": "string",
+              "Value": "&nbsp;&nbsp;",
+              "NewPage": "false"
+            },
+            {
+              "Type": "select",
+              "Title": "Verbosity",
+              "Label": "Verbosity",
+              "Name": "verbose",
+              "NewPage": "false",
+              "ParamName": "verbose",
+              "Values": [
+                {
+                  "Title": "off",
+                  "Value": "--verbose=-1"
+                },
+                {
+                  "Title": "0",
+                  "Value": "--verbose=0"
+                },
+                {
+                  "Title": "1",
+                  "Value": "--verbose=1"
+                },
+                {
+                  "Title": "2",
+                  "Value": "--verbose=2"
+                },
+                {
+                  "Title": "3",
+                  "Value": "--verbose=3"
+                },
+                {
+                  "Title": "4",
+                  "Value": "--verbose=4"
+                },
+                {
+                  "Title": "5",
+                  "Value": "--verbose=5"
+                }
+              ]
+            },
+            {
+              "Type": "string",
+              "Value": "&nbsp;&nbsp;",
+              "NewPage": "false"
+            },
+            {
+              "Type": "checkbox",
+              "Title": "Color verbose output",
+              "Label": "Coloured output",
+              "Name": "color",
+              "Value": "--color",
+              "NewPage": "false",
+              "ParamName": "color"
+            },
+            {
+              "Type": "string",
+              "Value": "&nbsp;&nbsp;",
+              "NewPage": "false"
+            },
+            {
+              "Type": "checkbox",
+              "Title": "Omit point marks from plot",
+              "Label": "No pointmarks",
+              "Name": "omitpoints",
+              "Value": "omitpoints",
+              "NewPage": "false",
+              "ParamName": "omitpoints"
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "Class": "results",
+          "NewPage": "false",
+          "Items": [
+            {
+              "Type": "submit",
+              "Title": "Submit to obtain textual output",
+              "Name": "eval",
+              "Value": "Show Result",
+              "NewPage": "false",
+              "InvocationName": "eval"
+            },
+            {
+              "Type": "submit",
+              "Title": "Submit to obtain graphical output",
+              "Name": "plot",
+              "Value": "Show Plot",
+              "NewPage": "false",
+              "InvocationName": "plot"
+            },
+            {
+              "Type": "submit",
+              "Title": "Submit to obtain graphical output",
+              "Name": "plotandstore",
+              "Value": "Show Plot and store data set",
+              "NewPage": "false",
+              "InvocationName": "plotandstore"
+            },
+            {
+              "Type": "text",
+              "Title": "Data set name",
+              "Label": "Data set  name",
+              "Name": "datasetname",
+              "Class": "datasetname",
+              "NewPage": "false",
+              "ParamName": "datasetname"
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "Class": "data",
+          "NewPage": "false",
+          "Items": [
+            {
+              "Type": "submit",
+              "Name": "permalink",
+              "Value": "Permalink",
+              "NewPage": "false"
+            },
+            {
+              "Type": "collection",
+              "Title": "Stored data sets (to be used for combined plot, or for download)",
+              "Class": "datasets",
+              "NewPage": "false",
+              "CollectionName": "datasets",
+              "ItemsDir": "SESSION/dftcalc/datasets",
+              "Items": [
+                {
+                  "Type": "checkbox",
+                  "Name": "dataset",
+                  "NewPage": "false",
+                  "ParamName": "dataset",
+                  "Container": "span"
+                }
+              ]
+            },
+            {
+              "Type": "submit",
+              "Title": "Submit to obtain graphical output",
+              "Name": "plotdatasets",
+              "Value": "Plot selected data sets in combined plot",
+              "NewPage": "false",
+              "InvocationName": "plotdatasets"
+            },
+            {
+              "Type": "submit",
+              "Title": "Submit to obtain the selected datasets in a gzip-ed tar file",
+              "Name": "plotdatasets",
+              "Value": "Download selected data sets",
+              "NewPage": "false",
+              "InvocationName": "downloaddatasets"
+            }
+          ]
+        },
+        {
+          "Type": "group",
+          "Class": "sep",
+          "NewPage": "false",
+          "Container": "div",
+          "Items": [
+            {
+              "Type": "string",
+              "Value": "\u003chr/\u003e",
+              "NewPage": "false"
+            }
+          ]
+        }
+      ],
+      "Results": [
+        {
+          "Name": "errors",
+          "Type": "prefmt",
+          "Class": "errors"
+        },
+        {
+          "Name": "output",
+          "Type": "prefmt",
+          "Class": "output"
+        },
+        {
+          "Name": "img",
+          "Type": "img",
+          "Class": "img"
+        },
+        {
+          "Name": "datasets",
+          "Type": "collection",
+          "CollectionName": "datasets"
+        },
+        {
+          "Name": "download",
+          "Type": "download",
+          "Class": "download"
+        },
+        {
+          "Name": "internalError",
+          "Type": "prefmt",
+          "Class": "internalError"
+        },
+        {
+          "Name": "spinner",
+          "Type": "prefmt",
+          "Class": "spinner"
+        },
+        {
+          "Name": "resourceUsage",
+          "Type": "prefmt",
+          "Class": "resourceUsage"
+        }
+      ],
+      "ToolInvocations": [
+        {
+          "Name": "eval",
+          "Type": "cmdline",
+          "Program": "scripts/dftcalc/dodftcalc.sh",
+          "Arguments": [
+            {
+              "Type": "param",
+              "Constraint": [
+                "nonempty"
+              ],
+              "ParamName": "minmaxprob"
+            },
+            {
+              "Type": "string",
+              "Value": "-t",
+              "CondParamName": "mtimessel",
+              "CondValue": "valuelist"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimesvalues",
+              "CondParamName": "mtimessel",
+              "CondValue": "valuelist"
+            },
+            {
+              "Type": "string",
+              "Value": "-i",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimeslwb",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimesupb",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimesstep",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            }
+          ],
+          "Environment": [
+            {
+              "Name": "VERSION",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "version"
+                }
+              ]
+            },
+            {
+              "Name": "MODELCHECKER",
+	      "Value": [{
+		      "Type": "param",
+		      "Constraint": [
+			      "nonempty"
+		      ],
+		      "ParamName": "modelchecker"
+	      }]
+            },
+            {
+              "Name": "MTTFPLOTUPB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "mttfplotupb"
+                }
+              ]
+            },
+            {
+              "Name": "MTTFPLOTSTEP",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "mttfplotstep"
+                }
+              ]
+            },
+            {
+              "Name": "EVIDENCE",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "evidence"
+                }
+              ]
+            },
+            {
+              "Name": "ERRORBOUND",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "errorbound"
+                }
+              ]
+            },
+            {
+              "Name": "MINMAXPROB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "minmaxprob"
+                }
+              ]
+            },
+            {
+              "Name": "MINMAXTIME",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "minmaxtime"
+                }
+              ]
+            },
+            {
+              "Name": "AT",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "at"
+                }
+              ]
+            },
+            {
+              "Name": "VERBOSE",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "verbose"
+                }
+              ]
+            },
+            {
+              "Name": "COLOR",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "color"
+                }
+              ]
+            },
+            {
+              "Name": "OMITPOINTS",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "omitpoints"
+                }
+              ]
+            },
+            {
+              "Name": "COMPUTATION",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "computation"
+                }
+              ]
+            },
+            {
+              "Name": "TIMELWB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "timelwb"
+                }
+              ]
+            },
+            {
+              "Name": "TIMEUPB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "timeupb"
+                }
+              ]
+            }
+          ],
+          "StdinData": [
+            {
+              "Type": "param",
+              "Constraint": [
+                "nonempty"
+              ],
+              "ParamName": "dft"
+            }
+          ],
+          "StdoutResult": [
+            {
+              "Type": "coloredResult",
+              "ResultName": "output"
+            }
+          ],
+          "StderrResult": [
+            {
+              "Type": "coloredResult",
+              "ResultName": "errors"
+            }
+          ]
+        },
+        {
+          "Name": "plot",
+          "Type": "cmdline",
+          "Program": "scripts/dftcalc/topng.sh",
+          "Arguments": [
+            {
+              "Type": "param",
+              "Constraint": [
+                "nonempty"
+              ],
+              "ParamName": "modelchecker"
+            },
+            {
+              "Type": "param",
+              "Constraint": [
+                "nonempty"
+              ],
+              "ParamName": "minmaxprob"
+            },
+            {
+              "Type": "string",
+              "Value": "-t",
+              "CondParamName": "mtimessel",
+              "CondValue": "valuelist"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimesvalues",
+              "CondParamName": "mtimessel",
+              "CondValue": "valuelist"
+            },
+            {
+              "Type": "string",
+              "Value": "-i",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimeslwb",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimesupb",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimesstep",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            }
+          ],
+          "Environment": [
+            {
+              "Name": "VERSION",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "version"
+                }
+              ]
+            },
+            {
+              "Name": "MTTFPLOTUPB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "mttfplotupb"
+                }
+              ]
+            },
+            {
+              "Name": "MTTFPLOTSTEP",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "mttfplotstep"
+                }
+              ]
+            },
+            {
+              "Name": "EVIDENCE",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "evidence"
+                }
+              ]
+            },
+            {
+              "Name": "ERRORBOUND",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "errorbound"
+                }
+              ]
+            },
+            {
+              "Name": "MINMAXPROB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "minmaxprob"
+                }
+              ]
+            },
+            {
+              "Name": "MINMAXTIME",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "minmaxtime"
+                }
+              ]
+            },
+            {
+              "Name": "AT",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "at"
+                }
+              ]
+            },
+            {
+              "Name": "VERBOSE",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "verbose"
+                }
+              ]
+            },
+            {
+              "Name": "COLOR",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "color"
+                }
+              ]
+            },
+            {
+              "Name": "OMITPOINTS",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "omitpoints"
+                }
+              ]
+            },
+            {
+              "Name": "COMPUTATION",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "computation"
+                }
+              ]
+            },
+            {
+              "Name": "TIMELWB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "timelwb"
+                }
+              ]
+            },
+            {
+              "Name": "TIMEUPB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "timeupb"
+                }
+              ]
+            }
+          ],
+          "StdinData": [
+            {
+              "Type": "param",
+              "Constraint": [
+                "nonempty"
+              ],
+              "ParamName": "dft"
+            }
+          ],
+          "StdoutResult": [
+            {
+              "Type": "result",
+              "ResultName": "img"
+            }
+          ],
+          "StderrResult": [
+            {
+              "Type": "coloredResult",
+              "ResultName": "errors"
+            }
+          ]
+        },
+        {
+          "Name": "plotandstore",
+          "Type": "cmdline",
+          "Program": "scripts/dftcalc/plotandstore.sh",
+          "Arguments": [
+            {
+              "Type": "param",
+              "Constraint": [
+                "nonempty"
+              ],
+              "ParamName": "modelchecker"
+            },
+            {
+              "Type": "param",
+              "Constraint": [
+                "nonempty"
+              ],
+              "ParamName": "minmaxprob"
+            },
+            {
+              "Type": "string",
+              "Value": "-t",
+              "CondParamName": "mtimessel",
+              "CondValue": "valuelist"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimesvalues",
+              "CondParamName": "mtimessel",
+              "CondValue": "valuelist"
+            },
+            {
+              "Type": "string",
+              "Value": "-i",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimeslwb",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimesupb",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            },
+            {
+              "Type": "param",
+              "ParamName": "mtimesstep",
+              "CondParamName": "mtimessel",
+              "CondValue": "interval"
+            }
+          ],
+          "Environment": [
+            {
+              "Name": "VERSION",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "version"
+                }
+              ]
+            },
+            {
+              "Name": "MTTFPLOTUPB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "mttfplotupb"
+                }
+              ]
+            },
+            {
+              "Name": "MTTFPLOTSTEP",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "mttfplotstep"
+                }
+              ]
+            },
+            {
+              "Name": "EVIDENCE",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "evidence"
+                }
+              ]
+            },
+            {
+              "Name": "ERRORBOUND",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "errorbound"
+                }
+              ]
+            },
+            {
+              "Name": "MINMAXPROB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "minmaxprob"
+                }
+              ]
+            },
+            {
+              "Name": "MINMAXTIME",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "minmaxtime"
+                }
+              ]
+            },
+            {
+              "Name": "AT",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "at"
+                }
+              ]
+            },
+            {
+              "Name": "VERBOSE",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "verbose"
+                }
+              ]
+            },
+            {
+              "Name": "COLOR",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "color"
+                }
+              ]
+            },
+            {
+              "Name": "OMITPOINTS",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "omitpoints"
+                }
+              ]
+            },
+            {
+              "Name": "COMPUTATION",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "computation"
+                }
+              ]
+            },
+            {
+              "Name": "TIMELWB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "timelwb"
+                }
+              ]
+            },
+            {
+              "Name": "TIMEUPB",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "timeupb"
+                }
+              ]
+            },
+            {
+              "Name": "DATASETNAME",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "datasetname"
+                }
+              ]
+            }
+          ],
+          "StdinData": [
+            {
+              "Type": "param",
+              "Constraint": [
+                "nonempty"
+              ],
+              "ParamName": "dft"
+            }
+          ],
+          "StdoutResult": [
+            {
+              "Type": "coloredResult",
+              "ResultName": "output"
+            }
+          ],
+          "StderrResult": [
+            {
+              "Type": "coloredResult",
+              "ResultName": "errors"
+            }
+          ],
+          "ExtraResults": [
+            {
+              "EnvVarName": "PUPTOL_IMG_FD",
+              "Result": [
+                {
+                  "Type": "result",
+                  "ResultName": "img"
+                }
+              ]
+            },
+            {
+              "EnvVarName": "PUPTOL_DFTCALC_datasets_FD",
+              "Result": [
+                {
+                  "Type": "collection",
+                  "ResultName": "datasets"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "plotdatasets",
+          "Type": "cmdline",
+          "Program": "scripts/dftcalc/plotdatasets.sh",
+          "Arguments": [
+            {
+              "Type": "param",
+              "ParamName": "datasets",
+              "Items": [
+                {
+                  "Type": "field",
+                  "FieldName": "dataset"
+                }
+              ]
+            }
+          ],
+          "Environment": [
+            {
+              "Name": "VERSION",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "version"
+                }
+              ]
+            },
+            {
+              "Name": "AT",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "at"
+                }
+              ]
+            },
+            {
+              "Name": "VERBOSE",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "verbose"
+                }
+              ]
+            },
+            {
+              "Name": "COLOR",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "color"
+                }
+              ]
+            },
+            {
+              "Name": "OMITPOINTS",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "omitpoints"
+                }
+              ]
+            }
+          ],
+          "StdoutResult": [
+            {
+              "Type": "coloredResult",
+              "ResultName": "output"
+            }
+          ],
+          "StderrResult": [
+            {
+              "Type": "coloredResult",
+              "ResultName": "errors"
+            }
+          ],
+          "ExtraResults": [
+            {
+              "EnvVarName": "PUPTOL_IMG_FD",
+              "Result": [
+                {
+                  "Type": "result",
+                  "ResultName": "img"
+                }
+              ]
+            },
+            {
+              "EnvVarName": "PUPTOL_DFTCALC_datasets_refresh_FD",
+              "Result": [
+                {
+                  "Type": "collection-refresh",
+                  "ResultName": "datasets"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "downloaddatasets",
+          "Type": "cmdline",
+          "Program": "scripts/dftcalc/downloaddatasets.sh",
+          "Arguments": [
+            {
+              "Type": "param",
+              "ParamName": "datasets",
+              "Items": [
+                {
+                  "Type": "field",
+                  "FieldName": "dataset"
+                }
+              ]
+            }
+          ],
+          "Environment": [
+            {
+              "Name": "VERSION",
+              "Value": [
+                {
+                  "Type": "param",
+                  "Constraint": [
+                    "nonempty"
+                  ],
+                  "ParamName": "version"
+                }
+              ]
+            },
+            {
+              "Name": "AT",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "at"
+                }
+              ]
+            },
+            {
+              "Name": "VERBOSE",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "verbose"
+                }
+              ]
+            },
+            {
+              "Name": "COLOR",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "color"
+                }
+              ]
+            },
+            {
+              "Name": "OMITPOINTS",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "omitpoints"
+                }
+              ]
+            }
+          ],
+          "StdoutResult": [
+            {
+              "Type": "coloredResult",
+              "ResultName": "output"
+            }
+          ],
+          "StderrResult": [
+            {
+              "Type": "coloredResult",
+              "ResultName": "errors"
+            }
+          ],
+          "ExtraResults": [
+            {
+              "EnvVarName": "PUPTOL_DOWNLOAD_FD",
+              "Result": [
+                {
+                  "Type": "result",
+                  "ResultName": "download"
+                }
+              ]
+            },
+            {
+              "EnvVarName": "PUPTOL_DFTCALC_datasets_refresh_FD",
+              "Result": [
+                {
+                  "Type": "collection-refresh",
+                  "ResultName": "datasets"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+}]}

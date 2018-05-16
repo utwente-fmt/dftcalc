@@ -1,0 +1,5 @@
+toplevel "X";
+"X" and "Y" "Z";
+"Y" aph="test1.bcg";
+"Z" aph="test1.bcg";
+
