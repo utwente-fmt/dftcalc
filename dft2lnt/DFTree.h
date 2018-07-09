@@ -333,6 +333,8 @@ public:
 	{
 		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateSpareType))
 			return; /* Children of SPAREs are dynamically activated. */
+		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateSAndType))
+			return; /* Children of Sequential ANDs are dynamically activated. */
 
 		size_t n = gate->getChildren().size();
 		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateFDEPType))
