@@ -18,6 +18,7 @@ class DFTreeEXPBuilder;
 #include <map>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 #include "DFTree.h"
 #include "dft_parser.h"
@@ -30,6 +31,7 @@ namespace DFT {
  * This class reflects how one Node is synchronized in a synchronization rule.
  * It consists of a gate name and a list of arguments.
  */
+
 class EXPSyncItem {
 public:
 	std::string name;
@@ -135,7 +137,7 @@ public:
 class EXPSyncRule {
 public:
 	/// A mapping from NodeID to EXPSyncItem
-	std::map<unsigned int,EXPSyncItem*> label;
+	std::map<unsigned int,std::shared_ptr<EXPSyncItem>> label;
 	
 	/// The renamed label name
 	std::string toLabel;
@@ -163,7 +165,10 @@ public:
 	}
 	~EXPSyncRule() {
 	}
-	
+
+	void insertLabel(unsigned int pos, EXPSyncItem *item) {
+		label.insert(std::pair<unsigned int, std::shared_ptr<EXPSyncItem>>(pos, std::shared_ptr<EXPSyncItem>(item)));
+	}
 };
 
 /**
@@ -307,11 +312,11 @@ public:
 	 * @param sending Whether this is a sending action or not.
 	 * @return A new EXPSyncItem instance.
 	 */
-	EXPSyncItem* syncActivate(unsigned int localNodeID, bool sending) {
+	EXPSyncItem *syncActivate(unsigned int localNodeID, bool sending) {
 		return new EXPSyncItemIB(DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE,localNodeID,sending);
 	}
 
-	EXPSyncItem* syncDeactivate(unsigned int localNodeID, bool sending) {
+	EXPSyncItem *syncDeactivate(unsigned int localNodeID, bool sending) {
 		return new EXPSyncItemIB(DFT::DFTreeBCGNodeBuilder::GATE_DEACTIVATE,localNodeID,sending);
 	}
 
@@ -321,7 +326,7 @@ public:
 	 * @param localNodeID This is the ID of the Node seen from the actor.
 	 * @return A new EXPSyncItem instance.
 	 */
-	EXPSyncItem* syncFail(unsigned int localNodeID) {
+	EXPSyncItem *syncFail(unsigned int localNodeID) {
 		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_FAIL,localNodeID);
 	}
 
@@ -331,7 +336,7 @@ public:
 	 * @param localNodeID This is the ID of the Node seen from the actor.
 	 * @return A new EXPSyncItem instance.
 	 */
-	EXPSyncItem* syncRepair(unsigned int localNodeID) {
+	EXPSyncItem *syncRepair(unsigned int localNodeID) {
 		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_REPAIR,localNodeID);
 	}
 
@@ -341,7 +346,7 @@ public:
 	 * @param localNodeID This is the ID of the Node seen from the actor.
 	 * @return A new EXPSyncItem instance.
 	 */
-	EXPSyncItem* syncRepairing(unsigned int localNodeID) {
+	EXPSyncItem *syncRepairing(unsigned int localNodeID) {
 		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING,localNodeID);
 	}
 
@@ -351,7 +356,7 @@ public:
 	 * @param localNodeID This is the ID of the Node seen from the actor.
 	 * @return A new EXPSyncItem instance.
 	 */
-	EXPSyncItem* syncOnline(unsigned int localNodeID) {
+	EXPSyncItem *syncOnline(unsigned int localNodeID) {
 		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_ONLINE,localNodeID);
 	}
 
@@ -363,7 +368,7 @@ public:
 	 * @param sending Whether this is a sending action or not.
 	 * @return A new EXPSyncItem instance.
 	 */
-	EXPSyncItem* syncRepaired(unsigned int localNodeID, bool sending) {
+	EXPSyncItem *syncRepaired(unsigned int localNodeID, bool sending) {
 		return new EXPSyncItemIB(DFT::DFTreeBCGNodeBuilder::GATE_REPAIRED,localNodeID,sending);
 	}
     
@@ -373,7 +378,7 @@ public:
      * @param localNodeID This is the ID of the Node seen from the actor.
      * @return A new EXPSyncItem instance.
      */
-    EXPSyncItem* syncInspection(unsigned int localNodeID) {
+    EXPSyncItem *syncInspection(unsigned int localNodeID) {
         return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_INSPECT,localNodeID);
     }
 

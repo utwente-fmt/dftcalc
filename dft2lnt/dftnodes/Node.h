@@ -153,18 +153,21 @@ public:
 	Node(Location location, NodeType type):
 		location(location),
 		type(type),
+		alwaysActive(false),
 		repairable(false){
 	}
 	Node(Location location, std::string name, NodeType type):
 		location(location),
 		name(name),
 		type(type),
+		alwaysActive(false),
 		repairable(false){
 	}
 	Node(Location location, std::string name, NodeType type, bool repairable):
 		location(location),
 		name(name),
 		type(type),
+		alwaysActive(false),
 		repairable(repairable){
 	}
 	Node() {

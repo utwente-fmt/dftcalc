@@ -325,17 +325,17 @@ int main(int argc, char** argv) {
 //	}
 
 	/* Create a new compiler context */
-	CompilerContext* compilerContext = new CompilerContext(std::cerr);
-	compilerContext->useColoredMessages(useColoredMessages);
-	compilerContext->setVerbosity(verbosity);
+	CompilerContext compilerContext(std::cerr);
+	compilerContext.useColoredMessages(useColoredMessages);
+	compilerContext.setVerbosity(verbosity);
 
 	/* Print help / version if requested and quit */
 	if(printHelp) {
-		print_help(compilerContext);
+		print_help(&compilerContext);
 		exit(0);
 	}
 	if(printVersion) {
-		print_version(compilerContext);
+		print_version(&compilerContext);
 		exit(0);
 	}
 
@@ -347,7 +347,7 @@ int main(int argc, char** argv) {
 		int isSet = 0;
 		for(unsigned int i=optind; i<(unsigned int)argc; ++i) {
 			if(isSet) {
-				compilerContext->reportError("too many input files: "+string(argv[i]));
+				compilerContext.reportError("too many input files: "+string(argv[i]));
 				continue;
 			}
 			isSet = 1;
@@ -360,7 +360,7 @@ int main(int argc, char** argv) {
 				if(f) {
 					fclose(f);
 				} else {
-					compilerContext->reportError("unable to open inputfile " + string(argv[i]));
+					compilerContext.reportError("unable to open inputfile " + string(argv[i]));
 					return 1;
 				}
 			}
@@ -379,23 +379,23 @@ int main(int argc, char** argv) {
 		
 		// Test all the files that need to be written if they are writable
 		bool ok = true;
-		if(!outputSVLFileName.empty() && !compilerContext->testWritable(outputSVLFileName)) {
-			compilerContext->reportError("SVL output file is not writable: `" + outputSVLFileName + "'");
+		if(!outputSVLFileName.empty() && !compilerContext.testWritable(outputSVLFileName)) {
+			compilerContext.reportError("SVL output file is not writable: `" + outputSVLFileName + "'");
 			ok = false;
 		}
-		if(!outputEXPFileName.empty() && !compilerContext->testWritable(outputEXPFileName)) {
-			compilerContext->reportError("EXP output file is not writable: `" + outputEXPFileName + "'");
+		if(!outputEXPFileName.empty() && !compilerContext.testWritable(outputEXPFileName)) {
+			compilerContext.reportError("EXP output file is not writable: `" + outputEXPFileName + "'");
 			ok = false;
 		}
-		if(!outputDFTFileName.empty() && !compilerContext->testWritable(outputDFTFileName)) {
-			compilerContext->reportError("DFT output file is not writable: `" + outputDFTFileName + "'");
+		if(!outputDFTFileName.empty() && !compilerContext.testWritable(outputDFTFileName)) {
+			compilerContext.reportError("DFT output file is not writable: `" + outputDFTFileName + "'");
 			ok = false;
 		}
-		if(!outputASTFileName.empty() && !compilerContext->testWritable(outputASTFileName)) {
-			compilerContext->reportError("AST output file is not writable: `" + outputASTFileName + "'");
+		if(!outputASTFileName.empty() && !compilerContext.testWritable(outputASTFileName)) {
+			compilerContext.reportError("AST output file is not writable: `" + outputASTFileName + "'");
 			ok = false;
 		}
-		compilerContext->flush();
+		compilerContext.flush();
 		if(!ok) {
 			return 1;
 		}
@@ -464,7 +464,7 @@ int main(int argc, char** argv) {
 		origFileName = inputFileName;
 	}
 	
-	compilerContext->notify("Running dft2lntc...");
+	compilerContext.notify("Running dft2lntc...");
 
 	//char* real_path = new char[PATH_MAX];
 	//cwd_realpath(inputFileName.c_str(),real_path);
@@ -474,157 +474,157 @@ int main(int argc, char** argv) {
 
 	std::string parserInputFileName(path_basename(inputFileName.c_str()));
 	
-	std::string dft2lntRoot = getRoot(compilerContext);
+	std::string dft2lntRoot = getRoot(&compilerContext);
 	bool rootValid = dft2lntRoot!="";
 
 	/* Parse input file */
-	compilerContext->notify("Checking syntax...",VERBOSITY_FLOW);
-	Parser* parser = new Parser(inputFile,parserInputFilePath,compilerContext);
+	compilerContext.notify("Checking syntax...",VERBOSITY_FLOW);
+	Parser* parser = new Parser(inputFile,parserInputFilePath,&compilerContext);
 	DFT::AST::ASTNodes* ast = parser->parse();
-	compilerContext->flush();
-	if(!ast || compilerContext->getErrors()>0) {
-		compilerContext->reportError("Syntax is incorrect");
+	compilerContext.flush();
+	if(!ast || compilerContext.getErrors()>0) {
+		compilerContext.reportError("Syntax is incorrect");
 		ast = 0;
 	} else {
-		compilerContext->reportAction("Syntax is correct",VERBOSITY_FLOW);
+		compilerContext.reportAction("Syntax is correct",VERBOSITY_FLOW);
 	}
-	compilerContext->flush();
+	compilerContext.flush();
 
 	/* Print AST */
 	if(ast && outputASTFileSet) {
-		compilerContext->notify("Printing AST...",VERBOSITY_FLOW);
-		compilerContext->flush();
-		DFT::ASTPrinter printer(ast,compilerContext);
+		compilerContext.notify("Printing AST...",VERBOSITY_FLOW);
+		compilerContext.flush();
+		DFT::ASTPrinter printer(ast,&compilerContext);
 		if(outputASTFileName!="") {
 			std::ofstream astFile (outputASTFileName);
 			astFile << printer.print();
 		} else {
 			FileWriter ast;
 			ast << printer.print();
-			compilerContext->reportFile("AST",ast.toString());
+			compilerContext.reportFile("AST",ast.toString());
 		}
 	}
-	compilerContext->flush();
+	compilerContext.flush();
 	
 	/* Validate input */
 	int astValid = false;
 	if(ast) {
-		compilerContext->notify("Validating AST...",VERBOSITY_FLOW);
-		compilerContext->flush();
-		DFT::ASTValidator validator(ast,compilerContext);
+		compilerContext.notify("Validating AST...",VERBOSITY_FLOW);
+		compilerContext.flush();
+		DFT::ASTValidator validator(ast, &compilerContext);
 		astValid = validator.validate();
 		if(!astValid) {
-			compilerContext->reportError("AST invalid");
+			compilerContext.reportError("AST invalid");
 		} else {
-			compilerContext->reportAction("AST is valid",VERBOSITY_FLOW);
+			compilerContext.reportAction("AST is valid",VERBOSITY_FLOW);
 		}
 	}
-	compilerContext->flush();
+	compilerContext.flush();
 	
 	/* Create DFT */
 	DFT::DFTree* dft = NULL;
 	if(astValid) {
-		compilerContext->notify("Building DFT...",VERBOSITY_FLOW);
-		compilerContext->flush();
-		DFT::ASTDFTBuilder builder(ast,compilerContext);
+		compilerContext.notify("Building DFT...",VERBOSITY_FLOW);
+		compilerContext.flush();
+		DFT::ASTDFTBuilder builder(ast, &compilerContext);
 		dft = builder.build();
 		if(!dft) {
-			compilerContext->reportError("Could not build DFT");
+			compilerContext.reportError("Could not build DFT");
 		} else {
-			compilerContext->reportAction("DFT built successfully",VERBOSITY_FLOW);
+			compilerContext.reportAction("DFT built successfully",VERBOSITY_FLOW);
 		}
 	}
-	compilerContext->flush();
+	compilerContext.flush();
 
 	/* Validate DFT */
 	int dftValid = false;
 	if(dft) {
-		compilerContext->notify("Validating DFT...",VERBOSITY_FLOW);
-		compilerContext->flush();
-		DFT::DFTreeValidator validator(dft,compilerContext);
+		compilerContext.notify("Validating DFT...",VERBOSITY_FLOW);
+		compilerContext.flush();
+		DFT::DFTreeValidator validator(dft, &compilerContext);
 		dftValid = validator.validate();
 		if(!dftValid) {
-			compilerContext->reportError("DFT invalid");
+			compilerContext.reportError("DFT invalid");
 		} else {
-			compilerContext->reportAction("DFT is valid",VERBOSITY_FLOW);
+			compilerContext.reportAction("DFT is valid",VERBOSITY_FLOW);
 		}
 	}
-	compilerContext->flush();
+	compilerContext.flush();
 	
 	/* Apply evidence to DFT */
 	if(dftValid && !failedBEs.empty()) {
-		compilerContext->reportAction("Applying evidence to DFT...",VERBOSITY_FLOW);
-		compilerContext->flush();
+		compilerContext.reportAction("Applying evidence to DFT...",VERBOSITY_FLOW);
+		compilerContext.flush();
 		try {
 			dft->applyEvidence(failedBEs);
 		} catch(std::vector<std::string>& errors) {
 			for(std::string e: errors) {
-				compilerContext->reportError(e);
+				compilerContext.reportError(e);
 			}
-			compilerContext->flush();
+			compilerContext.flush();
 		}
 	}
     
 	/* Add repair knowledge to gates */
 	if(dft) {
-		compilerContext->reportAction("Applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
-		compilerContext->flush();
+		compilerContext.reportAction("Applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
+		compilerContext.flush();
 		dft->addRepairInfo();
-		compilerContext->reportAction("Done applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
+		compilerContext.reportAction("Done applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
 	}
 
 	/* Add always-active knowledge to gates */
 	if(dft) {
-		compilerContext->reportAction("Applying always-active knowledge to DFT gates...",VERBOSITY_FLOW);
-		compilerContext->flush();
+		compilerContext.reportAction("Applying always-active knowledge to DFT gates...",VERBOSITY_FLOW);
+		compilerContext.flush();
 		dft->addAlwaysActiveInfo();
-		compilerContext->reportAction("Done applying always-active knowledge to DFT gates...",VERBOSITY_FLOW);
+		compilerContext.reportAction("Done applying always-active knowledge to DFT gates...",VERBOSITY_FLOW);
 	}
     
     /* Remove superflous FDEP edges */
     if(dft) {
-        compilerContext->reportAction("Applying FDEP cleanup to DFT gates...",VERBOSITY_FLOW);
-        compilerContext->flush();
+        compilerContext.reportAction("Applying FDEP cleanup to DFT gates...",VERBOSITY_FLOW);
+        compilerContext.flush();
         dft->checkFDEPInfo();
     }
 
 	/* Printing DFT */
 	if(dftValid && outputDFTFileSet) {
-		compilerContext->notify("Printing DFT...",VERBOSITY_FLOW);
-		compilerContext->flush();
-		DFT::DFTreePrinter printer(dft,compilerContext);
+		compilerContext.notify("Printing DFT...",VERBOSITY_FLOW);
+		compilerContext.flush();
+		DFT::DFTreePrinter printer(dft, &compilerContext);
 		if(outputDFTFileName!="") {
 			std::ofstream dftFile (outputDFTFileName);
 			printer.print(dftFile);
 		} else {
 			std::stringstream out;
 			printer.print(out);
-			compilerContext->reportFile("DFT",out.str());
+			compilerContext.reportFile("DFT",out.str());
 		}
 		
 	}
-	compilerContext->flush();
+	compilerContext.flush();
 
 	/* Building SVL and LNT out of DFT */
 //	if(dftValid) {
-//		compilerContext->notify("Building SVL and LNT...");
-//		DFT::DFTreeSVLAndLNTBuilder builder(dft2lntRoot,".","try",dft,compilerContext);
+//		compilerContext.notify("Building SVL and LNT...");
+//		DFT::DFTreeSVLAndLNTBuilder builder(dft2lntRoot,".","try",dft,&compilerContext);
 //		builder.build();
 //	}
 
 	/* Building needed BCG files for DFT */
 	if(rootValid && dftValid) {
-		compilerContext->notify("Building needed BCG files...",VERBOSITY_FLOW);
-		compilerContext->flush();
-		DFT::DFTreeBCGNodeBuilder builder(dft2lntRoot,dft,compilerContext);
+		compilerContext.notify("Building needed BCG files...",VERBOSITY_FLOW);
+		compilerContext.flush();
+		DFT::DFTreeBCGNodeBuilder builder(dft2lntRoot,dft, &compilerContext);
 		builder.generate();
 	}
 
 	/* Building EXP out of DFT */
 	if(rootValid && dftValid && outputFileSet) {
-		compilerContext->notify("Building EXP...",VERBOSITY_FLOW);
-		compilerContext->flush();
-		DFT::DFTreeEXPBuilder builder(dft2lntRoot,".",outputBCGFileName,outputEXPFileName,dft,compilerContext);
+		compilerContext.notify("Building EXP...",VERBOSITY_FLOW);
+		compilerContext.flush();
+		DFT::DFTreeEXPBuilder builder(dft2lntRoot,".",outputBCGFileName,outputEXPFileName,dft, &compilerContext);
 		builder.build();
 		
 		if(outputSVLFileName!="") {
@@ -633,7 +633,7 @@ int main(int argc, char** argv) {
 		} else {
 			std::stringstream out;
 			builder.printSVL(out);
-			compilerContext->reportFile("SVL",out.str());
+			compilerContext.reportFile("SVL",out.str());
 		}
 		if(outputEXPFileName!="") {
 			std::ofstream expFile (outputEXPFileName);
@@ -641,27 +641,26 @@ int main(int argc, char** argv) {
 		} else {
 			std::stringstream out;
 			builder.printEXP(out);
-			compilerContext->reportFile("EXP",out.str());
+			compilerContext.reportFile("EXP",out.str());
 		}
 		
 	}
-	compilerContext->flush();
+	compilerContext.flush();
 	
-	compilerContext->reportErrors();
-	compilerContext->flush();
+	compilerContext.reportErrors();
+	compilerContext.flush();
 	
-	if(compilerContext->getVerbosity()>=3) {
-		compilerContext->notify("SUCCESS! Time for brandy!");
-		compilerContext->flush();
+	if(compilerContext.getVerbosity()>=3) {
+		compilerContext.notify("SUCCESS! Time for brandy!");
+		compilerContext.flush();
 	}
 	
 	if(ast) delete ast;
 	if(dft) delete dft;
 	delete parser;
-	delete compilerContext;
 	
-	if(settings["warn-code"] && compilerContext->getWarnings()>0) {
+	if(settings["warn-code"] && compilerContext.getWarnings()>0) {
 		return true;
 	}
-	return compilerContext->getErrors()>0;
+	return compilerContext.getErrors()>0;
 }
