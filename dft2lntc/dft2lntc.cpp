@@ -572,6 +572,14 @@ int main(int argc, char** argv) {
 		dft->addRepairInfo();
 		compilerContext->reportAction("Done applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
 	}
+
+	/* Add always-active knowledge to gates */
+	if(dft) {
+		compilerContext->reportAction("Applying always-active knowledge to DFT gates...",VERBOSITY_FLOW);
+		compilerContext->flush();
+		dft->addAlwaysActiveInfo();
+		compilerContext->reportAction("Done applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
+	}
     
     /* Remove superflous FDEP edges */
     if(dft) {
