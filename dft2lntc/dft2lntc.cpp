@@ -578,7 +578,7 @@ int main(int argc, char** argv) {
 		compilerContext->reportAction("Applying always-active knowledge to DFT gates...",VERBOSITY_FLOW);
 		compilerContext->flush();
 		dft->addAlwaysActiveInfo();
-		compilerContext->reportAction("Done applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
+		compilerContext->reportAction("Done applying always-active knowledge to DFT gates...",VERBOSITY_FLOW);
 	}
     
     /* Remove superflous FDEP edges */
