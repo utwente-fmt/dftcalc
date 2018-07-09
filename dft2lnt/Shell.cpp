@@ -166,9 +166,8 @@ int Shell::system(const SystemOptions& options, RunStatistics* stats) {
 	dir.popd();
 	if(messageFormatter) messageFormatter->reportAction("Exiting directory: `" + realCWD + "'", options.verbosity);
 	
-	if(useStatFile && removeTmpFile && FileSystem::exists(statFile)) {
+	if(removeTmpFile && FileSystem::exists(statFile))
 		FileSystem::remove(statFile);
-	}
 	
 	// Check if the command was killed, e.g. by ctrl-c
 #ifdef WIN32
