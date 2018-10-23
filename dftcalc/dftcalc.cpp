@@ -971,6 +971,8 @@ int main(int argc, char** argv) {
 					useChecker = DFT::checker::STORM;
 		}
 	}
+	if (expOnly)
+		useChecker = DFT::checker::EXP_ONLY;
 
 	/* Create a new compiler context */
 	MessageFormatter* messageFormatter = new MessageFormatter(std::cerr);

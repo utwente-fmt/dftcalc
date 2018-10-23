@@ -15,7 +15,7 @@
 #include "DFTCalculationResult.h"
 
 namespace DFT {
-	enum checker {STORM, MRMC, IMCA};
+	enum checker {STORM, MRMC, IMCA, EXP_ONLY};
 
 	class DFTCalc {
 	public:
