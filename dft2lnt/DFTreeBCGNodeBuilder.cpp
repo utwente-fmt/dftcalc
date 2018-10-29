@@ -360,6 +360,8 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
 	std::string initialState;
 	if (be.getFailed())
 		initialState = "FAILING";
+	else if (dummy)
+		initialState = "DORMANT";
 	else
 		initialState = "UP";
 
