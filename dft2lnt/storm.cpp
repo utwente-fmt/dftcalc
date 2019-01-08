@@ -19,7 +19,7 @@
 #include <iostream>
 
 double Storm::default_result = -1;
-static const char needle[] = "Result (initial states): ";
+static const char needle[] = "Result (for initial states): ";
 
 int Storm::FileHandler::readOutputFile(const File& file) {
 	if(!FileSystem::exists(file)) {
