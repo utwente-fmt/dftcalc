@@ -14,20 +14,18 @@
 #include <vector>
 
 class Storm {
-private:
-	static double default_result;
 public:
 	class FileHandler {
 	private:
 		bool i_isCalculated;
 		std::string i_calcCommand;
-		double i_result;
+		std::string i_result;
 	public:
 		
 		FileHandler(std::string calcCommand):
 			i_isCalculated(false),
 			i_calcCommand(calcCommand),
-			i_result(default_result) {
+			i_result(std::string()) {
 		}
 		
 		/**
@@ -43,7 +41,7 @@ public:
 		 * Return the result previously read with readOutputFile().
 		 * @return The result of the calculation.
 		 */
-		virtual double getResult();
+		virtual std::string getResult();
 	};
 };
 

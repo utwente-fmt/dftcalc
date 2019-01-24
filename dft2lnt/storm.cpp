@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <iostream>
 
-double Storm::default_result = -1;
 static const char needle[] = "Result (for initial states): ";
 
 int Storm::FileHandler::readOutputFile(const File& file) {
@@ -32,7 +31,7 @@ int Storm::FileHandler::readOutputFile(const File& file) {
 	while (input.good()) {
 		if (line.find(needle) != std::string::npos) {
 			line.erase(0, strlen(needle));
-			i_result = std::stod(line);
+			i_result = line;
 			i_isCalculated = true;
 			break;
 		}
@@ -41,6 +40,6 @@ int Storm::FileHandler::readOutputFile(const File& file) {
 	return 0;
 }
 
-double Storm::FileHandler::getResult() {
+std::string Storm::FileHandler::getResult() {
 	return i_result;
 }

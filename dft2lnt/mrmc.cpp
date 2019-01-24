@@ -17,8 +17,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-MRMC::T_Chance MRMC::T_Chance_Default;
-
 int MRMC::FileHandler::generateInputFile(const File& file) {
 	FileWriter out;
 	out << out.applyprefix << m_calcCommand << out.applypostfix;
@@ -61,12 +59,13 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 			//printf("%c",*c);
 			if(!strncmp("$MIN_RESULT",c,11) || !strncmp("$MAX_RESULT",c,11)) {
 				c += 15;
-				const char* ce = c;
-				while(*ce && *ce!=')') ce++;
 				resultString = c;
 				//printf("\nfound: %s\n",c);
 				//printf("should be: '%s'\n",resultString.c_str());
 				break;
+			} else if (!strncmp("$RESULT", c, 7)) {
+				c += 11;
+				resultString = c;
 			}
 			c++;
 		}
@@ -78,20 +77,12 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 
 	{
 		results.clear();
-		const char* c = resultString;
-		while(*c && *c!=')') {
-			//float res = atof(c);
-			double res = 0;
-			sscanf(c,"%lf",&res);
-			results.push_back(res);
-			//printf("found result: %f\n",res);
-
-			const char* ce = c;
-			while(*ce && *ce!=' ') ce++;
-			if(!*ce) break;
-			c = ce+1;
-		}
-
+		const char *c = resultString;
+		const char *end = c;
+		while (*end && *end != ')' && *end != ',')
+			end++;
+		std::string res(c, end - c);
+		results.push_back(res);
 		m_isCalculated = true;
 	}
 
@@ -100,9 +91,9 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 	return 0;
 }
 
-MRMC::T_Chance MRMC::FileHandler::getResult() {
+std::string MRMC::FileHandler::getResult() {
 	if(results.size()<1) {
-		return T_Chance_Default;
+		return std::string();
 	}
 	return results[0];
 }

@@ -15,22 +15,18 @@
 
 class MRMC {
 public:
-
-	typedef double T_Chance;
-	static double T_Chance_Default;
-
 	class FileHandler {
 	private:
-		std::vector<T_Chance> results;
+		std::vector<std::string> results;
 		bool m_isCalculated;
 		std::string m_calcCommand;
-		T_Chance result;
+		std::string result;
 	public:
 		
 		FileHandler(std::string calcCommand):
 			m_isCalculated(false),
 			m_calcCommand(calcCommand),
-			result(T_Chance_Default) {
+			result(std::string("")) {
 		}
 		
 		/**
@@ -52,7 +48,7 @@ public:
 		 * Return the result previously read with readOutputFile().
 		 * @return The result of the calculation.
 		 */
-		virtual T_Chance getResult();
+		virtual std::string getResult();
 	};
 };
 

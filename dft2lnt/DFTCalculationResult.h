@@ -20,14 +20,14 @@ namespace DFT {
         public:
                 std::string missionTime;
                 std::string mrmcCommand;
-                double failprob;
+		std::string failProb;
         };
 
 	class DFTCalculationResult {
 	public:
 		std::string dftFile;
 		Shell::RunStatistics stats;
-		std::vector<DFTCalculationResultItem> failprobs;
+		std::vector<DFTCalculationResultItem> failProbs;
 	};
 
 } // Namespace: DFT

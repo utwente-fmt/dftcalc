@@ -18,8 +18,6 @@
 #include <stdlib.h>
 #include <iostream>
 
-IMCA::T_Chance IMCA::T_Chance_Default;
-
 int IMCA::FileHandler::readOutputFile(const File& file) {
 	if(!FileSystem::exists(file)) {
 		return 1;
@@ -60,10 +58,11 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 			} else {
 				p = et;
 			}
-			double et_res = 0;
+			std::string res(et, et_e - et);
+			double et_res;
                 	int r_et  = sscanf(et,"%lf",&et_res);
 			if (r_et ==  1){
-				results.push_back(std::pair<std::string,IMCA::T_Chance>("?",et_res));
+				results.push_back(std::pair<std::string,std::string>("?",res));
 				i_isCalculated = true;
 				found = 1;
 				break;
@@ -86,7 +85,7 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 
 			// get probability value, turning end-of-line into \0
 			int r_prob = 0;
-			double prob_res = 0;
+			double tmp;
 			char *prob = k + strlen(prob_needle);
 			char *prob_e = strchr(prob, '\n');
 			if (prob_e != 0) {
@@ -95,16 +94,16 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 			} else {
 				p = prob;
 			}
-                	r_prob  = sscanf(prob,"%lf",&prob_res);
+			std::string prob_res(prob, prob_e - prob);
+                	r_prob  = sscanf(prob,"%lf",&tmp);
 
 			// look for tb= value, from start of line
 			// we will not cross into next line, because end-of-line is turned into \0
 			int r_tb = 0;
-			double tb_res = 0;
-			char *tb;
+			std::string tb_res;
 			if ((k = strstr(line_start, tb_needle)) != 0) {
 				//fprintf(stderr, "tb found, p=%p, k=%p, ep=%p, line_start=%p\n", p, k, ep, line_start);
-				tb = k + strlen(tb_needle);
+				char *tb = k + strlen(tb_needle);
 				char *tb_e = strchr(tb, ' ');
 				if (tb_e != 0) {
 					*tb_e = '\0';
@@ -112,16 +111,16 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 				} else {
 					//p = tb;
 				}
-                		r_tb  = sscanf(tb,"%lf",&tb_res);
+				tb_res = std::string(tb, tb_e - tb);
+                		r_tb  = sscanf(tb,"%lf",&tmp);
 			}
 			//fprintf(stderr, "r_prob=%d r_tb=%d\n", r_prob, r_tb);
 
 			if (r_tb ==  1 && r_prob == 1){
-				string tb_str(tb);
-				results.push_back(std::pair<std::string,IMCA::T_Chance>(tb_str,prob_res));
+				results.push_back(std::pair<std::string, std::string>(tb_res, prob_res));
 				i_isCalculated = true;
 			} else if (r_prob == 1){
-				results.push_back(std::pair<std::string,IMCA::T_Chance>("?",prob_res));
+				results.push_back(std::pair<std::string,std::string>("?",prob_res));
 				i_isCalculated = true;
 			}
 		}
@@ -131,13 +130,13 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 	return 0;
 }
 
-IMCA::T_Chance IMCA::FileHandler::getResult() {
+std::string IMCA::FileHandler::getResult() {
 	if(results.size()<1) {
-		return T_Chance_Default;
+		return std::string();
 	}
 	return results[0].second;
 }
 
-std::vector<std::pair<std::string,IMCA::T_Chance>> IMCA::FileHandler::getResults() {
+std::vector<std::pair<std::string,std::string>> IMCA::FileHandler::getResults() {
 	return results;
 }

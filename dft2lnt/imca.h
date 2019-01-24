@@ -15,22 +15,18 @@
 
 class IMCA {
 public:
-
-	typedef double T_Chance;
-	static double T_Chance_Default;
-
 	class FileHandler {
 	private:
-		std::vector<std::pair<std::string,T_Chance>> results;
+		std::vector<std::pair<std::string,std::string>> results;
 		bool i_isCalculated;
 		std::string i_calcCommand;
-		T_Chance result;
+		std::string result;
 	public:
 		
 		FileHandler(std::string calcCommand):
 			i_isCalculated(false),
 			i_calcCommand(calcCommand),
-			result(T_Chance_Default) {
+			result(std::string()) {
 		}
 		
 		/**
@@ -46,9 +42,9 @@ public:
 		 * Return the result previously read with readOutputFile().
 		 * @return The result of the calculation.
 		 */
-		virtual T_Chance getResult();
+		virtual std::string getResult();
 
-		virtual std::vector<std::pair<std::string,T_Chance>> getResults();
+		virtual std::vector<std::pair<std::string,std::string>> getResults();
 	};
 };
 

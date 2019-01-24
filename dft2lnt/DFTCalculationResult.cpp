@@ -4,10 +4,10 @@ const YAML::Node& operator>>(const YAML::Node& node, DFT::DFTCalculationResult& 
 	if(const YAML::Node itemNode = node["dft"]) {
 		result.dftFile = itemNode.as<std::string>();
 	}
-	if(const YAML::Node itemNode = node["failprobs"]) {
-		std::vector<DFT::DFTCalculationResultItem> failprobs;
-		itemNode >> failprobs;
-		result.failprobs = failprobs;
+	if(const YAML::Node itemNode = node["failProbs"]) {
+		std::vector<DFT::DFTCalculationResultItem> failProbs;
+		itemNode >> failProbs;
+		result.failProbs = failProbs;
 	}
 	if(const YAML::Node itemNode = node["stats"]) {
 		Shell::RunStatistics stats;
@@ -20,11 +20,11 @@ const YAML::Node& operator>>(const YAML::Node& node, DFT::DFTCalculationResult& 
 YAML::Emitter& operator<<(YAML::Emitter& out, const DFT::DFTCalculationResult& result) {
 	out << YAML::BeginMap;
 	out << YAML::Key << "dft"  << YAML::Value << result.dftFile;
-	out << YAML::Key << "failprobs"  << YAML::Value << result.failprobs;
+	out << YAML::Key << "failProbs"  << YAML::Value << result.failProbs;
 	// for dfttest, when we have one item, show it under the key that dfttest expects
-	// dfttest currently only has support for the "failprob" key, not for "failprobs"
-	for(auto it: result.failprobs) {
-		out << YAML::Key << "failprob"  << YAML::Value << it.failprob;
+	// dfttest currently only has support for the "failProb" key, not for "failProbs"
+	for(auto it: result.failProbs) {
+		out << YAML::Key << "failProb"  << YAML::Value << it.failProb;
 		break;
 	}
 	out << YAML::Key << "stats"  << YAML::Value << result.stats;
@@ -60,8 +60,8 @@ const YAML::Node& operator>>(const YAML::Node& node, DFT::DFTCalculationResultIt
 	if(const YAML::Node itemNode = node["mrmcCommand"]) {
 		result.mrmcCommand = itemNode.as<std::string>();
 	}
-	if(const YAML::Node itemNode = node["failprob"]) {
-		result.failprob = itemNode.as<double>();
+	if(const YAML::Node itemNode = node["failProb"]) {
+		result.failProb = itemNode.as<std::string>();
 	}
 	return node;
 }
@@ -70,7 +70,7 @@ YAML::Emitter& operator<<(YAML::Emitter& out, const DFT::DFTCalculationResultIte
 	out << YAML::BeginMap;
 	out << YAML::Key << "missionTime"  << YAML::Value << result.missionTime;
 	out << YAML::Key << "mrmcCommand"  << YAML::Value << result.mrmcCommand;
-	out << YAML::Key << "failprob"  << YAML::Value << result.failprob;
+	out << YAML::Key << "failProb"  << YAML::Value << result.failProb;
 	out << YAML::EndMap;
 	return out;
 }
