@@ -64,7 +64,7 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 				//printf("should be: '%s'\n",resultString.c_str());
 				break;
 			} else if (!strncmp("$RESULT", c, 7)) {
-				c += 11;
+				c += 13;
 				resultString = c;
 			}
 			c++;
@@ -79,8 +79,15 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 		results.clear();
 		const char *c = resultString;
 		const char *end = c;
-		while (*end && *end != ')' && *end != ',')
-			end++;
+		if (*c == '[') {
+			while (*end && *end != ']')
+				end++;
+			if (*end)
+				end++;
+		} else {
+			while (*end && *end != ')' && *end != ',')
+				end++;
+		}
 		std::string res(c, end - c);
 		results.push_back(res);
 		m_isCalculated = true;

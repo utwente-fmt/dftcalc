@@ -15,7 +15,7 @@
 #include "DFTCalculationResult.h"
 
 namespace DFT {
-	enum checker {STORM, MRMC, IMCA, EXP_ONLY};
+	enum checker {STORM, MRMC, IMRMC, IMCA, EXP_ONLY};
 
 	class DFTCalc {
 	public:
@@ -35,11 +35,13 @@ namespace DFT {
 		File imc2ctmdpExec;
 		File bcg2imcaExec;
 		File bcg2janiExec;
+		File bcg2tralabExec;
 		File svlExec;
 		File bcgioExec;
 		File bcginfoExec;
 		File stormExec;
 		File mrmcExec;
+		File imrmcExec;
 		File imcaExec;
 		File dotExec;
 		
@@ -86,6 +88,8 @@ namespace DFT {
 				bcg2imcaExec = File(imcaRoot+"/bin/bcg2imca");
 			} else if (checker == STORM) {
 				bcg2janiExec = File(dft2lntRoot+"/bin/bcg2jani");
+			} else if (checker == IMRMC) {
+				bcg2tralabExec = File(dft2lntRoot+"/bin/bcg2tralab");
 			}
 
 			cadpRoot = getCADPRoot(NULL);
@@ -210,6 +214,32 @@ namespace DFT {
 					ok = false;
 				} else {
 					messageFormatter->reportAction("Using mrmc [" + mrmcExec.getFilePath() + "]",VERBOSITY_SEARCHING);
+				}
+			}
+
+			/* Find an imrmc executable (based on PATH environment variable) */
+			if (checker == IMRMC) {
+				bool exists = false;
+				bool accessible = false;
+				vector<File> imrmcs;
+				int n = FileSystem::findInPath(imrmcs,File("imrmc"));
+				for(File imrmc: imrmcs) {
+					accessible = false;
+					exists = true;
+					if(FileSystem::hasAccessTo(imrmc,X_OK)) {
+						accessible = true;
+						imrmcExec = imrmc;
+						break;
+					} else {
+						messageFormatter->reportWarning("mrmc [" + imrmc.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
+						ok = false;
+					}
+				}
+				if(!accessible) {
+					messageFormatter->reportError("no runnable imrmc executable found in PATH");
+					ok = false;
+				} else {
+					messageFormatter->reportAction("Using mrmc [" + imrmcExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 				}
 			}
 			

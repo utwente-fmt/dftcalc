@@ -61,6 +61,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -R              Reuse existing output files.");
 		messageFormatter->message("  --storm         Use Storm. (standard setting)");
 		messageFormatter->message("  --mrmc          Use MRMC. instead of Storm.");
+		messageFormatter->message("  --imrmc         Use IMRMC. instead of Storm.");
 		messageFormatter->message("  --imca          Use IMCA instead of MRMC.");
 		messageFormatter->message("  --no-nd-warning Do not warn (but give notice) for non-determinism.");
 		messageFormatter->message("");
@@ -75,7 +76,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -p              Print result to stdout.");
 		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
 		messageFormatter->message("  -m              Calculate mean time to failure using IMCA.");
-		messageFormatter->message("                  Overrules -i, -t, -f, --mrmc.");
+		messageFormatter->message("                  Overrules -i, -t, -f, --mrmc, --imrmc.");
 		messageFormatter->message("  -i l u s        Calculate P(DFT fails in [0,x] time units) for each x in interval,");
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
 		messageFormatter->message("  -t xList        Calculate P(DFT fails in [0,x] time units) for each x in xList,");
@@ -341,6 +342,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 	File bcg    = dft.newWithExtension("bcg");
 	File imc    = dft.newWithExtension("imc");
 	File ctmdpi = dft.newWithExtension("ctmdpi");
+	File tra = dft.newWithExtension("tra");
 	File ma     = dft.newWithExtension("ma");
 	File jani     = dft.newWithExtension("jani");
 	File lab    = ctmdpi.newWithExtension("lab");
@@ -361,6 +363,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 		if(FileSystem::exists(exp))    FileSystem::remove(exp);
 		if(FileSystem::exists(bcg))    FileSystem::remove(bcg);
 		if(FileSystem::exists(imc))    FileSystem::remove(imc);
+		if(FileSystem::exists(tra)) FileSystem::remove(tra);
 		if(FileSystem::exists(ctmdpi)) FileSystem::remove(ctmdpi);
 		if(FileSystem::exists(ma))     FileSystem::remove(ma);
 		if(FileSystem::exists(lab))    FileSystem::remove(lab);
@@ -551,6 +554,86 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 				DFT::DFTCalculationResultItem calcResultItem;
 				calcResultItem.missionTime = mrmcCalcCommand.second;
 				calcResultItem.mrmcCommand = mrmcCalcCommand.first;
+				calcResultItem.failProb = res;
+				resultItems.push_back(calcResultItem);
+			}
+	
+			delete fileHandler;
+		}
+		DFT::DFTCalculationResult calcResult;
+		calcResult.dftFile = dft.getFilePath();
+		calcResult.failProbs = resultItems;
+		calcResult.stats = stats;
+		results.insert(pair<string,DFT::DFTCalculationResult>(dft.getFileName(), calcResult));
+		break;
+	}
+	case IMRMC: {
+		if(!reuse || !FileSystem::exists(tra)) {
+			// bcg -> tra, lab
+			messageFormatter->reportAction("Translating IMC to .tra/.lab ...",VERBOSITY_FLOW);
+			sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg2tralab.report";
+			sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".bcg2tralab.err";
+			sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".bcg2tralab.out";
+			sysOps.command    = bcg2tralabExec.getFilePath()
+	                  			+ " \""    + bcg.getFileRealPath() + "\""
+	                  			+ " \""    + tra.newWithExtension("").getFileRealPath() + "\""
+	                  			+ " FAIL ONLINE"
+						;
+			result = Shell::system(sysOps);
+
+			if(!FileSystem::exists(tra)) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
+				return 1;
+			} else if (messageFormatter->getVerbosity() >= 5) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
+			}
+		} else {
+			messageFormatter->reportAction("Reusing IMC to .tra/.lab translation result",VERBOSITY_FLOW);
+		}
+
+		std::vector<DFT::DFTCalculationResultItem> resultItems;
+		for(auto imrmcCalcCommand: calcCommands) {
+
+			// -> mrmcinput
+			MRMC::FileHandler* fileHandler = new MRMC::FileHandler(imrmcCalcCommand.first);
+			fileHandler->generateInputFile(input);
+			if(!FileSystem::exists(input)) {
+				messageFormatter->reportError("Error generating MRMC input file `" + input.getFileRealPath() + "'");
+				return 1;
+			}
+
+			// ctmdpi, lab, mrmcinput -> calculation
+			messageFormatter->reportAction("Calculating probability with MRMC...",VERBOSITY_FLOW);
+			sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imrmc.report";
+			sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imrmc.err";
+			sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".imrmc.out";
+			sysOps.command    = imrmcExec.getFilePath()
+	                  			+ " ctmc"
+	                  			+ " \""    + tra.getFileRealPath() + "\""
+	                  			+ " \""    + lab.getFileRealPath() + "\""
+	                  			+ " < \""  + input.getFileRealPath() + "\""
+	                  			;
+			result = Shell::system(sysOps);
+
+			if(result) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
+				return 1;
+			} else if (messageFormatter->getVerbosity() >= 5) {
+				printOutput(File(sysOps.outFile), result);
+				printOutput(File(sysOps.errFile), result);
+			}
+
+			if(fileHandler->readOutputFile(File(sysOps.outFile))) {
+				messageFormatter->reportError("Could not calculate");
+				return 1;
+			} else {
+				std::string res = fileHandler->getResult();
+				DFT::DFTCalculationResultItem calcResultItem;
+				calcResultItem.missionTime = imrmcCalcCommand.second;
+				calcResultItem.mrmcCommand = imrmcCalcCommand.first;
 				calcResultItem.failProb = res;
 				resultItems.push_back(calcResultItem);
 			}
@@ -965,6 +1048,8 @@ int main(int argc, char** argv) {
 				}
 				if (!strcmp("mrmc", optarg))
 					useChecker = DFT::checker::MRMC;
+				else if (!strcmp("imrmc", optarg))
+					useChecker = DFT::checker::IMRMC;
 				else if (!strcmp("imca", optarg))
 					useChecker = DFT::checker::IMCA;
 				else if (!strcmp("storm", optarg))
@@ -994,6 +1079,10 @@ int main(int argc, char** argv) {
 	}
 	if (mttf && useChecker == DFT::checker::MRMC) {
 		messageFormatter->reportWarningAt(Location("commandline"), "MTTF flag cannot be used with MRMC model checker, defaulting to Storm.");
+		useChecker = DFT::checker::STORM;
+	}
+	if (mttf && useChecker == DFT::checker::IMRMC) {
+		messageFormatter->reportWarningAt(Location("commandline"), "MTTF flag cannot be used with IMRMC model checker, defaulting to Storm.");
 		useChecker = DFT::checker::STORM;
 	}
 	if (mttf) {
@@ -1069,6 +1158,9 @@ int main(int argc, char** argv) {
 				case DFT::checker::IMCA:
 					commands.push_back(pair<string,string>("" + imcaMinMax + " -tb -T " + s + imcaEb, s));
 					break;
+				case DFT::checker::IMRMC:
+					commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] failed ]", s));
+					break;
 				case DFT::checker::STORM:
 					commands.push_back(pair<string,string>("P" + stormMinMax + "=? [F<=" + s + " failed=true]", s));
 				}
@@ -1105,6 +1197,9 @@ int main(int argc, char** argv) {
 			switch (useChecker) {
 			case DFT::checker::MRMC:
 				commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] reach ]", s));
+				break;
+			case DFT::checker::IMRMC:
+				commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] failed ]", s));
 				break;
 			case DFT::checker::STORM:
 				commands.push_back(pair<string,string>("P"+stormMinMax+"=? [F<=" + s + " failed=true]", s));
