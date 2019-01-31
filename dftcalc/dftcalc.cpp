@@ -734,7 +734,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 			sysOps.command    = bcg2janiExec.getFilePath()
 						+ " " + bcg.getFileRealPath()
 						+ " " + jani.getFileRealPath()
-						+ " FAIL"
+						+ " FAIL ONLINE"
 						;
 			result = Shell::system(sysOps);
 

@@ -56,62 +56,13 @@ int main(int argc, char* argv[])
 		 "\t\"actions\": [],\n"
 	         "\t\"variables\": [{\"name\": \"failed\", "
 	                            "\"type\": \"bool\", "
-	                            "\"initial-value\": false}],\n"
-	         "\t\"constants\": [", argv[1]);
+	                            "\"initial-value\": false}],\n",
+	         argv[1]);
 
 	bcg_nb_states = BCG_OT_NB_STATES(bcg_graph);
-	/* Constants for the exit rates of Markovian states */
-	_Bool first_constant = 1;
-	for (bcg_s1 = 0; bcg_s1 < bcg_nb_states; bcg_s1++) {
-		_Bool has_nonmarkovian = 0;
-		BCG_TYPE_LABEL_NUMBER num_markov = 0;
-		BCG_TYPE_LABEL_NUMBER labelnum;
-		BCG_TYPE_STATE_NUMBER s2;
-
-		/* Count number of Markovian edges */
-		BCG_OT_ITERATE_P_LN (bcg_graph, bcg_s1, labelnum, s2) {
-			if (bcg_s1 == s2)
-				continue; /* Ignore self-loops */
-			BCG_TYPE_C_STRING labelname;
-			labelname = BCG_OT_LABEL_STRING(bcg_graph, labelnum);
-			if (!strncmp(labelname, "rate ", 5)) {
-				num_markov++;
-			} else {
-				has_nonmarkovian = 1;
-				break;
-			}
-		} BCG_OT_END_ITERATE;
-
-		if (has_nonmarkovian || !num_markov)
-			continue;
-		if (!first_constant) {
-			fputc(',', jani);
-		}
-		first_constant = 0;
-
-		fprintf(jani, "\n\t\t\t{\"name\": \"rate_%"PRIuMAX"\",\n"
-		              "\t\t\t \"type\": \"real\",\n"
-		              "\t\t\t \"value\": ", (uintmax_t) bcg_s1);
-
-		BCG_TYPE_LABEL_NUMBER left = num_markov;
-		/* Write sum of Markovian rates */
-		BCG_OT_ITERATE_P_LN (bcg_graph, bcg_s1, labelnum, s2) {
-			BCG_TYPE_C_STRING labelname;
-			labelname = BCG_OT_LABEL_STRING(bcg_graph, labelnum);
-			if (strncmp(labelname, "rate ", 5))
-				continue;
-			if (left == 1)
-				fprintf(jani, "%s", labelname + 5);
-			else
-				fprintf(jani, "{\"op\": \"+\", \"left\": %s, \"right\": ", labelname + 5);
-			left--;
-		} BCG_OT_END_ITERATE;
-		for (left = 0; left < num_markov; left++)
-			fputc('}', jani);
-	}
 
 	/* Done with constants, moving on to the automaton */
-	fprintf(jani, "],\n\t\"automata\": [{\n"
+	fprintf(jani, "\t\"automata\": [{\n"
 	        "\t\t\"name\": \"aut\",\n"
 	        "\t\t\"locations\": [\n");
 
@@ -142,29 +93,21 @@ int main(int argc, char* argv[])
 		} BCG_OT_END_ITERATE;
 
 		if (!has_nonmarkov && num_markov) {
-			if (!first_transition)
-				fprintf(jani, ",\n");
-			first_transition = 0;
-			fprintf(jani, "\t\t\t{\"location\": \"l%"PRIuMAX"\",\n"
-			              "\t\t\t \"rate\": {\"exp\": \"rate_%"PRIuMAX"\"},\n"
-			              "\t\t\t \"destinations\": [\n",
-				(uintmax_t) bcg_s1, (uintmax_t) bcg_s1);
-
-			_Bool first = 1;
 			BCG_OT_ITERATE_P_LN (bcg_graph, bcg_s1, labelnum, s2) {
 				BCG_TYPE_C_STRING nm;
 				nm = BCG_OT_LABEL_STRING(bcg_graph, labelnum);
 				if (strncmp(nm, "rate ", 5))
 					continue;
-				if (!first)
+				if (!first_transition)
 					fprintf(jani, ",\n");
-				first = 0;
-				fprintf(jani, "\t\t\t\t{\"location\": \"l%"PRIuMAX"\",\n"
-				              "\t\t\t\t \"probability\": { \"exp\": {\"op\": \"/\", \"left\": %s, \"right\": \"rate_%"PRIuMAX"\"}}}",
-					(uintmax_t) s2, nm + 5,
-					(uintmax_t) bcg_s1);
+				first_transition = 0;
+				fprintf(jani, "\t\t\t{\"location\": \"l%"PRIuMAX"\",\n"
+					"\t\t\t \"rate\": {\"exp\": %s},\n"
+					"\t\t\t \"destinations\": [{\"location\":\"l%"PRIuMAX"\"}]"
+					"\t\t\t }",
+					(uintmax_t) bcg_s1, nm+5,
+					(uintmax_t) s2);
 			} BCG_OT_END_ITERATE;
-			fprintf(jani, "]}%s\n", has_nonmarkov ? "," : "");
 		}
 
 		if (has_nonmarkov) {
@@ -188,6 +131,9 @@ int main(int argc, char* argv[])
 				} else if (repairlabel && !strcmp(nm, repairlabel)) {
 					fprintf(jani, ", \"assignments\": [{\"ref\": \"failed\", "
 					                                "\"value\": false}]");
+				} else {
+					fprintf(stderr, "Unknown label: %s\n", nm);
+					fprintf(stderr, "Repair label: %s\n", repairlabel);
 				}
 				fprintf(jani, "}]}\n");
 			} BCG_OT_END_ITERATE;
