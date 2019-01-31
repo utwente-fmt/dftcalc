@@ -75,8 +75,9 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -c FILE         Output result as CSV format to this file. (see --help=output)");
 		messageFormatter->message("  -p              Print result to stdout.");
 		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
-		messageFormatter->message("  -m              Calculate mean time to failure using IMCA.");
+		messageFormatter->message("  -m              Calculate mean time to failure (requires --storm or --imca).");
 		messageFormatter->message("                  Overrules -i, -t, -f, --mrmc, --imrmc.");
+		messageFormatter->message("  -s              Calculate P(DFT failed) at steady-state (requires --storm or --imrmc).");
 		messageFormatter->message("  -i l u s        Calculate P(DFT fails in [0,x] time units) for each x in interval,");
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
 		messageFormatter->message("  -t xList        Calculate P(DFT fails in [0,x] time units) for each x in xList,");
@@ -861,6 +862,7 @@ int main(int argc, char** argv) {
 	int    outputFolderSet    = 0;
 	string calcCommand        = "";
 	int    calcCommandSet     = 0;
+	bool   steadyState        = 0;
 	int    mttf               = 0;
 	string errorBound         = "";
 	int    errorBoundSet      = 0;
@@ -884,7 +886,7 @@ int main(int argc, char** argv) {
 	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"C:e:E:f:mpqr:Rc:t:i:I:hxv-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:e:E:f:mpqr:Rc:st:i:I:hxv-:")) >= 0 ) {
 		switch(c) {
 			
 			// -C FILE
@@ -945,6 +947,11 @@ int main(int argc, char** argv) {
 			// -m
 			case 'm':
 				mttf = 1;
+				break;
+
+			// -s
+			case 's':
+				steadyState = 1;
 				break;
 			
 			// -t STRING containing time values separated by whitespace
@@ -1077,12 +1084,27 @@ int main(int argc, char** argv) {
 	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet || timeLwbUpbSet)) {
 		messageFormatter->reportWarningAt(Location("commandline"),"MTTF flag (-m) has been given: ignoring time specifications and calculation commands");
 	}
+	if (steadyState && (calcCommandSet || timeIntervalSet || timeSpecSet || timeLwbUpbSet)) {
+		messageFormatter->reportWarningAt(Location("commandline"),"Steady-state flag (-s) has been given: ignoring time specifications and calculation commands");
+	}
+	if (steadyState && mttf) {
+		messageFormatter->reportWarningAt(Location("commandline"),"Steady-state flag (-s) and MTTF flag (-m) both specified: Calculating only MTTF.");
+		steadyState = 0;
+	}
 	if (mttf && useChecker == DFT::checker::MRMC) {
 		messageFormatter->reportWarningAt(Location("commandline"), "MTTF flag cannot be used with MRMC model checker, defaulting to Storm.");
 		useChecker = DFT::checker::STORM;
 	}
 	if (mttf && useChecker == DFT::checker::IMRMC) {
 		messageFormatter->reportWarningAt(Location("commandline"), "MTTF flag cannot be used with IMRMC model checker, defaulting to Storm.");
+		useChecker = DFT::checker::STORM;
+	}
+	if (steadyState && useChecker == DFT::checker::MRMC) {
+		messageFormatter->reportWarningAt(Location("commandline"), "Steady-state flag cannot currently be used with MRMC model checker, defaulting to Storm.");
+		useChecker = DFT::checker::STORM;
+	}
+	if (steadyState && useChecker == DFT::checker::IMCA) {
+		messageFormatter->reportWarningAt(Location("commandline"), "Steady-state flag cannot currently be used with IMCA model checker, defaulting to Storm.");
 		useChecker = DFT::checker::STORM;
 	}
 	if (mttf) {
@@ -1092,6 +1114,18 @@ int main(int argc, char** argv) {
 		else
 			calcCommand = "T" + stormMinMax + "=? [F failed=true]";
 	}
+	if (steadyState) {
+		calcCommandSet = true;
+		if (useChecker == DFT::checker::IMRMC)
+			calcCommand = "S{>1}[failed]";
+		else if (useChecker == DFT::checker::STORM)
+			calcCommand = "LRA" + stormMinMax + "=? [failed=true]";
+		else {
+			messageFormatter->reportError("Internal error: Unsupported model checker for steady-state query, unable to set calculation command.");
+			return EXIT_FAILURE;
+		}
+	}
+
 	if (timeLwbUpbSet) {
 		double tl;
 		if(!isReal(timeLwb, &tl) || tl<0) {
