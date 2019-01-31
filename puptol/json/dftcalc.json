@@ -270,6 +270,15 @@
                         },
                         {
                           "Type": "radio",
+                          "Title": "IMRMC",
+                          "Label": "IMRMC",
+                          "Name": "modelchecker",
+                          "Value": "--imrmc",
+                          "NewPage": "false",
+                          "ParamName": "modelchecker"
+                        },
+                        {
+                          "Type": "radio",
                           "Title": "IMCA",
                           "Label": "IMCA",
                           "Name": "modelchecker",
