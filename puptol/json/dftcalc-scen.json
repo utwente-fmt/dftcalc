@@ -91,8 +91,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/mcs.dft"
                 },
                 {
                   "ParamName": "mttfplotupb",
@@ -123,8 +123,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/cas.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/cas.dft"
                 },
                 {
                   "ParamName": "mttfplotupb",
@@ -166,8 +166,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/mcs.dft"
                 },
                 {
                   "ParamName": "mtimeslwb",
@@ -206,8 +206,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/mcs.dft"
                 },
                 {
                   "ParamName": "mtimeslwb",
@@ -250,8 +250,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/mcs.dft"
                 },
                 {
                   "ParamName": "mttfplotupb",
@@ -285,8 +285,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs_4CM.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/mcs_4CM.dft"
                 },
                 {
                   "ParamName": "mtimeslwb",
@@ -329,8 +329,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs_4CM.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/mcs_4CM.dft"
                 },
                 {
                   "ParamName": "mtimeslwb",
@@ -373,8 +373,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/mcs_4CM.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/mcs_4CM.dft"
                 },
                 {
                   "ParamName": "mttfplotupb",
@@ -412,8 +412,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/cas.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/cas.dft"
                 },
                 {
                   "ParamName": "mtimeslwb",
@@ -456,8 +456,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/cas.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/cas.dft"
                 },
                 {
                   "ParamName": "mtimeslwb",
@@ -500,8 +500,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/cas.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/cas.dft"
                 },
                 {
                   "ParamName": "mttfplotupb",
@@ -532,8 +532,8 @@
               "Params": [
                 {
                   "ParamName": "dft",
-                  "Type": "URL",
-                  "Value": "http://fmt.cs.utwente.nl/tools/dftcalc/cases/cas.dft"
+                  "Type": "SHARED",
+                  "Value": "dftcalc/cases/cas.dft"
                 },
                 {
                   "ParamName": "evidence",
