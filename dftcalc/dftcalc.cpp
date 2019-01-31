@@ -105,7 +105,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("      mem_resident: 1752");
 		messageFormatter->message("  The Calculation command can be manually set using -f.");
 		messageFormatter->message("  For Storm the defaults is:");
-		messageFormatter->message("    P=? [F<=n failed=true ]             (default)");
+		messageFormatter->message("    Pmax=? [F<=n failed=true ]             (default)");
 		messageFormatter->message("  For MRMC the defaults are:");
 		messageFormatter->message("    P{>1} [ tt U[0,n] reach ]             (default)");
 		messageFormatter->message("    P{<0} [ tt U[0,n] reach ]             (when --max is given)");
@@ -601,12 +601,12 @@ int DFT::DFTCalc::calculateDFT(const bool reuse, const std::string& cwd, const F
 			MRMC::FileHandler* fileHandler = new MRMC::FileHandler(imrmcCalcCommand.first);
 			fileHandler->generateInputFile(input);
 			if(!FileSystem::exists(input)) {
-				messageFormatter->reportError("Error generating MRMC input file `" + input.getFileRealPath() + "'");
+				messageFormatter->reportError("Error generating IMRMC input file `" + input.getFileRealPath() + "'");
 				return 1;
 			}
 
 			// ctmdpi, lab, mrmcinput -> calculation
-			messageFormatter->reportAction("Calculating probability with MRMC...",VERBOSITY_FLOW);
+			messageFormatter->reportAction("Calculating probability with IMRMC...",VERBOSITY_FLOW);
 			sysOps.reportFile = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imrmc.report";
 			sysOps.errFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com  ) + ".imrmc.err";
 			sysOps.outFile    = cwd + "/" + dft.getFileBase() + "." + intToString(com++) + ".imrmc.out";
@@ -878,7 +878,7 @@ int main(int argc, char** argv) {
 	enum DFT::checker useChecker  = DFT::checker::STORM;
 	string imcaMinMax        = "-min";
 	string mrmcMinMax        = "{>1}";
-	string stormMinMax       = "";
+	string stormMinMax       = "max";
 	bool minMaxSet        = false;
 	bool expOnly		 = false;
 	
