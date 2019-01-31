@@ -140,9 +140,7 @@ if [ X$COMPUTATION = Xmttf ]; then
 		echo command: dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -m $EVDNCE $ERRORB $dft 1>&2
 		echo "" 1>&2
 	fi
-	#dftcalc -R --no-color $COLOR -q $VERBOSE -p -m $EVDNCE $ERRORB $dft
-	#memtimerec -d 0.1  -V -V -V -o $tmpmemrec dftcalc -R --no-color $COLOR -q $VERBOSE -p -m $EVDNCE $ERRORB $dft
-	memtimerec -d 1  -V -V -V -o $tmpmemrec dftcalc $MODELCHECKER -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -m $EVDNCE $ERRORB $dft
+	dftcalc $MODELCHECKER -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -m $EVDNCE $ERRORB $dft
 	#echo "" 1>&2
 	#echo "" 1>&2
 	#echo "memrec statistics:" 1>&2
@@ -161,9 +159,7 @@ if [ "$COMPUTATION" = "steadyState" ]; then
 		echo command: dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -s $EVDNCE $ERRORB $dft 1>&2
 		echo "" 1>&2
 	fi
-	#dftcalc -R --no-color $COLOR -q $VERBOSE -p -m $EVDNCE $ERRORB $dft
-	#memtimerec -d 0.1  -V -V -V -o $tmpmemrec dftcalc -R --no-color $COLOR -q $VERBOSE -p -m $EVDNCE $ERRORB $dft
-	memtimerec -d 1  -V -V -V -o $tmpmemrec dftcalc $MODELCHECKER -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -s $EVDNCE $ERRORB $dft
+	dftcalc $MODELCHECKER -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -s $EVDNCE $ERRORB $dft
 fi
 if [ X$COMPUTATION = Xlwbupb ]; then
 	testRealValue TIMELWB 'mission time lwb'

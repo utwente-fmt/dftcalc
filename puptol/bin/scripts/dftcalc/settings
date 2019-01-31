@@ -33,8 +33,8 @@ export TOOLTMPDIR
 
 gnuplot=gnuplot
 
-if [ "$MODELCHECKER" != "--mrmc" ] && [ "$MODELCHECKER" != "--imca" ]; then
-	MODELCHECKER="--mrmc";
+if [ "$MODELCHECKER" != "--mrmc" ] && [ "$MODELCHECKER" != "--imca" ] && [ "$MODELCHECKER" != "--storm" ] && [ "$MODELCHECKER" != "--imrmc" ]; then
+	MODELCHECKER="--storm";
 fi
 
 # set default dftcalc version (for when no version is given in web-request):
