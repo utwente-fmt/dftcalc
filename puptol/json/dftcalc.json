@@ -378,6 +378,15 @@
                   ]
                 }
               ]
+            },
+	    {
+              "Type": "radio",
+              "Title": "Compute steady-state availability",
+              "Label": "Compute steady-state availability",
+              "Name": "computation",
+              "Value": "steadyState",
+              "NewPage": "false",
+              "ParamName": "computation"
             }
           ]
         },

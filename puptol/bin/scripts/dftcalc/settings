@@ -1,0 +1,99 @@
+# env var NAME is set by puptol from the Name field of the experiment configuration
+TOOL=$NAME
+
+if [ "X$TEMPDIR" = "X" ]
+then
+	TEMPDIR=/tmp
+fi
+
+tmperrtxt=$TEMPDIR/$TOOL$pid.err.txt
+tmppng=$TEMPDIR/$TOOL$pid.png
+tmppfx=$TEMPDIR/$TOOL$pid
+tmpdft=$TEMPDIR/$TOOL$pid.dft
+tmpcandft=$TEMPDIR/$TOOL$pid-can.dft
+tmptxt=$TEMPDIR/$TOOL$pid-tmp.txt
+tmpcsv=$TEMPDIR/$TOOL$pid.csv
+tmpcurvecsv=$TEMPDIR/$TOOL$pid-curve.csv
+tmppntcsv=$TEMPDIR/$TOOL$pid-pnt.csv
+tmpmemrec=$TEMPDIR/$TOOL$pid-memrec.txt
+filesToTar=$TEMPDIR/$TOOL$pid-filesToTar
+
+sesfilepfx=$PUPTOLROOT/data/session/$SESSION
+sesurlpfx=$PUPTOLURLPFX/$TOOL/own/$SESSION
+
+dft=$TOOL$pid.dft
+png=$TOOL$pid.png
+svg=$TOOL$pid.svg
+csv=$TOOL$pid.csv
+plotdata=$TOOL$pid.plot
+plotcmd=$TOOL$pid.gnuplot
+
+TOOLTMPDIR=$TEMPDIR/$TOOL$pid
+export TOOLTMPDIR
+
+gnuplot=gnuplot
+
+if [ "$MODELCHECKER" != "--mrmc" ] && [ "$MODELCHECKER" != "--imca" ]; then
+	MODELCHECKER="--mrmc";
+fi
+
+# set default dftcalc version (for when no version is given in web-request):
+if [ "X$VERSION" = "X" ]
+then
+	VERSION=next
+fi
+
+# =======================================
+# for input validation
+
+errorfound=0
+# NOTE: it is VERY important that the VERSION value has the form of an identifier:
+#       no embedded whitespace, quotes, or other funny characters
+# NOTE: no longer, each valid version must be mentioned below (otherwise it is refused as 'not valid')
+testVersionValue () {
+	#if ! validate-env-by-rx $1 "${2}: not a valid version" '^(master)|(old)$' 1>&2
+	#then
+	#	errorfound=1
+	#el
+	if ! $PUPTOLROOT/bin/validate-env-by-rx $1 "${2}: internal error: version contains illegal characters (not an identifier)" '^([a-zA-Z0-9_.-]*)$' 1>&2
+	then
+		errorfound=1
+	fi
+}
+testRealValue () {
+	if ! $PUPTOLROOT/bin/validate-env-by-rx $1 "${2}: not a valid real number" '^[ \t]*[0123456789E.-]+[ \t]*$' 1>&2
+	then
+		errorfound=1
+	fi
+}
+testVerbosityValue () {
+	if ! $PUPTOLROOT/bin/validate-env-by-rx $1 "${2}: not a valid verbosity value"  '^[ \t]*--verbose=off[ \t]*$' '^[ \t]*--verbose=[0123456-]+[ \t]*$' 1>&2
+	then
+		errorfound=1
+	fi
+}
+testColorValue () {
+	if ! $PUPTOLROOT/bin/validate-env-by-rx $1 "${2}: not a valid color value"  '^[ \t]*--color[ \t]*$' '^[ \t]*$' 1>&2
+	then
+		errorfound=1
+	fi
+}
+testIdentifierListValue () {
+	if ! $PUPTOLROOT/bin/validate-env-by-rx $1 "${2}: not a valid list of identifiers" '^$' '^[a-zA-Z0-9_, \t]+$' 1>&2
+	then
+		errorfound=1
+	fi
+}
+testDataSetNameValue () {
+	if ! $PUPTOLROOT/bin/validate-env-by-rx $1 "${2}: not a valid data set name" '^$' '^[a-zA-Z0-9_, \t\\+\\-]+$' 1>&2
+	then
+		errorfound=1
+	fi
+}
+# return implicit boolean value: exit status of last command (i.e. the test command, [ ])
+# returns true (exit status value 0) when there are errors
+# and false otherwise
+errorsfound () {
+	[ X$errorfound != X0 ]
+}
+

@@ -1,0 +1,6 @@
+toplevel "A";
+"A" 2of3 "B" "C" "D";
+"B" lambda=0.1 dorm=0 phases=1 interval=1;
+"C" lambda=0.2 dorm=0 phases=1 interval=1;
+"D" lambda=0.3 dorm=0 phases=1 interval=1;
+"R" 2insp4 "B" "C" "D";

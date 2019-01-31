@@ -63,6 +63,28 @@
             },
             {
               "ToolName": "dftcalc",
+              "Title": "MTTF for Voting 2of3, with repairs",
+              "Params": [
+                {
+                  "ParamName": "dft",
+                  "Type": "SHARED",
+                  "Value": "dftcalc/repair.dft"
+                },
+                {
+                  "ParamName": "evidence"
+                },
+                {
+                  "ParamName": "computation",
+                  "Value": "steadyState"
+                },
+                {
+                  "ParamName": "datasetname",
+                  "Value": "Voting 2of3, Rep"
+                }
+              ]
+            },
+            {
+              "ToolName": "dftcalc",
               "Title": "MTTF for Voting 2of3, with evidence setting failed C",
               "Params": [
                 {
