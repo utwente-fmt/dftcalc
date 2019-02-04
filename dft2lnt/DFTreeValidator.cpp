@@ -123,6 +123,12 @@ int DFT::DFTreeValidator::validateBasicEvent(const DFT::Nodes::BasicEvent& be) {
 		}
 		break;
 	}
+	case DFT::Nodes::BE::CalculationMode::PROBABILITY:
+        if (be.getProb() < 0) {
+			valid = false;
+			cc->reportErrorAt(be.getLocation(),"BasicEvent `" + (be.getName()) + "': has no probability");
+		}
+		break;
 	case DFT::Nodes::BE::CalculationMode::APH: {
 		// TODO check that file exists
 		break;

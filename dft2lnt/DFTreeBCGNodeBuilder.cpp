@@ -368,6 +368,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
 	if(!dummy){
 		out << out.applyprefix << " * Generating BE("
 			<< "parents=" << nr_parents
+			<< ", prob=" << be.getProb()
 			<< ", repair=" << be.getRepair()
 			<< ", phases=" << be.getPhases()
 			<< ", interval=" << be.getInterval()

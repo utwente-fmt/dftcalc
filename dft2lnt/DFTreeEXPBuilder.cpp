@@ -64,15 +64,33 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		ss << " in \"";
 		ss << be.getFileToEmbed();
 		ss << "\" end rename";
-	} else if(be.getLambda()>0){
+	} else if (be.getLambda()>0 || be.getProb() > 0) {
+		double l = be.getLambda();
+		double rateFailSafe = 0;
+		if (l < 0) {
+			/* Purely probabilistic BE. Assign arbitrary rate
+			 * since only time-unbounded properties make sense
+			 * anyway.
+			 */
+			l = be.getProb();
+			rateFailSafe = 1 - l;
+		} else {
+			rateFailSafe = l / be.getProb() - l;
+		}
+
 		ss << "total rename ";
 		// Insert lambda value
-		ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !2\" -> \"rate " << be.getLambda() << "\"";
+		ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !2\" -> \"rate " << l << "\"";
+		if (rateFailSafe != 0)
+			ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !2 !2\" -> \"rate " << rateFailSafe << "\"";
 	
 		// Insert mu value (only for non-cold BE's)
 		if(be.getMu()>0) {
-			ss << ", ";
-			ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << be.getMu()     << "\"";
+			double mu = be.getMu();
+			rateFailSafe = mu / be.getProb() - mu;
+			ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << mu << "\"";
+			if (rateFailSafe != 0)
+				ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !2 !1\" -> \"rate " << rateFailSafe << "\"";
 		}
         if(be.getMaintain()>0) {
             ss << ", ";

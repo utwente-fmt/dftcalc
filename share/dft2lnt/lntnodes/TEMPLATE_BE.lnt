@@ -1,5 +1,17 @@
+(* Basic event with possible non-failure probability.
+ * Input rates:
+ * RATE_FAIL !1 !1: Dormant failure rate (mu, per-phase)
+ * RATE_FAIL !1 !2: Active failure rate (lambda, per-phase)
+ * RATE_FAIL !2 !1: Dormant non-failure rate (lambda * (1/p - 1))
+ * RATE_FAIL !2 !1: Active non-failure rate (mu * (1/p - 1))
+ *
+ * A note on the combination of prob and repairs: A repairable BE will
+ * decide once whether it can ever fail or not. A BE that has
+ * determined that it can fail (by undergoing any degradation at all)
+ * will never enter a failsafe state after repairs. Similarly, a
+ * failsafe BE with remain failsafe after attempted repairs.
+ *)
 module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
-
 	process BEproc [FAIL : NAT_CHANNEL,
 	                ACTIVATE : NAT_BOOL_CHANNEL,
 	                RATE_FAIL : NAT_NAT_CHANNEL,
@@ -15,10 +27,12 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 		emit_fail : BOOL,
 		emit_online : BOOL,
 		emit_inspect : BOOL,
+		can_definitely_fail: BOOL,
 		degenerated : NAT
 	in
 		status := initial;
 		emit_fail := FALSE;
+		can_definitely_fail := FALSE;
 		emit_inspect := FALSE;
 		if (initial == FAILING) then
 			emit_fail := TRUE;
@@ -56,6 +70,7 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 			[]
 				if ((not (cold)) and (status == UP) and (not(isactive))) then
 					RATE_FAIL (!1 of NAT,1 of NAT);
+					can_definitely_fail := TRUE;
 					degenerated := degenerated-1;
 					if (degenerated < 1) then
 						emit_fail := TRUE;
@@ -64,6 +79,22 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 					if ((phases-degenerated) == threshold) then
 						emit_inspect := TRUE
 					end if
+				end if
+
+			 (* If the BE is in the first degradation phase,
+			  * and has a non-failure probability
+			  * (converted to a rate), the BE might move to
+			  * a failsafe state.
+			  *)
+			[]
+				if ((not (cold))
+				    and (status == UP)
+				    and not(isactive)
+				    and not(can_definitely_fail)
+				    and (degenerated == phases))
+				then
+					RATE_FAIL (!2 of NAT,1 of NAT);
+					status := FAILSAFE
 				end if
 			[]
 				if (emit_inspect) then
@@ -92,6 +123,7 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 			[]
 				if (isactive and (status == UP)) then
 					RATE_FAIL (!1 of NAT,2 of NAT);
+					can_definitely_fail := TRUE;
 					degenerated := degenerated-1;
 					if (degenerated < 1 of NAT) then
 						emit_fail := TRUE;
@@ -100,6 +132,16 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 					if ((phases-degenerated) == threshold) then
 						emit_inspect := TRUE
 					end if
+				end if
+
+			(* Probability of non-failure *)
+			[]
+				if (isactive
+				    and (status == UP)
+				    and not(can_definitely_fail))
+				then
+					RATE_FAIL (!2 of NAT,2 of NAT);
+					status := FAILSAFE
 				end if
 
 			-- listen if repair is finished active branch
@@ -111,7 +153,9 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 						emit_online := TRUE;
 						emit_inspect := FALSE
 					end if;
-					status := UP
+					if (status != FAILSAFE) then
+						status := UP
+					end if
 				end if
 			end select
 		end loop

@@ -76,14 +76,15 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -p              Print result to stdout.");
 		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
 		messageFormatter->message("  -m              Calculate mean time to failure (requires --storm or --imca).");
-		messageFormatter->message("                  Overrules -i, -t, -f, --mrmc, --imrmc.");
+		messageFormatter->message("                  Overrules -i, -t, -u, -f, --mrmc, --imrmc.");
 		messageFormatter->message("  -s              Calculate P(DFT failed) at steady-state (requires --storm or --imrmc).");
 		messageFormatter->message("  -i l u s        Calculate P(DFT fails in [0,x] time units) for each x in interval,");
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
 		messageFormatter->message("  -t xList        Calculate P(DFT fails in [0,x] time units) for each x in xList,");
 		messageFormatter->message("                  where xList is a whitespace-separated list of values, default is \"1\"");
+		messageFormatter->message("  -u              Calculate P(DFT fails eventually)");
 		messageFormatter->message("  -I l u          Calculate P(DFT fails in [l,u] time units) where l can be >= 0");
-		messageFormatter->message("  -f <command>    Raw Calculation formula for the model-checker. Overrules -t.");
+		messageFormatter->message("  -f <command>    Raw Calculation formula for the model-checker. Overrules -i, -s, -m, -t, and -u.");
 		messageFormatter->message("  -E errorbound   Error bound, to be passed to IMCA.");
 		messageFormatter->message("  -C DIR          Temporary output files will be in this directory");
 		messageFormatter->message("  --min           Compute minimum time-bounded reachability (default)");
@@ -886,7 +887,7 @@ int main(int argc, char** argv) {
 	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"C:e:E:f:mpqr:Rc:st:i:I:hxv-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"C:e:E:f:mpqr:Rc:st:ui:I:hxv-:")) >= 0 ) {
 		switch(c) {
 			
 			// -C FILE
@@ -957,6 +958,11 @@ int main(int argc, char** argv) {
 			// -t STRING containing time values separated by whitespace
 			case 't':
 				timeSpec = string(optarg);
+				timeSpecSet = 1;
+				break;
+
+			case 'u':
+				timeSpec = string("Eventually");
 				timeSpecSet = 1;
 				break;
 			
@@ -1159,6 +1165,21 @@ int main(int argc, char** argv) {
 	std::vector<std::pair<std::string,std::string>> commands;
 	if(calcCommandSet) {
 		commands.push_back(pair<string,string>(calcCommand,"?"));
+	} else if (timeSpecSet && timeSpec == string("Eventually")) {
+		string s = timeSpec;
+		switch (useChecker) {
+		case DFT::checker::MRMC:
+			commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U reach ]", s));
+			break;
+		case DFT::checker::IMCA:
+			commands.push_back(pair<string,string>("" + imcaMinMax + " -ub " + imcaEb, s));
+			break;
+		case DFT::checker::IMRMC:
+			commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U failed ]", s));
+			break;
+		case DFT::checker::STORM:
+			commands.push_back(pair<string,string>("P" + stormMinMax + "=? [F failed]", s));
+		}
 	} else if (timeSpecSet) {
 		std::string str = timeSpec;
 		size_t b, e;

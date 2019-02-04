@@ -48,6 +48,7 @@ enum AttributeLabelType {
 enum class CalculationMode {
 	UNDEFINED = 0,
 	EXPONENTIAL,
+	PROBABILITY,
 	WEIBULL, // not supported
 	APH,
 	NUMBER_OF
@@ -242,6 +243,7 @@ class BasicEvent: public Node {
 private:
 	DFT::Nodes::BE::CalculationMode mode;
 	double lambda;
+	double prob;
 	double mu;
     double maintain_rate;
 	double repair_rate;
@@ -258,6 +260,9 @@ public:
 	
 	void setLambda(double lambda) {
 		this->lambda = lambda;
+	}
+	void setProb(double p) {
+		this->prob = p;
 	}
 	void setMu(double mu) {
 		this->mu = mu;
@@ -295,6 +300,12 @@ public:
 	 * @return The lambda failure probability of this Basic Event.
 	 */
 	double getLambda() const { return lambda; }
+
+	/**
+	 * Returns the failure probability of this Basic Event.
+	 * @return The failure probability of this Basic Event.
+	 */
+	double getProb() const { return prob; }
 	
 	/**
 	 * Returns the mu failure probability of this Basic Event.
@@ -358,6 +369,7 @@ public:
 		Node(loc,name,BasicEventType),
 		mode(DFT::Nodes::BE::CalculationMode::UNDEFINED),
 		lambda(-1),
+		prob(1),
 		mu(0),
 		maintain_rate(0),
 		repair_rate(-1),
