@@ -17,6 +17,7 @@ class DFTree;
 #include <algorithm>
 #include <vector>
 #include <map>
+#include <set>
 #include <iostream>
 #include <assert.h>
 #include "dftnodes/nodes.h"
@@ -353,17 +354,28 @@ public:
 	/**
 	 * Apply information about always-active gates (Smart Semantics) to
 	 * entire tree.
+	 * Basic concept: All root nodes are always-active, as are all
+	 * nodes reachable from an always-active node without traversing
+	 * a dynamically-activating node (i.e., SPARE or SAND).
 	 */
 	void addAlwaysActiveInfo()
 	{
-		DFT::Nodes::Node *node=getTopNode();
-		if (node->isGate()) {
-			DFT::Nodes::Gate *gate = static_cast<DFT::Nodes::Gate*>(node);
-			gate->setAlwaysActive(true);
-			addAlwaysActiveInfo(gate);
-		} else if (node->isBasicEvent()) {
-			DFT::Nodes::BasicEvent *be = static_cast<DFT::Nodes::BasicEvent*>(node);
-			be->setAlwaysActive(true);
+		std::set<Nodes::Node *> roots;
+		for (auto node : nodes)
+			roots.insert(node);
+		for (auto node : nodes) {
+			if (!node->isGate())
+				continue;
+			Nodes::Gate *gate = static_cast<Nodes::Gate*>(node);
+			for (auto child : gate->getChildren())
+				roots.erase(child);
+		}
+		for (auto root : roots) {
+			root->setAlwaysActive(true);
+			if (root->isGate()) {
+				Nodes::Gate *gate = static_cast<Nodes::Gate*>(root);
+				addAlwaysActiveInfo(gate);
+			}
 		}
 	}
     
