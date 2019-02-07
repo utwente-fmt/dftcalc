@@ -54,7 +54,7 @@ int DFT::DFTreeSVLAndLNTBuilder::build() {
 }
 
 int DFT::DFTreeSVLAndLNTBuilder::buildSVLOptions() {
-	svl_options.appendLine("%BCG_MIN_OPTIONS=\"-self\"");
+	svl_options.appendLine("%BCG_MIN_OPTIONS=\"-rate -self -epsilon 5e-324\"");
 	return 0;
 }
 
