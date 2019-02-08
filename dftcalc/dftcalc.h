@@ -16,6 +16,7 @@
 
 namespace DFT {
 	enum checker {STORM, MRMC, IMRMC, IMCA, EXP_ONLY};
+	enum converter {SVL, DFTRES};
 
 	class DFTCalc {
 	public:
@@ -44,12 +45,14 @@ namespace DFT {
 		File imrmcExec;
 		File imcaExec;
 		File dotExec;
+		File dftresJar;
 		
 		std::string getCoralRoot(MessageFormatter* messageFormatter);
 		std::string getImcaRoot(MessageFormatter* messageFormatter);
 		std::string getRoot(MessageFormatter* messageFormatter);
 		std::string getCADPRoot(MessageFormatter* messageFormatter);
-		
+		File getDftresJar(MessageFormatter* messageFormatter);
+
 		/// A map containing the results of the calculation. <filename> --> <result>
 		map<std::string,DFT::DFTCalculationResult> results;
 		
@@ -72,7 +75,7 @@ namespace DFT {
 		 * setMessageFormatter().
 		 * @return false: all tools found OK, true: error
 		 */
-		bool checkNeededTools(DFT::checker checker) {
+		bool checkNeededTools(DFT::checker checker, converter conv) {
 			
 			bool ok = true;
 			
@@ -146,23 +149,31 @@ namespace DFT {
 				messageFormatter->reportAction("Using bcg2imca [" + bcg2imcaExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 			}
 			
-			/* Find svl executable (based on CADP environment variable) */
-			if(cadpRoot.empty()) {
-				messageFormatter->reportError("Environment variable `CADP' not set. Please set it to where CADP can be found.");
-				ok = false;
-			} else if(!FileSystem::hasAccessTo(File(cadpRoot),X_OK)) {
-				messageFormatter->reportError("Could not enter CADP directory (environment variable `CADP'");
-				ok = false;
-			} else {
-				if(!FileSystem::hasAccessTo(svlExec,F_OK)) {
-					messageFormatter->reportError("svl not found (in " + cadpRoot+"/com)");
+			if (conv == SVL) {
+				/* Find svl executable (based on CADP environment variable) */
+				if(cadpRoot.empty()) {
+					messageFormatter->reportError("Environment variable `CADP' not set. Please set it to where CADP can be found.");
 					ok = false;
-				} else if(!FileSystem::hasAccessTo(svlExec,X_OK)) {
-					messageFormatter->reportError("svl not executable (in " + cadpRoot+"/com)");
+				} else if(!FileSystem::hasAccessTo(File(cadpRoot),X_OK)) {
+					messageFormatter->reportError("Could not enter CADP directory (environment variable `CADP'");
 					ok = false;
 				} else {
-					messageFormatter->reportAction("Using svl [" + svlExec.getFilePath() + "]",VERBOSITY_SEARCHING);
+					if(!FileSystem::hasAccessTo(svlExec,F_OK)) {
+						messageFormatter->reportError("svl not found (in " + cadpRoot+"/com)");
+						ok = false;
+					} else if(!FileSystem::hasAccessTo(svlExec,X_OK)) {
+						messageFormatter->reportError("svl not executable (in " + cadpRoot+"/com)");
+						ok = false;
+					} else {
+						messageFormatter->reportAction("Using svl [" + svlExec.getFilePath() + "]",VERBOSITY_SEARCHING);
+					}
 				}
+			}
+
+			if (conv == DFTRES) {
+				dftresJar = getDftresJar(messageFormatter);
+				if(!FileSystem::hasAccessTo(dftresJar, F_OK))
+					ok = false;
 			}
 
 			/* Find a storm executable */
@@ -380,8 +391,14 @@ namespace DFT {
 		 * @param dft The DFT to calculate
 		 * @return 0 if successful, non-zero otherwise
 		 */
-		int calculateDFT(const bool reuse, const std::string& cwd, const File& dft, const std::vector<std::pair<std::string,std::string>>& timeSpec,
-				unordered_map<string,string> settings,  DFT::checker checker, bool warnNonDeterminism, bool expOnly);
+		int calculateDFT(const bool reuse, const std::string& cwd,
+		                 const File& dft,
+		                 const std::vector<std::pair<std::string,std::string>>& timeSpec,
+		                 unordered_map<string,string> settings,
+		                 DFT::checker checker,
+		                 DFT::converter useConverter,
+		                 bool warnNonDeterminism,
+		                 bool expOnly);
 		
 		void setEvidence(const std::vector<std::string>& evidence) {this->evidence = evidence;}
 		const std::vector<std::string>& getEvidence() const {return evidence;}

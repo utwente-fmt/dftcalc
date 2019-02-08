@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 	std::vector<signed char> state_labels (bcg_nb_states);
 
 	if (BCG_OT_INITIAL_STATE(bcg_graph) != 0) {
-		fprintf(stderr, "Initial state non-zeron\n");
+		fprintf(stderr, "Initial state non-zero\n");
 		return EXIT_FAILURE;
 	}
 	state_labels[0] = 1; /* Initial state is certainly not failed. */
@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
 	fprintf(tra, "TRANSITIONS ");
 	long transition_count_pos = ftell(tra);
 	fprintf(tra, "%llu%n\n", (unsigned long long) bcg_nb_edges, &edge_count_chars);
-	fprintf(lab, "#DECLARATION\nfailed\n#END\n");
+	fprintf(lab, "#DECLARATION\nmarked\n#END\n");
 
 	unsigned long long n_transitions = 0;
 	for (bcg_s1 = 0; bcg_s1 < bcg_nb_states; bcg_s1++) {
@@ -290,7 +290,7 @@ int main(int argc, char* argv[])
 	for (auto it = reachable.begin(); it != reachable.end(); ++it) {
 		BCG_TYPE_STATE_NUMBER s1 = *it;
 		if (state_labels[s1] < 0)
-			fprintf(lab, "%zu failed\n", stateNums[s1]);
+			fprintf(lab, "%zu marked\n", stateNums[s1]);
 	}
 	fclose(lab);
 	return 0;
