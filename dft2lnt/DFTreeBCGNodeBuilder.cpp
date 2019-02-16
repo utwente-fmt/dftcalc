@@ -1392,7 +1392,7 @@ int DFT::DFTreeBCGNodeBuilder::generateHeaderClose(FileWriter& out) {
 int DFT::DFTreeBCGNodeBuilder::generateSVLBuilder(FileWriter& out, std::string fileName) {
 	generateHeader(out);
 	generateHeaderClose(out);
-	out << out.applyprefix << "\"" << bcgRoot << fileName << "." << DFT::FileExtensions::BCG << "\" = strong reduction of \"" << fileName << "." << DFT::FileExtensions::LOTOSNT << "\"" << out.applypostfix;
+	out << out.applyprefix << "\"" << bcgRoot << fileName << "." << DFT::FileExtensions::BCG << "\" = tau-compression reduction of \"" << fileName << "." << DFT::FileExtensions::LOTOSNT << "\"" << out.applypostfix;
 	return 0;
 }
 

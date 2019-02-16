@@ -65,7 +65,7 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		ss << be.getFileToEmbed();
 		ss << "\" end rename";
 	} else if (be.getLambda()>0 || be.getProb() > 0) {
-		double l = be.getLambda();
+		double l = be.getLambda() * be.getProb();
 		double rateFailSafe = 0;
 		if (l < 0) {
 			/* Purely probabilistic BE. Assign arbitrary rate
@@ -75,22 +75,29 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 			l = be.getProb();
 			rateFailSafe = 1 - l;
 		} else {
-			rateFailSafe = l / be.getProb() - l;
+			rateFailSafe = be.getLambda() * (1 - be.getProb());
 		}
 
+		const std::string GATE = DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL;
 		ss << "total rename ";
 		// Insert lambda value
-		ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !2\" -> \"rate " << l << "\"";
+		ss << "\"" << GATE << " !1 !2\" -> \"rate " << l << "\"";
 		if (rateFailSafe != 0)
-			ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !2 !2\" -> \"rate " << rateFailSafe << "\"";
+			ss << ", \"" << GATE << " !0 !2\" -> \"rate " << rateFailSafe << "\"";
+		for (int i = be.getPhases(); i > 1; i--) {
+			ss << ", \"" << GATE << " !" << i << " !2\" -> \"rate " << be.getLambda() << "\"";
+		}
 	
 		// Insert mu value (only for non-cold BE's)
 		if(be.getMu()>0) {
-			double mu = be.getMu();
-			rateFailSafe = mu / be.getProb() - mu;
+			double mu = be.getMu() * be.getProb();
+			rateFailSafe = be.getMu() * (1 - be.getProb());
 			ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << mu << "\"";
 			if (rateFailSafe != 0)
 				ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !2 !1\" -> \"rate " << rateFailSafe << "\"";
+			for (int i = be.getPhases(); i > 1; i--) {
+				ss << ", \"" << GATE << " !" << i << " !2\" -> \"rate " << be.getMu() << "\"";
+			}
 		}
         if(be.getMaintain()>0) {
             ss << ", ";
@@ -335,23 +342,31 @@ int DFT::DFTreeEXPBuilder::parseDFT(
 
 void DFT::DFTreeEXPBuilder::writeHideLines(vector<DFT::EXPSyncRule>& rules)
 {
+	bool first = true;
 	for(size_t s = 0; s < rules.size(); ++s) {
 		EXPSyncRule& rule = rules[s];
 		if(rule.hideToLabel) {
-			exp_body << exp_body.applyprefix << rule.toLabel << "," << exp_body.applypostfix;
+			if (!first)
+				exp_body << "," << exp_body.applypostfix;
+			first = false;
+			exp_body << exp_body.applyprefix << rule.toLabel;
 		}
 	}
+	exp_body << exp_body.applypostfix;
 }
 
 void DFT::DFTreeEXPBuilder::writeRules(vector<DFT::EXPSyncRule>& rules,
 									   vector<unsigned int> columnWidths)
 {
+	bool first = true;
 	for(size_t s = 0; s < rules.size(); ++s) {
+		if (!first)
+			exp_body << "," << exp_body.applypostfix;
+		first = false;
 		exp_body << exp_body.applyprefix;
 		printSyncLine(rules[s],columnWidths);
-		exp_body << ",";
-		exp_body << exp_body.applypostfix;
 	}
+	exp_body << exp_body.applypostfix;
 }
 
 int DFT::DFTreeEXPBuilder::buildEXPBody(
@@ -364,29 +379,23 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 			vector<DFT::EXPSyncRule>& onlineRules,
 			vector<DFT::EXPSyncRule>& inspectionRules)
 {
+
+	vector<DFT::EXPSyncRule> allRules(activationRules);
+	allRules.insert(allRules.end(), repairRules.begin(), repairRules.end());
+	allRules.insert(allRules.end(), repairedRules.begin(), repairedRules.end());
+	allRules.insert(allRules.end(), onlineRules.begin(), onlineRules.end());
+	allRules.insert(allRules.end(), inspectionRules.begin(), inspectionRules.end());
+	allRules.insert(allRules.end(), failRules.begin(), failRules.end());
+	allRules.insert(allRules.end(), impossibleRules.begin(), impossibleRules.end());
+
     /* Generate the EXP based on the generated synchronization rules */
     exp_body.clearAll();
-    exp_body << exp_body.applyprefix << "(* Number of rules: " << (activationRules.size()+failRules.size()+repairRules.size()+repairedRules.size()+repairingRules.size()+onlineRules.size()+inspectionRules.size());
+    exp_body << exp_body.applyprefix << "(* Number of rules: " << allRules.size();
    	exp_body << "*)" << exp_body.applypostfix;
     exp_body << exp_body.applyprefix << "hide" << exp_body.applypostfix;
     exp_body.indent();
     
-	writeHideLines(activationRules);
-	writeHideLines(repairRules);
-	writeHideLines(repairedRules);
-	writeHideLines(onlineRules);
-	writeHideLines(inspectionRules);
-	/* Fail rules are special since we need to omit the last trailing
-	 * comma.
-	 */
-    for(size_t s=0; s<failRules.size(); ++s) {
-        EXPSyncRule& rule = failRules.at(s);
-        if(rule.hideToLabel) {
-            exp_body << exp_body.applyprefix << rule.toLabel;
-            if(s<failRules.size()-1) exp_body << ",";
-            exp_body << exp_body.applypostfix;
-        }
-    }
+	writeHideLines(allRules);
     
     exp_body.outdent();
     exp_body.appendLine("in");
@@ -394,13 +403,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 
 	// Synchronization rules
 	vector<unsigned int> columnWidths(dft->getNodes().size() + 1, 0);
-	calculateColumnWidths(columnWidths,impossibleRules);
-	calculateColumnWidths(columnWidths,activationRules);
-	calculateColumnWidths(columnWidths,failRules);
-	calculateColumnWidths(columnWidths,repairRules);
-	calculateColumnWidths(columnWidths,repairedRules);
-	calculateColumnWidths(columnWidths,onlineRules);
-	calculateColumnWidths(columnWidths,inspectionRules);
+	calculateColumnWidths(columnWidths,allRules);
 	
 	exp_body << exp_body.applyprefix << "label par using" << exp_body.applypostfix;
 	exp_body << exp_body.applyprefix << "(*\t";
@@ -417,21 +420,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 	exp_body << " *)" << exp_body.applypostfix;
 	
 	exp_body.indent();
-	writeRules(activationRules, columnWidths);
-	writeRules(repairRules, columnWidths);
-	writeRules(repairingRules, columnWidths);
-	writeRules(repairedRules, columnWidths);
-	writeRules(onlineRules, columnWidths);
-	writeRules(inspectionRules, columnWidths);
-	writeRules(impossibleRules, columnWidths);
-	// Generate fail rules (again omitting last trailing comma).
-	for(size_t s=0; s<failRules.size(); ++s) {
-		exp_body << exp_body.applyprefix;
-		printSyncLine(failRules.at(s),columnWidths);
-		if(s<failRules.size()-1)
-			exp_body << ",";
-		exp_body << exp_body.applypostfix;
-	}
+	writeRules(allRules, columnWidths);
 	exp_body.outdent();
 	
 	// Generate the parallel composition of all the nodes
