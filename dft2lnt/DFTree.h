@@ -332,9 +332,6 @@ public:
 	 */
 	void addAlwaysActiveInfo(DFT::Nodes::Gate *gate)
 	{
-		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateSAndType))
-			return; /* Children of Sequential ANDs are dynamically activated. */
-
 		if (gate->matchesType(DFT::Nodes::RepairUnitType)
 			|| gate->matchesType(DFT::Nodes::RepairUnitFcfsType)
 			|| gate->matchesType(DFT::Nodes::RepairUnitPrioType)
@@ -353,6 +350,9 @@ public:
 			n = 1; /* Of SPAREs, only the primary is always-active. */
 		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateFDEPType))
 			n = 1; /* Of FDEPs, avoid activating non-trigger children. */
+		if (DFT::Nodes::Node::typeMatch(gate->getType(), DFT::Nodes::GateSAndType))
+			n = 1; /* Of PANDs, only the first child is always-active. */
+
 
 		while (n-- > 0) {
 			// Get the current child and associated childID

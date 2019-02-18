@@ -1,6 +1,8 @@
 module TEMPLATE_SEQUENCE_AND(TEMPLATE_COMMON) is
 
-	process SEQUENCE_AND [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (threshold : NAT, total : NAT, received : BOOL_ARRAY) is
+	process SEQUENCE_AND [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL]
+		(threshold : NAT, total : NAT, received : BOOL_ARRAY,
+                 always_active : BOOL) is
 	var
 		nr : NAT,
 		done : BOOL,
@@ -10,8 +12,12 @@ module TEMPLATE_SEQUENCE_AND(TEMPLATE_COMMON) is
 	in
 		nr_act := 0;
 		done := FALSE;
-		active := FALSE;
+		active := always_active;
 		activated := BOOL_ARRAY(FALSE);
+		if always_active then
+			nr_act := 1;
+			activated[1] := TRUE
+		end if;
 		loop
 			select
 
@@ -55,7 +61,7 @@ module TEMPLATE_SEQUENCE_AND(TEMPLATE_COMMON) is
 			 * from left to right.
 			 *)
 			[]
-				if (nr_act == 1) and not (done) and (threshold > 0) then
+				if (nr_act >= 1) and not (done) and (threshold > 0) then
 					if not (activated[nr_act]) then
 						ACTIVATE (!nr_act,TRUE);
 						activated[nr_act] := TRUE;

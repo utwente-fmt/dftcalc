@@ -233,7 +233,7 @@ int DFT::DFTreeBCGNodeBuilder::generateSAnd(FileWriter& out, const DFT::Nodes::G
         out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
         out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
         out.indent();
-        out << out.applyprefix << "SEQUENCE_AND [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)))" << out.applypostfix;
+        out << out.applyprefix << "SEQUENCE_AND [" << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, " << total << " of NAT, (BOOL_ARRAY(FALSE)), " << (gate.isAlwaysActive() ? "TRUE" : "FALSE") << ")" << out.applypostfix;
         out.outdent();
         out << out.applyprefix << "end process" << out.applypostfix;
     }
