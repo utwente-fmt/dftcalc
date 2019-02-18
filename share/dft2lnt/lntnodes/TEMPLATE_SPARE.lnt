@@ -169,6 +169,14 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 					IMPOSSIBLE;
 					loop null end loop
 				end if;
+				if (nr == prev_using) then
+					IMPOSSIBLE;
+					loop null end loop
+				end if;
+				if (nr == repairing_deactivate) then
+					IMPOSSIBLE;
+					loop null end loop
+				end if;
 				unclaimed := insert(nr, unclaimed);
 				avail := inter(unclaimed, unfailed)
 			
@@ -216,7 +224,8 @@ module TEMPLATE_SPARE(TEMPLATE_COMMON) is
 			 * sending signals.
 			 *)
 			if always_active then
-				if using == 0 and member(1, avail) then
+				if using != 1 and member(1, avail) then
+					prev_using := using;
 					using := 1;
 					if repairing_deactivate == 1 then
 						repairing_deactivate := 0

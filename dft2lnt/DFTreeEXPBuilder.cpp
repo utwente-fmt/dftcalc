@@ -325,16 +325,15 @@ int DFT::DFTreeEXPBuilder::parseDFT(
                 const DFT::Nodes::Gate& gate = static_cast<const DFT::Nodes::Gate&>(**it);
                 cc->reportAction("Creating synchronization rules for `" + gate.getName() + "' (THIS node)",VERBOSITY_FLOW);
                 createSyncRule(impossibleRules, activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules,inspectionRules,gate,getIDOfNode(gate));
-            } else {
-				unsigned int nodeID = getIDOfNode(**it);
-				/* Impossible (model-error) rule */
-				std::string iName("IMPOSSIBLE_");
-				iName += (*it)->getTypeStr();
-				iName += std::to_string(nodeID);
-				DFT::EXPSyncRule ruleI(iName);
-				ruleI.insertLabel(nodeID, syncImpossible());
-				impossibleRules.push_back(ruleI);
-			}
+            }
+			unsigned int nodeID = getIDOfNode(**it);
+			/* Impossible (model-error) rule */
+			std::string iName("IMPOSSIBLE_");
+			iName += (*it)->getTypeStr();
+			iName += std::to_string(nodeID);
+			DFT::EXPSyncRule ruleI(iName);
+			ruleI.insertLabel(nodeID, syncImpossible());
+			impossibleRules.push_back(ruleI);
         }
     }
     return 0;
