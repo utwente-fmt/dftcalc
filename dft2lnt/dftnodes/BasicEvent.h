@@ -13,6 +13,7 @@ class BasicEvent;
 #define BASICEVENT_H
 
 #include "Node.h"
+#include "decnumber.h"
 
 namespace DFT {
 namespace Nodes {
@@ -242,9 +243,7 @@ public:
 class BasicEvent: public Node {
 private:
 	DFT::Nodes::BE::CalculationMode mode;
-	double lambda;
-	double prob;
-	double mu;
+	decnumber<> lambda, prob, mu;
     double maintain_rate;
 	double repair_rate;
 	int priority;
@@ -258,13 +257,13 @@ private:
 	std::string fileToEmbed;
 public:
 	
-	void setLambda(double lambda) {
+	void setLambda(decnumber<> lambda) {
 		this->lambda = lambda;
 	}
-	void setProb(double p) {
+	void setProb(decnumber<> p) {
 		this->prob = p;
 	}
-	void setMu(double mu) {
+	void setMu(decnumber<> mu) {
 		this->mu = mu;
 	}
     void setMaintain(double maintain_rate) {
@@ -299,25 +298,25 @@ public:
 	 * Returns the lambda failure probability of this Basic Event.
 	 * @return The lambda failure probability of this Basic Event.
 	 */
-	double getLambda() const { return lambda; }
+	decnumber<> getLambda() const { return lambda; }
 
 	/**
 	 * Returns the failure probability of this Basic Event.
 	 * @return The failure probability of this Basic Event.
 	 */
-	double getProb() const { return prob; }
+	decnumber<> getProb() const { return prob; }
 	
 	/**
 	 * Returns the mu failure probability of this Basic Event.
 	 * @return The mu failure probability of this Basic Event.
 	 */
-	double getMu()     const { return mu; }
+	decnumber<> getMu()     const { return mu; }
 	
 	/**
 	 * Returns the dormancy factor (mu/lambda) of this Basic Event.
 	 * @return The dormancy factor (mu/lambda) of this Basic Event.
 	 */
-	double getDorm()   const { return mu / lambda; }
+	double getDorm()   const { return (double)mu / (double)lambda; }
 
     /**
      * Returns the repair rate of this Basic Event.

@@ -64,45 +64,45 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		ss << " in \"";
 		ss << be.getFileToEmbed();
 		ss << "\" end rename";
-	} else if (be.getLambda()>0 || be.getProb() > 0) {
-		double l = be.getLambda() * be.getProb();
-		double rateFailSafe = 0;
-		if (l < 0) {
+	} else if (!be.getLambda().is_zero() || !be.getProb().is_zero()) {
+		decnumber<> l = be.getLambda() * be.getProb();
+		decnumber<> rateFailSafe = 0;
+		if ((double)l < 0) {
 			/* Purely probabilistic BE. Assign arbitrary rate
 			 * since only time-unbounded properties make sense
 			 * anyway.
 			 */
 			l = be.getProb();
-			rateFailSafe = 1 - l;
+			rateFailSafe = decnumber<>(1) - l;
 		} else {
-			rateFailSafe = be.getLambda() * (1 - be.getProb());
+			rateFailSafe = be.getLambda() * (decnumber<>(1) - be.getProb());
 		}
 
 		const std::string GATE = DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL;
 		ss << "total rename ";
 		// Insert lambda value
-		ss << "\"" << GATE << " !1 !2\" -> \"rate " << l << "\"";
-		if (rateFailSafe != 0)
-			ss << ", \"" << GATE << " !0 !2\" -> \"rate " << rateFailSafe << "\"";
+		ss << "\"" << GATE << " !1 !2\" -> \"rate " << l.str() << "\"";
+		if (!rateFailSafe.is_zero())
+			ss << ", \"" << GATE << " !0 !2\" -> \"rate " << rateFailSafe.str() << "\"";
 		for (int i = be.getPhases(); i > 1; i--) {
-			ss << ", \"" << GATE << " !" << i << " !2\" -> \"rate " << be.getLambda() << "\"";
+			ss << ", \"" << GATE << " !" << i << " !2\" -> \"rate " << be.getLambda().str() << "\"";
 		}
 	
 		// Insert mu value (only for non-cold BE's)
-		if(be.getMu()>0) {
-			double mu = be.getMu() * be.getProb();
-			rateFailSafe = be.getMu() * (1 - be.getProb());
-			ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << mu << "\"";
-			if (rateFailSafe != 0)
-				ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !2 !1\" -> \"rate " << rateFailSafe << "\"";
+		if(!be.getMu().is_zero()) {
+			decnumber<> mu = be.getMu() * be.getProb();
+			rateFailSafe = be.getMu() * (decnumber<>(1) - be.getProb());
+			ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << mu.str() << "\"";
+			if (!rateFailSafe.is_zero())
+				ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !2 !1\" -> \"rate " << rateFailSafe.str() << "\"";
 			for (int i = be.getPhases(); i > 1; i--) {
-				ss << ", \"" << GATE << " !" << i << " !2\" -> \"rate " << be.getMu() << "\"";
+				ss << ", \"" << GATE << " !" << i << " !2\" -> \"rate " << be.getMu().str() << "\"";
 			}
 		}
         if(be.getMaintain()>0) {
             ss << ", ";
             ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !4\" -> \"rate " << be.getMaintain()     << "\"";
-            if(be.getMu()>0) {
+            if(!be.getMu().is_zero()) {
                 ss << ", ";
                 ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !3\" -> \"rate " << be.getMaintain() << "\"";
             }

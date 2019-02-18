@@ -71,7 +71,7 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 	ss << "_p" << (node.getParents().size()>0?node.getParents().size():1);
 	if(node.isBasicEvent()) {
 		const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
-		if(be.getMu()==0) {
+		if(be.getMu().is_zero()) {
 			ss << "_cold";
 		}
         if(be.getMaintain()>0) {
@@ -80,7 +80,7 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		// extension for a repairable BE
 		if(be.isRepairable())
             ss << "_repair";
-        if(be.getLambda()==0) {
+        if(be.getLambda().is_zero()) {
             ss << "_dummy";
         }
 		if(be.getFailed()) {
@@ -370,8 +370,8 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
                                           const DFT::Nodes::BasicEvent& be)
 {
 	int nr_parents = be.getParents().size();
-	bool cold = be.getMu() == 0;
-	bool dummy = be.getLambda() == 0;
+	bool cold = be.getMu().is_zero();
+	bool dummy = be.getLambda().is_zero();
 
 	std::string initialState;
 	if (be.getFailed())
@@ -384,7 +384,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
 	if(!dummy){
 		out << out.applyprefix << " * Generating BE("
 			<< "parents=" << nr_parents
-			<< ", prob=" << be.getProb()
+			<< ", prob=" << be.getProb().str()
 			<< ", repair=" << be.getRepair()
 			<< ", phases=" << be.getPhases()
 			<< ", interval=" << be.getInterval()

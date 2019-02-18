@@ -52,6 +52,11 @@
 		int n;
 		int k;
 	} Voting;
+
+	typedef struct RealWithString {
+		double val;
+		std::string str_val;
+	} RealWithString;
     
     typedef struct Inspection {
         int n;
@@ -67,7 +72,7 @@
 
 %union {
 		int number;
-		long double realnumber;
+		RealWithString *realOrig;
 		char character;
 		char* c_string;
 		char* address;
@@ -94,7 +99,7 @@
 
 %token <c_string> IDENTIFIER
 %token <c_string> STRING
-%token <realnumber> REAL
+%token <realOrig> REAL
 %token <character> CHAR
 %token <number> NUMBER
 %token <numbersuffix> NUMBERSUFFIX
@@ -161,7 +166,7 @@
 %type <attribute>  be_attrib_name
 %type <attributeValue> be_attrib_value
 %type <number> number
-%type <realnumber> floatingpoint
+%type <realOrig> floatingpoint
 
 //%type <dft>       dft
 
@@ -355,7 +360,8 @@ be_attrib_name //{
 be_attrib_value //{
 	:	floatingpoint
 	{
-		$$ = new DFT::AST::ASTAttribFloat(@1,$1);
+		$$ = new DFT::AST::ASTAttribFloat(@1,$1->val,$1->str_val);
+	    delete $1;
 	}
 	|	number
 	{

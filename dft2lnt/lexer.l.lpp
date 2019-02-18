@@ -282,7 +282,9 @@ transfer      "accepts transfers from"
 {real_exp} {
 	double in;
 	sscanf(yytext,"%lf",&in);
-	yylval->realnumber = (long double)in;
+	yylval->realOrig = new RealWithString();
+	yylval->realOrig->val = in;
+	yylval->realOrig->str_val = std::string(yytext);
 	return REAL;
 }
 

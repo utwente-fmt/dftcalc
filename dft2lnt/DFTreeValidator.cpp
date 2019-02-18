@@ -110,21 +110,19 @@ int DFT::DFTreeValidator::validateBasicEvent(const DFT::Nodes::BasicEvent& be) {
 	
 	switch(be.getMode()) {
 	case DFT::Nodes::BE::CalculationMode::EXPONENTIAL: {
-		float l = be.getLambda();
-		if(l<0) {
+		if((double)be.getLambda() < 0) {
 			valid = false;
 			cc->reportErrorAt(be.getLocation(),"BasicEvent `" + (be.getName()) + "': has negative lambda");
 		}
 		
-		float m = be.getMu();
-		if(m<0) {
+		if((double)be.getMu() < 0) {
 			valid = false;
 			cc->reportErrorAt(be.getLocation(),"BasicEvent `" + (be.getName()) + "': has negative mu");
 		}
 		break;
 	}
 	case DFT::Nodes::BE::CalculationMode::PROBABILITY:
-        if (be.getProb() < 0) {
+        if ((double)be.getProb() < 0) {
 			valid = false;
 			cc->reportErrorAt(be.getLocation(),"BasicEvent `" + (be.getName()) + "': has no probability");
 		}

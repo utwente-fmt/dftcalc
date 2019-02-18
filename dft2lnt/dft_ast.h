@@ -137,6 +137,51 @@ public:
 	}
 };
 
+/**
+ * Identifier ASTNode
+ */
+class ASTIdentifier: public ASTNode {
+private:
+	std::string str;
+public:
+	ASTIdentifier(NodeType type, Location location, std::string str):
+		ASTNode(type,location),
+		str(str) {
+	}
+	ASTIdentifier(Location location, std::string str):
+		ASTNode(IdentifierType,location),
+		str(str) {
+	}
+	
+	virtual ~ASTIdentifier() {
+	}
+	
+	/**
+	 * Sets the string value.
+	 * @param str The string value to be set.
+	 */
+	void setString(const std::string& str) {
+		this->str = str;
+	}
+	
+	/**
+	 * Returns the string value.
+	 * @return The string value.
+	 */
+	const std::string& getString() const {
+		return str;
+	}
+};
+
+class ASTIdentifiers: public std::vector<DFT::AST::ASTIdentifier*> {
+public:
+	virtual ~ASTIdentifiers() {
+		for(size_t i = size();i--;) {
+			if((*this)[i]) delete (*this)[i];
+		}
+	}
+};
+
 //class ASTEntity: public ASTNode {
 //public:
 //	const std::string& getName() const = 0;
@@ -147,7 +192,9 @@ public:
  */
 class ASTAttrib: public ASTNode {
 public:
-	ASTAttrib(NodeType type, Location location):
+	const std::string origString;
+	ASTAttrib(NodeType type, Location location, std::string orig):
+		origString(orig),
 		ASTNode(type,location) {
 	}
 	
@@ -169,8 +216,8 @@ class ASTAttribFloat: public ASTAttrib {
 private:
 	long double value;
 public:
-	ASTAttribFloat(Location location, long double value):
-		ASTAttrib(BEAttributeFloatType,location),
+	ASTAttribFloat(Location location, long double value, std::string orig):
+		ASTAttrib(BEAttributeFloatType,location, orig),
 		value(value) {
 	
 	}
@@ -213,7 +260,7 @@ private:
 	int value;
 public:
 	ASTAttribNumber(Location location, int value):
-		ASTAttrib(BEAttributeNumberType,location),
+		ASTAttrib(BEAttributeNumberType,location, std::to_string(value)),
 		value(value) {
 	}
 	
@@ -260,7 +307,7 @@ public:
 	 * Claims ownership of all specified arguments.
 	 */
 	ASTAttribString(Location location, ASTIdentifier* value):
-		ASTAttrib(BEAttributeStringType,location),
+		ASTAttrib(BEAttributeStringType,location, value->getString()),
 		value(value) {
 	}
 	
@@ -287,51 +334,6 @@ public:
 	virtual bool isString() { return true;  }
 	virtual ASTIdentifier* getStringValue() {
 		return value;
-	}
-};
-
-/**
- * Identifier ASTNode
- */
-class ASTIdentifier: public ASTNode {
-private:
-	std::string str;
-public:
-	ASTIdentifier(NodeType type, Location location, std::string str):
-		ASTNode(type,location),
-		str(str) {
-	}
-	ASTIdentifier(Location location, std::string str):
-		ASTNode(IdentifierType,location),
-		str(str) {
-	}
-	
-	virtual ~ASTIdentifier() {
-	}
-	
-	/**
-	 * Sets the string value.
-	 * @param str The string value to be set.
-	 */
-	void setString(const std::string& str) {
-		this->str = str;
-	}
-	
-	/**
-	 * Returns the string value.
-	 * @return The string value.
-	 */
-	const std::string& getString() const {
-		return str;
-	}
-};
-
-class ASTIdentifiers: public std::vector<DFT::AST::ASTIdentifier*> {
-public:
-	virtual ~ASTIdentifiers() {
-		for(size_t i = size();i--;) {
-			if((*this)[i]) delete (*this)[i];
-		}
 	}
 };
 
