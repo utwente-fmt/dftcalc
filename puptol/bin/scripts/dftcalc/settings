@@ -33,7 +33,7 @@ export TOOLTMPDIR
 
 gnuplot=gnuplot
 
-if [ "$MODELCHECKER" != "--mrmc" ] && [ "$MODELCHECKER" != "--imca" ] && [ "$MODELCHECKER" != "--storm" ] && [ "$MODELCHECKER" != "--imrmc" ]; then
+if [ "$MODELCHECKER" != "--mrmc" ] && [ "$MODELCHECKER" != "--imca" ] && [ "$MODELCHECKER" != "--storm" ] && [ "$MODELCHECKER" != "--imrmc" ] && [ "$MODELCHECKER" != "--exact" ] ; then
 	MODELCHECKER="--storm";
 fi
 

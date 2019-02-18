@@ -279,6 +279,15 @@
                         },
                         {
                           "Type": "radio",
+                          "Title": "IMRMC (exact mode)",
+                          "Label": "IMRMC Exact",
+                          "Name": "modelchecker",
+                          "Value": "--exact",
+                          "NewPage": "false",
+                          "ParamName": "modelchecker"
+                        },
+                        {
+                          "Type": "radio",
                           "Title": "IMCA",
                           "Label": "IMCA",
                           "Name": "modelchecker",
