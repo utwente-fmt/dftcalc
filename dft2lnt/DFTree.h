@@ -99,7 +99,7 @@ public:
 			}
 			
 			// Remove all the parent-references of the current node to the node to be removed
-			vector<DFT::Nodes::Node*>::iterator it = std::remove(n->getParents().begin(),n->getParents().end(),node);
+			vector<Nodes::Gate*>::iterator it = std::remove(n->getParents().begin(),n->getParents().end(),node);
 			n->getParents().resize(it-n->getParents().begin());
 		}
 		
@@ -216,7 +216,7 @@ public:
 						gate->addChild(fdepChild);
 						
 						// Loop over all the parents of the depender
-						for(DFT::Nodes::Node* parent: fdepChild->getParents()) {
+						for(DFT::Nodes::Gate* parent: fdepChild->getParents()) {
 							
 							// Add the parent to the OR-node's parents
 							gate->getParents().push_back(parent);
@@ -285,6 +285,8 @@ public:
 			}
 		}
 	}
+
+	void replaceSEQs();
 
 	/**
 	 * Find repair information

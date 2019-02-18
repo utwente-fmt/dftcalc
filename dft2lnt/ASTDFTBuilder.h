@@ -72,6 +72,7 @@ public:
             gate = new DFT::Nodes::GatePor(astgate->getLocation(), astgate->getName()->getString());
             break;
 		case DFT::Nodes::GateSeqType:
+            gate = new DFT::Nodes::GateSeq(astgate->getLocation(), astgate->getName()->getString());
 			break;
 		case DFT::Nodes::GateVotingType: {
 			DFT::AST::ASTVotingGateType* vote = static_cast<DFT::AST::ASTVotingGateType*>(astgate->getGateType());
@@ -421,7 +422,7 @@ public:
 			
 			// Add the trigger as a child
 			DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(0)->getString());
-			node->getParents().push_back(n);
+			node->getParents().push_back(g);
 			g->getChildren().push_back(node);
 			
 			// Add the rest of the children as dependers
@@ -437,7 +438,7 @@ public:
 				DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(i)->getString());
 				
 				// Add the Gate to that child's list of parents
-				node->getParents().push_back(n);
+				node->getParents().push_back(g);
 				
 				// Add the child to the Gate's list of children
 				g->getChildren().push_back(node);

@@ -23,6 +23,8 @@ using namespace std;
 namespace DFT {
 namespace Nodes {
 
+class Gate;
+
 /**
  * The supported DFT Node types
  */
@@ -148,7 +150,7 @@ private:
 	bool alwaysActive;
 	
 	/// List of parents, instances are freed by DFTree instance.
-	std::vector<Nodes::Node*> parents;
+	std::vector<Nodes::Gate*> parents;
 public:
 	Node(Location location, NodeType type):
 		location(location),
@@ -211,9 +213,9 @@ public:
 	 */
 	virtual const NodeType& getType() const {return type;}
 	
-	void setParents(std::vector<Nodes::Node*> parents) { this->parents = parents;}
-	std::vector<Node*>& getParents() {return parents;}
-	const std::vector<Node*>& getParents() const {return parents;}
+	void setParents(std::vector<Nodes::Gate*> parents) { this->parents = parents;}
+	std::vector<Gate*>& getParents() {return parents;}
+	const std::vector<Gate*>& getParents() const {return parents;}
 	
 	/**
 	 * Returns the type of this Node.
