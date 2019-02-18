@@ -79,15 +79,8 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 		results.clear();
 		const char *c = resultString;
 		const char *end = c;
-		if (*c == '[') {
-			while (*end && *end != ']')
-				end++;
-			if (*end)
-				end++;
-		} else {
-			while (*end && *end != ')' && *end != ',')
-				end++;
-		}
+		while (*end && *end != ')' && *end != ',')
+			end++;
 		std::string res(c, end - c);
 		results.push_back(res);
 		m_isCalculated = true;
