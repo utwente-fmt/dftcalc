@@ -1186,15 +1186,6 @@ int main(int argc, char** argv) {
 		messageFormatter->reportWarningAt(Location("commandline"), "MTTF flag cannot be used with MRMC model checker, defaulting to Storm.");
 		useChecker = DFT::checker::STORM;
 	}
-	if (mttf && useConverter == DFT::converter::DFTRES) {
-		messageFormatter->reportErrorAt(Location("commandline"), "MTTF flag cannot be used with IMRMC model checker, cannot perform exact computation.");
-		return EXIT_FAILURE;
-	}
-
-	if (mttf && useChecker == DFT::checker::IMRMC) {
-		messageFormatter->reportWarningAt(Location("commandline"), "MTTF flag cannot be used with IMRMC model checker, defaulting to Storm.");
-		useChecker = DFT::checker::STORM;
-	}
 	if (steadyState && useChecker == DFT::checker::MRMC) {
 		messageFormatter->reportWarningAt(Location("commandline"), "Steady-state flag cannot currently be used with MRMC model checker, defaulting to Storm.");
 		useChecker = DFT::checker::STORM;
@@ -1207,8 +1198,14 @@ int main(int argc, char** argv) {
 		calcCommandSet = true;
 		if (useChecker == DFT::checker::IMCA)
 			calcCommand = "-et " + imcaMinMax + imcaEb;
-		else
+		else if (useChecker == DFT::checker::STORM)
 			calcCommand = "T" + stormMinMax + "=? [F failed]";
+		else if (useChecker == DFT::checker::IMRMC)
+			calcCommand = "M{>1}[marked]";
+		else {
+			messageFormatter->reportError("Internal error: Unsupported model checker for mean-time query, unable to set calculation command.");
+			return EXIT_FAILURE;
+		}
 	}
 	if (steadyState) {
 		calcCommandSet = true;
