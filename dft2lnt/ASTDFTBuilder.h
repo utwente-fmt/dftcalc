@@ -94,6 +94,9 @@ public:
 		case DFT::Nodes::RepairUnitNdType:
 			gate = new DFT::Nodes::RepairUnit(astgate->getLocation(), astgate->getName()->getString(), DFT::Nodes::RepairUnitNdType);
 			break;
+		case DFT::Nodes::RepairUnitSimulType:
+			gate = new DFT::Nodes::RepairUnit(astgate->getLocation(), astgate->getName()->getString(), DFT::Nodes::RepairUnitSimulType);
+			break;
         case DFT::Nodes::InspectionType:{
             DFT::AST::ASTInspectionType* insp = static_cast<DFT::AST::ASTInspectionType*>(astgate->getGateType());
             gate = new DFT::Nodes::Inspection(astgate->getLocation(), astgate->getName()->getString(),insp->getPhases(),insp->getLambda());

@@ -81,4 +81,23 @@ namespace DFT {
 		}
 		return;
 	}
+
+	void DFTree::addSimulRepairs() {
+		for (Nodes::Node *node : nodes) {
+			if (!node->matchesType(Nodes::BasicEventType))
+				continue;
+			if (node->hasRepairModule())
+				continue;
+			if (!node->isRepairable())
+				continue;
+			Nodes::RepairUnit *ru = new Nodes::RepairUnit(node->getLocation(),
+				                                          "r_"+node->getName(),
+			                                        Nodes::RepairUnitSimulType);
+
+			ru->addChild(node);
+			node->getParents().push_back(ru);
+			addNode(ru);
+		}
+		return;
+	}
 }

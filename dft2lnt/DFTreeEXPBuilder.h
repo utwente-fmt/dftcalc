@@ -128,6 +128,29 @@ public:
 	}
 };
 
+class EXPSyncItemB: public EXPSyncItem {
+public:
+	EXPSyncItemB(std::string name, bool arg1):
+		EXPSyncItem(name,arg1) {
+	}
+	
+	/**
+	 * Returns the label to be synchronized on. This is a textual
+	 * representation of this class. The format is:
+	 *  <gate name> ' !' arg0 ' !' arg1
+	 * Node that arg0 is represented as Integer
+	 * and that arg1 is represented as boolean (TRUE/FALSE)
+	 * @return The label to synchronize on.
+	 */
+	virtual std::string toString() const {
+		assert( (args.size()==1) && "EXPSyncItemB should have one argument");
+		std::stringstream ss;
+		ss << name;
+		ss << " !" << (args.at(0)?"TRUE":"FALSE");
+		return ss.str();
+	}
+};
+
 /**
  * This class reflects a single synchronization rule in the "rule table"
  * of a generated EXP file.
@@ -208,6 +231,11 @@ private:
 						  EXPSyncItem *childSignal,
 						  std::string name_prefix,
 						  unsigned int childNum);
+
+	void addIndepRule(vector<DFT::EXPSyncRule> &rules,
+					     const DFT::Nodes::Node &node,
+					     EXPSyncItem *nodeSignal,
+					     std::string name_prefix);
 
 	void addAnycastRule(vector<DFT::EXPSyncRule> &rules,
 						const DFT::Nodes::Gate &node,
@@ -334,13 +362,23 @@ public:
 	EXPSyncItem *syncImpossible() {
 		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_IMPOSSIBLE);
 	}
+
+	/**
+	 * Create a new EXPSyncItem instance reflecting a Repair action.
+	 * @param direction: input (false) or output (true)
+	 * @return A new EXPSyncItem instance.
+	 */
+	EXPSyncItem *syncRepair(bool direction) {
+		return new EXPSyncItemB(DFT::DFTreeBCGNodeBuilder::GATE_REPAIR,direction);
+	}
+
 	/**
 	 * Create a new EXPSyncItem instance reflecting a Repair action
 	 * based on the specified localNodeID.
 	 * @param localNodeID This is the ID of the Node seen from the actor.
 	 * @return A new EXPSyncItem instance.
 	 */
-	EXPSyncItem *syncRepair(unsigned int localNodeID) {
+	EXPSyncItem *syncRepair(size_t localNodeID) {
 		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_REPAIR,localNodeID);
 	}
 
@@ -369,11 +407,10 @@ public:
 	 * based on the specified localNodeID and if this is the sendign action
 	 * or not.
 	 * @param localNodeID This is the ID of the Node seen from the actor.
-	 * @param sending Whether this is a sending action or not.
 	 * @return A new EXPSyncItem instance.
 	 */
-	EXPSyncItem *syncRepaired(unsigned int localNodeID, bool sending) {
-		return new EXPSyncItemIB(DFT::DFTreeBCGNodeBuilder::GATE_REPAIRED,localNodeID,sending);
+	EXPSyncItem *syncRepaired(unsigned int localNodeID) {
+		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_REPAIRED,localNodeID);
 	}
     
     /**

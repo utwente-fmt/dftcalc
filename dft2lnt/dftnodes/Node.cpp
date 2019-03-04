@@ -31,6 +31,22 @@ namespace Nodes {
     const std::string Node::InspectionStr("inspection");
     const std::string Node::ReplacementStr("replacement");
 
- 
+	bool Node::hasInspectionModule(void) const {
+		for (Gate *g : parents) {
+			Node *n = (Node *)g;
+			if (n->matchesType(Nodes::InspectionType))
+				return true;
+		}
+		return false;
+	}
+
+	bool Node::hasRepairModule(void) const {
+		for (Gate *g : parents) {
+			Node *n = (Node *)g;
+			if (n->matchesType(Nodes::RepairUnitAnyType))
+				return true;
+		}
+		return false;
+	}
 }
 }

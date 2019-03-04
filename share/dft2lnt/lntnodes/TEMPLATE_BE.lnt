@@ -3,6 +3,7 @@
  * RATE_FAIL !x !1: Dormant rate from phase x (1-indexed)
  * RATE_FAIL !x !2: Active rate from phase x (1-indexed)
  * RATE_FAIL !0 !y: Non-fail rate from first phase (p * lambda)
+ * RATE_REPAIR    : Repair rate from any failed state.
  *
  * A note on the combination of prob and repairs: A repairable BE will
  * decide once whether it can ever fail or not. A BE that has
@@ -45,12 +46,16 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 	                FAIL : NAT_CHANNEL,
 	                ACTIVATE : NAT_BOOL_CHANNEL,
 	                RATE_FAIL : NAT_NAT_CHANNEL,
-	                REPAIRED : NAT_BOOL_CHANNEL,
+	                RATE_REPAIR : none,
+	                REPAIR : BOOL_CHANNEL,
+	                REPAIRED : NAT_CHANNEL,
+	                REPAIRING : NAT_CHANNEL,
 	                INSPECT : NAT_CHANNEL,
 	                ONLINE : NAT_CHANNEL,
 	                DEACTIVATE : NAT_BOOL_CHANNEL]
 		(cold: BOOL, initial: STATUS, phases: NAT,
-		 threshold : NAT, repairable: BOOL, always_active: BOOL)
+		 threshold : NAT, repairable: BOOL, self_repair: BOOL,
+		 always_active: BOOL)
 	is var
 		status : STATUS,
 		isactive : BOOL,
@@ -58,6 +63,7 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 		emit_online : BOOL,
 		emit_inspect : BOOL,
 		can_definitely_fail: BOOL,
+		repair_state: REPAIR_STATUS,
 		phase : NAT
 	in
 		status := initial;
@@ -74,6 +80,7 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 		isactive := always_active;
 		phase := 1 of NAT;
 		emit_online := FALSE;
+		repair_state := NONE;
 		loop
 			select
 			(* Note: Activation/deactivation logic will get
@@ -157,22 +164,62 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 					emit_online := FALSE
 				end if
 
-			-- listen if repair is finished active branch
+			-- Decide on our own we need repairs.
+			[]	if (repairable and self_repair
+				    and (status == DOWN)
+				    and (repair_state == NONE))
+				then
+					repair_state := NEEDED
+				end if
+
+			-- IM tells us we need to do repairs.
+			[]	REPAIR(FALSE);
+				if not(repairable) then
+					IMPOSSIBLE; stop
+				end if;
+				if (repair_state == NONE) then
+					repair_state := NEEDED
+				end if
+
+			-- Signal that we need repair
+			[]	if (repair_state == NEEDED) then
+					REPAIR(TRUE);
+					repair_state := WAITING
+				end if
+
+			-- RU tells us we can start repair.
+			[]	REPAIRING(0 of NAT);
+				if (repair_state == WAITING) then
+					repair_state := BUSY
+				end if
 			[]
-				REPAIRED (!0 of NAT,FALSE);
-				if repairable then
+				if (repair_state == BUSY) then
+					RATE_REPAIR;
 					phase := 1;
+					if (emit_inspect) then
+						IMPOSSIBLE; stop
+					end if;
+					repair_state := DONE;
 					if (status == DOWN) then
-						emit_online := TRUE;
-						emit_inspect := FALSE
+						emit_online := TRUE
 					end if;
 					if (status != FAILSAFE) then
 						status := UP
 					end if
-				else
-					IMPOSSIBLE; stop
 				end if
-			end select
+			[]
+				if (repair_state == DONE) then
+					REPAIRED(!0 of NAT);
+					repair_state := NONE
+				end if
+			end select;
+
+			if ((repair_state == NEEDED) and (phase == 1)) then
+				if (emit_inspect or not(repairable)) then
+					IMPOSSIBLE; stop
+				end if;
+				repair_state := DONE
+			end if
 		end loop
 	end var
 	end process

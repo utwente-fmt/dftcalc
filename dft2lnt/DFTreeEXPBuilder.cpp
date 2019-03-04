@@ -58,9 +58,6 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		ss << "\"ACTIVATE\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE << " !0 !FALSE\"";
 		ss << ", ";
 		ss << "\"FAIL\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !0\"";
-		//ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE << " !0 !FALSE\" -> \"A\"";
-		//ss << ", ";
-		//ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !0\" -> \"F\"";
 		ss << " in \"";
 		ss << be.getFileToEmbed();
 		ss << "\" end rename";
@@ -99,13 +96,9 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 				ss << ", \"" << GATE << " !" << i << " !2\" -> \"rate " << be.getMu().str() << "\"";
 			}
 		}
-        if(be.getMaintain()>0) {
-            ss << ", ";
-            ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !4\" -> \"rate " << be.getMaintain()     << "\"";
-            if(!be.getMu().is_zero()) {
-                ss << ", ";
-                ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !3\" -> \"rate " << be.getMaintain() << "\"";
-            }
+        if (be.getRepair()>0) {
+			ss << ", ";
+            ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR << "\" -> \"rate " << be.getRepair() << "\"";
         }
 		ss << " in \"";
 		ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
@@ -325,7 +318,16 @@ int DFT::DFTreeEXPBuilder::parseDFT(
                 const DFT::Nodes::Gate& gate = static_cast<const DFT::Nodes::Gate&>(**it);
                 cc->reportAction("Creating synchronization rules for `" + gate.getName() + "' (THIS node)",VERBOSITY_FLOW);
                 createSyncRule(impossibleRules, activationRules,failRules,repairRules,repairedRules,repairingRules,onlineRules,inspectionRules,gate,getIDOfNode(gate));
-            }
+            } else {
+				const DFT::Nodes::BasicEvent& be = static_cast<const DFT::Nodes::BasicEvent&>(**it);
+				if (!be.hasInspectionModule()) {
+					addIndepRule(inspectionRules, be, syncInspection(0), "i_");
+				} else if (be.getRepair() <= 0) {
+					EXPSyncItem *RR = new EXPSyncItem(
+								DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR);
+					addIndepRule(repairRules, be, RR, "rr_");
+				}
+			}
 			unsigned int nodeID = getIDOfNode(**it);
 			/* Impossible (model-error) rule */
 			std::string iName("IMPOSSIBLE_");
@@ -382,6 +384,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 	vector<DFT::EXPSyncRule> allRules(activationRules);
 	allRules.insert(allRules.end(), repairRules.begin(), repairRules.end());
 	allRules.insert(allRules.end(), repairedRules.begin(), repairedRules.end());
+	allRules.insert(allRules.end(), repairingRules.begin(), repairingRules.end());
 	allRules.insert(allRules.end(), onlineRules.begin(), onlineRules.end());
 	allRules.insert(allRules.end(), inspectionRules.begin(), inspectionRules.end());
 	allRules.insert(allRules.end(), failRules.begin(), failRules.end());
@@ -440,20 +443,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 			         << exp_body.applypostfix;
 		} else if (node.isGate()) {
 			if (DFT::Nodes::Node::typeMatch(node.getType(),
-											DFT::Nodes::RepairUnitType)
-				|| DFT::Nodes::Node::typeMatch(node.getType(),
-											   DFT::Nodes::RepairUnitFcfsType)
-				|| DFT::Nodes::Node::typeMatch(node.getType(),
-											   DFT::Nodes::RepairUnitPrioType)
-				|| DFT::Nodes::Node::typeMatch(node.getType(),
-											   DFT::Nodes::RepairUnitNdType))
-			{
-				const DFT::Nodes::Gate *ru;
-			   	ru = static_cast<const DFT::Nodes::Gate*>(&node);
-				exp_body << exp_body.applyprefix << getRUProc(*ru)
-				         << exp_body.applypostfix;
-			} else if (DFT::Nodes::Node::typeMatch(node.getType(),
-												   DFT::Nodes::InspectionType))
+			                                DFT::Nodes::InspectionType))
 			{
 				const DFT::Nodes::Inspection *insp;
 			   	insp = static_cast<const DFT::Nodes::Inspection*>(&node);
@@ -645,6 +635,9 @@ void DFT::DFTreeEXPBuilder::addBroadcastRule(vector<DFT::EXPSyncRule> &rules,
 		// If there is a rule that also synchronizes on the same node,
 		// we have come across a child with another parent.
 		if(rule.syncOnNode == child) {
+			EXPSyncItem prevSignal = *rule.label[nodeIDs[child]];
+			if (prevSignal.toString() != childSignal->toString())
+				continue;
 			cc->reportAction3("Found earlier fail rule",VERBOSITY_RULEORIGINS);
 			rule.insertLabel(nodeID, nodeSignal);
 			return;
@@ -652,6 +645,25 @@ void DFT::DFTreeEXPBuilder::addBroadcastRule(vector<DFT::EXPSyncRule> &rules,
 	}
 
 	addAnycastRule(rules, node, nodeSignal, childSignal, name_prefix, childNum);
+}
+
+/** Add a rule to make a given signal independent */
+void DFT::DFTreeEXPBuilder::addIndepRule(vector<DFT::EXPSyncRule> &rules,
+					     const DFT::Nodes::Node &node,
+					     EXPSyncItem *nodeSignal,
+					     std::string name_prefix)
+{
+	unsigned int nodeID = nodeIDs[&node];
+
+	std::stringstream ss;
+	ss << name_prefix << '_' << node.getTypeStr() << nodeID;
+	EXPSyncRule rule(ss.str());
+	rule.syncOnNode = &node;
+	rule.insertLabel(nodeID, nodeSignal);
+	std::stringstream report("Added new independent sync rule: ");
+	printSyncLineShort(report, rule);
+	cc->reportAction2(report.str(),VERBOSITY_RULES);
+	rules.push_back(rule);
 }
 
 int DFT::DFTreeEXPBuilder::createSyncRule(
@@ -678,10 +690,7 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 						  VERBOSITY_RULES);
 
 		// ask if we have a repair unit (if it is the case we don't have to handle activation and fail) same for inspection and replacement
-		if (!node.matchesType(DFT::Nodes::RepairUnitType)
-			&& !node.matchesType(DFT::Nodes::RepairUnitFcfsType)
-			&& !node.matchesType(DFT::Nodes::RepairUnitPrioType)
-			&& !node.matchesType(DFT::Nodes::RepairUnitNdType)
+		if (!node.matchesType(DFT::Nodes::RepairUnitAnyType)
 			&& !node.matchesType(DFT::Nodes::InspectionType)
 			&& !node.matchesType(DFT::Nodes::ReplacementType))
 		{
@@ -800,29 +809,26 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 				   && !node.matchesType(DFT::Nodes::ReplacementType))
 		{
 			addBroadcastRule(repairRules, node, syncRepair(n + 1),
-							 syncRepair(0), "rep_", n);
-			/** REPAIRING RULE for ND **/
-			if(node.matchesType(DFT::Nodes::RepairUnitNdType)) {
-				addBroadcastRule(repairingRules, node, syncRepairing(n + 1),
-								 syncRepairing(0), "repi_", n);
-			}
-			addBroadcastRule(repairedRules, node, syncRepaired(n + 1, true),
-							 syncRepaired(0, false), "repd_", n);
+							 syncRepair(true), "rep_", n);
+			addBroadcastRule(repairingRules, node, syncRepairing(n + 1),
+							 syncRepairing(0), "repi_", n);
+			addBroadcastRule(repairedRules, node, syncRepaired(n + 1),
+							 syncRepaired(0), "repd_", n);
 		} else if(node.matchesType(DFT::Nodes::InspectionType)) {
 			addBroadcastRule(inspectionRules, node, syncInspection(n+1),
 							 syncInspection(0), "insp_", n);
 			addBroadcastRule(failRules, node, syncInspection(n+1),
 							 syncFail(0), "inspf_", n);
 			addAnycastRule(repairRules, node, syncRepair(n + 1),
-						   syncRepaired(0, false), "rep_", n);
+						   syncRepair(false), "rep_", n);
 
 		} else if(DFT::Nodes::Node::typeMatch(node.getType(),
 											  DFT::Nodes::ReplacementType))
 		{
 			addAnycastRule(repairRules, node, syncRepair(n + 1),
-						   syncRepair(0), "rep_", n);
-			addBroadcastRule(repairedRules, node, syncRepaired(n+1, true),
-							 syncRepaired(0, false), "rpd_", n);
+						   syncRepair(true), "rep_", n);
+			addBroadcastRule(repairedRules, node, syncRepaired(n+1),
+							 syncRepaired(0), "rpd_", n);
 		}
 	}
 

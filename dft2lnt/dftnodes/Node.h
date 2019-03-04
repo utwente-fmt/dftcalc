@@ -46,10 +46,12 @@ enum NodeType {
 	GateFDEPType,
 	GateTransferType,
 
+	RepairUnitAnyType,
 	RepairUnitType,
 	RepairUnitFcfsType,
-	RepairUnitPrioType,
 	RepairUnitNdType,
+	RepairUnitPrioType,
+	RepairUnitSimulType,
 
     InspectionType,
     ReplacementType,
@@ -138,6 +140,12 @@ public:
 			return GATES_FIRST <= type && type <= GATES_LAST;
 		} else if (matchType == GateSpareType) {
 			return type == GateWSPType || type == GateCSPType || type == GateHSPType;
+		} else if (matchType == RepairUnitAnyType) {
+			return type == RepairUnitType
+			       || type == RepairUnitFcfsType
+			       || type == RepairUnitNdType
+			       || type == RepairUnitPrioType
+			       || type == RepairUnitSimulType;
 		} else {
 			return false;
 		}
@@ -291,6 +299,8 @@ public:
 	virtual bool outputIsDumb() const { return false; }
 
 	bool matchesType(NodeType otherType) const {return typeMatch(type, otherType);}
+	bool hasInspectionModule(void) const;
+	bool hasRepairModule(void) const;
 };
 
 } // Namespace: Nodes

@@ -457,7 +457,12 @@ public:
 			ret = (char)('0' + digit) + ret;
 			num.divint(10);
 		}
-		ret += std::string("e") + std::to_string(exponent);
+		if (exponent < 0 || exponent > 2)
+			ret += std::string("e") + std::to_string(exponent);
+		else if (exponent == 1)
+			ret += std::string("0");
+		else if (exponent == 2)
+			ret += std::string("00");
 		return ret;
 	}
 

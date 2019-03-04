@@ -28,7 +28,11 @@ public:
 	static const std::string GATE_FAIL;
 	static const std::string GATE_ACTIVATE;
 	static const std::string GATE_DEACTIVATE;
+	/* REPAIR?: Insp to BE: Start repairing
+	 * REPAIR!: BE to RU: In need of repair.
+	 */
 	static const std::string GATE_REPAIR;
+	/* REPAIRED: BE to RU: Repair finished */
 	static const std::string GATE_REPAIRED;
 	static const std::string GATE_ONLINE;
 	static const std::string GATE_RATE_FAIL;
@@ -36,6 +40,7 @@ public:
 	static const std::string GATE_RATE_REPAIR;
     static const std::string GATE_RATE_PERIOD;
     static const std::string GATE_RATE_INSPECTION;
+	/* REPAIRING: RU to BE: Start repair time */
 	static const std::string GATE_REPAIRING;
     static const std::string GATE_INSPECT;
     static const std::string GATE_INSPECTED;
@@ -72,6 +77,7 @@ private:
 	int generateRU_FCFS(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 	int generateRU_Prio(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
 	int generateRU_Nd(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
+	int generateRU_Simul(FileWriter& out, const DFT::Nodes::RepairUnit& gate);
     
     int generateInspection(FileWriter& out, const DFT::Nodes::Inspection& gate);
     int generateReplacement(FileWriter& out, const DFT::Nodes::Replacement& gate);

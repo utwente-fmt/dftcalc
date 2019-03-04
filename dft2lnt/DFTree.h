@@ -287,6 +287,7 @@ public:
 	}
 
 	void replaceSEQs();
+	void addSimulRepairs();
 
 	/**
 	 * Find repair information

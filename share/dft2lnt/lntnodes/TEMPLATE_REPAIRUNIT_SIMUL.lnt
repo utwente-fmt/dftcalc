@@ -1,0 +1,46 @@
+module TEMPLATE_REPAIRUNIT_SIMUL(TEMPLATE_COMMON) is
+
+	process REPAIRUNIT_SIMUL [REPAIR : NAT_CHANNEL,
+	                          REPAIRED : NAT_CHANNEL,
+	                          REPAIRING : NAT_CHANNEL]
+		(total : NAT)
+	is
+	var
+		nr : NAT,
+		repair_needed : BOOL_ARRAY,
+		repair_busy : BOOL_ARRAY,
+		idx : NAT
+	in
+		repair_needed := BOOL_ARRAY(FALSE);
+		repair_busy := BOOL_ARRAY(FALSE);
+		loop
+			select
+				-- listen for repair
+				REPAIR (?nr) where (0 < nr) and (nr <= total);
+				if not(repair_busy[nr]) then
+					repair_needed[nr] := TRUE
+				end if
+				
+				-- Pick any BE in need of repair and start it.
+				[]
+					idx := any NAT where (idx > 0) and (idx <= total);
+					if repair_needed[idx]
+					   and not(repair_busy[idx])
+					then
+						repair_needed[idx] := FALSE;
+						repair_busy[idx] := TRUE;
+						REPAIRING(!idx)
+					end if
+
+				-- Ignore any BE that says it's done.
+				[]
+				REPAIRED (?nr) where (0 < nr) and (nr <= total);
+				repair_needed[nr] := FALSE;
+				repair_busy[nr] := FALSE
+
+			end select
+		end loop
+	end var
+	end process
+
+end module 

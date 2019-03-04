@@ -570,6 +570,7 @@ int main(int argc, char** argv) {
 		compilerContext.reportAction("Applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
 		compilerContext.flush();
 		dft->addRepairInfo();
+		dft->addSimulRepairs();
 		compilerContext.reportAction("Done applying repair knowledge to DFT gates...",VERBOSITY_FLOW);
 	}
 
