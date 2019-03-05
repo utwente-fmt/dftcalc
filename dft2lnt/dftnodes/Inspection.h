@@ -58,8 +58,6 @@ namespace DFT {
                     std::stringstream ss;
                     ss << phases;
                     ss << "insp";
-                    ss << lambda;
-                    //ss << lambda;
                     cachedName = ss.str();
                 }
                 return cachedName;

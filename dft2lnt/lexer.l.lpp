@@ -104,7 +104,7 @@ digit         [0-9]
 letter        [A-Za-z]
 posnumber     {digit}+
 number        [-+]?{posnumber}
-rate          ({posnumber}|{posnumber}[.]{posnumber})
+rate          {posnumber}([.]{posnumber})?((e|E){number})?
 number_exp    e|E
 voting        {number}of{number}
 inspection    {number}insp{rate}
@@ -247,7 +247,7 @@ transfer      "accepts transfers from"
     // Read second number (lambda)
     dst = buffer;
     src+=4;
-    while(ispunct(*src) || isdigit(*src)) {
+    while(ispunct(*src) || isdigit(*src) || *src == 'e' || *src == 'E') {
         *dst++ = *src++;
     }
     *dst = '\0';
