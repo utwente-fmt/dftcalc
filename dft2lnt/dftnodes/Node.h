@@ -301,6 +301,15 @@ public:
 	bool matchesType(NodeType otherType) const {return typeMatch(type, otherType);}
 	bool hasInspectionModule(void) const;
 	bool hasRepairModule(void) const;
+
+	/* A node is an independent subtree if:
+	 * - It has exactly one parent.
+	 * - The set of nodes that is reachable (via parent/child
+	 *   relationships) from the node without visiting its parent is
+	 *   disjoint from the set of nodes that is reachable from the
+	 *   parent without visiting this node.
+	 */
+	bool isIndependentSubtree(void) const;
 };
 
 } // Namespace: Nodes

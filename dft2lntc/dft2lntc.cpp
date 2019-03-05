@@ -4,7 +4,8 @@
  * Part of dft2lnt library - a library containing read/write operations for DFT
  * files in Galileo format and translating DFT specifications into Lotos NT.
  * 
- * @author Freark van der Berg and extended by Dennis Guck
+ * @author Freark van der Berg and extended by Dennis Guck and Enno
+ * Ruijters.
  */
 
 #include <stdlib.h>
@@ -37,6 +38,7 @@
 #include "DFTreeEXPBuilder.h"
 #include "compiletime.h"
 #include "Settings.h"
+#include "modularize.h"
 
 FILE* pp_outputFile = stdout;
 
@@ -64,6 +66,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("");
 		messageFormatter->notify ("Output Options:");
 		messageFormatter->message("  -o FILE         Output EXP to <FILE>.exp and SVL to <FILE>.svl.");
+		messageFormatter->message("  -m FILE         Output module description to <FILE>, '-' for stdout.");
 		messageFormatter->message("  -x FILE         Output EXP to file. '-' for stdout. Overrules -o.");
 		messageFormatter->message("  -s FILE         Output SVL to file. '-' for stdout. Overrules -o.");
 		messageFormatter->message("  -b FILE         Output of SVL to this BCG file. Overrules -o.");
@@ -179,9 +182,9 @@ int main(int argc, char** argv) {
 	int    outputEXPFileSet  = 0;
 	string outputBCGFileName = "";
 	int    outputBCGFileSet  = 0;
+	string outputMODFileName = "";
+	int    outputMODFileSet  = 0;
 
-	int optimize             = 1;
-	int execute              = 0;
 	int stopAfterPreproc     = 0;
 	int useColoredMessages   = 1;
 	int verbosity            = 0;
@@ -192,7 +195,7 @@ int main(int argc, char** argv) {
 	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"o:n:a:b:e:t:s:x:hvq-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"o:m:n:a:b:e:t:s:x:hvq-:")) >= 0 ) {
 		switch(c) {
 
 			// -o FILE
@@ -203,6 +206,17 @@ int main(int argc, char** argv) {
 				} else {
 					outputFileName = string(optarg);
 					outputFileSet = 1;
+				}
+				break;
+
+			// -m FILE
+			case 'm':
+				if(strlen(optarg)==1 && optarg[0]=='-') {
+					outputMODFileName = "";
+					outputMODFileSet = 1;
+				} else {
+					outputMODFileName = string(optarg);
+					outputMODFileSet = 1;
 				}
 				break;
 
@@ -395,6 +409,10 @@ int main(int argc, char** argv) {
 			compilerContext.reportError("AST output file is not writable: `" + outputASTFileName + "'");
 			ok = false;
 		}
+		if(!outputMODFileName.empty() && !compilerContext.testWritable(outputMODFileName)) {
+			compilerContext.reportError("MOD output file is not writable: `" + outputMODFileName + "'");
+			ok = false;
+		}
 		compilerContext.flush();
 		if(!ok) {
 			return 1;
@@ -550,6 +568,21 @@ int main(int argc, char** argv) {
 		}
 	}
 	compilerContext.flush();
+
+	if (dftValid && outputMODFileSet) {
+		compilerContext.reportAction("Writing static modules...",VERBOSITY_FLOW);
+		compilerContext.flush();
+		try {
+			writeModules(outputMODFileName, dft);
+		} catch(std::vector<std::string>& errors) {
+			for(std::string e: errors) {
+				compilerContext.reportError(e);
+			}
+			compilerContext.flush();
+		}
+		compilerContext.reportAction("Done writing static modules.",VERBOSITY_FLOW);
+		return 0;
+	}
 	
 	/* Apply evidence to DFT */
 	if(dftValid && !failedBEs.empty()) {

@@ -9,7 +9,9 @@
  */
 
 #include "Node.h"
+#include "Gate.h"
 #include <string>
+#include <unordered_set>
 
 namespace DFT {
 namespace Nodes {
@@ -47,6 +49,33 @@ namespace Nodes {
 				return true;
 		}
 		return false;
+	}
+
+	bool Node::isIndependentSubtree(void) const {
+		if (parents.size() > 1)
+			return false;
+		if (parents.size() == 0)
+			return true;
+		std::unordered_set<const Node *> to_explore, subtree;
+		to_explore.insert(this);
+		while (to_explore.size() != 0) {
+			const Node *current = *to_explore.begin();
+			to_explore.erase(current);
+			subtree.insert(current);
+			for (Node *par : current->parents) {
+				if (subtree.find(par) != subtree.end())
+					to_explore.insert(par);
+			}
+			if (current->isGate()) {
+				const Gate *g = static_cast<const Gate *>(current);
+				for (Node *c : g->getChildren()) {
+					if (subtree.find(c) != subtree.end())
+						to_explore.insert(c);
+				}
+			}
+		}
+		Node *parent = static_cast<Node *>(parents[0]);
+		return subtree.find(parent) == subtree.end();
 	}
 }
 }
