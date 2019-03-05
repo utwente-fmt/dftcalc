@@ -333,7 +333,7 @@ int DFT::DFTreeEXPBuilder::parseDFT(
 			std::string iName("IMPOSSIBLE_");
 			iName += (*it)->getTypeStr();
 			iName += std::to_string(nodeID);
-			DFT::EXPSyncRule ruleI(iName);
+			DFT::EXPSyncRule ruleI(iName, false);
 			ruleI.insertLabel(nodeID, syncImpossible());
 			impossibleRules.push_back(ruleI);
         }
@@ -611,14 +611,14 @@ void DFT::DFTreeEXPBuilder::addAnycastRule(vector<DFT::EXPSyncRule> &rules,
 	unsigned int nodeID = nodeIDs[&node];
 
 	std::stringstream ss;
-	ss << name_prefix << '_' << child.getTypeStr() << childID;
+	ss << name_prefix << node.getTypeStr() << nodeID << '_' << child.getTypeStr() << childID;
 	EXPSyncRule rule(ss.str());
 	rule.syncOnNode = &child;
 	rule.insertLabel(nodeID, nodeSignal);
 	rule.insertLabel(childID, childSignal);
-	std::stringstream report("Added new broadcast sync rule: ");
+	std::stringstream report("Added new anycast sync rule: ");
 	printSyncLineShort(report, rule);
-	cc->reportAction2(report.str(),VERBOSITY_RULES);
+	cc->reportAction3(report.str(), VERBOSITY_RULES);
 	rules.push_back(rule);
 }
 /** Add a rule broadcast from a child to all its parents. */
@@ -635,8 +635,8 @@ void DFT::DFTreeEXPBuilder::addBroadcastRule(vector<DFT::EXPSyncRule> &rules,
 		// If there is a rule that also synchronizes on the same node,
 		// we have come across a child with another parent.
 		if(rule.syncOnNode == child) {
-			EXPSyncItem prevSignal = *rule.label[nodeIDs[child]];
-			if (prevSignal.toString() != childSignal->toString())
+			shared_ptr<EXPSyncItem> prevSignal = rule.label[nodeIDs[child]];
+			if (prevSignal->toString() != childSignal->toString())
 				continue;
 			cc->reportAction3("Found earlier fail rule",VERBOSITY_RULEORIGINS);
 			rule.insertLabel(nodeID, nodeSignal);
@@ -810,10 +810,75 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 		{
 			addBroadcastRule(repairRules, node, syncRepair(n + 1),
 							 syncRepair(true), "rep_", n);
-			addBroadcastRule(repairingRules, node, syncRepairing(n + 1),
-							 syncRepairing(0), "repi_", n);
 			addBroadcastRule(repairedRules, node, syncRepaired(n + 1),
 							 syncRepaired(0), "repd_", n);
+			// Special case: If any other repair unit wants to repair
+			// our child, we should be informed so we don't try to
+			// repair the same child.
+
+			/** ACTIVATION RULE **/
+			std::stringstream ss;
+			ss << node.getTypeStr() << nodeID << "_" << child->getTypeStr()
+			   << childID;
+			EXPSyncRule rule("repi_" + ss.str());
+
+			std::stringstream report;
+			report << "New EXPSyncRule " << ss.str();
+			cc->reportAction3(report.str(),VERBOSITY_RULEORIGINS);
+
+			// Set synchronization node
+			rule.syncOnNode = child;
+
+			// Add synchronization of THIS node to the synchronization rule
+			rule.insertLabel(nodeID, syncRepairing(n+1, true));
+			rule.insertLabel(childID, syncRepairing(0));
+			cc->reportAction3("THIS node added to sync rule",
+							  VERBOSITY_RULEORIGINS);
+			for (auto &otherRule : repairingRules) {
+				// If there is a rule that also synchronizes on the same node,
+				// we have come across a child with another parent.
+				if(otherRule.syncOnNode != child)
+					continue;
+				std::stringstream report;
+				report << "Detected earlier repairing rule: ";
+				printSyncLineShort(report, otherRule);
+				cc->reportAction3(report.str(), VERBOSITY_RULEORIGINS);
+
+				// First, we look up the sending Node of the
+				// current repairing rule...
+				int otherNodeID = -1;
+				int otherLocalNodeID = -1;
+				for(auto& syncItem: otherRule.label) {
+					if (syncItem.second->args.size() == 1)
+						continue;
+					std::cerr << "Looking up " << syncItem.second->toString() << "\n";
+					if(syncItem.second->getArg(1)) {
+						otherNodeID = syncItem.first;
+						otherLocalNodeID = syncItem.second->getArg(0);
+						break;
+					}
+				}
+				if(otherNodeID<0) {
+					cc->reportError("Could not find sender of the other rule, bailing...");
+					return 1;
+				}
+				const DFT::Nodes::Node* otherNode = getNodeWithID(otherNodeID);
+				assert(otherNode);
+
+				otherRule.insertLabel(nodeID, syncRepairing(n+1, false));
+
+				// This is not enough, because the other way around also
+				// has to be added: the other node wants to listen to
+				// Repairing of the THIS node as well.
+				// Thus, we add a synchronization item to the
+				// new rule we create for the THIS node, specifying
+				// the other node wants to listen to repairing of
+				// the THIS node.
+				rule.insertLabel(otherNodeID, syncRepairing(otherLocalNodeID, false));
+				cc->reportAction3("Detected (other) repair unit `" + otherNode->getName() + "', added to sync rule",VERBOSITY_RULEORIGINS);
+
+			}
+			repairingRules.push_back(rule);
 		} else if(node.matchesType(DFT::Nodes::InspectionType)) {
 			addBroadcastRule(inspectionRules, node, syncInspection(n+1),
 							 syncInspection(0), "insp_", n);

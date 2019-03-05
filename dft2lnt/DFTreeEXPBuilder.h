@@ -393,6 +393,17 @@ public:
 	}
 
 	/**
+	 * Create a new EXPSyncItem instance reflecting a Repairing action
+	 * based on the specified localNodeID.
+	 * @param localNodeID This is the ID of the Node seen from the actor.
+	 * @param direction: input (false) or output (true)
+	 * @return A new EXPSyncItem instance.
+	 */
+	EXPSyncItem *syncRepairing(unsigned int localNodeID, bool direction) {
+		return new EXPSyncItemIB(DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING,localNodeID, direction);
+	}
+
+	/**
 	 * Create a new EXPSyncItem instance reflecting a Online action
 	 * based on the specified localNodeID.
 	 * @param localNodeID This is the ID of the Node seen from the actor.

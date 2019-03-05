@@ -76,7 +76,6 @@
 		char character;
 		char* c_string;
 		char* address;
-		NumberSuffix numbersuffix;
 		Voting voting;
         Replacement replacement;
         Inspection inspection;
@@ -102,7 +101,6 @@
 %token <realOrig> REAL
 %token <character> CHAR
 %token <number> NUMBER
-%token <numbersuffix> NUMBERSUFFIX
 %token <voting> VOTING
 %token <inspection> INSPECTION
 %token <replacement> REPLACEMENT
@@ -124,7 +122,6 @@
 %token<c_string> RU_F
 %token<c_string> RU_P
 %token<c_string> RU_ND
-%token<c_string> RU_S
 %token<c_string> INSP
 %token<c_string> REP
 %token<c_string> TRANSFER
@@ -508,7 +505,6 @@ gate //{
 	|	RU_F      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitFcfsType); free($1); }
 	|	RU_P      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitPrioType); free($1); }
 	|	RU_ND     { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitNdType  ); free($1); }
-	|	RU_S      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitSimulType  ); free($1); }
     |	INSPECTION{ $$ = new DFT::AST::ASTInspectionType(@$,$1.n,$1.k);                                          }
     |	REPLACEMENT{ $$ = new DFT::AST::ASTReplacementType(@$,$1.n,$1.k);                                        }
 	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType  ); free($1); }

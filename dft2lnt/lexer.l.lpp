@@ -391,7 +391,6 @@ ru                      { yylval->c_string=my_strdup(yytext); return RU;       }
 ru_f                    { yylval->c_string=my_strdup(yytext); return RU_F;     }
 ru_p                    { yylval->c_string=my_strdup(yytext); return RU_P;     }
 ru_nd                   { yylval->c_string=my_strdup(yytext); return RU_ND;    }
-ru_s                    { yylval->c_string=my_strdup(yytext); return RU_S;    }
 insp                    { yylval->c_string=my_strdup(yytext); return INSP;     }
 rep                     { yylval->c_string=my_strdup(yytext); return REP;      }
 {transfer}              { yylval->c_string=my_strdup(yytext); return TRANSFER; }
