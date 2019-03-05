@@ -55,7 +55,7 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 	                DEACTIVATE : NAT_BOOL_CHANNEL]
 		(cold: BOOL, initial: STATUS, phases: NAT,
 		 threshold : NAT, repairable: BOOL, self_repair: BOOL,
-		 always_active: BOOL)
+		 independent_repair: BOOL, always_active: BOOL)
 	is var
 		status : STATUS,
 		isactive : BOOL,
@@ -169,7 +169,11 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 				    and (status == DOWN)
 				    and (repair_state == NONE))
 				then
-					repair_state := NEEDED
+					if independent_repair then
+						repair_state := BUSY
+					else
+						repair_state := NEEDED
+					end if
 				end if
 
 			-- IM tells us we need to do repairs.
@@ -178,7 +182,11 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 					IMPOSSIBLE; stop
 				end if;
 				if (repair_state == NONE) then
-					repair_state := NEEDED
+					if independent_repair then
+						repair_state := BUSY
+					else
+						repair_state := NEEDED
+					end if
 				end if
 
 			-- Signal that we need repair
@@ -191,6 +199,8 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 			[]	REPAIRING(0 of NAT);
 				if (repair_state == WAITING) then
 					repair_state := BUSY
+				else
+					IMPOSSIBLE; stop
 				end if
 			[]
 				if (repair_state == BUSY) then
@@ -219,6 +229,17 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 					IMPOSSIBLE; stop
 				end if;
 				repair_state := DONE
+			end if;
+
+			if ((repair_state == BUSY) and (phase == 1)) then
+				if (emit_inspect or not(repairable)) then
+					IMPOSSIBLE; stop
+				end if;
+				repair_state := DONE
+			end if;
+
+			if ((repair_state == DONE) and independent_repair) then
+				repair_state := NONE
 			end if
 		end loop
 	end var

@@ -74,8 +74,6 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 	}
 	
 	ss << node.getTypeStr();
-	if (!node.isBasicEvent())
-		ss << "_p" << (node.getParents().size()>0?node.getParents().size():1);
 	if(node.isBasicEvent()) {
 		const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
 		if(be.getMu().is_zero()) {
@@ -84,11 +82,16 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
         if(be.getMaintain()>0) {
             ss << "_maintain";
         }
-		// extension for a repairable BE
-		if(be.isRepairable()) {
-            ss << "_repair";
+        if(!be.hasRepairModule()) {
 			if (be.hasInspectionModule())
-				ss << "_insp";
+				ss << "_imrm";
+			else
+				ss << "_repair";
+        } else if(be.isRepairable()) {
+			if (be.hasInspectionModule())
+				ss << "_im";
+			else
+				ss << "_rm";
 		}
         if(be.getLambda().is_zero()) {
             ss << "_dummy";
@@ -97,10 +100,10 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 			ss << "_failed";
 		}
 		if(be.getPhases()>1){
-			ss << "_aph_" << be.getPhases();
+			ss << "_erl" << be.getPhases();
 		}
 		if(be.getInterval()>0){
-			ss << "_interval_" << be.getInterval();
+			ss << "_interval" << be.getInterval();
 		}
 		if (be.isAlwaysActive())
 			ss << "_aa";
@@ -113,24 +116,12 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
 		} if(node.getType()==DFT::Nodes::GateFDEPType) {
 			const DFT::Nodes::GateFDEP& gateFDEP = *static_cast<const DFT::Nodes::GateFDEP*>(&node);
 			ss << "_d" << gateFDEP.getDependers().size();
-        } if(node.getType()==DFT::Nodes::InspectionType) {
-            const DFT::Nodes::Inspection& inspection = *static_cast<const DFT::Nodes::Inspection*>(&node);
-            ss << "_p" << inspection.getPhases();
         } if(node.getType()==DFT::Nodes::ReplacementType) {
             const DFT::Nodes::Replacement& replacement = *static_cast<const DFT::Nodes::Replacement*>(&node);
             ss << "_p" << replacement.getPhases();
         }
 		if(node.isRepairable()) {
-			// FIXME: add this directly as gate information
-			int repairable=0;
-			for(size_t n = 0; n<gate.getChildren().size(); ++n) {
-
-				// Get the current child and associated childID
-				const DFT::Nodes::Node& child = *gate.getChildren().at(n);
-				if(child.isRepairable())
-					repairable++;
-			}
-			ss << "_r" << repairable;//gate.getRepairableChildren();
+			ss << "_r";
 		}
 		if (node.isAlwaysActive())
 			ss << "_aa";
@@ -439,6 +430,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
 			<< ", " << be.getInterval() << " of NAT"
 			<< ", " << (be.isRepairable() ? "TRUE" : "FALSE")
 			<< ", " << (be.hasInspectionModule() ? "FALSE" : "TRUE")
+			<< ", " << (be.hasRepairModule() ? "FALSE" : "TRUE")
 			<< ", " << (be.isAlwaysActive() ? "TRUE" : "FALSE")
 			<< ")" << out.applypostfix;
 
