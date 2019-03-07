@@ -12,6 +12,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "DFTCalculationResult.h"
 
 namespace DFT {
@@ -53,313 +54,45 @@ namespace DFT {
 		std::string getCADPRoot(MessageFormatter* messageFormatter);
 		File getDftresJar(MessageFormatter* messageFormatter);
 
-		/// A map containing the results of the calculation. <filename> --> <result>
-		map<std::string,DFT::DFTCalculationResult> results;
-		
 		std::vector<std::string> evidence;
-		
-	public:
-		
-		/**
-		 * Returns the result map. The result map contains the mapping:
-		 *   <filename> --> <result>
-		 * @return The result map.
-		 */
-		const map<std::string,DFT::DFTCalculationResult> getResults() const {
-			return results;
+
+		std::string runCommand(std::string command,
+		                       std::string cwd,
+		                       std::string baseFile,
+		                       std::string cmdName,
+		                       int commandNum,
+			               std::vector<File> outputFiles);
+
+		std::string runCommand(std::string command,
+		                       std::string cwd,
+		                       std::string baseFile,
+		                       std::string cmdName,
+		                       int commandNum,
+				       File outputFile)
+		{
+			std::vector<File> outputs;
+			outputs.push_back(outputFile);
+			return runCommand(command, cwd, baseFile, cmdName,
+			                  commandNum, outputs);
 		}
-		
+
+		std::string runCommand(std::string command,
+		                       std::string cwd,
+		                       std::string baseFile,
+		                       std::string cmdName,
+		                       int commandNum)
+		{
+			return runCommand(command, cwd, baseFile, cmdName,
+			                  commandNum, std::vector<File>());
+		}
+	public:
 		/**
 		 * Verifies all the needed tools for calculation are installed.
 		 * Will report errors to the MessageFormatter specified with 
 		 * setMessageFormatter().
 		 * @return false: all tools found OK, true: error
 		 */
-		bool checkNeededTools(DFT::checker checker, converter conv) {
-			
-			bool ok = true;
-			
-			messageFormatter->notify("Checking environment...",VERBOSITY_SEARCHING);
-			
-			/* Obtain all needed root information from environment */
-			dft2lntRoot = getRoot(NULL);
-			if (checker == MRMC) {
-				coralRoot = getCoralRoot(NULL);
-				imc2ctmdpExec = File(coralRoot+"/bin/imc2ctmdp");
-			} else if (checker == IMCA) {
-				imcaRoot = getImcaRoot(NULL);
-				bcg2imcaExec = File(imcaRoot+"/bin/bcg2imca");
-			} else if (checker == STORM) {
-				bcg2janiExec = File(dft2lntRoot+"/bin/bcg2jani");
-			} else if (checker == IMRMC) {
-				bcg2tralabExec = File(dft2lntRoot+"/bin/bcg2tralab");
-			}
-
-			cadpRoot = getCADPRoot(NULL);
-			
-			/* These tools should be easy to find in the roots. Note that an added
-			 * bonus would be to locate them using PATH as well.
-			 */
-			dft2lntcExec = File(dft2lntRoot+"/bin/dft2lntc");
-			svlExec = File(cadpRoot+"/com/svl");
-			
-			/* Find dft2lntc executable (based on DFT2LNTROOT environment variable) */
-			if(dft2lntRoot.empty()) {
-				messageFormatter->reportError("Environment variable `DFT2LNTROOT' not set. Please set it to where /bin/dft2lntc can be found.");
-				ok = false;
-			} else if(!FileSystem::hasAccessTo(File(dft2lntRoot),X_OK)) {
-				messageFormatter->reportError("Could not enter dft2lntroot directory (environment variable `DFT2LNTROOT'");
-				ok = false;
-			} else if(!FileSystem::hasAccessTo(dft2lntcExec,F_OK)) {
-				messageFormatter->reportError("dft2lntc not found (in " + dft2lntRoot+"/bin)");
-				ok = false;
-			} else if(!FileSystem::hasAccessTo(dft2lntcExec,X_OK)) {
-				messageFormatter->reportError("dft2lntc not executable (in " + dft2lntRoot+"/bin)");
-				ok = false;
-			} else {
-				messageFormatter->reportAction("Using dft2lntc [" + dft2lntcExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-			}
-			
-			/* Find imc2ctmdpi executable (based on CORAL environment variable) */
-			if(checker == MRMC && coralRoot.empty()) {
-				messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
-				ok = false;
-			} else if(checker == MRMC && !FileSystem::hasAccessTo(File(coralRoot),X_OK)) {
-				messageFormatter->reportError("Could not enter coral directory (environment variable `CORAL'");
-				ok = false;
-			} else if(checker == MRMC && !FileSystem::hasAccessTo(imc2ctmdpExec,F_OK)) {
-				messageFormatter->reportError("imc2ctmdp not found (in " + coralRoot+"/bin)");
-				ok = false;
-			} else if(checker == MRMC && !FileSystem::hasAccessTo(imc2ctmdpExec,X_OK)) {
-				messageFormatter->reportError("imc2ctmdp not executable (in " + coralRoot+"/bin)");
-				ok = false;
-			} else if (checker == MRMC) {
-				messageFormatter->reportAction("Using imc2ctmdp [" + imc2ctmdpExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-			}
-
-			/* Find bcg2imca */
-
-			if(checker == IMCA && !FileSystem::hasAccessTo(bcg2imcaExec,F_OK)) {
-				messageFormatter->reportError("bcg2imca not found (in " + imcaRoot+"/bin)");
-				ok = false;
-			} else if(checker == IMCA && !FileSystem::hasAccessTo(bcg2imcaExec,X_OK)) {
-				messageFormatter->reportError("bcg2imca not executable (in " + imcaRoot+"/bin)");
-				ok = false;
-			} else if (checker == IMCA) {
-				messageFormatter->reportAction("Using bcg2imca [" + bcg2imcaExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-			}
-			
-			if (conv == SVL) {
-				/* Find svl executable (based on CADP environment variable) */
-				if(cadpRoot.empty()) {
-					messageFormatter->reportError("Environment variable `CADP' not set. Please set it to where CADP can be found.");
-					ok = false;
-				} else if(!FileSystem::hasAccessTo(File(cadpRoot),X_OK)) {
-					messageFormatter->reportError("Could not enter CADP directory (environment variable `CADP'");
-					ok = false;
-				} else {
-					if(!FileSystem::hasAccessTo(svlExec,F_OK)) {
-						messageFormatter->reportError("svl not found (in " + cadpRoot+"/com)");
-						ok = false;
-					} else if(!FileSystem::hasAccessTo(svlExec,X_OK)) {
-						messageFormatter->reportError("svl not executable (in " + cadpRoot+"/com)");
-						ok = false;
-					} else {
-						messageFormatter->reportAction("Using svl [" + svlExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-					}
-				}
-			}
-
-			if (conv == DFTRES) {
-				dftresJar = getDftresJar(messageFormatter);
-				if(!FileSystem::hasAccessTo(dftresJar, F_OK))
-					ok = false;
-			}
-
-			/* Find a storm executable */
-			if (checker == STORM) {
-				bool exists = false;
-				bool accessible = false;
-				vector<File> storms;
-				int n = FileSystem::findInPath(storms,File("storm"));
-				for(File storm: storms) {
-					accessible = false;
-					exists = true;
-					if(FileSystem::hasAccessTo(storm,X_OK)) {
-						accessible = true;
-						stormExec = storm;
-						break;
-					} else {
-						messageFormatter->reportWarning("storm [" + storm.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-						ok = false;
-					}
-				}
-				if(!accessible) {
-					messageFormatter->reportError("no runnable storm executable found in PATH");
-					ok = false;
-				} else {
-					messageFormatter->reportAction("Using storm [" + stormExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-				}
-			}
-
-			/* Find an mrmc executable (based on PATH environment variable) */
-			if (checker == MRMC) {
-				bool exists = false;
-				bool accessible = false;
-				vector<File> mrmcs;
-				int n = FileSystem::findInPath(mrmcs,File("mrmc"));
-				for(File mrmc: mrmcs) {
-					accessible = false;
-					exists = true;
-					if(FileSystem::hasAccessTo(mrmc,X_OK)) {
-						accessible = true;
-						mrmcExec = mrmc;
-						break;
-					} else {
-						messageFormatter->reportWarning("mrmc [" + mrmc.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-						ok = false;
-					}
-				}
-				if(!accessible) {
-					messageFormatter->reportError("no runnable mrmc executable found in PATH");
-					ok = false;
-				} else {
-					messageFormatter->reportAction("Using mrmc [" + mrmcExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-				}
-			}
-
-			/* Find an imrmc executable (based on PATH environment variable) */
-			if (checker == IMRMC) {
-				bool exists = false;
-				bool accessible = false;
-				vector<File> imrmcs;
-				int n = FileSystem::findInPath(imrmcs,File("imrmc"));
-				for(File imrmc: imrmcs) {
-					accessible = false;
-					exists = true;
-					if(FileSystem::hasAccessTo(imrmc,X_OK)) {
-						accessible = true;
-						imrmcExec = imrmc;
-						break;
-					} else {
-						messageFormatter->reportWarning("mrmc [" + imrmc.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-						ok = false;
-					}
-				}
-				if(!accessible) {
-					messageFormatter->reportError("no runnable imrmc executable found in PATH");
-					ok = false;
-				} else {
-					messageFormatter->reportAction("Using mrmc [" + imrmcExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-				}
-			}
-			
-			/* Find an imca executable (based on PATH environment variable) */
-			if (checker == IMCA) {
-				bool exists = false;
-				bool accessible = false;
-				vector<File> imcas;
-				int n = FileSystem::findInPath(imcas,File("imca"));
-				for(File imca: imcas) {
-					accessible = false;
-					exists = true;
-					if(FileSystem::hasAccessTo(imca,X_OK)) {
-						accessible = true;
-						imcaExec = imca;
-						break;
-					} else {
-						messageFormatter->reportWarning("imca [" + imca.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-						ok = false;
-					}
-				}
-				if(!accessible) {
-					messageFormatter->reportError("no runnable imca executable found in PATH");
-					ok = false;
-				} else {
-					messageFormatter->reportAction("Using imca [" + imcaExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-				}
-			}
-			
-			/* Find bcg_io executable (based on PATH environment variable) */
-			{
-				bool exists = false;
-				bool accessible = false;
-				vector<File> bcgios;
-				int n = FileSystem::findInPath(bcgios,File("bcg_io"));
-				for(File bcgio: bcgios) {
-					accessible = false;
-					exists = true;
-					if(FileSystem::hasAccessTo(bcgio,X_OK)) {
-						accessible = true;
-						bcgioExec = bcgio;
-						break;
-					} else {
-						messageFormatter->reportWarning("bcg_io [" + bcgio.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-						ok = false;
-					}
-				}
-				if(!accessible) {
-					messageFormatter->reportError("no runnable bcg_io executable found in PATH");
-					ok = false;
-				} else {
-					messageFormatter->reportAction("Using bcg_io [" + bcgioExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-				}
-			}
-			
-			/* Find bcg_info executable (based on PATH environment variable) */
-			{
-				bool exists = false;
-				bool accessible = false;
-				vector<File> bcginfos;
-				int n = FileSystem::findInPath(bcginfos,File("bcg_info"));
-				for(File bcginfo: bcginfos) {
-					accessible = false;
-					exists = true;
-					if(FileSystem::hasAccessTo(bcginfo,X_OK)) {
-						accessible = true;
-						bcginfoExec = bcginfo;
-						break;
-					} else {
-						messageFormatter->reportWarning("bcg_info [" + bcginfo.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-						ok = false;
-					}
-				}
-				if(!accessible) {
-					messageFormatter->reportError("no runnable bcg_info executable found in PATH");
-					ok = false;
-				} else {
-					messageFormatter->reportAction("Using bcg_info [" + bcginfoExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-				}
-			}
-			
-			/* Find dot executable (based on PATH environment variable) */
-			if (!buildDot.empty()) {
-				bool exists = false;
-				bool accessible = false;
-				vector<File> dots;
-				int n = FileSystem::findInPath(dots,File("dot"));
-				for(File dot: dots) {
-					accessible = false;
-					exists = true;
-					if(FileSystem::hasAccessTo(dot,X_OK)) {
-						accessible = true;
-						dotExec = dot;
-						break;
-					} else {
-						messageFormatter->reportWarning("dot [" + dot.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-						ok = false;
-					}
-				}
-				if(!accessible) {
-					messageFormatter->reportError("no runnable dot executable found in PATH");
-					ok = false;
-				} else {
-					messageFormatter->reportAction("Using dot [" + dotExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-				}
-			}
-			
-			return !ok;
-		}
+		bool checkNeededTools(DFT::checker checker, converter conv);
 		
 		/**
 		 * Sets the MessageFormatter to be used by this DFTCalc instance.
@@ -386,20 +119,29 @@ namespace DFT {
 		void printOutput(const File& file, int status);
 		
 		/**
-		 * Calculates the specified DFT file, using the specified working directory.
+		 * Calculates the specified DFT file.
+		 * @param reuse Whether to reuse intermediate files.
 		 * @param cwd The directory to work in.
-		 * @param dft The DFT to calculate
+		 * @param dftOriginal The DFT to analyze.
+		 * @param calcCommands the Command to model check.
+		 * @param useChecker Which model checker to use.
+		 * @param useConverter Which converter to use in
+		 * 	convertion from BCG to model checker format.
+		 * @param warnNonDeterminism Whether to issue a warning
+		 * 	if the BCG file contains nondeterminism.
+		 * @param ret Will have the calculated result added.
 		 * @return 0 if successful, non-zero otherwise
 		 */
-		int calculateDFT(const bool reuse, const std::string& cwd,
-		                 const File& dft,
-		                 const std::vector<std::pair<std::string,std::string>>& timeSpec,
-		                 unordered_map<string,string> settings,
-		                 DFT::checker checker,
-		                 DFT::converter useConverter,
+		int calculateDFT(const bool reuse,
+		                 const std::string& cwd,
+		                 const File& dftOriginal,
+		                 const std::vector<std::pair<std::string,std::string>>& calcCommands,
+		                 enum DFT::checker useChecker,
+		                 enum DFT::converter useConverter,
 		                 bool warnNonDeterminism,
+		                 DFT::DFTCalculationResult &ret,
 		                 bool expOnly);
-		
+
 		void setEvidence(const std::vector<std::string>& evidence) {this->evidence = evidence;}
 		const std::vector<std::string>& getEvidence() const {return evidence;}
 	};

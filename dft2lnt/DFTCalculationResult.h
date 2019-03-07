@@ -25,7 +25,6 @@ namespace DFT {
 
 	class DFTCalculationResult {
 	public:
-		std::string dftFile;
 		Shell::RunStatistics stats;
 		std::vector<DFTCalculationResultItem> failProbs;
 	};

@@ -1,9 +1,6 @@
 #include "DFTCalculationResult.h"
 
 const YAML::Node& operator>>(const YAML::Node& node, DFT::DFTCalculationResult& result) {
-	if(const YAML::Node itemNode = node["dft"]) {
-		result.dftFile = itemNode.as<std::string>();
-	}
 	if(const YAML::Node itemNode = node["failProbs"]) {
 		std::vector<DFT::DFTCalculationResultItem> failProbs;
 		itemNode >> failProbs;
@@ -19,7 +16,6 @@ const YAML::Node& operator>>(const YAML::Node& node, DFT::DFTCalculationResult& 
 
 YAML::Emitter& operator<<(YAML::Emitter& out, const DFT::DFTCalculationResult& result) {
 	out << YAML::BeginMap;
-	out << YAML::Key << "dft"  << YAML::Value << result.dftFile;
 	out << YAML::Key << "failProbs"  << YAML::Value << result.failProbs;
 	// for dfttest, when we have one item, show it under the key that dfttest expects
 	// dfttest currently only has support for the "failProb" key, not for "failProbs"
