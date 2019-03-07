@@ -30,7 +30,7 @@ namespace DFT {
 				setAllDormsToZero(child);
 		} else if (node->isBasicEvent()) {
 			Nodes::BasicEvent* be = static_cast<Nodes::BasicEvent*>(node);
-			be->setMu(0);
+			be->setDorm(0);
 		}
 	}
 

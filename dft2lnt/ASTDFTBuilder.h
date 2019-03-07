@@ -202,9 +202,8 @@ public:
 			std::vector<DFT::AST::ASTAttribute*>::iterator it = basicEvent->getAttributes()->begin();
 			for(; it!=basicEvent->getAttributes()->end(); ++it) {
 				if((*it)->getLabel()==DFT::Nodes::BE::AttrLabelDorm) {
-					double v = (*it)->getValue()->getFloatValue();
-					v *= (double)be->getLambda();
-					be->setMu(decnumber<>(v));
+					decnumber<> v((*it)->getValue()->origString);
+					be->setDorm(decnumber<>(v));
 				}
 			}
 		}

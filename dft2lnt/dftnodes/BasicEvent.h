@@ -243,12 +243,11 @@ public:
 class BasicEvent: public Node {
 private:
 	DFT::Nodes::BE::CalculationMode mode;
-	decnumber<> lambda, prob, mu;
+	decnumber<> lambda, prob, dorm;
     double maintain_rate;
 	double repair_rate;
 	int priority;
 	int interval;
-//	double dorm;
 	double rate;
 	int phases;
 	int shape;
@@ -263,8 +262,8 @@ public:
 	void setProb(decnumber<> p) {
 		this->prob = p;
 	}
-	void setMu(decnumber<> mu) {
-		this->mu = mu;
+	void setDorm(decnumber<> dorm) {
+		this->dorm = dorm;
 	}
     void setMaintain(double maintain_rate) {
         this->maintain_rate = maintain_rate;
@@ -275,7 +274,7 @@ public:
 	void setPriority(int priority) {
 		this->priority = priority;
 	}
-	void setRate(double rate) {
+	void setRate(int rate) {
 		this->rate = rate;
 	}
     void setPhases(int phases) {
@@ -310,13 +309,13 @@ public:
 	 * Returns the mu failure probability of this Basic Event.
 	 * @return The mu failure probability of this Basic Event.
 	 */
-	decnumber<> getMu()     const { return mu; }
+	decnumber<> getMu()     const { return dorm * lambda; }
 	
 	/**
 	 * Returns the dormancy factor (mu/lambda) of this Basic Event.
 	 * @return The dormancy factor (mu/lambda) of this Basic Event.
 	 */
-	double getDorm()   const { return (double)mu / (double)lambda; }
+	decnumber<> getDorm()   const { return dorm; }
 
     /**
      * Returns the repair rate of this Basic Event.
@@ -369,7 +368,7 @@ public:
 		mode(DFT::Nodes::BE::CalculationMode::UNDEFINED),
 		lambda(-1),
 		prob(1),
-		mu(0),
+		dorm(0),
 		maintain_rate(0),
 		repair_rate(-1),
 		priority(0),

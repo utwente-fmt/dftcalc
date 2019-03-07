@@ -43,9 +43,10 @@ int DFT::DFTreePrinter::printBasicEvent(std::ostream& out, const DFT::Nodes::Bas
 	streamsize ss_old = out.precision();
 	out.precision(10);
 	out << " lambda=" << fixed << basicEvent->getLambda().str();
-	out << " prob=" << fixed << basicEvent->getProb().str();
-	out << " dorm=" << basicEvent->getDorm();
-    if(basicEvent->getPhases()>0){
+	if (basicEvent->getProb() != decnumber(1))
+		out << " prob=" << fixed << basicEvent->getProb().str();
+	out << " dorm=" << basicEvent->getDorm().str();
+    if(basicEvent->getPhases()>1){
         out << " phases=" << basicEvent->getPhases();
     }
     if(basicEvent->getInterval()>0){

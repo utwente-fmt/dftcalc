@@ -192,34 +192,29 @@ public:
 		parse_string(num);
 	}
 
-	decnumber(long double v) {
-		long double frac, ipart;
-		frac = modf(v, &ipart);
-		if (frac) {
-			/* TODO: exact conversion. */
-			parse_string(std::to_string(v));
-			return;
-		}
+	decnumber(uintmax_t i) {
 		blocks = nullptr;
-		num_blocks = 0;
-		sign = 1;
-		exponent = 0;
-		if (v < 0) {
-			sign = -1;
-			v = -v;
-		}
-		while (ipart) {
-			mul_unnorm(2);
-			if (num_blocks == 0) {
-				blocks = new BT[1];
-				blocks[0] = 0;
-				num_blocks = 1;
-			}
-			frac = modf(ipart / 2, &ipart);
-			if (frac)
-				blocks[num_blocks - 1]++;
-		}
-		normalize();
+		*this = i;
+	}
+
+	decnumber(intmax_t i) {
+		blocks = nullptr;
+		*this = i;
+	}
+
+	decnumber(int i) {
+		blocks = nullptr;
+		*this = (intmax_t)i;
+	}
+
+	decnumber(long double v) {
+		blocks = nullptr;
+		*this = v;
+	}
+
+	decnumber(double v) {
+		blocks = nullptr;
+		*this = (long double)v;
 	}
 
 	~decnumber() {
@@ -250,6 +245,94 @@ public:
 			num_blocks = other.num_blocks;
 			exponent = other.exponent;
 			sign = other.sign;
+		}
+		return *this;
+	}
+
+	decnumber<BT, ET>& operator=(uintmax_t i) {
+		delete[] blocks;
+		blocks = nullptr;
+		num_blocks = 0;
+		sign = 1;
+		exponent = 0;
+		while (i) {
+			mul_unnorm(2);
+			if (num_blocks == 0) {
+				blocks = new BT[1];
+				blocks[0] = 0;
+				num_blocks = 1;
+			}
+			if (i % 2)
+				blocks[num_blocks - 1]++;
+			i /= 2;
+		}
+		normalize();
+		return *this;
+	}
+
+	decnumber<BT, ET>& operator=(intmax_t i) {
+		delete[] blocks;
+		blocks = nullptr;
+		num_blocks = 0;
+		sign = 1;
+		exponent = 0;
+		if (i < 0)
+			sign = -1;
+		while (i) {
+			mul_unnorm(2);
+			if (num_blocks == 0) {
+				blocks = new BT[1];
+				blocks[0] = 0;
+				num_blocks = 1;
+			}
+			if (i % 2)
+				blocks[num_blocks - 1]++;
+			i /= 2;
+		}
+		normalize();
+		return *this;
+	}
+
+	decnumber<BT, ET>& operator=(long double v) {
+		long double frac, ipart;
+		delete[] blocks;
+		blocks = nullptr;
+		frac = modf(v, &ipart);
+		blocks = nullptr;
+		num_blocks = 0;
+		sign = 1;
+		exponent = 0;
+		if (v < 0) {
+			sign = -1;
+			v = -v;
+		}
+		while (ipart) {
+			mul_unnorm(2);
+			if (num_blocks == 0) {
+				blocks = new BT[1];
+				blocks[0] = 0;
+				num_blocks = 1;
+			}
+			frac = modf(ipart / 2, &ipart);
+			if (frac)
+				blocks[num_blocks - 1]++;
+		}
+		normalize();
+		if (frac) {
+			/* Note: this is only guaranteed to terminate
+			 * (and be exact) in base-2 floats (i.e.,
+			 * IEEE-754)
+			 */
+			decnumber<BT, ET> f(1);
+			f.exponent = -1;
+			while (frac) {
+				if (frac >= 0.5) {
+					*this += f;
+					frac -= 0.5;
+				}
+				frac *= 2;
+				f.exponent -= 1;
+			}
 		}
 		return *this;
 	}
@@ -445,6 +528,22 @@ public:
 		decnumber<BT, ET> ret(*this);
 		ret *= other;
 		return ret;
+	}
+
+	bool operator==(const decnumber<BT, ET> &other) const {
+		if (&other == this)
+			return true;
+		if (other.num_blocks == 0 && num_blocks == 0)
+			return true;
+		if (other.sign != sign)
+			return false;
+		if (other.exponent != exponent)
+			return false;
+		return !memcmp(other.blocks, blocks, num_blocks * sizeof(BT));
+	}
+
+	bool operator!=(const decnumber<BT, ET> &other) const {
+		return !(*this == other);
 	}
 
 	std::string str() const {
