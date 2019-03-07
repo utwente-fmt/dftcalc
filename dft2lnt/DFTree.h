@@ -160,6 +160,8 @@ public:
 		return topNode;
 	}
 
+	void removeUnreachable(void);
+
 	/**
 	 * Translates this DFTree so that all FDEP nodes are removed and Or nodes
 	 * are inserted, such that the meaning of the DFTree is unaltered.

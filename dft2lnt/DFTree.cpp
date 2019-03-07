@@ -8,7 +8,9 @@
  */
 
 #include "DFTree.h"
+#include "dftnodes/nodes.h"
 #include "dft_parser.h"
+#include <unordered_set>
 
 namespace DFT {
 	/* This should be replaced by a proper check to allow replacing of
@@ -80,5 +82,36 @@ namespace DFT {
 			}
 		}
 		return;
+	}
+
+	void DFTree::removeUnreachable(void) {
+		std::unordered_set<Nodes::Node *> to_explore, reachable;
+		to_explore.insert(topNode);
+		while (to_explore.size() != 0) {
+			Nodes::Node *current = *to_explore.begin();
+			to_explore.erase(current);
+			reachable.insert(current);
+			if (current->isGate()) {
+				Nodes::Gate *g = static_cast<Nodes::Gate *>(current);
+				for (Nodes::Node *c : g->getChildren()) {
+					if (reachable.find(c) == reachable.end())
+						to_explore.insert(c);
+				}
+			}
+			if (current == topNode)
+				continue;
+			for (Nodes::Node *par : current->getParents()) {
+				if (reachable.find(par) == reachable.end())
+					to_explore.insert(par);
+			}
+		}
+		std::unordered_set<Nodes::Node *> to_remove;
+		for (Nodes::Node *node : nodes) {
+			if (reachable.find(node) == reachable.end()) {
+				to_remove.insert(node);
+			}
+		}
+		for (Nodes::Node *node : to_remove)
+			removeNode(node);
 	}
 }

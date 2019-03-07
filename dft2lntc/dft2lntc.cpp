@@ -71,6 +71,7 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -s FILE         Output SVL to file. '-' for stdout. Overrules -o.");
 		messageFormatter->message("  -b FILE         Output of SVL to this BCG file. Overrules -o.");
 		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
+		messageFormatter->message("  -r root         Root node of the subtree to analyse.");
 		messageFormatter->message("  -n FILE         Name to use in error messages and to find");
 		messageFormatter->message("                  embedded bcg files mentioned as aph attributes");
 		messageFormatter->message("                  (used by dftcalc; not intented to be used directly by user).");
@@ -184,6 +185,7 @@ int main(int argc, char** argv) {
 	int    outputBCGFileSet  = 0;
 	string outputMODFileName = "";
 	int    outputMODFileSet  = 0;
+	string rootNode          = "";
 
 	int stopAfterPreproc     = 0;
 	int useColoredMessages   = 1;
@@ -195,7 +197,7 @@ int main(int argc, char** argv) {
 	
 	/* Parse command line arguments */
 	char c;
-	while( (c = getopt(argc,argv,"o:m:n:a:b:e:t:s:x:hvq-:")) >= 0 ) {
+	while( (c = getopt(argc,argv,"o:m:n:a:b:e:r:t:s:x:hvq-:")) >= 0 ) {
 		switch(c) {
 
 			// -o FILE
@@ -309,8 +311,12 @@ int main(int argc, char** argv) {
 					if(!*end) break;
 					begin = end + 1;
 				}
+				break;
 				
 			}
+			case 'r':
+				  rootNode = string(optarg);
+				  break;
 			// --
 			case '-':
 				if(!strncmp("help",optarg,4)) {
@@ -568,6 +574,17 @@ int main(int argc, char** argv) {
 		}
 	}
 	compilerContext.flush();
+
+	if (!rootNode.empty()) {
+		DFT::Nodes::Node *newRoot = dft->getNode(rootNode);
+		if (newRoot == nullptr) {
+			compilerContext.reportError("Root node " + rootNode + " does not exist.");
+			compilerContext.flush();
+			return 1;
+		}
+		dft->setTopNode(newRoot);
+		dft->removeUnreachable();
+	}
 
 	if (dftValid && outputMODFileSet) {
 		compilerContext.reportAction("Writing static modules...",VERBOSITY_FLOW);
