@@ -101,7 +101,7 @@ public:
 	std::pair<std::string,TestResult*> getLastResult(string iteration);
 	std::pair<std::string,TestResult*> getLastValidResult(string iteration);
 	
-	virtual ResultStatus verify(TestResult* result) {};
+	virtual ResultStatus verify(TestResult* result) {return UNKNOWN;};
 	
 	virtual std::map<std::string,TestResult*>& getVerifiedResults() { return verifiedResults; }
 	

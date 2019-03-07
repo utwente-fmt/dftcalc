@@ -65,7 +65,8 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 			double et_res;
                 	int r_et  = sscanf(et,"%lf",&et_res);
 			if (r_et ==  1){
-				results.push_back(std::pair<std::string,std::string>("?",res));
+				decnumber<> dres(res);
+				results.push_back(std::pair<std::string,decnumber<>>("?",dres));
 				i_isCalculated = true;
 				found = 1;
 				break;
@@ -91,7 +92,8 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 			double ub_res;
 			int r_ub  = sscanf(ub,"%lf",&ub_res);
 			if (r_ub ==  1){
-				results.push_back(std::pair<std::string,std::string>("?",res));
+				decnumber<> dres(res);
+				results.push_back(std::pair<std::string,decnumber<>>("?",dres));
 				i_isCalculated = true;
 				found = 1;
 				break;
@@ -149,11 +151,12 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 		}
 		//fprintf(stderr, "r_prob=%d r_tb=%d\n", r_prob, r_tb);
 
+		decnumber<> dres(prob_res);
 		if (r_tb ==  1 && r_prob == 1){
-			results.push_back(std::pair<std::string, std::string>(tb_res, prob_res));
+			results.push_back(std::pair<std::string,decnumber<>>(tb_res, dres));
 			i_isCalculated = true;
 		} else if (r_prob == 1){
-			results.push_back(std::pair<std::string,std::string>("?",prob_res));
+			results.push_back(std::pair<std::string,decnumber<>>("?",dres));
 			i_isCalculated = true;
 		}
 	}
@@ -162,13 +165,13 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 	return 0;
 }
 
-std::string IMCA::FileHandler::getResult() {
+decnumber<> IMCA::FileHandler::getResult() {
 	if(results.size()<1) {
-		return std::string();
+		return decnumber<>(-1);
 	}
 	return results[0].second;
 }
 
-std::vector<std::pair<std::string,std::string>> IMCA::FileHandler::getResults() {
+std::vector<std::pair<std::string,decnumber<>>> IMCA::FileHandler::getResults() {
 	return results;
 }

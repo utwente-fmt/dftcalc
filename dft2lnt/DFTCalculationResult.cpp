@@ -1,5 +1,38 @@
 #include "DFTCalculationResult.h"
 
+std::string DFT::DFTCalculationResultItem::valStr(void) const {
+	if (lowerBound == upperBound)
+		return lowerBound.str();
+	std::string lower = lowerBound.str(), upper = upperBound.str();
+	std::string ret = "";
+	std::string lexp = "", uexp = "";
+	if (lower.find('e') != std::string::npos) {
+		lexp = lower.substr(lower.find('e'));
+		lower = lower.substr(0, upper.find('e'));
+	}
+	if (upper.find('e') != std::string::npos) {
+		uexp = upper.substr(upper.find('e'));
+		upper = upper.substr(0, upper.find('e'));
+	}
+	if (lexp != uexp) {
+		return '[' + lower + lexp + "; " + upper + uexp + ']';
+	}
+	while (!lower.empty() && lower[0] == upper[0]) {
+		ret += lower[0];
+		lower = lower.substr(1);
+		upper = upper.substr(1);
+	}
+	if (!lower.empty() || !upper.empty()) {
+		ret += '[';
+		ret += lower;
+		ret += "; ";
+		ret += upper;
+		ret += ']';
+	}
+	ret += lexp;
+	return ret;
+}
+
 const YAML::Node& operator>>(const YAML::Node& node, DFT::DFTCalculationResult& result) {
 	if(const YAML::Node itemNode = node["failProbs"]) {
 		std::vector<DFT::DFTCalculationResultItem> failProbs;
@@ -20,7 +53,7 @@ YAML::Emitter& operator<<(YAML::Emitter& out, const DFT::DFTCalculationResult& r
 	// for dfttest, when we have one item, show it under the key that dfttest expects
 	// dfttest currently only has support for the "failProb" key, not for "failProbs"
 	for(auto it: result.failProbs) {
-		out << YAML::Key << "failProb"  << YAML::Value << it.failProb;
+		out << YAML::Key << "failProb"  << YAML::Value << it.lowerBound.str();
 		break;
 	}
 	out << YAML::Key << "stats"  << YAML::Value << result.stats;
@@ -56,8 +89,11 @@ const YAML::Node& operator>>(const YAML::Node& node, DFT::DFTCalculationResultIt
 	if(const YAML::Node itemNode = node["mrmcCommand"]) {
 		result.mrmcCommand = itemNode.as<std::string>();
 	}
-	if(const YAML::Node itemNode = node["failProb"]) {
-		result.failProb = itemNode.as<std::string>();
+	if(const YAML::Node itemNode = node["lowerBound"]) {
+		result.lowerBound = decnumber<>(itemNode.as<std::string>());
+	}
+	if(const YAML::Node itemNode = node["upperBound"]) {
+		result.upperBound = decnumber<>(itemNode.as<std::string>());
 	}
 	return node;
 }
@@ -66,7 +102,8 @@ YAML::Emitter& operator<<(YAML::Emitter& out, const DFT::DFTCalculationResultIte
 	out << YAML::BeginMap;
 	out << YAML::Key << "missionTime"  << YAML::Value << result.missionTime;
 	out << YAML::Key << "mrmcCommand"  << YAML::Value << result.mrmcCommand;
-	out << YAML::Key << "failProb"  << YAML::Value << result.failProb;
+	out << YAML::Key << "lowerBound"  << YAML::Value << result.lowerBound.str();
+	out << YAML::Key << "upperBound"  << YAML::Value << result.upperBound.str();
 	out << YAML::EndMap;
 	return out;
 }

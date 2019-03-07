@@ -11,22 +11,21 @@
 #define MRMC_H
 
 #include "FileSystem.h"
+#include "decnumber.h"
 #include <vector>
 
 class MRMC {
 public:
 	class FileHandler {
 	private:
-		std::vector<std::string> results;
+		std::vector<std::pair<decnumber<>, decnumber<>>> results;
 		bool m_isCalculated;
 		std::string m_calcCommand;
-		std::string result;
 	public:
 		
 		FileHandler(std::string calcCommand):
 			m_isCalculated(false),
-			m_calcCommand(calcCommand),
-			result(std::string("")) {
+			m_calcCommand(calcCommand) {
 		}
 		
 		/**
@@ -48,7 +47,7 @@ public:
 		 * Return the result previously read with readOutputFile().
 		 * @return The result of the calculation.
 		 */
-		virtual std::string getResult();
+		virtual std::pair<decnumber<>, decnumber<>> getResult();
 	};
 };
 

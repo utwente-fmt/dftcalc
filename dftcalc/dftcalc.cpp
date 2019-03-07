@@ -593,11 +593,12 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 				messageFormatter->reportError("Could not calculate");
 				return 1;
 			} else {
-				std::string res = fileHandler.getResult();
+				decnumber<> res = fileHandler.getResult().first;
 				DFT::DFTCalculationResultItem calcResultItem;
 				calcResultItem.missionTime = mrmcCalcCommand.second;
 				calcResultItem.mrmcCommand = mrmcCalcCommand.first;
-				calcResultItem.failProb = res;
+				calcResultItem.lowerBound = res;
+				calcResultItem.upperBound = res;
 				ret.failProbs.push_back(calcResultItem);
 			}
 		}
@@ -646,11 +647,12 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 				messageFormatter->reportError("Could not calculate");
 				return 1;
 			} else {
-				std::string res = fileHandler.getResult();
+				std::pair<decnumber<>, decnumber<>> res = fileHandler.getResult();
 				DFT::DFTCalculationResultItem calcResultItem;
 				calcResultItem.missionTime = imrmcCalcCommand.second;
 				calcResultItem.mrmcCommand = imrmcCalcCommand.first;
-				calcResultItem.failProb = res;
+				calcResultItem.lowerBound = res.first;
+				calcResultItem.upperBound = res.second;
 				ret.failProbs.push_back(calcResultItem);
 			}
 		}
@@ -687,7 +689,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 				messageFormatter->reportError("Could not calculate");
 				return 1;
 			} else {
-				std::vector<std::pair<std::string,std::string>> imcaResult = fileHandler.getResults();
+				std::vector<std::pair<std::string,decnumber<>>> imcaResult = fileHandler.getResults();
 				for(auto imcaResultItem: imcaResult) {
 					DFT::DFTCalculationResultItem calcResultItem;
 					if (imcaResultItem.first == "" || imcaResultItem.first == "?")
@@ -695,7 +697,8 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 					else
 						calcResultItem.missionTime = imcaResultItem.first;
 					calcResultItem.mrmcCommand = imcaCalcCommand.first;
-					calcResultItem.failProb = imcaResultItem.second;
+					calcResultItem.lowerBound = imcaResultItem.second;
+					calcResultItem.upperBound = imcaResultItem.second;
 					ret.failProbs.push_back(calcResultItem);
 				}
 			}
@@ -734,11 +737,12 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 				messageFormatter->reportError("Could not calculate");
 				return 1;
 			} else {
-				std::string result = fileHandler.getResult();
+				decnumber<> result = fileHandler.getResult();
 				DFT::DFTCalculationResultItem calcResultItem;
 				calcResultItem.missionTime = calcCommand.second;
 				calcResultItem.mrmcCommand = calcCommand.first;
-				calcResultItem.failProb = result;
+				calcResultItem.lowerBound = result;
+				calcResultItem.upperBound = result;
 				ret.failProbs.push_back(calcResultItem);
 			}
 		}
@@ -1303,9 +1307,9 @@ int main(int argc, char** argv) {
 			std::string fName = it.first;
 			for(auto it2: it.second.failProbs) {
 				if (mttf) {
-					out << "MTTF(`" << fName << "'" << ")=" << it2.failProb << std::endl;;
+					out << "MTTF(`" << fName << "'" << ")=" << it2.valStr() << std::endl;
 				} else {
-					out << "P(`" << fName << "'" << ", " << it2.mrmcCommand << ", " << it2.missionTime << ", " << "fails)=" << it2.failProb << std::endl;;
+					out << "P(`" << fName << "'" << ", " << it2.mrmcCommand << ", " << it2.missionTime << ", " << "fails)=" << it2.valStr() << std::endl;;
 				}
 			}
 		}
@@ -1350,7 +1354,7 @@ int main(int argc, char** argv) {
 			for(auto it: results) {
 				std::string fName = it.first;
 				for(auto it2: it.second.failProbs) {
-					out << it2.failProb << std::endl;
+					out << it2.valStr() << std::endl;
 				}
 			}
 		} else {
@@ -1358,7 +1362,7 @@ int main(int argc, char** argv) {
 			for(auto it: results) {
 				std::string fName = it.first;
 				for(auto it2: it.second.failProbs) {
-					out << it2.missionTime << ", " << it2.failProb << std::endl;
+					out << it2.missionTime << ", " << it2.valStr() << std::endl;
 				}
 			}
 		}

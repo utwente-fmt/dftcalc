@@ -11,6 +11,7 @@
 #define STORM_H
 
 #include "FileSystem.h"
+#include "decnumber.h"
 #include <vector>
 
 class Storm {
@@ -19,13 +20,13 @@ public:
 	private:
 		bool i_isCalculated;
 		std::string i_calcCommand;
-		std::string i_result;
+		decnumber<> i_result;
 	public:
 		
 		FileHandler(std::string calcCommand):
 			i_isCalculated(false),
 			i_calcCommand(calcCommand),
-			i_result(std::string()) {
+			i_result(-1) {
 		}
 		
 		/**
@@ -41,7 +42,7 @@ public:
 		 * Return the result previously read with readOutputFile().
 		 * @return The result of the calculation.
 		 */
-		virtual std::string getResult();
+		virtual decnumber<> getResult();
 	};
 };
 

@@ -12,6 +12,7 @@
 
 #include "Shell.h"
 #include "yaml-cpp/yaml.h"
+#include "decnumber.h"
 #include "CADP.h"
 
 namespace DFT {
@@ -20,7 +21,9 @@ namespace DFT {
         public:
                 std::string missionTime;
                 std::string mrmcCommand;
-		std::string failProb;
+		decnumber<> lowerBound, upperBound;
+		DFTCalculationResultItem() : lowerBound(0), upperBound(1) { };
+		std::string valStr(void) const;
         };
 
 	class DFTCalculationResult {

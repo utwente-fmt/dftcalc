@@ -4,6 +4,10 @@
 #include <cctype>
 #include <cmath>
 #include <exception>
+#include <stdexcept>
+
+#ifndef DECNUMBER_H
+#define DECNUMBER_H
 
 template <class BT = unsigned int, class ET = long>
 class decnumber
@@ -165,6 +169,8 @@ private:
 		normalize();
 	}
 public:
+	//decnumber() :num_blocks(0), blocks(nullptr), sign(1), exponent(0)
+	//{}
 	decnumber() = delete;
 
 	decnumber(const decnumber<BT, ET> &other) {
@@ -297,7 +303,7 @@ public:
 		long double frac, ipart;
 		delete[] blocks;
 		blocks = nullptr;
-		frac = modf(v, &ipart);
+		frac = modfl(v, &ipart);
 		blocks = nullptr;
 		num_blocks = 0;
 		sign = 1;
@@ -313,7 +319,7 @@ public:
 				blocks[0] = 0;
 				num_blocks = 1;
 			}
-			frac = modf(ipart / 2, &ipart);
+			frac = modfl(ipart / 2, &ipart);
 			if (frac)
 				blocks[num_blocks - 1]++;
 		}
@@ -556,13 +562,43 @@ public:
 			ret = (char)('0' + digit) + ret;
 			num.divint(10);
 		}
-		if (exponent < 0 || exponent > 2)
-			ret += std::string("e") + std::to_string(exponent);
-		else if (exponent == 1)
+		if (exponent == 1)
 			ret += std::string("0");
 		else if (exponent == 2)
 			ret += std::string("00");
-		return ret;
+		else if (exponent > 2) {
+			ret += std::string("e") + std::to_string(exponent);
+		} else if (exponent < 0) {
+			uintmax_t neg_exponent = -(uintmax_t)exponent;
+			size_t digits = ret.size();
+			size_t dot_pos;
+			if (digits == neg_exponent) {
+				digits++;
+				neg_exponent = 0;
+				ret = "0" + ret;
+				dot_pos = 1;
+			} else if (digits > neg_exponent) {
+				dot_pos = neg_exponent;
+				neg_exponent = 0;
+			} else {
+				dot_pos = 1;
+				neg_exponent -= digits - 1;
+			}
+			if (digits > 1) {
+				ret += ".";
+				while (digits > dot_pos) {
+					ret[digits] = ret[digits - 1];
+					ret[digits - 1] = '.';
+					digits--;
+				}
+			}
+			if (neg_exponent)
+				ret += std::string("e-") + std::to_string(neg_exponent);
+		}
+		if (sign < 0)
+			return "-" + ret;
+		else
+			return ret;
 	}
 
 	explicit operator double() const {
@@ -605,3 +641,5 @@ public:
 		}
 	}
 };
+
+#endif // DECNUMBER_H

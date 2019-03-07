@@ -31,7 +31,7 @@ int Storm::FileHandler::readOutputFile(const File& file) {
 	while (input.good()) {
 		if (line.find(needle) != std::string::npos) {
 			line.erase(0, strlen(needle));
-			i_result = line;
+			i_result = decnumber<>(line);
 			i_isCalculated = true;
 			break;
 		}
@@ -40,6 +40,6 @@ int Storm::FileHandler::readOutputFile(const File& file) {
 	return 0;
 }
 
-std::string Storm::FileHandler::getResult() {
+decnumber<> Storm::FileHandler::getResult() {
 	return i_result;
 }

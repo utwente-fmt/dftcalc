@@ -697,7 +697,7 @@ DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 		result->stats.maxMem(res->second.stats);
 		// HACK assumes that we have a single result item
 		for(auto it: res->second.failProbs) {
-			result->failprob = stod(it.failProb);
+			result->failprob = stod(it.valStr());
 			break;
 		}
 	}

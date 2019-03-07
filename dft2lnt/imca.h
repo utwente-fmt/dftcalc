@@ -11,22 +11,23 @@
 #define IMCA_H
 
 #include "FileSystem.h"
+#include "decnumber.h"
 #include <vector>
 
 class IMCA {
 public:
 	class FileHandler {
 	private:
-		std::vector<std::pair<std::string,std::string>> results;
+		std::vector<std::pair<std::string,decnumber<>>> results;
 		bool i_isCalculated;
 		std::string i_calcCommand;
-		std::string result;
+		decnumber<> result;
 	public:
 		
 		FileHandler(std::string calcCommand):
 			i_isCalculated(false),
 			i_calcCommand(calcCommand),
-			result(std::string()) {
+			result(-1) {
 		}
 		
 		/**
@@ -42,9 +43,9 @@ public:
 		 * Return the result previously read with readOutputFile().
 		 * @return The result of the calculation.
 		 */
-		virtual std::string getResult();
+		virtual decnumber<> getResult();
 
-		virtual std::vector<std::pair<std::string,std::string>> getResults();
+		virtual std::vector<std::pair<std::string,decnumber<>>> getResults();
 	};
 };
 

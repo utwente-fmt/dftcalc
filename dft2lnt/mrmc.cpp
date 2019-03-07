@@ -82,8 +82,23 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 		while (*end && *end != ')' && *end != ',')
 			end++;
 		std::string res(c, end - c);
-		results.push_back(res);
-		m_isCalculated = true;
+		if (res.find(';') == std::string::npos) {
+			decnumber<> val(res);
+			results.push_back(std::pair<decnumber<>, decnumber<>>(val, val));
+			m_isCalculated = true;
+		} else {
+			size_t pos = res.find('[');
+			std::string pre = res.substr(0, pos);
+			res = res.substr(pos + 1);
+			pos = res.find(']');
+			std::string post = res.substr(pos + 1);
+			res = res.substr(0, pos);
+			pos = res.find(';');
+			std::string low = pre + res.substr(0, pos) + post;
+			std::string up = pre + res.substr(pos + 2) + post;
+			results.push_back(std::pair<decnumber<>, decnumber<>>(low, up));
+			m_isCalculated = true;
+		}
 	}
 
 
@@ -91,9 +106,9 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 	return 0;
 }
 
-std::string MRMC::FileHandler::getResult() {
+std::pair<decnumber<>, decnumber<>> MRMC::FileHandler::getResult() {
 	if(results.size()<1) {
-		return std::string();
+		return std::pair<decnumber<>, decnumber<>>(-1, -1);
 	}
 	return results[0];
 }
