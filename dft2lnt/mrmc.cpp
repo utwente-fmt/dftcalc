@@ -19,6 +19,7 @@
 
 int MRMC::FileHandler::generateInputFile(const File& file) {
 	FileWriter out;
+	out << out.applyprefix << "set print on" << out.applypostfix;
 	out << out.applyprefix << m_calcCommand << out.applypostfix;
 	out << out.applyprefix << "$RESULT[1]" << out.applypostfix;
 	out << out.applyprefix << "quit" << out.applypostfix;
@@ -53,22 +54,25 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 	fclose(fp);
 
 	const char* resultString = NULL;
-	{
-		const char* c = buffer;
-		while(*c) {
-			//printf("%c",*c);
-			if(!strncmp("$MIN_RESULT",c,11) || !strncmp("$MAX_RESULT",c,11)) {
-				c += 15;
-				resultString = c;
-				//printf("\nfound: %s\n",c);
-				//printf("should be: '%s'\n",resultString.c_str());
-				break;
-			} else if (!strncmp("$RESULT", c, 7)) {
-				c += 13;
-				resultString = c;
-			}
-			c++;
+	const char* c = buffer;
+	while ((c - buffer) < len && *c) {
+		//printf("%c",*c);
+		if(!strncmp("$MIN_RESULT",c,11) || !strncmp("$MAX_RESULT",c,11)) {
+			c += 15;
+			resultString = c;
+			//printf("\nfound: %s\n",c);
+			//printf("should be: '%s'\n",resultString.c_str());
+			break;
+		} else if (!strncmp("$RESULT:", c, 8)) {
+			c += 11;
+			resultString = c;
+			break;
+		} else if (!strncmp("$RESULT[1]", c, 10)) {
+			c += 13;
+			resultString = c;
+			break;
 		}
+		c++;
 	}
 
 	if(!resultString) {
@@ -79,10 +83,14 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 		results.clear();
 		const char *c = resultString;
 		const char *end = c;
-		while (*end && *end != ')' && *end != ',')
+		while (*end && *end != '\n')
 			end++;
 		std::string res(c, end - c);
-		if (res.find(';') == std::string::npos) {
+		if (res.find('[') == std::string::npos) {
+			end = c;
+			while (*end && *end != ')' && *end != ',')
+				end++;
+			res = std::string(c, end - c);
 			decnumber<> val(res);
 			results.push_back(std::pair<decnumber<>, decnumber<>>(val, val));
 			m_isCalculated = true;
@@ -93,7 +101,12 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 			pos = res.find(']');
 			std::string post = res.substr(pos + 1);
 			res = res.substr(0, pos);
+			pos = post.find(',');
+			if (pos != std::string::npos)
+				post = post.substr(0, pos);
 			pos = res.find(';');
+			if (pos == std::string::npos)
+				pos = res.find(',');
 			std::string low = pre + res.substr(0, pos) + post;
 			std::string up = pre + res.substr(pos + 2) + post;
 			results.push_back(std::pair<decnumber<>, decnumber<>>(low, up));

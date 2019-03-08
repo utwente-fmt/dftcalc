@@ -85,6 +85,17 @@ namespace DFT {
 			return runCommand(command, cwd, baseFile, cmdName,
 			                  commandNum, std::vector<File>());
 		}
+
+		int checkModule(const bool reuse,
+		                const std::string& cwd,
+		                const File& dftOriginal,
+		                const std::vector<std::pair<std::string,std::string>>& calcCommands,
+		                enum DFT::checker useChecker,
+		                enum DFT::converter useConverter,
+		                bool warnNonDeterminism,
+		                DFT::DFTCalculationResult &ret,
+		                bool expOnly,
+		                std::string &module);
 	public:
 		/**
 		 * Verifies all the needed tools for calculation are installed.
@@ -119,7 +130,7 @@ namespace DFT {
 		void printOutput(const File& file, int status);
 		
 		/**
-		 * Calculates the specified DFT file.
+		 * Calculates the specified DFT file with modularization.
 		 * @param reuse Whether to reuse intermediate files.
 		 * @param cwd The directory to work in.
 		 * @param dftOriginal The DFT to analyze.
@@ -132,6 +143,31 @@ namespace DFT {
 		 * @param ret Will have the calculated result added.
 		 * @return 0 if successful, non-zero otherwise
 		 */
+		int calcModular(const bool reuse,
+		                const std::string& cwd,
+		                const File& dftOriginal,
+		                const std::vector<std::pair<std::string,std::string>>& calcCommands,
+		                enum DFT::checker useChecker,
+		                enum DFT::converter useConverter,
+		                bool warnNonDeterminism,
+		                DFT::DFTCalculationResult &ret,
+		                bool expOnly);
+		/**
+		 * Calculates the specified DFT file.
+		 * @param reuse Whether to reuse intermediate files.
+		 * @param cwd The directory to work in.
+		 * @param dftOriginal The DFT to analyze.
+		 * @param calcCommands the Command to model check.
+		 * @param useChecker Which model checker to use.
+		 * @param useConverter Which converter to use in
+		 * 	convertion from BCG to model checker format.
+		 * @param warnNonDeterminism Whether to issue a warning
+		 * 	if the BCG file contains nondeterminism.
+		 * @param root Which FT element to use as the root
+		 *      (toplevel if empty).
+		 * @param ret Will have the calculated result added.
+		 * @return 0 if successful, non-zero otherwise
+		 */
 		int calculateDFT(const bool reuse,
 		                 const std::string& cwd,
 		                 const File& dftOriginal,
@@ -139,6 +175,7 @@ namespace DFT {
 		                 enum DFT::checker useChecker,
 		                 enum DFT::converter useConverter,
 		                 bool warnNonDeterminism,
+		                 std::string root,
 		                 DFT::DFTCalculationResult &ret,
 		                 bool expOnly);
 

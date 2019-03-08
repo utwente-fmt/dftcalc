@@ -1,20 +1,60 @@
 #include "DFTCalculationResult.h"
 
-std::string DFT::DFTCalculationResultItem::valStr(void) const {
+static std::string round(std::string value, size_t digits, bool roundUp)
+{
+	/* Add a character if the decimal point is in the rounded-off
+	 * part, to preserve the number of actual digits. */
+	size_t dot = value.find('.');
+	if (dot != std::string::npos && dot <= digits)
+		digits++;
+	if (digits >= value.length())
+		return value;
+	std::string ret = value.substr(0, digits);
+	if (roundUp) {
+		int carry = 1;
+		size_t pos = ret.length() - 1;
+		while (carry) {
+			if (pos == 0) {
+				ret = "1" + ret;
+				carry = 0;
+			} else if (ret[pos] == '.') {
+				pos--;
+			} else if (ret[pos] == '9') {
+				ret[pos] = '0';
+			} else {
+				ret[pos]++;
+				carry = 0;
+			}
+		}
+	}
+	return ret;
+}
+
+std::string DFT::DFTCalculationResultItem::valStr(size_t deltaDigits) const {
 	if (lowerBound == upperBound)
 		return lowerBound.str();
 	std::string lower = lowerBound.str(), upper = upperBound.str();
+	/* TODO: Implement proper rounding for negative numbers (i.e.,
+	 * increase the LSD of the negative lower bound and leave the
+	 * upper bound alone if it is also negative.
+	 * Not a priority since nothing DFTCalc calculates currently
+	 * goes negative.
+	 */
+	if (lower[0] == '-' || upper[0] == '-')
+		deltaDigits = SIZE_MAX;
 	std::string ret = "";
 	std::string lexp = "", uexp = "";
 	if (lower.find('e') != std::string::npos) {
 		lexp = lower.substr(lower.find('e'));
-		lower = lower.substr(0, upper.find('e'));
+		lower = lower.substr(0, lower.find('e'));
 	}
 	if (upper.find('e') != std::string::npos) {
 		uexp = upper.substr(upper.find('e'));
 		upper = upper.substr(0, upper.find('e'));
 	}
 	if (lexp != uexp) {
+		lower = round(lower, deltaDigits, 0);
+		upper = round(upper, deltaDigits, 1);
 		return '[' + lower + lexp + "; " + upper + uexp + ']';
 	}
 	while (!lower.empty() && lower[0] == upper[0]) {
@@ -22,6 +62,8 @@ std::string DFT::DFTCalculationResultItem::valStr(void) const {
 		lower = lower.substr(1);
 		upper = upper.substr(1);
 	}
+	lower = round(lower, deltaDigits, 0);
+	upper = round(upper, deltaDigits, 1);
 	if (!lower.empty() || !upper.empty()) {
 		ret += '[';
 		ret += lower;

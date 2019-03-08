@@ -23,7 +23,7 @@ namespace DFT {
                 std::string mrmcCommand;
 		decnumber<> lowerBound, upperBound;
 		DFTCalculationResultItem() : lowerBound(0), upperBound(1) { };
-		std::string valStr(void) const;
+		std::string valStr(size_t deltaDigits = 3) const;
         };
 
 	class DFTCalculationResult {

@@ -32,30 +32,102 @@ private:
 	int sign;
 
 	void mul_unnorm(BT val) {
+		if (val == 0) {
+			free(blocks);
+			blocks = nullptr;
+			num_blocks = 0;
+			sign = 1;
+			exponent = 0;
+			return;
+		}
+		if (val < 0)
+			throw std::invalid_argument("Unnormalized multiplication by negative numbers currently not supported.");
+		if (val == 1)
+			return;
+		if (val == base) {
+			if (num_blocks == SIZE_MAX)
+				throw std::overflow_error("Number way too big.");
+			BT *tmp = new BT[num_blocks + 1];
+			memcpy(tmp, blocks, num_blocks * sizeof(BT));
+			delete[] blocks;
+			blocks = tmp;
+			blocks[num_blocks] = 0;
+			num_blocks++;
+			return;
+		}
+		decnumber<BT, ET> old(*this);
+		if (val > 2) {
+			mul_unnorm(val / 2);
+		}
+		/* val == 2 */
 		BT carry = 0;
-		BT premul_max = base / val;
 		for (std::size_t i = num_blocks - 1; i != SIZE_MAX; i--) {
-			BT new_carry;
-			new_carry = blocks[i] / premul_max;
-			blocks[i] = (blocks[i] % premul_max) * val;
-			if (base - blocks[i] < carry) {
+			BT new_carry = 0;
+			/* This entirely depends on base being divisible by 2, which it
+			 * is since we've chosen it to be a multiple of 10.
+			 */
+			if (blocks[i] >= base / 2) {
+				blocks[i] -= base / 2;
+				new_carry = 1;
+			}
+			blocks[i] *= 2;
+			blocks[i] += carry;
+			if (blocks[i] >= base) {
 				new_carry++;
 				blocks[i] -= base;
 			}
-			blocks[i] += carry;
 			carry = new_carry;
 		}
 		if (carry) {
 			if (num_blocks == SIZE_MAX)
 				throw std::overflow_error("Number way too big.");
 			BT *tmp = new BT[num_blocks + 1];
-			if (blocks != nullptr) {
-				memcpy(tmp+1, blocks, num_blocks * sizeof(BT));
-				delete[] blocks;
-			}
+			memcpy(tmp+1, blocks, num_blocks * sizeof(BT));
+			delete[] blocks;
 			num_blocks++;
 			blocks = tmp;
 			blocks[0] = carry;
+		}
+		if (val & 1) {
+			BT carry = 0;
+			size_t i;
+			for (i = 0; i < old.num_blocks; i++) {
+				size_t pn = num_blocks - i - 1;
+				size_t po = old.num_blocks - i - 1;
+				if (blocks[pn] == base - carry) {
+					blocks[pn] = 0;
+				} else {
+					blocks[pn] += carry;
+					carry = 0;
+				}
+				if (blocks[pn] >= base - old.blocks[po]) {
+					carry++;
+					blocks[pn] -= base - old.blocks[po];
+				} else {
+					blocks[pn] += old.blocks[po];
+				}
+			}
+			i = num_blocks - old.num_blocks;
+			while (carry) {
+				if (i) {
+					i--;
+					blocks[i]++;
+					if (blocks[i] == base)
+						blocks[i] = 0;
+					else
+						carry = 0;
+				} else {
+					if (num_blocks == SIZE_MAX)
+						throw std::overflow_error("Number way too big.");
+					BT *tmp = new BT[num_blocks + 1];
+					memcpy(tmp+1, blocks, num_blocks * sizeof(BT));
+					delete[] blocks;
+					num_blocks++;
+					blocks = tmp;
+					blocks[0] = carry;
+					carry = 0;
+				}
+			}
 		}
 	}
 
@@ -63,6 +135,18 @@ private:
 		while (blocks && !(blocks[num_blocks - 1] % 10)) {
 			divint(10);
 			exponent++;
+		}
+		while (num_blocks && blocks[0] == 0) {
+			if (num_blocks == 0) {
+				delete[] blocks;
+				blocks = nullptr;
+			} else {
+				BT *tmp = new BT[num_blocks - 1];
+				num_blocks--;
+				memcpy(tmp, blocks + 1, num_blocks*sizeof(BT));
+				delete[] blocks;
+				blocks = tmp;
+			}
 		}
 		if (!blocks)
 			exponent = 0;
@@ -261,41 +345,38 @@ public:
 		num_blocks = 0;
 		sign = 1;
 		exponent = 0;
+		uintmax_t rev = 0, bits = 0;
+		if (i == 0)
+			return *this;
 		while (i) {
+			rev <<= 1;
+			if (i % 2)
+				rev++;
+			i /= 2;
+			bits++;
+		}
+		while (bits--) {
 			mul_unnorm(2);
 			if (num_blocks == 0) {
 				blocks = new BT[1];
 				blocks[0] = 0;
 				num_blocks = 1;
 			}
-			if (i % 2)
+			if (rev % 2)
 				blocks[num_blocks - 1]++;
-			i /= 2;
+			rev /= 2;
 		}
 		normalize();
 		return *this;
 	}
 
 	decnumber<BT, ET>& operator=(intmax_t i) {
-		delete[] blocks;
-		blocks = nullptr;
-		num_blocks = 0;
-		sign = 1;
-		exponent = 0;
-		if (i < 0)
+		if (i >= 0) {
+			*this = (uintmax_t)i;
+		} else {
+			*this = -(uintmax_t)i;
 			sign = -1;
-		while (i) {
-			mul_unnorm(2);
-			if (num_blocks == 0) {
-				blocks = new BT[1];
-				blocks[0] = 0;
-				num_blocks = 1;
-			}
-			if (i % 2)
-				blocks[num_blocks - 1]++;
-			i /= 2;
 		}
-		normalize();
 		return *this;
 	}
 
@@ -375,21 +456,32 @@ public:
 		}
 		decnumber<BT, ET> tmp(0);
 		const decnumber<BT, ET> *add;
-		if (other.exponent >= exponent) {
+		if (other.exponent <= exponent) {
 			add = &other;
-			while (add->exponent > exponent) {
+			while (add->exponent < exponent) {
 				mul_unnorm(10);
 				exponent--;
 			}
 		} else {
 			tmp = other;
-			while (exponent > tmp.exponent) {
+			while (exponent < tmp.exponent) {
 				tmp.mul_unnorm(10);
 				tmp.exponent--;
 			}
 			add = &tmp;
 		}
 		BT carry = 0;
+		if (num_blocks < add->num_blocks) {
+			size_t d = add->num_blocks - num_blocks;
+			BT *tmp = new BT[add->num_blocks];
+			memcpy(tmp + d, blocks, num_blocks * sizeof(*tmp));
+			delete[] blocks;
+			blocks = tmp;
+			while (d--)
+				blocks[d] = 0;
+			num_blocks = add->num_blocks;
+		}
+		size_t d = num_blocks - add->num_blocks;
 		for (std::size_t i = num_blocks - 1; i != SIZE_MAX; i--) {
 			if (blocks[i] == (base - 1) && carry) {
 				blocks[i] = 0;
@@ -398,12 +490,14 @@ public:
 				blocks[i] += carry;
 				carry = 0;
 			}
-			if (blocks[i] > base - add->blocks[i]) {
-				carry = 1;
-				blocks[i] += base - add->blocks[i];
-			} else {
-				carry = 0;
-				blocks[i] += add->blocks[i];
+			if (i >= d) {
+				if (blocks[i] > base - add->blocks[i - d]) {
+					carry = 1;
+					blocks[i] -= base - add->blocks[i - d];
+				} else {
+					carry = 0;
+					blocks[i] += add->blocks[i - d];
+				}
 			}
 		}
 		if (carry) {
@@ -444,7 +538,7 @@ public:
 		}
 		decnumber<BT, ET> tmp(0);
 		const decnumber<BT, ET> *sub;
-		if (other.exponent <= exponent) {
+		if (other.exponent <= ret.exponent) {
 			sub = &other;
 			while (sub->exponent < ret.exponent) {
 				ret.mul_unnorm(10);
@@ -452,26 +546,39 @@ public:
 			}
 		} else {
 			tmp = other;
-			while (ret.exponent < tmp.exponent) {
+			while (exponent < tmp.exponent) {
 				tmp.mul_unnorm(10);
 				tmp.exponent--;
 			}
 			sub = &tmp;
 		}
+		if (ret.num_blocks < sub->num_blocks) {
+			size_t d = sub->num_blocks - ret.num_blocks;
+			BT *tmp = new BT[sub->num_blocks];
+			memcpy(tmp + d, ret.blocks, ret.num_blocks * sizeof(*tmp));
+			delete[] ret.blocks;
+			ret.blocks = tmp;
+			while (d--)
+				ret.blocks[d] = 0;
+			ret.num_blocks = sub->num_blocks;
+		}
+		size_t d = ret.num_blocks - sub->num_blocks;
 		BT carry = 0;
 		for (std::size_t i = ret.num_blocks - 1; i != SIZE_MAX; i--) {
 			if (ret.blocks[i] < carry) {
-				ret.blocks[i] += base + carry;
+				ret.blocks[i] += base - carry;
 				carry = 1;
 			} else {
 				ret.blocks[i] -= carry;
 				carry = 0;
 			}
-			if (ret.blocks[i] < sub->blocks[i]) {
-				carry += 1;
-				ret.blocks[i] += base + sub->blocks[i];
-			} else {
-				ret.blocks[i] -= sub->blocks[i];
+			if (i >= d) {
+				if (ret.blocks[i] < sub->blocks[i - d]) {
+					carry += 1;
+					ret.blocks[i] += base - sub->blocks[i - d];
+				} else {
+					ret.blocks[i] -= sub->blocks[i - d];
+				}
 			}
 		}
 		if (carry) {
@@ -507,7 +614,7 @@ public:
 
 		decnumber<BT, ET> multiplier(0);
 		multiplier.blocks = blocks;
-		multiplier.exponent = exponent;
+		multiplier.exponent = 0;
 		multiplier.num_blocks = num_blocks;
 		num_blocks = 0;
 		blocks = nullptr;
@@ -515,15 +622,18 @@ public:
 		sign = 1;
 
 		decnumber<BT, ET> multiplicand(other);
+		multiplicand.exponent = 0;
 		std::size_t i;
 		for (i = multiplicand.num_blocks - 1; i != SIZE_MAX; i--) {
 			decnumber<BT, ET> tmp(multiplier);
 			tmp.mul_unnorm(multiplicand.blocks[i]);
+			tmp.normalize();
 			*this += tmp;
 			multiplier.mul_unnorm(base);
+			multiplier.normalize();
 		}
 		sign = target_sign;
-		exponent = target_exponent;
+		exponent += target_exponent;
 		normalize();
 		return *this;
 	}
@@ -578,7 +688,7 @@ public:
 				ret = "0" + ret;
 				dot_pos = 1;
 			} else if (digits > neg_exponent) {
-				dot_pos = neg_exponent;
+				dot_pos = digits - neg_exponent;
 				neg_exponent = 0;
 			} else {
 				dot_pos = 1;
@@ -610,7 +720,7 @@ public:
 	}
 
 	void divint(BT num) {
-		if (num < -base || num > base)
+		if ((num < 0 && num < -base) || num > base)
 			throw std::invalid_argument("Division by numbers larger than the internal base is currently not supported.");
 		if (base % num)
 			throw std::invalid_argument("Divisor currently must be multiple of internal base.");

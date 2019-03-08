@@ -62,16 +62,18 @@ namespace Nodes {
 			const Node *current = *to_explore.begin();
 			to_explore.erase(current);
 			subtree.insert(current);
-			for (Node *par : current->parents) {
-				if (subtree.find(par) != subtree.end())
-					to_explore.insert(par);
-			}
 			if (current->isGate()) {
 				const Gate *g = static_cast<const Gate *>(current);
 				for (Node *c : g->getChildren()) {
-					if (subtree.find(c) != subtree.end())
+					if (subtree.find(c) == subtree.end())
 						to_explore.insert(c);
 				}
+			}
+			if (current == this)
+				continue;
+			for (Node *par : current->parents) {
+				if (subtree.find(par) == subtree.end())
+					to_explore.insert(par);
 			}
 		}
 		Node *parent = static_cast<Node *>(parents[0]);
