@@ -443,16 +443,26 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 	size_t eol = module.find('\n');
 	if (eol == std::string::npos)
 		eol = module.length();
-	size_t sp = module.substr(0, eol).find(' ');
-	if (sp == std::string::npos) {
-		std::string root = module.substr(0, eol);
+	if (module[0] == 'M') {
+		std::string root = module.substr(1, eol - 1);
 		module = module.substr(eol + 1);
 		return calculateDFT(reuse, cwd, dft, calcCommands, useChecker,
 		                    useConverter, warnNonDeterminism, root, ret,
 		                    expOnly);
+	} else if (module[0] == '=') {
+		decnumber<> val(module.substr(1, eol - 1));
+		module = module.substr(eol + 1);
+		for (std::pair<std::string, std::string> cmd : calcCommands) {
+			DFT::DFTCalculationResultItem it;
+			it.missionTime = cmd.second;
+			it.mrmcCommand = cmd.first;
+			it.lowerBound = it.upperBound = val;
+			ret.failProbs.push_back(it);
+		}
+		return 0;
 	}
-	std::string op = module.substr(0, sp);
-	std::string numStr = module.substr(sp + 1, eol);
+	char op = module[0];
+	std::string numStr = module.substr(1, eol);
 	module = module.substr(eol + 1);
 	unsigned long num = std::stoul(numStr);
 	std::vector<DFT::DFTCalculationResultItem> gather;
@@ -481,10 +491,10 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 					messageFormatter->reportError("Unequal order/type of results for modules.");
 					return 1;
 				}
-				if (op == "AND") {
+				if (op == '*') {
 					old.lowerBound *= add.lowerBound;
 					old.upperBound *= add.upperBound;
-				} else if (op == "OR") {
+				} else if (op == '+') {
 					decnumber<> one(1);
 					old.lowerBound = (one - (one - old.lowerBound)
 					                      * (one - add.lowerBound));

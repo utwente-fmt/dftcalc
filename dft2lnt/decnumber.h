@@ -183,7 +183,7 @@ private:
 			}
 			if (!isdigit(num[pos])) {
 				delete[] blocks;
-				throw std::runtime_error("Unexpected character in number: " + num);
+				throw std::runtime_error("Unexpected character in number: '" + num + "'");
 			}
 			mul_unnorm(10);
 			if (num_blocks == 0) {
