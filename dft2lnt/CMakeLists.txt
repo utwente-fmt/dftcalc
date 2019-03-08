@@ -54,9 +54,6 @@ add_library(dft2lnt
 	Shell.cpp
 	FileSystem.cpp
 	System.cpp
-	imca.cpp
-	storm.cpp
-	mrmc.cpp
 	CADP.cpp
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
 )

@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-int MRMC::FileHandler::generateInputFile(const File& file) {
+int MRMCParser::generateInputFile(const File& file) {
 	FileWriter out;
 	out << out.applyprefix << "set print on" << out.applypostfix;
 	out << out.applyprefix << m_calcCommand << out.applypostfix;
@@ -36,7 +36,7 @@ int MRMC::FileHandler::generateInputFile(const File& file) {
 	return 0;
 }
 
-int MRMC::FileHandler::readOutputFile(const File& file) {
+int MRMCParser::readOutputFile(const File& file) {
 	if(!FileSystem::exists(file)) {
 		return 1;
 	}
@@ -119,7 +119,7 @@ int MRMC::FileHandler::readOutputFile(const File& file) {
 	return 0;
 }
 
-std::pair<decnumber<>, decnumber<>> MRMC::FileHandler::getResult() {
+std::pair<decnumber<>, decnumber<>> MRMCParser::getResult() {
 	if(results.size()<1) {
 		return std::pair<decnumber<>, decnumber<>>(-1, -1);
 	}

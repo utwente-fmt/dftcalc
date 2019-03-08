@@ -18,9 +18,12 @@
 #include <stdlib.h>
 #include <iostream>
 
-int IMCA::FileHandler::readOutputFile(const File& file) {
+IMCAParser::IMCAParser(const File file) :
+		i_isCalculated(false),
+		result(-1)
+{
 	if(!FileSystem::exists(file)) {
-		return 1;
+		return;
 	}
 
 	FILE* fp;
@@ -75,7 +78,7 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 	}
 	if (found) {
 		free(buffer);
-		return 0;
+		return;
 	}
 
 	for(int i=0; ub_needles[i] != 0; i++) {
@@ -102,7 +105,7 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 	}
 	if (found) {
 		free(buffer);
-		return 0;
+		return;
 	}
 
 	p = buffer;
@@ -162,16 +165,16 @@ int IMCA::FileHandler::readOutputFile(const File& file) {
 	}
 
 	free(buffer);
-	return 0;
+	return;
 }
 
-decnumber<> IMCA::FileHandler::getResult() {
+decnumber<> IMCAParser::getResult() {
 	if(results.size()<1) {
 		return decnumber<>(-1);
 	}
 	return results[0].second;
 }
 
-std::vector<std::pair<std::string,decnumber<>>> IMCA::FileHandler::getResults() {
+std::vector<std::pair<std::string,decnumber<>>> IMCAParser::getResults() {
 	return results;
 }

@@ -36,6 +36,7 @@ using namespace std;
 #include "dftcalc.h"
 #include "compiletime.h"
 #include "yaml-cpp/yaml.h"
+#include "mrmc.h"
 #include "imca.h"
 #include "storm.h"
 
@@ -699,8 +700,8 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 		for(auto mrmcCalcCommand: calcCommands) {
 			// -> mrmcinput
-			MRMC::FileHandler fileHandler(mrmcCalcCommand.first);
-			fileHandler.generateInputFile(input);
+			MRMCParser mrmcParser(mrmcCalcCommand.first);
+			mrmcParser.generateInputFile(input);
 			if(!FileSystem::exists(input)) {
 				messageFormatter->reportError("Error generating MRMC input file `" + input.getFileRealPath() + "'");
 				return 1;
@@ -718,11 +719,11 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			if (resf == "")
 				return 1;
 
-			if(fileHandler.readOutputFile(File(resf))) {
+			if(mrmcParser.readOutputFile(File(resf))) {
 				messageFormatter->reportError("Could not calculate");
 				return 1;
 			} else {
-				decnumber<> res = fileHandler.getResult().first;
+				decnumber<> res = mrmcParser.getResult().first;
 				DFT::DFTCalculationResultItem calcResultItem;
 				calcResultItem.missionTime = mrmcCalcCommand.second;
 				calcResultItem.mrmcCommand = mrmcCalcCommand.first;
@@ -749,8 +750,8 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 		for(auto imrmcCalcCommand: calcCommands) {
 			// -> mrmcinput
-			MRMC::FileHandler fileHandler(imrmcCalcCommand.first);
-			fileHandler.generateInputFile(input);
+			MRMCParser mrmcParser(imrmcCalcCommand.first);
+			mrmcParser.generateInputFile(input);
 			if(!FileSystem::exists(input)) {
 				messageFormatter->reportError("Error generating IMRMC input file `" + input.getFileRealPath() + "'");
 				return 1;
@@ -772,11 +773,11 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			if (out == "")
 				return 1;
 
-			if(fileHandler.readOutputFile(File(out))) {
+			if(mrmcParser.readOutputFile(File(out))) {
 				messageFormatter->reportError("Could not calculate");
 				return 1;
 			} else {
-				std::pair<decnumber<>, decnumber<>> res = fileHandler.getResult();
+				std::pair<decnumber<>, decnumber<>> res = mrmcParser.getResult();
 				DFT::DFTCalculationResultItem calcResultItem;
 				calcResultItem.missionTime = imrmcCalcCommand.second;
 				calcResultItem.mrmcCommand = imrmcCalcCommand.first;
@@ -802,8 +803,6 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		}
 		
 		for(auto imcaCalcCommand: calcCommands) {
-			IMCA::FileHandler fileHandler(imcaCalcCommand.first);
-		
 			// imca -> calculation
 			messageFormatter->reportAction("Calculating probability with IMCA...",VERBOSITY_FLOW);
 			std::string cmd = imcaExec.getFilePath()
@@ -814,11 +813,13 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			if (out == "")
 				return 1;
 
-			if(fileHandler.readOutputFile(File(out))) {
+			File outFile(out);
+			IMCAParser parser(outFile);
+			if(!parser.hasResults()) {
 				messageFormatter->reportError("Could not calculate");
 				return 1;
 			} else {
-				std::vector<std::pair<std::string,decnumber<>>> imcaResult = fileHandler.getResults();
+				std::vector<std::pair<std::string,decnumber<>>> imcaResult = parser.getResults();
 				for(auto imcaResultItem: imcaResult) {
 					DFT::DFTCalculationResultItem calcResultItem;
 					if (imcaResultItem.first == "" || imcaResultItem.first == "?")
@@ -849,8 +850,6 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		}
 		
 		for(auto calcCommand: calcCommands) {
-			Storm::FileHandler fileHandler(calcCommand.first);
-
 			// storm -> calculation
 			messageFormatter->reportAction("Calculating probability with Storm...",VERBOSITY_FLOW);
 			std::string cmd = stormExec.getFilePath()
@@ -862,11 +861,14 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			if (out == "")
 				return 1;
 
-			if(fileHandler.readOutputFile(File(out))) {
+			File outFile(out);
+			Storm stormParser(outFile);
+
+			if (!stormParser.hasResult()) {
 				messageFormatter->reportError("Could not calculate");
 				return 1;
 			} else {
-				decnumber<> result = fileHandler.getResult();
+				decnumber<> result = stormParser.getResult();
 				DFT::DFTCalculationResultItem calcResultItem;
 				calcResultItem.missionTime = calcCommand.second;
 				calcResultItem.mrmcCommand = calcCommand.first;

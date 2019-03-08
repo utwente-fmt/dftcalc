@@ -17,6 +17,7 @@
 #include "dft_parser.h"
 #include "dftnodes/nodes.h"
 #include "ASTVisitor.h"
+#include "FileSystem.h"
 
 namespace DFT {
 

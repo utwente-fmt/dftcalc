@@ -17,13 +17,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
+#include <stdexcept>
 
 static const char needle[] = "Result (for initial states): ";
 
-int Storm::FileHandler::readOutputFile(const File& file) {
-	if(!FileSystem::exists(file)) {
-		return 1;
-	}
+Storm::Storm(const File &file) :
+		i_isCalculated(false),
+		i_result(-1)
+{
+	if(!FileSystem::exists(file))
+		return;
 
 	std::ifstream input(file.getFileRealPath());
 	std::string line;
@@ -37,9 +40,8 @@ int Storm::FileHandler::readOutputFile(const File& file) {
 		}
 		std::getline(input, line);
 	}
-	return 0;
 }
 
-decnumber<> Storm::FileHandler::getResult() {
+decnumber<> Storm::getResult() {
 	return i_result;
 }
