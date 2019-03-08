@@ -1552,17 +1552,19 @@ int main(int argc, char** argv) {
 		std::cout << out.str();
 	}
     
-    for(File dft: dfts) {
-    File svlLogFile = File(outputFolderFile.getFileRealPath(),dft.getFileBase(),"log");
-    Shell::SvlStatistics svlStats;
-    if(Shell::readSvlStatisticsFromLog(svlLogFile,svlStats)) {
-        messageFormatter->reportWarning("Could not read from svl log file `" + svlLogFile.getFileRealPath() + "'");
-    } else {
-        messageFormatter->reportAction2("Read from svl log file `" + svlLogFile.getFileRealPath() + "'",VERBOSITY_DATA);
-        messageFormatter->notify("SVL composition maximum values");
-        std::cout << "Max States: " << svlStats.max_states << ", Max Transitions: " << svlStats.max_transitions << ", Max Memory by SVL: " << svlStats.max_memory << " Kbytes" << endl;
-    }
-    }
+	if (useConverter != DFT::converter::DFTRES) {
+		for(File dft: dfts) {
+			File svlLogFile = File(outputFolderFile.getFileRealPath(),dft.getFileBase(),"log");
+			Shell::SvlStatistics svlStats;
+			if(Shell::readSvlStatisticsFromLog(svlLogFile,svlStats)) {
+				messageFormatter->reportWarning("Could not read from svl log file `" + svlLogFile.getFileRealPath() + "'");
+			} else {
+				messageFormatter->reportAction2("Read from svl log file `" + svlLogFile.getFileRealPath() + "'",VERBOSITY_DATA);
+				messageFormatter->notify("SVL composition maximum values");
+				std::cout << "Max States: " << svlStats.max_states << ", Max Transitions: " << svlStats.max_transitions << ", Max Memory by SVL: " << svlStats.max_memory << " Kbytes" << endl;
+			}
+		}
+	}
 	
 	/* Write yaml file */
 	if(yamlFileSet) {
