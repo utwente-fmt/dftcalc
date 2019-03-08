@@ -425,6 +425,67 @@ int DFT::DFTCalc::calcModular(const bool reuse,
 	                   useConverter, warnNonDeterminism, ret, expOnly,*modules);
 }
 
+static void addVoteResults(DFT::DFTCalculationResultItem &ret,
+                           std::vector<DFT::DFTCalculationResultItem> P,
+			   size_t votCount)
+{
+	if (votCount == 0) {
+		ret.lowerBound = ret.upperBound = (uintmax_t)1;
+		return;
+	} else if (votCount > P.size()) {
+		ret.lowerBound = ret.upperBound = (uintmax_t)0;
+		return;
+	}
+	DFT::DFTCalculationResultItem cur = P[0];
+	P.erase(P.begin());
+	/* P{k/N}(X1, X2, ..., XN)
+	 * = P(X1)*P{(k-1)/(N-1)}(X2, ..., XN)
+	 *   + (1-P(X1))*P{k/(N-1)}(X2, ..., XN)
+	 */
+	addVoteResults(ret, P, votCount - 1);
+	decnumber<> loSum = cur.lowerBound * ret.lowerBound;
+	decnumber<> upSum = cur.upperBound * ret.upperBound;
+	addVoteResults(ret, P, votCount);
+	/* In the next part we swap the lower and upper bounds of the
+	 * current entry due to the subtraction.
+	 */
+	loSum += (decnumber<>(1) - cur.upperBound) * ret.lowerBound;
+	upSum += (decnumber<>(1) - cur.lowerBound) * ret.upperBound;
+	ret.lowerBound = loSum;
+	ret.upperBound = upSum;
+}
+
+static void addVoteResults(std::vector<DFT::DFTCalculationResultItem> &ret,
+                           const std::vector<DFT::DFTCalculationResult> P,
+			   MessageFormatter &mf,
+                           size_t votCount)
+{
+	if (P.empty())
+		return;
+	size_t nResults = P[0].failProbs.size();
+	for (const DFT::DFTCalculationResult r : P) {
+		if (r.failProbs.size() != nResults) {
+			mf.reportError("Unequal number of results for modules.");
+		}
+	}
+	for (size_t i = 0; i < nResults; i++) {
+		std::vector<DFT::DFTCalculationResultItem> probs;
+		DFT::DFTCalculationResultItem ref = P[0].failProbs[i];
+		for (const DFT::DFTCalculationResult r : P) {
+			DFT::DFTCalculationResultItem it = r.failProbs[i];
+			if (it.missionTime != ref.missionTime
+			    || it.mrmcCommand != ref.mrmcCommand)
+			{
+				mf.reportError("Unequal order/type of results for modules.");
+				return;
+			}
+			probs.push_back(it);
+		}
+		addVoteResults(ref, probs, votCount);
+		ret.push_back(ref);
+	}
+}
+
 int DFT::DFTCalc::checkModule(const bool reuse,
                               const std::string& cwd,
                               const File& dft,
@@ -437,8 +498,8 @@ int DFT::DFTCalc::checkModule(const bool reuse,
                               std::string &module)
 {
 	if (module.length() == 0) {
-			messageFormatter->reportError("Modules file empty.");
-			return 1;
+		messageFormatter->reportError("Modules file empty.");
+		return 1;
 	}
 	size_t eol = module.find('\n');
 	if (eol == std::string::npos)
@@ -462,10 +523,23 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 		return 0;
 	}
 	char op = module[0];
-	std::string numStr = module.substr(1, eol);
+	std::string numStr;
+	unsigned long votCount = 0;
+	if (op != '/') {
+		numStr = module.substr(1, eol);
+	} else {
+		size_t sp = module.find(' ');
+		if (sp == std::string::npos) {
+			messageFormatter->reportError("Improperly formatted modules file: voting gate without child count.");
+			return 1;
+		}
+		numStr = module.substr(sp + 1, eol);
+		votCount = std::stoul(module.substr(1, sp));
+	}
 	module = module.substr(eol + 1);
 	unsigned long num = std::stoul(numStr);
 	std::vector<DFT::DFTCalculationResultItem> gather;
+	std::vector<DFT::DFTCalculationResult> votResults;
 	for (unsigned long i = 0; i < num; i++) {
 		DFT::DFTCalculationResult tmp;
 		if (module.empty()) {
@@ -475,7 +549,9 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 		if (checkModule(reuse, cwd, dft, calcCommands, useChecker, useConverter,
 		                warnNonDeterminism, tmp, expOnly, module))
 			return 1;
-		if (i == 0) {
+		if (op == '/') {
+			votResults.push_back(tmp);
+		} else if (i == 0) {
 			gather = tmp.failProbs;
 		} else {
 			if (gather.size() != tmp.failProbs.size()) {
@@ -507,7 +583,11 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 			}
 		}
 	}
-	ret.failProbs.insert(ret.failProbs.begin(), gather.begin(), gather.end());
+	if (op != '/') {
+		ret.failProbs.insert(ret.failProbs.begin(), gather.begin(), gather.end());
+	} else {
+		addVoteResults(ret.failProbs, votResults, *messageFormatter, votCount);
+	}
 	return 0;
 }
 

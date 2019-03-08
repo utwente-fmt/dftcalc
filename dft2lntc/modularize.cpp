@@ -15,7 +15,8 @@ static void writeModules(std::ostream &out, DFT::DFTree *dft, DFT::Nodes::Node *
 		}
 	}
 	if (!(root->matchesType(DFT::Nodes::NodeType::GateAndType)
-	      || root->matchesType(DFT::Nodes::NodeType::GateOrType)))
+	      || root->matchesType(DFT::Nodes::NodeType::GateOrType)
+	      || root->matchesType(DFT::Nodes::NodeType::GateVotingType)))
 	{
 		out << "M" << root->getName() << "\n";
 		return;
@@ -30,8 +31,13 @@ static void writeModules(std::ostream &out, DFT::DFTree *dft, DFT::Nodes::Node *
 	}
 	if (root->matchesType(DFT::Nodes::NodeType::GateAndType))
 		out << "*" << children.size() << "\n";
-	else
+	else if (root->matchesType(DFT::Nodes::NodeType::GateOrType))
 		out << "+" << children.size() << "\n";
+	else {
+		DFT::Nodes::GateVoting *v;
+		v = static_cast<DFT::Nodes::GateVoting *>(root);
+		out << "/" << v->getThreshold() <<" "<< children.size() << "\n";
+	}
 	for (DFT::Nodes::Node *child : children)
 		writeModules(out, dft, child);
 }
