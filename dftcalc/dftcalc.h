@@ -55,6 +55,7 @@ namespace DFT {
 		File getDftresJar(MessageFormatter* messageFormatter);
 
 		std::vector<std::string> evidence;
+		std::unordered_map<std::string, DFTCalculationResult> cachedResults;
 
 		std::string runCommand(std::string command,
 		                       std::string cwd,

@@ -501,7 +501,7 @@ public:
 			}
 		}
 		if (carry) {
-			if (num_blocks == SIZE_MAX);
+			if (num_blocks == SIZE_MAX)
 				throw std::overflow_error("Addition result too large");
 			BT *bl;
 			bl = new BT[num_blocks + 1];

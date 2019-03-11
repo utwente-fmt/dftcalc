@@ -702,6 +702,15 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 	if (expOnly)
 		return 0;
 
+	std::string* tmpContents = FileSystem::load(exp);
+	if (cachedResults.find(*tmpContents) != cachedResults.end()) {
+		ret = cachedResults[*tmpContents];
+		delete tmpContents;
+		return 0;
+	}
+	std::string expContents = *tmpContents;
+	delete tmpContents;
+
 	if (useConverter == DFT::converter::SVL) {
 		if (!reuse || !FileSystem::exists(bcg)) {
 			// svl, exp -> bcg
@@ -993,6 +1002,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			return 1;
 	}
 
+	cachedResults[expContents] = ret;
 	return 0;
 }
 
