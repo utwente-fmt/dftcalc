@@ -572,21 +572,31 @@ int DFT::DFTreeBCGNodeBuilder::generateRU_Nd(FileWriter& out,
 int DFT::DFTreeBCGNodeBuilder::generateInspection(FileWriter& out, const DFT::Nodes::Inspection& gate) {
     int total = gate.getChildren().size();
     int phases = gate.getPhases();
-    out << out.applyprefix << " * Generating Inspection(dependers=" << total << ")" << out.applypostfix;
+    out << out.applyprefix << " * Generating Inspection(children=" << total << ")" << out.applypostfix;
     generateHeaderClose(out);
     
     out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_INSPECTION) is" << out.applypostfix;
     out.indent();
 
-        out << out.applyprefix << "process MAIN [" << GATE_INSPECT << " : NAT_CHANNEL, " << GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED  << " : NAT_BOOL_CHANNEL, " <<
-            GATE_RATE_INSPECTION << " : NAT_CHANNEL, " << GATE_INSPECTED << " : NAT_CHANNEL ] is" << out.applypostfix;
-        out.indent();
+    out << out.applyprefix << "process MAIN ["
+		<< GATE_INSPECT << " : NAT_CHANNEL"
+		", " << GATE_REPAIR << " : NAT_CHANNEL"
+        ", " << GATE_RATE_INSPECTION << " : NAT_CHANNEL"
+		"] is" << out.applypostfix;
+	out.indent();
     
-            out << out.applyprefix << "INSPECTION [" << GATE_INSPECT << "," << GATE_REPAIR << "," << GATE_REPAIRED << "," << GATE_RATE_INSPECTION << "," << GATE_INSPECTED << "] (" << total << " of NAT," << phases << " of NAT)" << out.applypostfix;
+	out << out.applyprefix << "INSPECTION ["
+		<< GATE_INSPECT
+		<< "," << GATE_REPAIR
+		<< "," << GATE_RATE_INSPECTION
+		<< "] ("
+		<< total << " of NAT"
+		", " << phases << " of NAT)"
+		<< out.applypostfix;
     
-        out.outdent();
-        out << out.applyprefix << "end process" << out.applypostfix;
-    
+	out.outdent();
+	out << out.applyprefix << "end process" << out.applypostfix;
+
     out.outdent();
     out << out.applyprefix << "end module" << out.applypostfix;
 
@@ -976,7 +986,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
             case DFT::Nodes::InspectionType: {
                 const DFT::Nodes::Inspection& gate = static_cast<const DFT::Nodes::Inspection&>(node);
                 FileWriter report;
-                report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+                report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ")";
                 cc->reportAction(report.toString(),VERBOSE_GENERATION);
                 generateInspection(lntOut,gate);
                 break;

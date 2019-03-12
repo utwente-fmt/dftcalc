@@ -1,14 +1,12 @@
 module TEMPLATE_INSPECTION(TEMPLATE_COMMON) is
 
-	process INSPECTION [INSPECT : NAT_CHANNEL, REPAIR : NAT_CHANNEL, REPAIRED : NAT_BOOL_CHANNEL, RATE_INSPECTION : NAT_CHANNEL, INSPECTED : NAT_CHANNEL] (total: NAT, phases: NAT) is
+	process INSPECTION [INSPECT : NAT_CHANNEL, REPAIR : NAT_CHANNEL, RATE_INSPECTION : NAT_CHANNEL] (total: NAT, phases: NAT) is
 	var
 		nr : NAT,
 		counter : NAT,
-		repaired : NAT,
 		signal : BOOL
 	in
 		counter := 0;
-		repaired := 1;
 		signal := FALSE;
 		loop
 			select
@@ -30,15 +28,10 @@ module TEMPLATE_INSPECTION(TEMPLATE_COMMON) is
 
 			[]
 				if((counter == phases) and signal) then
-					REPAIR (!repaired);
-					repaired := repaired + 1;
-					if (repaired > total) then
-						repaired := 1;
-						counter := 0;
-						signal := FALSE
-					end if
+					REPAIR (!0 of NAT);
+					counter := 0;
+					signal := FALSE
 				end if
-
 			end select
 		end loop
 	end var

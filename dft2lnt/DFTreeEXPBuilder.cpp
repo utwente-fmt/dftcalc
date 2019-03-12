@@ -599,12 +599,13 @@ int DFT::DFTreeEXPBuilder::createSyncRuleTop(
 }
 
 /** Add a rule between a child and any of its parents. */
-void DFT::DFTreeEXPBuilder::addAnycastRule(vector<DFT::EXPSyncRule> &rules,
-											 const DFT::Nodes::Gate &node,
-											 EXPSyncItem *nodeSignal,
-											 EXPSyncItem *childSignal,
-											 std::string name_prefix,
-											 unsigned int childNum)
+DFT::EXPSyncRule &DFT::DFTreeEXPBuilder::addAnycastRule(
+		vector<DFT::EXPSyncRule> &rules,
+		const DFT::Nodes::Gate &node,
+		EXPSyncItem *nodeSignal,
+		EXPSyncItem *childSignal,
+		std::string name_prefix,
+		unsigned int childNum)
 {
 	const DFT::Nodes::Node &child = *node.getChildren().at(childNum);
 	unsigned int childID = nodeIDs[&child];
@@ -620,7 +621,36 @@ void DFT::DFTreeEXPBuilder::addAnycastRule(vector<DFT::EXPSyncRule> &rules,
 	printSyncLineShort(report, rule);
 	cc->reportAction3(report.str(), VERBOSITY_RULES);
 	rules.push_back(rule);
+	return rules[rules.size() - 1];
 }
+
+/** Add broadcast from a parent to all of its children */
+void DFT::DFTreeEXPBuilder::addInvBroadcastRule(vector<DFT::EXPSyncRule> &rules,
+											 const DFT::Nodes::Gate &node,
+											 EXPSyncItem *nodeSignal,
+											 EXPSyncItem *childSignal,
+											 std::string name_prefix,
+											 unsigned int childNum)
+{
+	const DFT::Nodes::Node *child = node.getChildren().at(childNum);
+	unsigned int nodeID = nodeIDs[&node];
+	for (auto &rule : rules) {
+		// If there is a rule that also synchronizes on the same node,
+		// we have come across a different child of this node.
+		if(rule.syncOnNode == &node) {
+			shared_ptr<EXPSyncItem> prevSignal = rule.label[nodeID];
+			if (prevSignal->toString() != nodeSignal->toString())
+				continue;
+			cc->reportAction3("Found earlier fail rule",VERBOSITY_RULEORIGINS);
+			rule.insertLabel(nodeIDs[child], childSignal);
+			return;
+		}
+	}
+
+	EXPSyncRule &rule = addAnycastRule(rules, node, nodeSignal, childSignal, name_prefix, childNum);
+	rule.syncOnNode = &node;
+}
+
 /** Add a rule broadcast from a child to all its parents. */
 void DFT::DFTreeEXPBuilder::addBroadcastRule(vector<DFT::EXPSyncRule> &rules,
 					     const DFT::Nodes::Gate &node,
@@ -884,8 +914,8 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 							 syncInspection(0), "insp_", n);
 			addBroadcastRule(failRules, node, syncInspection(n+1),
 							 syncFail(0), "inspf_", n);
-			addAnycastRule(repairRules, node, syncRepair(n + 1),
-						   syncRepair(false), "rep_", n);
+			addInvBroadcastRule(repairRules, node, syncRepair((size_t)0),
+						        syncRepair(false), "rep_", n);
 
 		} else if(DFT::Nodes::Node::typeMatch(node.getType(),
 											  DFT::Nodes::ReplacementType))

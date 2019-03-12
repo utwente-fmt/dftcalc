@@ -232,17 +232,24 @@ private:
 						  std::string name_prefix,
 						  unsigned int childNum);
 
+	void addInvBroadcastRule(vector<DFT::EXPSyncRule> &rules,
+	                         const DFT::Nodes::Gate &node,
+	                         EXPSyncItem *nodeSignal,
+	                         EXPSyncItem *childSignal,
+	                         std::string name_prefix,
+	                         unsigned int childNum);
+
 	void addIndepRule(vector<DFT::EXPSyncRule> &rules,
 					     const DFT::Nodes::Node &node,
 					     EXPSyncItem *nodeSignal,
 					     std::string name_prefix);
 
-	void addAnycastRule(vector<DFT::EXPSyncRule> &rules,
-						const DFT::Nodes::Gate &node,
-						EXPSyncItem *nodeSignal,
-						EXPSyncItem *childSignal,
-						std::string name_prefix,
-						unsigned int childNum);
+	DFT::EXPSyncRule& addAnycastRule(vector<DFT::EXPSyncRule> &rules,
+	                                 const DFT::Nodes::Gate &node,
+	                                 EXPSyncItem *nodeSignal,
+	                                 EXPSyncItem *childSignal,
+	                                 std::string name_prefix,
+	                                 unsigned int childNum);
 
 public:
 
