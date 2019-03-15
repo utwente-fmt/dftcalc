@@ -243,10 +243,8 @@ std::string DFT::DFTCalc::getRoot(MessageFormatter* messageFormatter) {
 	char* root = getenv((const char*)"DFT2LNTROOT");
 	std::string dft2lntRoot = root?string(root):"";
 	
-	if(dft2lntRoot=="") {
-		if(messageFormatter) messageFormatter->reportError("Environment variable `DFT2LNTROOT' not set. Please set it to where lntnodes/ can be found.");
-		goto end;
-	}
+	if(dft2lntRoot=="")
+		dft2lntRoot = DFT2LNTROOT;
 	
 	// \ to /
 	{

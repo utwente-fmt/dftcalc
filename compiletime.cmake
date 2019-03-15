@@ -29,6 +29,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/compiletime.h
 "/**
  * Generated at compile time on ${date_output}
  */
+#define DFT2LNTROOT \"${DFTROOT}\"
 #define COMPILETIME_DATE \"${date_output}\"
 #define COMPILETIME_GITREV \"${git_output}\"
 #define COMPILETIME_GITCHANGED ${git_changed}
