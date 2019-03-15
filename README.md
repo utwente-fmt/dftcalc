@@ -26,14 +26,14 @@ Download MRMC from [the MRMC homepage](http://www.mrmc-tool.org/),
 and ensure that the 'mrmc' binary is in your PATH.
 
 **Coral/imc2ctmdp**
-Only needed for the MRMC backend. Since the 2015 version of CADP you have to compile imc2ctmdp yourself. You can get the code from [here] (https://github.com/buschko/imc2ctmdp).
+Only needed for the MRMC backend. Since the 2015 version of CADP you have to compile imc2ctmdp yourself. You can get the code from [here] (https://github.com/buschko/imc2ctmdp). Set your 'CORAL' environment variable to the root of this installation (such that "$CORAL/bin" contains the imc2ctmdp binary).
 
 **IMRMC Backend**
 Download IMRMC from [the IMRMC homepage](https://www.ennoruijters.nl/imrmc.html)
 and ensure that the 'imrmc' binary is in your PATH.
 
 **IMCA Backend**
-Download the most recent IMCA version from [github](https://github.com/utwente-fmt/imca) and visit for more information the [IMCA homepage](http://www-i2.informatik.rwth-aachen.de/imca/index.html). Ensure that the 'imca' binary is in your PATH.
+Download the most recent IMCA version from [github](https://github.com/utwente-fmt/imca) and visit for more information the [IMCA homepage](http://www-i2.informatik.rwth-aachen.de/imca/index.html). Set the 'IMCA' environment variable to the root of your IMCA installation.
 
 **Storm Backend**
 Download the most recent Storm version from [the Storm
@@ -46,6 +46,9 @@ DFTRES from [github](https://github.com/utwente-fmt/DFTRES) and set an
 environment variable 'DFTRES' to point to the generated jar file.
 
 ## Installation
+
+By default, DFTCalc is installed into /opt/dft2lntroot. This can be
+changed by passing the '-DDFTROOT=/your/preferred/path' option to cmake.
 
 **Create Makefiles**
 $ mkdir build && cd build && cmake ..
