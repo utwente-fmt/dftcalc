@@ -126,21 +126,27 @@ dft=$canonical.dft
 #$dftcalc --no-color -v -v -v -v -v -v -p "$@" $tmpdft
 #$dftcalc --no-color -v -v -v -p "$@" $tmpdft
 
+MODUL="";
+echo "Mod: $MODULARIZE"
+if [ "$MODULARIZE" != "" ]; then
+	MODUL="-M ";
+fi
+
 if [ X$COMPUTATION = Xunreliability ]; then
 	if [ "X$VERBOSE" != "X--verbose=-1" ]; then
-		echo command: dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $EVDNCE $ERRORB "$@" $dft 1>&2
+		echo command: dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $EVDNCE $ERRORB $MODUL "$@" $dft 1>&2
 		echo "" 1>&2
 	fi
-	dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $EVDNCE $ERRORB "$@" $dft
+	dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $EVDNCE $ERRORB $MODUL "$@" $dft
 	#dftcalc -R --no-color -q -p $ERRORB "$@" $dft
 	#dftcalc -R --no-color -q --imca -p "$@" $dft
 fi
 if [ X$COMPUTATION = Xmttf ]; then
 	if [ "X$VERBOSE" != "X--verbose=-1" ]; then
-		echo command: dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -m $EVDNCE $ERRORB $dft 1>&2
+		echo command: dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -m $EVDNCE $ERRORB $MODUL $dft 1>&2
 		echo "" 1>&2
 	fi
-	dftcalc $MODELCHECKER -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -m $EVDNCE $ERRORB $dft
+	dftcalc $MODELCHECKER -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -m $EVDNCE $ERRORB $MODUL $dft
 	#echo "" 1>&2
 	#echo "" 1>&2
 	#echo "memrec statistics:" 1>&2
@@ -156,10 +162,10 @@ if [ X$COMPUTATION = Xmttf ]; then
 fi
 if [ "$COMPUTATION" = "steadyState" ]; then
 	if [ "X$VERBOSE" != "X--verbose=-1" ]; then
-		echo command: dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -s $EVDNCE $ERRORB $dft 1>&2
+		echo command: dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -s $EVDNCE $ERRORB $MODUL $dft 1>&2
 		echo "" 1>&2
 	fi
-	dftcalc $MODELCHECKER -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -s $EVDNCE $ERRORB $dft
+	dftcalc $MODELCHECKER -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -s $EVDNCE $ERRORB $MODUL $dft
 fi
 if [ X$COMPUTATION = Xlwbupb ]; then
 	testRealValue TIMELWB 'mission time lwb'
@@ -167,10 +173,10 @@ if [ X$COMPUTATION = Xlwbupb ]; then
 	if ! errorsfound
 	then
 		if [ "X$VERBOSE" != "X--verbose=-1" ]; then
-			echo command: dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $MINMAXPROB -I "$TIMELWB" "$TIMEUPB" $EVDNCE $ERRORB $dft 1>&2
+			echo command: dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $MINMAXPROB -I "$TIMELWB" "$TIMEUPB" $EVDNCE $ERRORB $MODUL $dft 1>&2
 			echo "" 1>&2
 		fi
-		dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $MINMAXPROB -I "$TIMELWB" "$TIMEUPB" $EVDNCE $ERRORB $dft
+		dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $MINMAXPROB -I "$TIMELWB" "$TIMEUPB" $EVDNCE $ERRORB $MODUL $dft
 	fi
 fi
 

@@ -96,6 +96,11 @@ then
   MINMAXTIME=$MINMAXPROB
 fi
 
+if [ "X$MODULARIZE" != "" ]
+then
+	MODULARIZE="-M";
+fi
+
 PLOTSTYLE=linespoints
 if [ "X$OMITPOINTS" = "Xomitpoints" ]
 then
@@ -245,12 +250,12 @@ then
   # NOTE here we invoke dftcalc with -p to make the MTTF value appear on the screen too
   # without -p we would only get the plot
   if [ "X$VERBOSE" != "X--verbose=-1" ]; then
-    echo command: dftcalc $MODELCHECKER -R --no-color $COLOR  -q $VERBOSE $MINMAXTIME -m $EVDNCE $ERRORB -c $tmpcsv -p $dft 1>&2
+    echo command: dftcalc $MODELCHECKER -R --no-color $COLOR  -q $VERBOSE $MINMAXTIME -m $EVDNCE $ERRORB $MODULARIZE -c $tmpcsv -p $dft 1>&2
     echo "" 1>&2
   fi
 
   mttf=0
-  if dftcalc $MODELCHECKER -R --no-color $COLOR  -q $VERBOSE $MINMAXTIME -m $EVDNCE $ERRORB -c $tmpcsv -p $dft 1>&2
+  if dftcalc $MODELCHECKER -R --no-color $COLOR  -q $VERBOSE $MINMAXTIME -m $EVDNCE $ERRORB $MODULARIZE -c $tmpcsv -p $dft 1>&2
   then
     #echo "dftcalc finished" 1>&2
     #date 1>&2
@@ -265,10 +270,10 @@ then
   then
       if [ "X$VERBOSE" != "X--verbose=-1" ]; then
         echo "" 1>&2
-        echo command: dftcalc  -R --no-color $COLOR  -q $VERBOSE --no-nd-warning --imca $MINMAXPROB -t "$mttf" $EVDNCE $ERRORB -c $tmppntcsv $dft 1>&2
+        echo command: dftcalc  -R --no-color $COLOR  -q $VERBOSE --no-nd-warning --imca $MINMAXPROB -t "$mttf" $EVDNCE $ERRORB $MODULARIZE -c $tmppntcsv $dft 1>&2
         echo "" 1>&2
       fi
-      if dftcalc  -R --no-color $COLOR  -q $VERBOSE --no-nd-warning --imca $MINMAXPROB -t "$mttf" $EVDNCE $ERRORB -c $tmppntcsv $dft 1>&2
+      if dftcalc  -R --no-color $COLOR  -q $VERBOSE --no-nd-warning --imca $MINMAXPROB -t "$mttf" $EVDNCE $ERRORB $MODULARIZE -c $tmppntcsv $dft 1>&2
       then
         #echo "dftcalc finished" 1>&2
         #date 1>&2
@@ -315,10 +320,10 @@ then
   #date 1>&2
   if [ "X$VERBOSE" != "X--verbose=-1" ]; then
     echo "" 1>&2
-    echo command: dftcalc -R --no-color $COLOR -q $VERBOSE --no-nd-warning --imca $MINMAXPROB -i 0 "$upb" "$step" $EVDNCE $ERRORB -c $tmpcurvecsv $dft 1>&2
+    echo command: dftcalc -R --no-color $COLOR -q $VERBOSE --no-nd-warning --imca $MINMAXPROB -i 0 "$upb" "$step" $EVDNCE $ERRORB $MODULARIZE -c $tmpcurvecsv $dft 1>&2
     echo "" 1>&2
   fi
-  if dftcalc -R --no-color $COLOR -q $VERBOSE --no-nd-warning --imca $MINMAXPROB -i 0 "$upb" "$step" $EVDNCE $ERRORB -c $tmpcurvecsv $dft 1>&2
+  if dftcalc -R --no-color $COLOR -q $VERBOSE --no-nd-warning --imca $MINMAXPROB -i 0 "$upb" "$step" $EVDNCE $ERRORB $MODULARIZE -c $tmpcurvecsv $dft 1>&2
   then
     #echo "dftcalc finished" 1>&2
     #date 1>&2
@@ -343,10 +348,10 @@ then
 elif  [ X$COMPUTATION = "Xunreliability" ]
 then
   if [ "X$VERBOSE" != "X--verbose=-1" ]; then
-    echo command: dftcalc $MODELCHECKER -R  --no-color $COLOR -q $VERBOSE  $EVDNCE $ERRORB -c $tmpcsv "$@" $dft 1>&2
+    echo command: dftcalc $MODELCHECKER -R  --no-color $COLOR -q $VERBOSE  $EVDNCE $ERRORB $MODULARIZE -c $tmpcsv "$@" $dft 1>&2
     echo "" 1>&2
   fi
-  if dftcalc $MODELCHECKER -R  --no-color $COLOR -q $VERBOSE  $EVDNCE $ERRORB -c $tmpcsv "$@" $dft 1>&2
+  if dftcalc $MODELCHECKER -R  --no-color $COLOR -q $VERBOSE  $EVDNCE $ERRORB $MODULARIZE -c $tmpcsv "$@" $dft 1>&2
   then
     #echo "dftcalc finished" 1>&2
 
@@ -387,10 +392,10 @@ else
     NOPLOT=1
     echo "" 1>&2
     if [ "X$VERBOSE" != "X--verbose=-1" ]; then
-      echo command: dftcalc $MODELCHECKER -R  --no-color $COLOR -q $VERBOSE $MINMAXPROB -I "$TIMELWB" "$TIMEUPB" -p $EVDNCE $ERRORB $dft 1>&2
+      echo command: dftcalc $MODELCHECKER -R  --no-color $COLOR -q $VERBOSE $MINMAXPROB -I "$TIMELWB" "$TIMEUPB" -p $EVDNCE $ERRORB $MODULARIZE $dft 1>&2
       echo "" 1>&2
     fi
-    if dftcalc $MODELCHECKER -R  --no-color $COLOR -q $VERBOSE $MINMAXPROB -I "$TIMELWB" "$TIMEUPB" -p $EVDNCE $ERRORB $dft 1>&2
+    if dftcalc $MODELCHECKER -R  --no-color $COLOR -q $VERBOSE $MINMAXPROB -I "$TIMELWB" "$TIMEUPB" -p $EVDNCE $ERRORB $MODULARIZE $dft 1>&2
     then
       :
     else

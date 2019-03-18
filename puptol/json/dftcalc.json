@@ -42,6 +42,10 @@
           "Type": "string"
         },
         {
+          "Name": "modularize",
+          "Type": "string"
+        },
+        {
           "Name": "mttfplotupb",
           "Type": "string"
         },
@@ -144,6 +148,74 @@
             }
           ]
         },
+	{
+		"Type": "group",
+		"Class": "modelchecker",
+		"NewPage": "false",
+		"Items": [
+			{
+				"Type": "string",
+				"Value": "Model checker: ",
+				"NewPage": "false"
+			},
+			{
+				"Type": "radio",
+				"Title": "Storm",
+				"Label": "Storm",
+				"Name": "modelchecker",
+				"Checked": "1",
+				"Value": "--storm",
+				"NewPage": "false",
+				"ParamName": "modelchecker"
+			},
+			{
+				"Type": "radio",
+				"Title": "MRMC",
+				"Label": "MRMC",
+				"Name": "modelchecker",
+				"Value": "--mrmc",
+				"NewPage": "false",
+				"ParamName": "modelchecker"
+			},
+			{
+				"Type": "radio",
+				"Title": "IMRMC",
+				"Label": "IMRMC",
+				"Name": "modelchecker",
+				"Value": "--imrmc",
+				"NewPage": "false",
+				"ParamName": "modelchecker"
+			},
+			{
+				"Type": "radio",
+				"Title": "IMRMC (exact mode)",
+				"Label": "IMRMC Exact",
+				"Name": "modelchecker",
+				"Value": "--exact",
+				"NewPage": "false",
+				"ParamName": "modelchecker"
+			},
+			{
+				"Type": "radio",
+				"Title": "IMCA",
+				"Label": "IMCA",
+				"Name": "modelchecker",
+				"Value": "--imca",
+				"NewPage": "false",
+				"ParamName": "modelchecker"
+			}
+		]
+	},
+	{
+		"Type": "checkbox",
+		"Title": "Modularization of static roots.",
+		"Label": "Enable modularization",
+		"Name": "modularize",
+		"Value": "modularize",
+		"Checked": "1",
+		"NewPage": "false",
+		"ParamName": "modularize"
+	},
         {
           "Type": "group",
           "NewPage": "false",
@@ -156,6 +228,7 @@
                   "Type": "radio",
                   "Title": "Compute unreliability in interval [0,T]",
                   "Label": "Compute unreliability in interval [0,T],",
+		  "Checked": "1",
                   "Name": "computation",
                   "Value": "unreliability",
                   "NewPage": "false",
@@ -184,6 +257,7 @@
                               "Type": "radio",
                               "Title": "list of values",
                               "Label": "list of values",
+			      "Checked": "1",
                               "Name": "mtimessel",
                               "Value": "valuelist",
                               "NewPage": "false",
@@ -194,6 +268,7 @@
                               "Title": "Mission times as list of values",
                               "Name": "mtv",
                               "NewPage": "false",
+			      "Value": "1",
                               "ParamName": "mtimesvalues"
                             }
                           ]
@@ -237,63 +312,6 @@
                               "ParamName": "mtimesstep"
                             }
                           ]
-                        }
-                      ]
-                    },
-                    {
-                      "Type": "group",
-                      "Class": "modelchecker",
-                      "NewPage": "false",
-                      "Items": [
-                        {
-                          "Type": "string",
-                          "Value": "Model checker: ",
-                          "NewPage": "false"
-                        },
-                        {
-                          "Type": "radio",
-                          "Title": "Storm",
-                          "Label": "Storm",
-                          "Name": "modelchecker",
-                          "Value": "--storm",
-                          "NewPage": "false",
-                          "ParamName": "modelchecker"
-                        },
-                        {
-                          "Type": "radio",
-                          "Title": "MRMC",
-                          "Label": "MRMC",
-                          "Name": "modelchecker",
-                          "Value": "--mrmc",
-                          "NewPage": "false",
-                          "ParamName": "modelchecker"
-                        },
-                        {
-                          "Type": "radio",
-                          "Title": "IMRMC",
-                          "Label": "IMRMC",
-                          "Name": "modelchecker",
-                          "Value": "--imrmc",
-                          "NewPage": "false",
-                          "ParamName": "modelchecker"
-                        },
-                        {
-                          "Type": "radio",
-                          "Title": "IMRMC (exact mode)",
-                          "Label": "IMRMC Exact",
-                          "Name": "modelchecker",
-                          "Value": "--exact",
-                          "NewPage": "false",
-                          "ParamName": "modelchecker"
-                        },
-                        {
-                          "Type": "radio",
-                          "Title": "IMCA",
-                          "Label": "IMCA",
-                          "Name": "modelchecker",
-                          "Value": "--imca",
-                          "NewPage": "false",
-                          "ParamName": "modelchecker"
                         }
                       ]
                     }
@@ -909,6 +927,15 @@
                 {
                   "Type": "param",
                   "ParamName": "at"
+                }
+              ]
+            },
+            {
+              "Name": "MODULARIZE",
+              "Value": [
+                {
+                  "Type": "param",
+                  "ParamName": "modularize"
                 }
               ]
             },
