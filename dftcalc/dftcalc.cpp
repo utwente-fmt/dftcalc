@@ -1504,6 +1504,7 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 	} else if (checker == IMRMC) {
 		bcg2tralabExec = File(dft2lntRoot+"/bin/bcg2tralab");
 	}
+	maxprogExec = File(dft2lntRoot+"/bin/maxprog");
 
 	cadpRoot = getCADPRoot();
 

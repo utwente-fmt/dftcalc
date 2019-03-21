@@ -28,7 +28,7 @@ static std::string getOptions(Query q) {
 	else
 		ret = "-max";
 	if (q.errorBoundSet)
-		ret = " -e " + q.errorBound.str();
+		ret += " -e " + q.errorBound.str();
 	switch (q.type) {
 	case EXPECTEDTIME:
 		ret += " -et ";
@@ -169,6 +169,9 @@ bool parseOutputFile(File file, Query q,
 		} else {
 			p = prob;
 		}
+		char *prob_v = strchr(prob, ' ');
+		if (prob_v)
+			prob_e = prob_v;
 		std::string prob_res(prob, prob_e - prob);
 		r_prob  = sscanf(prob,"%lf",&tmp);
 

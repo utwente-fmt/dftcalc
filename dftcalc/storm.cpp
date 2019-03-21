@@ -33,6 +33,8 @@ std::string StormRunner::getCommandOptions(Query q)
 			ret += " --exact ";
 		}
 	}
+	if (q.type == STEADY && !runExact)
+		ret += " --to-nondet ";
 	return ret;
 }
 
@@ -113,11 +115,20 @@ std::vector<DFT::DFTCalculationResultItem> StormRunner::analyze(std::vector<Quer
 		                  + getCommandOptions(q)
 		                  + " --prop \"" + qText + "\""
 		                  + " --jani \"" + janiFile.getFileRealPath()+ "\"";
-		std::string of = exec->runCommand(cmd, stormExec.getFileName());
-		if (of == "")
-			return ret; /* Exec should have reported already */
 		DFT::DFTCalculationResultItem it(q);
-		auto result = readOutputFile(of, it);
+		int result;
+		std::string of;
+		if (q.type == TIMEBOUND && q.upperBound == 0) {
+			/* Special case since Storm fails to compute otherwise. */
+			result = 0;
+		} else {
+			of = exec->runCommand(cmd, stormExec.getFileName());
+			if (of == "") {
+				messageFormatter->reportError("Could not calculate.");
+				return ret;
+			}
+			result = readOutputFile(of, it);
+		}
 		if (result == -1) {
 			messageFormatter->reportError("Could not calculate.");
 			return ret;
