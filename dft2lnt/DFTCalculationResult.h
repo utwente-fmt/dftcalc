@@ -13,25 +13,31 @@
 #include "Shell.h"
 #include "yaml-cpp/yaml.h"
 #include "decnumber.h"
+#include "query.h"
 #include "CADP.h"
 
 namespace DFT {
-
-        class DFTCalculationResultItem {
-        public:
-                std::string missionTime;
-                std::string mrmcCommand;
+class DFTCalculationResultItem {
+	public:
+		std::string missionTime;
+		std::string mrmcCommand;
+		Query query;
+		std::string exactString;
 		decnumber<> lowerBound, upperBound;
-		DFTCalculationResultItem() : lowerBound(0), upperBound(1) { };
+		bool exactBounds;
+		DFTCalculationResultItem() : lowerBound(0), upperBound(1) { }
+		DFTCalculationResultItem(Query query) : lowerBound(0), upperBound(1) {
+			mrmcCommand = query.toString();
+			missionTime = query.upperBound.str();
+		}
 		std::string valStr(size_t deltaDigits = 3) const;
-        };
+};
 
-	class DFTCalculationResult {
+class DFTCalculationResult {
 	public:
 		Shell::RunStatistics stats;
 		std::vector<DFTCalculationResultItem> failProbs;
-	};
-
+};
 } // Namespace: DFT
 
 const YAML::Node& operator>>(const YAML::Node& node, DFT::DFTCalculationResult& result);

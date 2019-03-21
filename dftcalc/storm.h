@@ -12,26 +12,22 @@
 
 #include "FileSystem.h"
 #include "decnumber.h"
+#include "checker.h"
 #include <vector>
 
-class Storm {
-	bool i_isCalculated;
-	decnumber<> i_result;
+class StormRunner : public Checker{
+private:
+	const File janiFile;
+	const File stormExec;
+	std::string getCommandOptions(Query q);
 public:
-	/**
-	 * Read the result from the specified STORM output file.
-	 * Obtain the result with getResult().
-	 * @param file The STORM output file in which the result can be found.
-	 */
-	Storm(const File &file);
+	bool runExact;
+	StormRunner(MessageFormatter *mf, DFT::CommandExecutor *exec,
+	            File stormExec, File model)
+		:Checker(mf, exec), stormExec(stormExec), janiFile(model), runExact(0)
+	{}
 
-	bool hasResult() {return i_isCalculated;}
-	
-	/**
-	 * Return the result previously read with readOutputFile().
-	 * @return The result of the calculation.
-	 */
-	decnumber<> getResult();
+	virtual std::vector<DFT::DFTCalculationResultItem> analyze(vector<Query> queries);
 };
 
 #endif

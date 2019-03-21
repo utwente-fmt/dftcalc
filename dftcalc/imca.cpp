@@ -11,6 +11,7 @@
 
 #include "FileSystem.h"
 #include "FileWriter.h"
+#include "MessageFormatter.h"
 #include <fstream>
 #include <vector>
 #include <stdio.h>
@@ -18,19 +19,51 @@
 #include <stdlib.h>
 #include <iostream>
 
-IMCAParser::IMCAParser(const File file) :
-		i_isCalculated(false),
-		result(-1)
-{
-	if(!FileSystem::exists(file)) {
-		return;
-	}
+using std::vector;
 
+static std::string getOptions(Query q) {
+	std::string ret;
+	if (q.min)
+		ret = "-min";
+	else
+		ret = "-max";
+	if (q.errorBoundSet)
+		ret = " -e " + q.errorBound.str();
+	switch (q.type) {
+	case EXPECTEDTIME:
+		ret += " -et ";
+		break;
+	case TIMEBOUND:
+		ret += " -tb -T " + q.upperBound.str();
+		if (q.lowerBound != 0)
+			ret += " -F " + q.lowerBound.str();
+		if (q.step != -1)
+			ret += " -i " + q.step.str();
+		break;
+	case UNBOUNDED:
+		ret += " -ub";
+		break;
+	default:
+		throw std::logic_error("Unsupported query type for IMCA.");
+	}
+	return ret;
+}
+
+bool parseOutputFile(File file, Query q,
+                     vector<DFT::DFTCalculationResultItem> &ret)
+{
+	/* This function assumes that the answer to only the given query is
+	 * in the result file. It is entirely possible in IMCA to have
+	 * multiple queries in one file, and if we ever need to include that
+	 * optimization, we need to change this parser.
+	 */
 	FILE* fp;
 	long len;
 	char* buffer;
 
 	fp = fopen(file.getFileRealPath().c_str(),"rb");
+	if (!fp)
+		return 0;
 	fseek(fp,0,SEEK_END);
 	len = ftell(fp)+1;
 	fseek(fp,0,SEEK_SET);
@@ -38,6 +71,12 @@ IMCAParser::IMCAParser(const File file) :
 	memset(buffer, 0, len);
 	fread(buffer,len,1,fp); //read into buffer
 	fclose(fp);
+
+	decnumber<> margin = q.errorBound;
+	if (q.errorBoundSet)
+		margin *= 0.5;
+	else
+		margin = decnumber<>("1e-6") * 0.5;
 
 	//fprintf(stdout, "imca buffer info (%ld,%ld):\n", len, n);
 	//fprintf(stdout, "imca buffer\n%*s\n", (int)n, buffer);
@@ -53,7 +92,6 @@ IMCAParser::IMCAParser(const File file) :
 	char ub_max_needle[] = "Maximal unbounded reachability: ";
 	char ub_min_needle[] = "Minimal unbounded reachability: ";
 	char *ub_needles[] = { ub_max_needle, ub_min_needle, 0 };
-	int found = 0;
 	for(int i=0; et_needles[i] != 0; i++) {
 		if((k=strstr(p, et_needles[i])) != 0) {
 			char *et = k + strlen(et_needles[i]);
@@ -67,18 +105,17 @@ IMCAParser::IMCAParser(const File file) :
 			std::string res(et, et_e - et);
 			double et_res;
                 	int r_et  = sscanf(et,"%lf",&et_res);
-			if (r_et ==  1){
+			if (r_et ==  1) {
+				DFT::DFTCalculationResultItem it(q);
 				decnumber<> dres(res);
-				results.push_back(std::pair<std::string,decnumber<>>("?",dres));
-				i_isCalculated = true;
-				found = 1;
-				break;
+				it.exactBounds = 0;
+				it.lowerBound = dres - margin;
+				it.upperBound = dres + margin;
+				ret.push_back(it);
+				free(buffer);
+				return 1;
 			}
 		}
-	}
-	if (found) {
-		free(buffer);
-		return;
 	}
 
 	for(int i=0; ub_needles[i] != 0; i++) {
@@ -95,19 +132,19 @@ IMCAParser::IMCAParser(const File file) :
 			double ub_res;
 			int r_ub  = sscanf(ub,"%lf",&ub_res);
 			if (r_ub ==  1){
+				DFT::DFTCalculationResultItem it(q);
 				decnumber<> dres(res);
-				results.push_back(std::pair<std::string,decnumber<>>("?",dres));
-				i_isCalculated = true;
-				found = 1;
-				break;
+				it.exactBounds = 0;
+				it.lowerBound = dres - margin;
+				it.upperBound = dres + margin;
+				ret.push_back(it);
+				free(buffer);
+				return 1;
 			}
 		}
 	}
-	if (found) {
-		free(buffer);
-		return;
-	}
 
+	bool found = 0;
 	p = buffer;
 	while((k= strstr(p, prob_needle)) != 0) {
 		// find start of line, by looking for end of previous line (either '\n' or '\0')
@@ -156,25 +193,46 @@ IMCAParser::IMCAParser(const File file) :
 
 		decnumber<> dres(prob_res);
 		if (r_tb ==  1 && r_prob == 1){
-			results.push_back(std::pair<std::string,decnumber<>>(tb_res, dres));
-			i_isCalculated = true;
+			Query qt = q;
+			qt.lowerBound = qt.upperBound = decnumber<>(tb_res);
+			DFT::DFTCalculationResultItem it(qt);
+			it.exactBounds = 0;
+			it.lowerBound = dres - margin;
+			it.upperBound = dres + margin;
+			ret.push_back(it);
 		} else if (r_prob == 1){
-			results.push_back(std::pair<std::string,decnumber<>>("?",dres));
-			i_isCalculated = true;
+			DFT::DFTCalculationResultItem it(q);
+			it.exactBounds = 0;
+			it.lowerBound = dres - margin;
+			it.upperBound = dres + margin;
+			ret.push_back(it);
 		}
+		found = 1;
 	}
 
 	free(buffer);
-	return;
+	return found;
 }
 
-decnumber<> IMCAParser::getResult() {
-	if(results.size()<1) {
-		return decnumber<>(-1);
+std::vector<DFT::DFTCalculationResultItem> IMCARunner::analyze(vector<Query> queries)
+{
+	std::vector<DFT::DFTCalculationResultItem> ret;
+	messageFormatter->reportAction("Calculating probability with IMCA...",DFT::VERBOSITY_FLOW);
+	for(Query query: queries) {
+		// imca -> calculation
+		std::string cmd = imcaExec.getFilePath()
+		+ " " + modelFile.getFileRealPath()
+		+ " " + getOptions(query);
+
+		std::string out = exec->runCommand(cmd, "imca");
+		if (out == "")
+			return ret;
+
+		File outFile(out);
+		if (!parseOutputFile(outFile, query, ret)) {
+			messageFormatter->reportError("Could not calculate");
+			return ret;
+		}
 	}
-	return results[0].second;
-}
-
-std::vector<std::pair<std::string,decnumber<>>> IMCAParser::getResults() {
-	return results;
+	return ret;
 }

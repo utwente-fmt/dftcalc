@@ -561,15 +561,11 @@
               "Values": [
                 {
                   "Title": "next",
-                  "Value": "smart-inspection"
+                  "Value": "next"
                 },
                 {
                   "Title": "stable",
                   "Value": "master"
-                },
-                {
-                  "Title": "experimental",
-                  "Value": "merge"
                 }
               ]
             },

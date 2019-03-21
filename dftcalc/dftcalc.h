@@ -14,21 +14,32 @@
 #include <unordered_map>
 #include <vector>
 #include "DFTCalculationResult.h"
+#include "executor.h"
 
 namespace DFT {
+	extern const int VERBOSITY_FLOW;
+
 	enum checker {STORM, MRMC, IMRMC, IMCA, EXP_ONLY};
 	enum converter {SVL, DFTRES};
 
 	class DFTCalc {
 	public:
 		static const int VERBOSITY_SEARCHING;
+
+		DFTCalc(MessageFormatter *mf)
+			:messageFormatter(mf), exec(nullptr)
+		{}
+
+		~DFTCalc()
+		{
+		}
 		
 	private:
 		
 		/// The -T<buildDot> argument passed to dot
 		std::string buildDot;
 		
-		MessageFormatter* messageFormatter;
+		MessageFormatter * const messageFormatter;
 		std::string dft2lntRoot;
 		std::string coralRoot;
 		std::string imcaRoot;
@@ -48,55 +59,28 @@ namespace DFT {
 		File dotExec;
 		File dftresJar;
 		
-		std::string getCoralRoot(MessageFormatter* messageFormatter);
-		std::string getImcaRoot(MessageFormatter* messageFormatter);
-		std::string getRoot(MessageFormatter* messageFormatter);
-		std::string getCADPRoot(MessageFormatter* messageFormatter);
-		File getDftresJar(MessageFormatter* messageFormatter);
+		std::string getCoralRoot();
+		std::string getImcaRoot();
+		std::string getRoot();
+		std::string getCADPRoot();
+		File getDftresJar();
 
 		std::vector<std::string> evidence;
 		std::unordered_map<std::string, DFTCalculationResult> cachedResults;
-
-		std::string runCommand(std::string command,
-		                       std::string cwd,
-		                       std::string baseFile,
-		                       std::string cmdName,
-		                       int commandNum,
-			               std::vector<File> outputFiles);
-
-		std::string runCommand(std::string command,
-		                       std::string cwd,
-		                       std::string baseFile,
-		                       std::string cmdName,
-		                       int commandNum,
-				       File outputFile)
-		{
-			std::vector<File> outputs;
-			outputs.push_back(outputFile);
-			return runCommand(command, cwd, baseFile, cmdName,
-			                  commandNum, outputs);
-		}
-
-		std::string runCommand(std::string command,
-		                       std::string cwd,
-		                       std::string baseFile,
-		                       std::string cmdName,
-		                       int commandNum)
-		{
-			return runCommand(command, cwd, baseFile, cmdName,
-			                  commandNum, std::vector<File>());
-		}
+		CommandExecutor *exec;
 
 		int checkModule(const bool reuse,
 		                const std::string& cwd,
 		                const File& dftOriginal,
-		                const std::vector<std::pair<std::string,std::string>>& calcCommands,
+		                const std::vector<Query> &queries,
 		                enum DFT::checker useChecker,
 		                enum DFT::converter useConverter,
 		                bool warnNonDeterminism,
 		                DFT::DFTCalculationResult &ret,
 		                bool expOnly,
 		                std::string &module);
+
+		bool findInPath(std::string tool, File &ret);
 	public:
 		/**
 		 * Verifies all the needed tools for calculation are installed.
@@ -105,14 +89,6 @@ namespace DFT {
 		 * @return false: all tools found OK, true: error
 		 */
 		bool checkNeededTools(DFT::checker checker, converter conv);
-		
-		/**
-		 * Sets the MessageFormatter to be used by this DFTCalc instance.
-		 * @param messageFormatter The MessageFormatter to be used by this DFTCalc instance
-		 */
-		void setMessageFormatter(MessageFormatter* messageFormatter) {
-			this->messageFormatter = messageFormatter;
-		}
 		
 		/**
 		 * Sets the image output format to be passed to dot as the -T argument.
@@ -124,18 +100,11 @@ namespace DFT {
 		}
 		
 		/**
-		 * Prints the contents of the specified File to the messageFormatter specified
-		 * with setMessageFormatter().
-		 * @param file The file to print.
-		 */
-		void printOutput(const File& file, int status);
-		
-		/**
 		 * Calculates the specified DFT file with modularization.
 		 * @param reuse Whether to reuse intermediate files.
 		 * @param cwd The directory to work in.
 		 * @param dftOriginal The DFT to analyze.
-		 * @param calcCommands the Command to model check.
+		 * @param queries The queries to model check.
 		 * @param useChecker Which model checker to use.
 		 * @param useConverter Which converter to use in
 		 * 	convertion from BCG to model checker format.
@@ -147,7 +116,7 @@ namespace DFT {
 		int calcModular(const bool reuse,
 		                const std::string& cwd,
 		                const File& dftOriginal,
-		                const std::vector<std::pair<std::string,std::string>>& calcCommands,
+		                const std::vector<Query> &queries,
 		                enum DFT::checker useChecker,
 		                enum DFT::converter useConverter,
 		                bool warnNonDeterminism,
@@ -158,7 +127,7 @@ namespace DFT {
 		 * @param reuse Whether to reuse intermediate files.
 		 * @param cwd The directory to work in.
 		 * @param dftOriginal The DFT to analyze.
-		 * @param calcCommands the Command to model check.
+		 * @param queries The queries to model check.
 		 * @param useChecker Which model checker to use.
 		 * @param useConverter Which converter to use in
 		 * 	convertion from BCG to model checker format.
@@ -172,7 +141,7 @@ namespace DFT {
 		int calculateDFT(const bool reuse,
 		                 const std::string& cwd,
 		                 const File& dftOriginal,
-		                 const std::vector<std::pair<std::string,std::string>>& calcCommands,
+		                 const std::vector<Query> &queries,
 		                 enum DFT::checker useChecker,
 		                 enum DFT::converter useConverter,
 		                 bool warnNonDeterminism,

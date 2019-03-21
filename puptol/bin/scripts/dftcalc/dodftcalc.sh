@@ -111,23 +111,7 @@ fi
 
 dft=$canonical.dft
 
-#echo COMPUTATION $COMPUTATION 1>&2
-#echo arguments "$@" $tmpdft 1>&2
-#for a in "$@"
-#do
-#	echo arg: "$a" 1>&2
-#done
-#echo PATH $PATH 1>&2
-#echo env:  1>&2
-#env  1>&2
-
-# $dftcalc "$@" $tmpdft
-# $dftcalc --no-color -v -v -v -v -v -v -p $tmpdft
-#$dftcalc --no-color -v -v -v -v -v -v -p "$@" $tmpdft
-#$dftcalc --no-color -v -v -v -p "$@" $tmpdft
-
 MODUL="";
-echo "Mod: $MODULARIZE"
 if [ "$MODULARIZE" != "" ]; then
 	MODUL="-M ";
 fi
@@ -138,8 +122,6 @@ if [ X$COMPUTATION = Xunreliability ]; then
 		echo "" 1>&2
 	fi
 	dftcalc $MODELCHECKER $ATTACK -R --no-color $COLOR -q $VERBOSE -p $EVDNCE $ERRORB $MODUL "$@" $dft
-	#dftcalc -R --no-color -q -p $ERRORB "$@" $dft
-	#dftcalc -R --no-color -q --imca -p "$@" $dft
 fi
 if [ X$COMPUTATION = Xmttf ]; then
 	if [ "X$VERBOSE" != "X--verbose=-1" ]; then
@@ -147,18 +129,6 @@ if [ X$COMPUTATION = Xmttf ]; then
 		echo "" 1>&2
 	fi
 	dftcalc $MODELCHECKER -R --no-color $COLOR -q $VERBOSE -p $MINMAXTIME -m $EVDNCE $ERRORB $MODUL $dft
-	#echo "" 1>&2
-	#echo "" 1>&2
-	#echo "memrec statistics:" 1>&2
-	#cat $tmpmemrec 1>&2
-	#echo "end of memrec statistics" 1>&2
-
-#	if $dftcalc -R  --no-color -q  --imca -p -f "-et -max"  -c $tmpcsv $dft 1>&2
-#	then
-#		cat $tmpcsv
-#	else
-#		echo "internal error: could not compute mean time to to failure" 1>&2
-#	fi
 fi
 if [ "$COMPUTATION" = "steadyState" ]; then
 	if [ "X$VERBOSE" != "X--verbose=-1" ]; then

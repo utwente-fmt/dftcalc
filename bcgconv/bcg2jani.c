@@ -54,9 +54,9 @@ int main(int argc, char* argv[])
 	         "\t\"name\": \"from_%s\",\n"
 	         "\t\"type\": \"ma\",\n"
 		 "\t\"actions\": [],\n"
-	         "\t\"variables\": [{\"name\": \"failed\", "
-	                            "\"type\": \"bool\", "
-	                            "\"initial-value\": false}],\n",
+	         "\t\"variables\": [{\"name\": \"marked\", "
+	                            "\"type\": {\"kind\":\"bounded\",\"base\":\"int\",\"upper-bound\":1}, "
+	                            "\"initial-value\": 0}],\n",
 	         argv[1]);
 
 	bcg_nb_states = BCG_OT_NB_STATES(bcg_graph);
@@ -126,11 +126,11 @@ int main(int argc, char* argv[])
 				        "\t\t\t\t{\"location\": \"l%"PRIuMAX"\"\n",
 				        (uintmax_t) bcg_s1, (uintmax_t) s2);
 				if (!strcmp(nm, faillabel)) {
-					fprintf(jani, ", \"assignments\": [{\"ref\": \"failed\", "
-					                                   "\"value\": true}]");
+					fprintf(jani, ", \"assignments\": [{\"ref\": \"marked\", "
+					                                   "\"value\": 1}]");
 				} else if (repairlabel && !strcmp(nm, repairlabel)) {
-					fprintf(jani, ", \"assignments\": [{\"ref\": \"failed\", "
-					                                "\"value\": false}]");
+					fprintf(jani, ", \"assignments\": [{\"ref\": \"marked\", "
+					                                "\"value\": 0}]");
 				} else {
 					fprintf(stderr, "Unknown label: %s\n", nm);
 					fprintf(stderr, "Repair label: %s\n", repairlabel);

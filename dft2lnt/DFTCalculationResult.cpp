@@ -31,6 +31,24 @@ static std::string round(std::string value, size_t digits, bool roundUp)
 }
 
 std::string DFT::DFTCalculationResultItem::valStr(size_t deltaDigits) const {
+	if (exactString != "")
+		return exactString;
+	if (!exactBounds) {
+		decnumber<> midVal = (lowerBound + upperBound) * 0.5;
+		std::string middle = midVal.str();
+		std::string exp = "";
+		double margin = (double)(upperBound - lowerBound);
+		if (middle.find('e') != std::string::npos) {
+			exp = middle.substr(middle.find('e'));
+			middle = middle.substr(0, middle.find('e'));
+		}
+		size_t wantedDigits = -std::log10(margin / (double)midVal);
+		size_t dot = middle.find('.');
+		if (dot < wantedDigits)
+			wantedDigits++;
+		middle = middle.substr(0, wantedDigits);
+		return middle + exp + " (" + lowerBound.str() + " - " + upperBound.str() + ")";
+	}
 	if (lowerBound == upperBound)
 		return lowerBound.str();
 	std::string lower = lowerBound.str(), upper = upperBound.str();

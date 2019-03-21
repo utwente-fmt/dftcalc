@@ -410,15 +410,16 @@ public:
 			 * (and be exact) in base-2 floats (i.e.,
 			 * IEEE-754)
 			 */
-			decnumber<BT, ET> f(1);
+			decnumber<BT, ET> f(5), h(5);
 			f.exponent = -1;
+			h.exponent = -1;
 			while (frac) {
 				if (frac >= 0.5) {
 					*this += f;
 					frac -= 0.5;
 				}
 				frac *= 2;
-				f.exponent -= 1;
+				f *= h;
 			}
 		}
 		return *this;
@@ -651,6 +652,8 @@ public:
 			return true;
 		if (other.num_blocks == 0 && num_blocks == 0)
 			return true;
+		if (other.num_blocks != num_blocks)
+			return false;
 		if (other.sign != sign)
 			return false;
 		if (other.exponent != exponent)
@@ -660,6 +663,35 @@ public:
 
 	bool operator!=(const decnumber<BT, ET> &other) const {
 		return !(*this == other);
+	}
+
+	bool operator<(const decnumber<BT, ET> &other) const {
+		if (&other == this)
+			return false;
+		if (other.num_blocks == 0 && num_blocks == 0)
+			return false;
+		if (num_blocks == 0)
+			return other.sign > 0;
+		if (other.num_blocks == 0)
+			return sign < 0;
+		if (other.sign != sign)
+			sign < other.sign;
+		if (other.exponent != exponent)
+			return exponent < other.exponent;
+		if (other.num_blocks != num_blocks)
+			return num_blocks < other.num_blocks;
+		for (size_t i = 0; i < num_blocks; i++)
+			if (blocks[i] != other.blocks[i])
+				return blocks[i] < other.blocks[i];
+		return 0; /* Equal */
+	}
+
+	bool operator<=(const decnumber<BT, ET> &other) const {
+		return (*this == other) || (*this < other);
+	}
+
+	bool operator>(const decnumber<BT, ET> &other) const {
+		return !(*this <= other);
 	}
 
 	std::string str() const {

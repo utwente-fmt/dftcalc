@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <iostream>
 #include <fstream>
+#include <memory>
 #include <limits.h>
 #include <CADP.h>
 
@@ -42,9 +43,8 @@ using namespace std;
 
 const int DFT::DFTCalc::VERBOSITY_SEARCHING = 2;
 
-const int VERBOSITY_FLOW = 1;
+const int DFT::VERBOSITY_FLOW = 1;
 const int VERBOSITY_DATA = 1;
-const int VERBOSITY_EXECUTIONS = 2;
 
 void print_help(MessageFormatter* messageFormatter, string topic="") {
 	if(topic.empty()) {
@@ -144,7 +144,7 @@ void print_version(MessageFormatter* messageFormatter) {
 	messageFormatter->flush();
 }
 
-File DFT::DFTCalc::getDftresJar(MessageFormatter* messageFormatter) {
+File DFT::DFTCalc::getDftresJar() {
 	char* root = getenv((const char*)"DFTRES");
 	std::string dftresRoot = root?string(root):"";
 
@@ -169,7 +169,7 @@ File DFT::DFTCalc::getDftresJar(MessageFormatter* messageFormatter) {
 	return ret;
 }
 
-std::string DFT::DFTCalc::getCoralRoot(MessageFormatter* messageFormatter) {
+std::string DFT::DFTCalc::getCoralRoot() {
 	
 	if(!coralRoot.empty()) {
 		return coralRoot;
@@ -202,7 +202,7 @@ end:
 	return coralRoot;
 }
 
-std::string DFT::DFTCalc::getImcaRoot(MessageFormatter* messageFormatter) {
+std::string DFT::DFTCalc::getImcaRoot() {
 	
 	if(!imcaRoot.empty()) {
 		return imcaRoot;
@@ -234,7 +234,7 @@ end:
 	return imcaRoot;
 }
 
-std::string DFT::DFTCalc::getRoot(MessageFormatter* messageFormatter) {
+std::string DFT::DFTCalc::getRoot() {
 	
 	if(!dft2lntRoot.empty()) {
 		return dft2lntRoot;
@@ -291,11 +291,9 @@ end:
 	return dft2lntRoot;
 }
 
-std::string DFT::DFTCalc::getCADPRoot(MessageFormatter* messageFormatter) {
-	
-	
+std::string DFT::DFTCalc::getCADPRoot() {
 	string cadp = CADP::getRoot();
-	
+
 	if(cadp=="") {
 		if(messageFormatter) messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
 	}
@@ -310,24 +308,6 @@ int isReal(string s, double *res) {
 	if (*end)
 		return 0;
 	return 1;
-}
-
-double normalize(double d) {
-	std::string s = std::to_string(d);
-	return atof(s.c_str());
-}
-
-void DFT::DFTCalc::printOutput(const File& file, int status) {
-	std::string* outContents = FileSystem::load(file);
-	if(outContents) {
-		messageFormatter->notifyHighlighted("** OUTPUT of " + file.getFileName() + " **");
-		if (status!=0)
-			messageFormatter->message(*outContents, MessageFormatter::MessageType::Error);
-		else
-			messageFormatter->message(*outContents);
-		messageFormatter->notifyHighlighted("** END output of " + file.getFileName() + " **");
-		delete outContents;
-	}
 }
 
 static bool hasHiddenLabels(const File& file) {
@@ -350,45 +330,10 @@ static bool hasImpossibleLabel(const File& file) {
 	return res;
 }
 
-std::string DFT::DFTCalc::runCommand(std::string command, std::string cwd,
-                                     std::string baseFile, std::string cmdName,
-                                     int commandNum,
-                                     std::vector<File> outputFiles)
-{
-	Shell::SystemOptions sysOps;
-	sysOps.verbosity = VERBOSITY_EXECUTIONS;
-	sysOps.cwd = cwd;
-	sysOps.command = command;
-	std::string base = cwd + "/" + baseFile + "." + std::to_string(commandNum)
-	                 + "." + cmdName;
-	sysOps.reportFile = base + ".report";
-	sysOps.errFile    = base + ".err";
-	sysOps.outFile    = base + ".out";
-	int result = Shell::system(sysOps);
-
-	if(result) {
-		printOutput(File(sysOps.outFile), result);
-		printOutput(File(sysOps.errFile), result);
-		return "";
-	}
-	for (File expected : outputFiles) {
-		if (!FileSystem::exists(expected)) {
-			printOutput(File(sysOps.outFile), result);
-			printOutput(File(sysOps.errFile), result);
-			return "";
-		}
-	}
-	if (messageFormatter->getVerbosity() >= 5) {
-		printOutput(File(sysOps.outFile), result);
-		printOutput(File(sysOps.errFile), result);
-	}
-	return sysOps.outFile;
-}
-
 int DFT::DFTCalc::calcModular(const bool reuse,
                               const std::string& cwd,
                               const File& dftOriginal,
-                              const std::vector<std::pair<std::string,std::string>>& calcCommands,
+                              const std::vector<Query> &queries,
                               enum DFT::checker useChecker,
                               enum DFT::converter useConverter,
                               bool warnNonDeterminism,
@@ -397,6 +342,7 @@ int DFT::DFTCalc::calcModular(const bool reuse,
 {
 	std::string dftFileName = dftOriginal.getFileBase();
 	messageFormatter->notify("Computing `"+dftFileName+"' with modularization");
+	CommandExecutor exec(messageFormatter, cwd, dftFileName);
 
 	File mod = dftOriginal.newWithPathTo(cwd).newWithExtension("mod");
 
@@ -413,13 +359,13 @@ int DFT::DFTCalc::calcModular(const bool reuse,
 		   << " --verbose=" << messageFormatter->getVerbosity()
 		   << " -m \"" << mod.getFileRealPath() << "\""
            << " \"" << dftOriginal.getFileRealPath() << "\"";
-		if (runCommand(ss.str(), cwd, dftFileName, "dft2lntc", 0, mod) == "")
+		if (exec.runCommand(ss.str(), "dft2lntc", mod) == "")
 			return 1;
 	} else {
 		messageFormatter->reportAction("Reusing modules file",VERBOSITY_FLOW);
 	}
 	std::string* modules = FileSystem::load(mod);
-	return checkModule(reuse, cwd, dftOriginal, calcCommands, useChecker,
+	return checkModule(reuse, cwd, dftOriginal, queries, useChecker,
 	                   useConverter, warnNonDeterminism, ret, expOnly,*modules);
 }
 
@@ -487,7 +433,7 @@ static void addVoteResults(std::vector<DFT::DFTCalculationResultItem> &ret,
 int DFT::DFTCalc::checkModule(const bool reuse,
                               const std::string& cwd,
                               const File& dft,
-                              const std::vector<std::pair<std::string,std::string>>& calcCommands,
+                              const std::vector<Query> &queries,
                               enum DFT::checker useChecker,
                               enum DFT::converter useConverter,
                               bool warnNonDeterminism,
@@ -505,16 +451,16 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 	if (module[0] == 'M') {
 		std::string root = module.substr(1, eol - 1);
 		module = module.substr(eol + 1);
-		return calculateDFT(reuse, cwd, dft, calcCommands, useChecker,
+		return calculateDFT(reuse, cwd, dft, queries, useChecker,
 		                    useConverter, warnNonDeterminism, root, ret,
 		                    expOnly);
 	} else if (module[0] == '=') {
 		decnumber<> val(module.substr(1, eol - 1));
 		module = module.substr(eol + 1);
-		for (std::pair<std::string, std::string> cmd : calcCommands) {
-			DFT::DFTCalculationResultItem it;
-			it.missionTime = cmd.second;
-			it.mrmcCommand = cmd.first;
+		std::vector<Query> tmp = queries;
+		expandRangeQueries(tmp);
+		for (Query q : tmp) {
+			DFT::DFTCalculationResultItem it(q);
 			it.lowerBound = it.upperBound = val;
 			ret.failProbs.push_back(it);
 		}
@@ -544,7 +490,7 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 			messageFormatter->reportError("Modules contains too few entries for module.");
 			return 1;
 		}
-		if (checkModule(reuse, cwd, dft, calcCommands, useChecker, useConverter,
+		if (checkModule(reuse, cwd, dft, queries, useChecker, useConverter,
 		                warnNonDeterminism, tmp, expOnly, module))
 			return 1;
 		if (op == '/') {
@@ -592,7 +538,7 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 int DFT::DFTCalc::calculateDFT(const bool reuse,
                                const std::string& cwd,
                                const File& dftOriginal,
-                               const std::vector<std::pair<std::string,std::string>>& calcCommands,
+                               const std::vector<Query> &queries,
                                enum DFT::checker useChecker,
                                enum DFT::converter useConverter,
                                bool warnNonDeterminism,
@@ -646,6 +592,8 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		messageFormatter->reportAction("Preserving generated files",VERBOSITY_FLOW);
 	}
 
+	CommandExecutor exec(messageFormatter, cwd, dftFileName);
+	this->exec = &exec;
 	int com = 0;
 
 	if(!reuse || !FileSystem::exists(dft)) {
@@ -657,7 +605,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		if (root != "")
 			ss << " -r \"" << root << "\"";
         ss << " \""    + dftOriginal.getFileRealPath() + "\"";
-		if (runCommand(ss.str(), cwd, dftFileName, "dft2lntc", com++, dft) == "")
+		if (exec.runCommand(ss.str(), "dft2lntc", dft) == "")
 			return 1;
 	} else {
 		messageFormatter->reportAction("Reusing copy of original dft file",VERBOSITY_FLOW);
@@ -691,7 +639,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		std::vector<File> outputs;
 		outputs.push_back(exp);
 		outputs.push_back(svl);
-		if (runCommand(ss.str(), cwd, dftFileName, "dft2lntc", com++, outputs) == "")
+		if (exec.runCommand(ss.str(), "dft2lntc", outputs) == "")
 			return 1;
 	} else {
 		messageFormatter->reportAction("Reusing DFT to EXP translation result",VERBOSITY_FLOW);
@@ -715,7 +663,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			messageFormatter->reportAction("Building IMC...",VERBOSITY_FLOW);
 			std::string command = svlExec.getFilePath() + " \"" + svl.getFileRealPath() + "\"";
 
-			if (runCommand(command, cwd, dftFileName, "svl", com++, bcg) == "")
+			if (exec.runCommand(command, "svl", bcg) == "")
 				return 1;
 		} else {
 			messageFormatter->reportAction("Reusing IMC",VERBOSITY_FLOW);
@@ -731,7 +679,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		std::string cmd = bcginfoExec.getFilePath() + " -hidden \""
 		                  + bcg.getFileRealPath() + "\"";
 
-		std::string hids = runCommand(cmd, cwd, dftFileName, "bcg_info", com++);
+		std::string hids = exec.runCommand(cmd, "bcg_info");
 		if (hids == "")
 			return 1;
 		if (hasHiddenLabels(File(hids))) {
@@ -750,7 +698,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 					       + " -labels"
 					       + " \""    + bcg.getFileRealPath() + "\"";
 
-		std::string labs = runCommand(cmd, cwd, dftFileName, "bcg_info", com++);
+		std::string labs = exec.runCommand(cmd, "bcg_info");
 		if (labs == "")
 			return 1;
 
@@ -760,24 +708,34 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		} else {
 			messageFormatter->notify("No impossible labels detected.");
 		}
-	} else if (!reuse || !FileSystem::exists(exactTra)) { /* DFTRES Converter to tra/lab */
-		if (useChecker != IMRMC) {
-			messageFormatter->reportError("Internal error: Trying to use DFTRES converter for non-IMRMC checker.");
-			return 1;
-		}
-		messageFormatter->reportAction("Building CTMC...",VERBOSITY_FLOW);
-		std::string cmd = std::string("java -jar ") + dftresJar.getFilePath()
+	} else if (!reuse
+	           || (useChecker == IMRMC && !FileSystem::exists(exactTra))
+	           || (useChecker == STORM && !FileSystem::exists(jani)))
+	{
+		/* DFTRES Converter to tra/lab */
+		std::vector<File> outputs;
+		std::string cmd;
+		if (useChecker == IMRMC) {
+			messageFormatter->reportAction("Building CTMC...",VERBOSITY_FLOW);
+			cmd = std::string("java -jar ") + dftresJar.getFilePath()
 				+ " --export-tralab \""
 				+ tra.newWithExtension("exact").getFileRealPath() + "\" \""
 				+ exp.getFileRealPath() + "\"";
-		std::vector<File> outputs;
-		outputs.push_back(exactTra);
-		outputs.push_back(exactLab);
+			outputs.push_back(exactTra);
+			outputs.push_back(exactLab);
+		} else {
+			messageFormatter->reportAction("Building JANI...",VERBOSITY_FLOW);
+			cmd = std::string("java -jar ") + dftresJar.getFilePath()
+				+ " --export-jani \"" + jani.getFileRealPath() + "\" \""
+				+ exp.getFileRealPath() + "\"";
+			outputs.push_back(jani);
+		}
 
-		if (runCommand(cmd, cwd, dftFileName, "dftres", com++, outputs) == "")
+		if (exec.runCommand(cmd, "dftres", outputs) == "")
 			return 1;
 	}
 
+	std::unique_ptr<Checker> checker;
 
 	switch (useChecker) {
 	case MRMC:
@@ -789,46 +747,13 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			                + " -o \"" + ctmdpi.getFileRealPath() + "\""
                             + " \""    + bcg.getFileRealPath() + "\"";
 
-			if (runCommand(cmd, cwd, dftFileName, "imc2ctmdpi", com++, ctmdpi) == "")
+			if (exec.runCommand(cmd, "imc2ctmdpi", ctmdpi) == "")
 				return 1;
 		} else {
 			messageFormatter->reportAction("Reusing IMC to CTMDPI translation result",VERBOSITY_FLOW);
 		}
 
-		for(auto mrmcCalcCommand: calcCommands) {
-			// -> mrmcinput
-			MRMCParser mrmcParser(mrmcCalcCommand.first);
-			mrmcParser.generateInputFile(input);
-			if(!FileSystem::exists(input)) {
-				messageFormatter->reportError("Error generating MRMC input file `" + input.getFileRealPath() + "'");
-				return 1;
-			}
-
-			// ctmdpi, lab, mrmcinput -> calculation
-			messageFormatter->reportAction("Calculating probability with MRMC...",VERBOSITY_FLOW);
-			std::string cmd = mrmcExec.getFilePath()
-			                  + " ctmdpi"
-			                  + " \""    + ctmdpi.getFileRealPath() + "\""
-			                  + " \""    + lab.getFileRealPath() + "\""
-			                  + " < \""  + input.getFileRealPath() + "\"";
-
-			std::string resf = runCommand(cmd, cwd, dftFileName, "mrmc", com++);
-			if (resf == "")
-				return 1;
-
-			if(mrmcParser.readOutputFile(File(resf))) {
-				messageFormatter->reportError("Could not calculate");
-				return 1;
-			} else {
-				decnumber<> res = mrmcParser.getResult().first;
-				DFT::DFTCalculationResultItem calcResultItem;
-				calcResultItem.missionTime = mrmcCalcCommand.second;
-				calcResultItem.mrmcCommand = mrmcCalcCommand.first;
-				calcResultItem.lowerBound = res;
-				calcResultItem.upperBound = res;
-				ret.failProbs.push_back(calcResultItem);
-			}
-		}
+		checker = std::unique_ptr<Checker>(new MRMCRunner(messageFormatter, &exec, false, mrmcExec, ctmdpi, lab));
 		break;
 	case IMRMC:
 		if(useConverter != DFTRES && (!reuse || !FileSystem::exists(tra))) {
@@ -839,49 +764,21 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			                  + tra.newWithExtension("").getFileRealPath()
 			                  + "\" FAIL ONLINE";
 
-			if (runCommand(cmd, cwd, dftFileName, "bcg2tralab", com++, tra) == "")
+			if (exec.runCommand(cmd, "bcg2tralab", tra) == "")
 				return 1;
 		} else {
 			messageFormatter->reportAction("Reusing IMC to .tra/.lab translation result",VERBOSITY_FLOW);
 		}
-
-		for(auto imrmcCalcCommand: calcCommands) {
-			// -> mrmcinput
-			MRMCParser mrmcParser(imrmcCalcCommand.first);
-			mrmcParser.generateInputFile(input);
-			if(!FileSystem::exists(input)) {
-				messageFormatter->reportError("Error generating IMRMC input file `" + input.getFileRealPath() + "'");
-				return 1;
-			}
-
-			// ctmdpi, lab, mrmcinput -> calculation
-			messageFormatter->reportAction("Calculating probability with IMRMC...",VERBOSITY_FLOW);
-			std::string cmd = imrmcExec.getFilePath() + " ctmc";
+		{
+			File tmpTra, tmpLab;
 			if (useConverter == SVL) {
-				cmd += " \""    + tra.getFileRealPath() + "\""
-				       " \""    + lab.getFileRealPath() + "\"";
-			} else if (useConverter == DFTRES) {
-				cmd += " \""    + exactTra.getFileRealPath() + "\""
-				       " \""    + exactLab.getFileRealPath() + "\"";
-			}
-			cmd += " < \""  + input.getFileRealPath() + "\"";
-
-			std::string out = runCommand(cmd, cwd, dftFileName, "imrmc", com++);
-			if (out == "")
-				return 1;
-
-			if(mrmcParser.readOutputFile(File(out))) {
-				messageFormatter->reportError("Could not calculate");
-				return 1;
+				tmpTra = tra;
+				tmpLab = lab;
 			} else {
-				std::pair<decnumber<>, decnumber<>> res = mrmcParser.getResult();
-				DFT::DFTCalculationResultItem calcResultItem;
-				calcResultItem.missionTime = imrmcCalcCommand.second;
-				calcResultItem.mrmcCommand = imrmcCalcCommand.first;
-				calcResultItem.lowerBound = res.first;
-				calcResultItem.upperBound = res.second;
-				ret.failProbs.push_back(calcResultItem);
+				tmpTra = exactTra;
+				tmpLab = exactLab;
 			}
+			checker = std::unique_ptr<Checker>(new MRMCRunner(messageFormatter, &exec, true, imrmcExec, tmpTra, tmpLab));
 		}
 		break;
 	case IMCA:
@@ -893,46 +790,16 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			                + " " + ma.getFileRealPath()
 			                + " FAIL";
 
-			if (runCommand(cmd, cwd, dftFileName, "bcg2imca", com++, ma) == "")
+			if (exec.runCommand(cmd, "bcg2imca", ma) == "")
 				return 1;
 		} else {
 			messageFormatter->reportAction("Reusing IMC to IMCA format translation result",VERBOSITY_FLOW);
 		}
-		
-		for(auto imcaCalcCommand: calcCommands) {
-			// imca -> calculation
-			messageFormatter->reportAction("Calculating probability with IMCA...",VERBOSITY_FLOW);
-			std::string cmd = imcaExec.getFilePath()
-						+ " " + ma.getFileRealPath()
-						+ " " + imcaCalcCommand.first;
+		checker = std::unique_ptr<Checker>(new IMCARunner(messageFormatter, &exec, imcaExec, ma));
 
-			std::string out = runCommand(cmd, cwd, dftFileName, "imca", com++);
-			if (out == "")
-				return 1;
-
-			File outFile(out);
-			IMCAParser parser(outFile);
-			if(!parser.hasResults()) {
-				messageFormatter->reportError("Could not calculate");
-				return 1;
-			} else {
-				std::vector<std::pair<std::string,decnumber<>>> imcaResult = parser.getResults();
-				for(auto imcaResultItem: imcaResult) {
-					DFT::DFTCalculationResultItem calcResultItem;
-					if (imcaResultItem.first == "" || imcaResultItem.first == "?")
-						calcResultItem.missionTime = imcaCalcCommand.second;
-					else
-						calcResultItem.missionTime = imcaResultItem.first;
-					calcResultItem.mrmcCommand = imcaCalcCommand.first;
-					calcResultItem.lowerBound = imcaResultItem.second;
-					calcResultItem.upperBound = imcaResultItem.second;
-					ret.failProbs.push_back(calcResultItem);
-				}
-			}
-		}
 		break;
 	case STORM:
-		if(!reuse || !FileSystem::exists(jani)) {
+		if(useConverter == SVL && (!reuse || !FileSystem::exists(jani))) {
 			// bcg -> jani
 			messageFormatter->reportAction("Translating IMC to JANI format...",VERBOSITY_FLOW);
 			std::string cmd = bcg2janiExec.getFilePath()
@@ -940,42 +807,22 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 						+ " " + jani.getFileRealPath()
 						+ " FAIL ONLINE";
 
-			if (runCommand(cmd, cwd, dftFileName, "bcg2jani", com++, jani) == "")
+			if (exec.runCommand(cmd, "bcg2jani", jani) == "")
 				return 1;
-		} else {
+		} else if (useConverter == SVL) {
 			messageFormatter->reportAction("Reusing IMC to JANI format translation result",VERBOSITY_FLOW);
 		}
 		
-		for(auto calcCommand: calcCommands) {
-			// storm -> calculation
-			messageFormatter->reportAction("Calculating probability with Storm...",VERBOSITY_FLOW);
-			std::string cmd = stormExec.getFilePath()
-						+ " --jani " + jani.getFileRealPath()
-						+ " --prop '" + calcCommand.first + "'"
-						;
-
-			std::string out = runCommand(cmd, cwd, dftFileName, "storm", com++);
-			if (out == "")
-				return 1;
-
-			File outFile(out);
-			Storm stormParser(outFile);
-
-			if (!stormParser.hasResult()) {
-				messageFormatter->reportError("Could not calculate");
-				return 1;
-			} else {
-				decnumber<> result = stormParser.getResult();
-				DFT::DFTCalculationResultItem calcResultItem;
-				calcResultItem.missionTime = calcCommand.second;
-				calcResultItem.mrmcCommand = calcCommand.first;
-				calcResultItem.lowerBound = result;
-				calcResultItem.upperBound = result;
-				ret.failProbs.push_back(calcResultItem);
-			}
-		}
+		StormRunner *sr = new StormRunner(messageFormatter, &exec, stormExec, jani);
+		if (useConverter == DFTRES)
+			sr->runExact = 1;
+		checker = std::unique_ptr<Checker>(sr);
 		break;
 	}
+
+	std::vector<DFT::DFTCalculationResultItem> results;
+	results = checker->analyze(queries);
+	ret.failProbs.insert(ret.failProbs.end(), results.begin(), results.end());
 	ret.stats = stats;
 
 	if(!buildDot.empty()) {
@@ -986,7 +833,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 					+ " \""    + dot.getFileRealPath() + "\""
 					;
 		
-		if (runCommand(cmd, cwd, dftFileName, "bcg_io", com++, dot) == "")
+		if (exec.runCommand(cmd, "bcg_io", dot) == "")
 			return 1;
 		
 		// dot -> png
@@ -996,7 +843,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 					+ " \""    + dot.getFileRealPath() + "\""
 					+ " -o \"" + png.getFileRealPath() + "\""
 					;
-		if (runCommand(cmd, cwd, dftFileName, "dot", com++, png) == "")
+		if (exec.runCommand(cmd, "dot", png) == "")
 			return 1;
 	}
 
@@ -1039,15 +886,15 @@ int main(int argc, char** argv) {
 	int printHelp            = 0;
 	string printHelpTopic    = "";
 	int printVersion         = 0;
-	enum DFT::checker useChecker  = DFT::checker::STORM;
-	enum DFT::converter useConverter  = DFT::converter::SVL;
-	string imcaMinMax        = "-min";
-	string mrmcMinMax        = "{>1}";
-	string stormMinMax       = "max";
-	bool minMaxSet        = false;
-	bool expOnly		 = false;
+	enum DFT::checker useChecker = DFT::checker::STORM;
+	enum DFT::converter useConverter = DFT::converter::SVL;
+	bool explicitChecker     = false;
+	bool checkMin            = true;
+	bool minMaxSet           = false;
+	bool expOnly             = false;
 	
 	std::vector<std::string> failedBEs;
+	std::vector<Query> queries;
 
 	/* Parse command line arguments */
 	char c;
@@ -1218,33 +1065,33 @@ int main(int argc, char** argv) {
 				} else if(!strcmp("no-nd-warning",optarg)) {
 					warnNonDeterminism = false;
 				} else if(!strcmp("min",optarg)) {
+					checkMin = true;
 					minMaxSet = true;
-					imcaMinMax = "-min";
-					stormMinMax = "min";
-					mrmcMinMax = "{>1}";
 				} else if(!strcmp("max",optarg)) {
+					checkMin = false;
 					minMaxSet = true;
-					imcaMinMax = "-max";
-					stormMinMax = "max";
-					mrmcMinMax = "{<0}";
 				}
-				if (!strcmp("mrmc", optarg))
+				if (!strcmp("mrmc", optarg)) {
 					useChecker = DFT::checker::MRMC;
-				else if (!strcmp("imrmc", optarg))
+					explicitChecker = true;
+				} else if (!strcmp("imrmc", optarg)) {
 					useChecker = DFT::checker::IMRMC;
-				else if (!strcmp("imca", optarg))
+					explicitChecker = true;
+				} else if (!strcmp("imca", optarg)) {
 					useChecker = DFT::checker::IMCA;
-				else if (!strcmp("storm", optarg))
+					explicitChecker = true;
+				} else if (!strcmp("storm", optarg)) {
 					useChecker = DFT::checker::STORM;
-				else if (!strcmp("exact", optarg)) {
+					explicitChecker = true;
+				} else if (!strcmp("exact", optarg)) {
 					useConverter = DFT::converter::DFTRES;
-					useChecker = DFT::checker::IMRMC;
+					if (!explicitChecker)
+						useChecker = DFT::checker::IMRMC;
 				}
 		}
 	}
 	if (expOnly)
 		useChecker = DFT::checker::EXP_ONLY;
-
 
 	/* Create a new compiler context */
 	MessageFormatter* messageFormatter = new MessageFormatter(std::cerr);
@@ -1253,34 +1100,29 @@ int main(int argc, char** argv) {
 	messageFormatter->setAutoFlush(true);
 
 	if (useConverter == DFT::converter::DFTRES
-		&& useChecker != DFT::checker::IMRMC)
+		&& useChecker != DFT::checker::IMRMC
+		&& useChecker != DFT::checker::STORM)
 	{
-		messageFormatter->reportWarningAt(Location("commandline"),"Exact flag has been given: ignoring request to use non-IMRMC checker.");
+		messageFormatter->reportWarningAt(Location("commandline"),"Exact flag has can only be used with IMRMC and Storm, defaulting to IMRMC");
 		useChecker = DFT::checker::IMRMC;
 	}
 
-	string imcaEb("");
+	Query q;
 	if (errorBoundSet) {
 		double t;
 		if (!isReal(errorBound, &t) || t<=0) {
 			messageFormatter->reportErrorAt(Location("commandline -E flag"),"Given error bound is not a positive real: "+errorBound);
 		}
-		imcaEb = " -e " + errorBound;
+		q.errorBound = decnumber<>(errorBound);
+		q.errorBoundSet = true;
 	}
+
+	if (minMaxSet)
+		q.min = checkMin;
 
 	if (mttf && modularize) {
 		messageFormatter->reportWarningAt(Location("commandline"),"MTTF flag (-m) has been given: Disabling modularization.");
 		modularize = false;
-	}
-	if (mttf && (calcCommandSet || timeIntervalSet || timeSpecSet || timeLwbUpbSet)) {
-		messageFormatter->reportWarningAt(Location("commandline"),"MTTF flag (-m) has been given: ignoring time specifications and calculation commands");
-	}
-	if (steadyState && (calcCommandSet || timeIntervalSet || timeSpecSet || timeLwbUpbSet)) {
-		messageFormatter->reportWarningAt(Location("commandline"),"Steady-state flag (-s) has been given: ignoring time specifications and calculation commands");
-	}
-	if (steadyState && mttf) {
-		messageFormatter->reportWarningAt(Location("commandline"),"Steady-state flag (-s) and MTTF flag (-m) both specified: Calculating only MTTF.");
-		steadyState = 0;
 	}
 	if (mttf && useChecker == DFT::checker::MRMC) {
 		messageFormatter->reportWarningAt(Location("commandline"), "MTTF flag cannot be used with MRMC model checker, defaulting to Storm.");
@@ -1295,28 +1137,14 @@ int main(int argc, char** argv) {
 		useChecker = DFT::checker::STORM;
 	}
 	if (mttf) {
-		calcCommandSet = true;
-		if (useChecker == DFT::checker::IMCA)
-			calcCommand = "-et " + imcaMinMax + imcaEb;
-		else if (useChecker == DFT::checker::STORM)
-			calcCommand = "T" + stormMinMax + "=? [F failed]";
-		else if (useChecker == DFT::checker::IMRMC)
-			calcCommand = "M{>1}[marked]";
-		else {
-			messageFormatter->reportError("Internal error: Unsupported model checker for mean-time query, unable to set calculation command.");
-			return EXIT_FAILURE;
-		}
+		Query mq = q;
+		mq.type = EXPECTEDTIME;
+		queries.push_back(mq);
 	}
 	if (steadyState) {
-		calcCommandSet = true;
-		if (useChecker == DFT::checker::IMRMC)
-			calcCommand = "S{>1}[marked]";
-		else if (useChecker == DFT::checker::STORM)
-			calcCommand = "LRA" + stormMinMax + "=? [failed]";
-		else {
-			messageFormatter->reportError("Internal error: Unsupported model checker for steady-state query, unable to set calculation command.");
-			return EXIT_FAILURE;
-		}
+		Query sq = q;
+		sq.type = STEADY;
+		queries.push_back(sq);
 	}
 
 	if (timeLwbUpbSet) {
@@ -1328,15 +1156,15 @@ int main(int argc, char** argv) {
 		if(!isReal(timeUpb, &tu) || tu<=0) {
 			messageFormatter->reportErrorAt(Location("commandline -I flag"),"Given interval upb is not a positive real: "+timeUpb);
 		}
-		if (useChecker == DFT::checker::IMCA) {
-			calcCommandSet = true;
-			calcCommand = "" + imcaMinMax + " -tb -F " +timeLwb + " -T " + timeUpb + imcaEb;
-			timeIntervalSet = false;
-			timeSpecSet = false;
-		}
+		Query tq = q;
+		tq.type = TIMEBOUND;
+		tq.lowerBound = timeLwb;
+		tq.upperBound = timeUpb;
+		tq.step = (intmax_t)-1;
+		queries.push_back(tq);
 	}
 
-	if (!calcCommandSet && !timeIntervalSet)
+	if (!calcCommandSet && !timeIntervalSet && !timeLwbUpbSet && !steadyState && !mttf)
 		timeSpecSet = 1; // default
 
 	/* Print help / version if requested and quit */
@@ -1349,24 +1177,16 @@ int main(int argc, char** argv) {
 		exit(0);
 	}
 	
-	std::vector<std::pair<std::string,std::string>> commands;
 	if(calcCommandSet) {
-		commands.push_back(pair<string,string>(calcCommand,"?"));
-	} else if (timeSpecSet && timeSpec == string("Eventually")) {
-		string s = timeSpec;
-		switch (useChecker) {
-		case DFT::checker::MRMC:
-			commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U reach ]", s));
-			break;
-		case DFT::checker::IMCA:
-			commands.push_back(pair<string,string>("" + imcaMinMax + " -ub " + imcaEb, s));
-			break;
-		case DFT::checker::IMRMC:
-			commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U marked ]", s));
-			break;
-		case DFT::checker::STORM:
-			commands.push_back(pair<string,string>("P" + stormMinMax + "=? [F failed]", s));
-		}
+		Query cq = q;
+		cq.type = CUSTOM;
+		cq.customQuery = calcCommand;
+		queries.push_back(cq);
+	}
+	if (timeSpecSet && timeSpec == string("Eventually")) {
+		Query uq = q;
+		uq.type = UNBOUNDED;
+		queries.push_back(uq);
 	} else if (timeSpecSet) {
 		std::string str = timeSpec;
 		size_t b, e;
@@ -1392,20 +1212,13 @@ int main(int argc, char** argv) {
 				hasInvalidItems = true;
 				messageFormatter->reportErrorAt(Location("commandline -t flag"),"Given mission time value is not a non-negative real: "+s);
 			} else {
+				Query tq = q;
+				tq.type = TIMEBOUND;
+				tq.lowerBound = (uintmax_t)0;
+				tq.upperBound = s;
+				tq.step = (intmax_t)-1;
+				queries.push_back(tq);
 				hasValidItems = true;
-				switch (useChecker) {
-				case DFT::checker::MRMC:
-					commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] reach ]", s));
-					break;
-				case DFT::checker::IMCA:
-					commands.push_back(pair<string,string>("" + imcaMinMax + " -tb -T " + s + imcaEb, s));
-					break;
-				case DFT::checker::IMRMC:
-					commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] marked ]", s));
-					break;
-				case DFT::checker::STORM:
-					commands.push_back(pair<string,string>("P" + stormMinMax + "=? [F<=" + s + " failed]", s));
-				}
 			}
 		}
 		if (!hasInvalidItems && !hasValidItems) {
@@ -1429,35 +1242,19 @@ int main(int argc, char** argv) {
 			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval step is not a positive real: "+timeIntervalStep);
 			intervalErrorReported = true;
 		}
+		if (lwb > upb) {
+			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval is empty (lwb > upb)");
+		}
 		/* Check if all went OK so far */
 		if(messageFormatter->getErrors()>0) {
 			return -1;
 		}
-		for(double n=lwb; normalize(n) <= normalize(upb); n+= step) {
-			hasItems = true;
-			std::string s = std::to_string(n);
-			switch (useChecker) {
-			case DFT::checker::MRMC:
-				commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] reach ]", s));
-				break;
-			case DFT::checker::IMRMC:
-				commands.push_back(pair<string,string>("P"+mrmcMinMax+" [ tt U[0," + s + "] marked ]", s));
-				break;
-			case DFT::checker::STORM:
-				commands.push_back(pair<string,string>("P"+stormMinMax+"=? [F<=" + s + " failed]", s));
-				break;
-			default:
-				assert(false); // IMCA has build-in command for ranges.
-			}
-		}
-		std::string s_from = std::to_string(lwb);
-		std::string s_to = std::to_string(upb);
-		std::string s_step = std::to_string(step);
-		if (useChecker == DFT::checker::IMCA)
-			commands.push_back(pair<string,string>("" + imcaMinMax + " -tb -b " + s_from + " -T " + s_to + " -i "+s_step + imcaEb, "?"));
-		if (!hasItems && !intervalErrorReported) {
-			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval is empty (lwb > upb)");
-		}
+		Query iq = q;
+		iq.type = TIMEBOUND;
+		iq.lowerBound = timeIntervalLwb;
+		iq.upperBound = timeIntervalUpb;
+		iq.step = timeIntervalStep;
+		queries.push_back(iq);
 	}
 	
 	/* Parse command line arguments without a -X.
@@ -1480,8 +1277,7 @@ int main(int argc, char** argv) {
 	Shell::messageFormatter = messageFormatter;
 	
 	/* Create the DFTCalc class */
-	DFT::DFTCalc calc;
-	calc.setMessageFormatter(messageFormatter);
+	DFT::DFTCalc calc(messageFormatter);
 	if(dotToTypeSet) calc.setBuildDOT(dotToType);
 	
 	/* Check if all needed tools are available */
@@ -1513,10 +1309,14 @@ int main(int argc, char** argv) {
 		if(FileSystem::exists(dft)) {
 			DFT::DFTCalculationResult ret;
 			bool res;
-			if (!modularize) {
-				res = calc.calculateDFT(reuse, outputFolderFile.getFileRealPath(),dft,commands, useChecker, useConverter, warnNonDeterminism, "", ret, expOnly);
-			} else {
-				res = calc.calcModular(reuse, outputFolderFile.getFileRealPath(),dft,commands, useChecker, useConverter, warnNonDeterminism, ret, expOnly);
+			try {
+				if (!modularize) {
+					res = calc.calculateDFT(reuse, outputFolderFile.getFileRealPath(),dft, queries, useChecker, useConverter, warnNonDeterminism, "", ret, expOnly);
+				} else {
+					res = calc.calcModular(reuse, outputFolderFile.getFileRealPath(),dft, queries, useChecker, useConverter, warnNonDeterminism, ret, expOnly);
+				}
+			} catch (std::exception &e) {
+				messageFormatter->reportError(e.what());
 			}
 			results[dft.getFileName()] = ret;
 			hasErrors = hasErrors || res;
@@ -1632,18 +1432,42 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+bool DFT::DFTCalc::findInPath(std::string tool, File &ret) {
+	bool exists = false;
+	bool accessible = false;
+	vector<File> progs;
+	FileSystem::findInPath(progs, File(tool));
+	for(File bin: progs) {
+		accessible = false;
+		exists = true;
+		if(FileSystem::hasAccessTo(bin, X_OK)) {
+			accessible = true;
+			ret = bin;
+			break;
+		} else {
+			messageFormatter->reportWarning(tool + " [" + bin.getFilePath() + "] is not runnable", VERBOSITY_SEARCHING);
+		}
+	}
+	if(!accessible) {
+		messageFormatter->reportError("no runnable " + tool + " executable found in PATH");
+	} else {
+		messageFormatter->reportAction("Using " + tool + " [" + ret.getFilePath() + "]",VERBOSITY_SEARCHING);
+	}
+	return accessible;
+}
+
 bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 	bool ok = true;
 
 	messageFormatter->notify("Checking environment...",VERBOSITY_SEARCHING);
 
 	/* Obtain all needed root information from environment */
-	dft2lntRoot = getRoot(NULL);
+	dft2lntRoot = getRoot();
 	if (checker == MRMC) {
-		coralRoot = getCoralRoot(NULL);
+		coralRoot = getCoralRoot();
 		imc2ctmdpExec = File(coralRoot+"/bin/imc2ctmdp");
 	} else if (checker == IMCA) {
-		imcaRoot = getImcaRoot(NULL);
+		imcaRoot = getImcaRoot();
 		bcg2imcaExec = File(imcaRoot+"/bin/bcg2imca");
 	} else if (checker == STORM) {
 		bcg2janiExec = File(dft2lntRoot+"/bin/bcg2jani");
@@ -1651,7 +1475,7 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 		bcg2tralabExec = File(dft2lntRoot+"/bin/bcg2tralab");
 	}
 
-	cadpRoot = getCADPRoot(NULL);
+	cadpRoot = getCADPRoot();
 
 	/* These tools should be easy to find in the roots. Note that an added
 	 * bonus would be to locate them using PATH as well.
@@ -1727,192 +1551,33 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 	}
 
 	if (conv == DFTRES) {
-		dftresJar = getDftresJar(messageFormatter);
+		dftresJar = getDftresJar();
 		if(!FileSystem::hasAccessTo(dftresJar, F_OK))
 			ok = false;
 	}
 
 	/* Find a storm executable */
-	if (checker == STORM) {
-		bool exists = false;
-		bool accessible = false;
-		vector<File> storms;
-		int n = FileSystem::findInPath(storms,File("storm"));
-		for(File storm: storms) {
-			accessible = false;
-			exists = true;
-			if(FileSystem::hasAccessTo(storm,X_OK)) {
-				accessible = true;
-				stormExec = storm;
-				break;
-			} else {
-				messageFormatter->reportWarning("storm [" + storm.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-				ok = false;
-			}
-		}
-		if(!accessible) {
-			messageFormatter->reportError("no runnable storm executable found in PATH");
-			ok = false;
-		} else {
-			messageFormatter->reportAction("Using storm [" + stormExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-		}
-	}
+	if (checker == STORM)
+		ok &= findInPath("storm", stormExec);
 
 	/* Find an mrmc executable (based on PATH environment variable) */
-	if (checker == MRMC) {
-		bool exists = false;
-		bool accessible = false;
-		vector<File> mrmcs;
-		int n = FileSystem::findInPath(mrmcs,File("mrmc"));
-		for(File mrmc: mrmcs) {
-			accessible = false;
-			exists = true;
-			if(FileSystem::hasAccessTo(mrmc,X_OK)) {
-				accessible = true;
-				mrmcExec = mrmc;
-				break;
-			} else {
-				messageFormatter->reportWarning("mrmc [" + mrmc.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-				ok = false;
-			}
-		}
-		if(!accessible) {
-			messageFormatter->reportError("no runnable mrmc executable found in PATH");
-			ok = false;
-		} else {
-			messageFormatter->reportAction("Using mrmc [" + mrmcExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-		}
-	}
+	if (checker == MRMC)
+		ok &= findInPath("mrmc", mrmcExec);
 
 	/* Find an imrmc executable (based on PATH environment variable) */
-	if (checker == IMRMC) {
-		bool exists = false;
-		bool accessible = false;
-		vector<File> imrmcs;
-		int n = FileSystem::findInPath(imrmcs,File("imrmc"));
-		for(File imrmc: imrmcs) {
-			accessible = false;
-			exists = true;
-			if(FileSystem::hasAccessTo(imrmc,X_OK)) {
-				accessible = true;
-				imrmcExec = imrmc;
-				break;
-			} else {
-				messageFormatter->reportWarning("mrmc [" + imrmc.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-				ok = false;
-			}
-		}
-		if(!accessible) {
-			messageFormatter->reportError("no runnable imrmc executable found in PATH");
-			ok = false;
-		} else {
-			messageFormatter->reportAction("Using mrmc [" + imrmcExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-		}
-	}
+	if (checker == IMRMC)
+		ok &= findInPath("imrmc", imrmcExec);
 
 	/* Find an imca executable (based on PATH environment variable) */
-	if (checker == IMCA) {
-		bool exists = false;
-		bool accessible = false;
-		vector<File> imcas;
-		int n = FileSystem::findInPath(imcas,File("imca"));
-		for(File imca: imcas) {
-			accessible = false;
-			exists = true;
-			if(FileSystem::hasAccessTo(imca,X_OK)) {
-				accessible = true;
-				imcaExec = imca;
-				break;
-			} else {
-				messageFormatter->reportWarning("imca [" + imca.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-				ok = false;
-			}
-		}
-		if(!accessible) {
-			messageFormatter->reportError("no runnable imca executable found in PATH");
-			ok = false;
-		} else {
-			messageFormatter->reportAction("Using imca [" + imcaExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-		}
-	}
+	if (checker == IMCA)
+		ok &= findInPath("imca", imcaExec);
 
-	/* Find bcg_io executable (based on PATH environment variable) */
-	{
-		bool exists = false;
-		bool accessible = false;
-		vector<File> bcgios;
-		int n = FileSystem::findInPath(bcgios,File("bcg_io"));
-		for(File bcgio: bcgios) {
-			accessible = false;
-			exists = true;
-			if(FileSystem::hasAccessTo(bcgio,X_OK)) {
-				accessible = true;
-				bcgioExec = bcgio;
-				break;
-			} else {
-				messageFormatter->reportWarning("bcg_io [" + bcgio.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-				ok = false;
-			}
-		}
-		if(!accessible) {
-			messageFormatter->reportError("no runnable bcg_io executable found in PATH");
-			ok = false;
-		} else {
-			messageFormatter->reportAction("Using bcg_io [" + bcgioExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-		}
-	}
-
-	/* Find bcg_info executable (based on PATH environment variable) */
-	{
-		bool exists = false;
-		bool accessible = false;
-		vector<File> bcginfos;
-		int n = FileSystem::findInPath(bcginfos,File("bcg_info"));
-		for(File bcginfo: bcginfos) {
-			accessible = false;
-			exists = true;
-			if(FileSystem::hasAccessTo(bcginfo,X_OK)) {
-				accessible = true;
-				bcginfoExec = bcginfo;
-				break;
-			} else {
-				messageFormatter->reportWarning("bcg_info [" + bcginfo.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-				ok = false;
-			}
-		}
-		if(!accessible) {
-			messageFormatter->reportError("no runnable bcg_info executable found in PATH");
-			ok = false;
-		} else {
-			messageFormatter->reportAction("Using bcg_info [" + bcginfoExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-		}
-	}
+	ok &= findInPath("bcg_io", bcgioExec);
+	ok &= findInPath("bcg_info", bcginfoExec);
 
 	/* Find dot executable (based on PATH environment variable) */
-	if (!buildDot.empty()) {
-		bool exists = false;
-		bool accessible = false;
-		vector<File> dots;
-		int n = FileSystem::findInPath(dots,File("dot"));
-		for(File dot: dots) {
-			accessible = false;
-			exists = true;
-			if(FileSystem::hasAccessTo(dot,X_OK)) {
-				accessible = true;
-				dotExec = dot;
-				break;
-			} else {
-				messageFormatter->reportWarning("dot [" + dot.getFilePath() + "] is not runnable",VERBOSITY_SEARCHING);
-				ok = false;
-			}
-		}
-		if(!accessible) {
-			messageFormatter->reportError("no runnable dot executable found in PATH");
-			ok = false;
-		} else {
-			messageFormatter->reportAction("Using dot [" + dotExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-		}
-	}
+	if (!buildDot.empty())
+		ok &= findInPath("dot", dotExec);
 
 	return !ok;
 }
