@@ -23,7 +23,7 @@ static const char needle[] = "Result (for initial states): ";
 
 std::string StormRunner::getCommandOptions(Query q)
 {
-	std::string ret;
+	std::string ret = " --constants T=1,L=0 ";
 	if (q.errorBoundSet)
 		ret = " --precision " + q.errorBound.str();
 	if (runExact) {

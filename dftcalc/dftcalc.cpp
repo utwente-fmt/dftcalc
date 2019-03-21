@@ -38,6 +38,7 @@ using namespace std;
 #include "compiletime.h"
 #include "yaml-cpp/yaml.h"
 #include "mrmc.h"
+#include "modest.h"
 #include "imca.h"
 #include "storm.h"
 
@@ -61,10 +62,11 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -R              Reuse existing output files.");
 		messageFormatter->message("  -M              Use modularization to check static parts of DFT.");
 		messageFormatter->message("  --storm         Use Storm. (standard setting)");
-		messageFormatter->message("  --mrmc          Use MRMC. instead of Storm.");
-		messageFormatter->message("  --imrmc         Use IMRMC. instead of Storm.");
+		messageFormatter->message("  --modest        Use Modest instead of Storm.");
+		messageFormatter->message("  --mrmc          Use MRMC instead of Storm.");
+		messageFormatter->message("  --imrmc         Use IMRMC instead of Storm.");
 		messageFormatter->message("  --imca          Use IMCA instead of MRMC.");
-		messageFormatter->message("  --exact         Use DFTRES and IMRMC to give exact results.");
+		messageFormatter->message("  --exact         Use DFTRES to give (more) exact results.");
 		messageFormatter->message("  --no-nd-warning Do not warn (but give notice) for non-determinism.");
 		messageFormatter->message("");
 		messageFormatter->notify ("Debug Options:");
@@ -710,7 +712,8 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		}
 	} else if (!reuse
 	           || (useChecker == IMRMC && !FileSystem::exists(exactTra))
-	           || (useChecker == STORM && !FileSystem::exists(jani)))
+	           || (useChecker == STORM && !FileSystem::exists(jani))
+	           || (useChecker == MODEST && !FileSystem::exists(jani)))
 	{
 		/* DFTRES Converter to tra/lab */
 		std::vector<File> outputs;
@@ -798,7 +801,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		checker = std::unique_ptr<Checker>(new IMCARunner(messageFormatter, &exec, imcaExec, ma));
 
 		break;
-	case STORM:
+	case STORM: {
 		if(useConverter == SVL && (!reuse || !FileSystem::exists(jani))) {
 			// bcg -> jani
 			messageFormatter->reportAction("Translating IMC to JANI format...",VERBOSITY_FLOW);
@@ -816,6 +819,25 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		StormRunner *sr = new StormRunner(messageFormatter, &exec, stormExec, jani);
 		if (useConverter == DFTRES)
 			sr->runExact = 1;
+		checker = std::unique_ptr<Checker>(sr);
+		break;
+	}
+	case MODEST:
+		if(useConverter == SVL && (!reuse || !FileSystem::exists(jani))) {
+			// bcg -> jani
+			messageFormatter->reportAction("Translating IMC to JANI format...",VERBOSITY_FLOW);
+			std::string cmd = bcg2janiExec.getFilePath()
+						+ " " + bcg.getFileRealPath()
+						+ " " + jani.getFileRealPath()
+						+ " FAIL ONLINE";
+
+			if (exec.runCommand(cmd, "bcg2jani", jani) == "")
+				return 1;
+		} else if (useConverter == SVL) {
+			messageFormatter->reportAction("Reusing IMC to JANI format translation result",VERBOSITY_FLOW);
+		}
+		
+		ModestRunner *sr = new ModestRunner(messageFormatter, &exec, "mcsta", jani);
 		checker = std::unique_ptr<Checker>(sr);
 		break;
 	}
@@ -1083,6 +1105,9 @@ int main(int argc, char** argv) {
 				} else if (!strcmp("storm", optarg)) {
 					useChecker = DFT::checker::STORM;
 					explicitChecker = true;
+				} else if (!strcmp("modest", optarg)) {
+					useChecker = DFT::checker::MODEST;
+					explicitChecker = true;
 				} else if (!strcmp("exact", optarg)) {
 					useConverter = DFT::converter::DFTRES;
 					if (!explicitChecker)
@@ -1101,9 +1126,10 @@ int main(int argc, char** argv) {
 
 	if (useConverter == DFT::converter::DFTRES
 		&& useChecker != DFT::checker::IMRMC
+		&& useChecker != DFT::checker::MODEST
 		&& useChecker != DFT::checker::STORM)
 	{
-		messageFormatter->reportWarningAt(Location("commandline"),"Exact flag has can only be used with IMRMC and Storm, defaulting to IMRMC");
+		messageFormatter->reportWarningAt(Location("commandline"),"Exact flag has can only be used with IMRMC, Storm, or Modest, defaulting to IMRMC");
 		useChecker = DFT::checker::IMRMC;
 	}
 
@@ -1134,6 +1160,10 @@ int main(int argc, char** argv) {
 	}
 	if (steadyState && useChecker == DFT::checker::IMCA) {
 		messageFormatter->reportWarningAt(Location("commandline"), "Steady-state flag cannot currently be used with IMCA model checker, defaulting to Storm.");
+		useChecker = DFT::checker::STORM;
+	}
+	if (steadyState && useChecker == DFT::checker::MODEST) {
+		messageFormatter->reportWarningAt(Location("commandline"), "Steady-state flag cannot currently be used with Modest model checker, defaulting to Storm.");
 		useChecker = DFT::checker::STORM;
 	}
 	if (mttf) {
@@ -1469,7 +1499,7 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 	} else if (checker == IMCA) {
 		imcaRoot = getImcaRoot();
 		bcg2imcaExec = File(imcaRoot+"/bin/bcg2imca");
-	} else if (checker == STORM) {
+	} else if (checker == STORM || checker == MODEST) {
 		bcg2janiExec = File(dft2lntRoot+"/bin/bcg2jani");
 	} else if (checker == IMRMC) {
 		bcg2tralabExec = File(dft2lntRoot+"/bin/bcg2tralab");

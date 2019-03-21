@@ -19,7 +19,7 @@
 namespace DFT {
 	extern const int VERBOSITY_FLOW;
 
-	enum checker {STORM, MRMC, IMRMC, IMCA, EXP_ONLY};
+	enum checker {STORM, MRMC, IMRMC, IMCA, MODEST, EXP_ONLY};
 	enum converter {SVL, DFTRES};
 
 	class DFTCalc {

@@ -15,8 +15,9 @@ DFTCalc takes as input a DFT in Galileo’s textual format. This intuitive forma
 To build and run DFTCalc, you need some external libraries. Which ones
 exactly depends on which options you wish to use. Below we list the
 external libraries and tools required. In any operation you require
-CADP. Beyond that, you need either MRMC, IMRMC, IMCA, or Storm. For
-exact operation (the --exact switch), you need IMRMC and DFTRES.
+CADP. Beyond that, you need either MRMC, IMRMC, IMCA, Storm, or Modest. For
+exact operation (the --exact switch), you need DFTRES and IMRMC, Storm,
+or Modest.
 
 **CADP**
 See the [CADP website](http://www.inrialpes.fr/vasy/cadp/) on how to obtain a license and download the CADP toolkit.
@@ -39,6 +40,12 @@ Download the most recent IMCA version from [github](https://github.com/utwente-f
 Download the most recent Storm version from [the Storm
 homepage](http://www.stormchecker.org/) and ensure that the 'storm'
 binary is in your PATH.
+
+**Modest Backend**
+Download the most recent Modest version from [the Modest
+homepage](http://www.modestchecker.net/) and ensure that running the
+'mcsta' command invokes the mcsta tool (e.g., by creating a shell script
+'mcsta' in the PATH that starts mcsta).
 
 **DFTRES Converter**
 For the 'exact' mode, download and build the most recent version of

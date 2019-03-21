@@ -31,6 +31,7 @@ add_executable(dftcalc
 	storm.cpp
 	executor.cpp
 	mrmc.cpp
+	modest.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/compiletime.h
 )
 

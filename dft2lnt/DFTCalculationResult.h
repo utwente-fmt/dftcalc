@@ -27,6 +27,7 @@ class DFTCalculationResultItem {
 		bool exactBounds;
 		DFTCalculationResultItem() : lowerBound(0), upperBound(1) { }
 		DFTCalculationResultItem(Query query) : lowerBound(0), upperBound(1) {
+			this->query = query;
 			mrmcCommand = query.toString();
 			missionTime = query.upperBound.str();
 		}
