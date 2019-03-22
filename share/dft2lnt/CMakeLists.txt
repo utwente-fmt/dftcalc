@@ -4,12 +4,6 @@ project (dftmisc)
 ## Needed for bison and flex
 cmake_minimum_required (VERSION 2.8)
 
-set(DFTROOT "/opt/dft2lntroot" CACHE PATH "")
-
-message(STATUS "NOTE: When installed, dft2lnt will be installed in ${DFTROOT}")
-message(STATUS "      You can change this behaviour by running cmake with:")
-message(STATUS "         -DDFTROOT=/path/to/dft2lntroot")
-
 set(CMAKE_INSTALL_PREFIX ${DFTROOT} CACHE INTERNAL "" FORCE)
 
 ## Installation

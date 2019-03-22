@@ -6,11 +6,16 @@ cmake_minimum_required(VERSION 2.8)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -g -DDEBUG=1 -UNDEBUG -O0 -DYYDEBUG=1")
 	set (BISON_CFLAGS "${BISON_CFLAGS} --verbose")
-#endif()
-#if(CMAKE_BUILD_TYPE STREQUAL "Release")
 else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 -UDEBUG -O3")
 endif()
+
+set(DFTROOT "/opt/dft2lntroot" CACHE PATH "")
+
+message(STATUS "NOTE: When installed, dft2lnt will be installed in ${DFTROOT}")
+message(STATUS "      You can change this behaviour by running cmake with:")
+message(STATUS "         -DDFTROOT=/path/to/dft2lntroot")
+
 add_subdirectory(yaml-cpp EXCLUDE_FROM_ALL)
 add_subdirectory(dft2lnt)
 add_subdirectory(dft2lntc)
