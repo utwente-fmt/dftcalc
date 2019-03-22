@@ -384,6 +384,8 @@ public:
 			if (!node->isGate())
 				continue;
 			Nodes::Gate *gate = static_cast<Nodes::Gate*>(node);
+			if (gate->matchesType(DFT::Nodes::InspectionType))
+				continue;
 			for (auto child : gate->getChildren())
 				roots.erase(child);
 		}
