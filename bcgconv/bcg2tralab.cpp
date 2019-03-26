@@ -19,6 +19,7 @@
  */
 
 #include "bcg_user.h"
+#include "../dft2lnt/decnumber.h"
 #include <cstdio>
 #include <cstdarg>
 #include <cstdlib>
@@ -29,10 +30,165 @@
 #include <unordered_set>
 #include <vector>
 
+typedef std::map<BCG_TYPE_STATE_NUMBER, BCG_TYPE_STATE_NUMBER> stateStateMap;
+
 static void invalid_label()
 {
 	fprintf(stderr, "Error: State reachable both from repair and fail transitions.\n");
 	exit(EXIT_FAILURE);
+}
+
+static std::vector<decnumber<>> get_times(BCG_TYPE_OBJECT_TRANSITION g,
+			std::vector<BCG_TYPE_STATE_NUMBER> stateNums)
+{
+	std::vector<decnumber<>> ret;
+	BCG_TYPE_STATE_NUMBER s1, s2;
+	BCG_TYPE_STATE_NUMBER bcg_nb_states;
+	bcg_nb_states = BCG_OT_NB_STATES(g);
+	for (s1 = 0; s1 < bcg_nb_states; s1++) {
+		if (stateNums[s1] == 0)
+			continue;
+		BCG_TYPE_LABEL_NUMBER labnum;
+
+		BCG_OT_ITERATE_P_LN (g, s1, labnum, s2) {
+			bool found = 0;
+			BCG_TYPE_C_STRING nm;
+			nm = BCG_OT_LABEL_STRING(g, labnum);
+			if (strncmp(nm, "time ", 5))
+				continue;
+			decnumber<> t(nm + 5);
+			for (decnumber<> s : ret) {
+				if (s == t) {
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				ret.push_back(t);
+		} BCG_OT_END_ITERATE;
+	}
+	return ret;
+}
+
+static std::map<decnumber<>, std::vector<decnumber<>>>
+		expand_times(const std::vector<decnumber<>> &times)
+{
+	std::map<decnumber<>, std::vector<decnumber<>>> ret;
+	if (times.empty())
+		return ret;
+	std::vector<uintmax_t> n;
+	bool done = false;
+	for (size_t i = times.size(); i > 0; i--)
+		n.push_back(0);
+	decnumber<> time(0);
+
+	while (!done) {
+		std::vector<decnumber<>> thisTime;
+		done = true;
+		time = times[0] * (n[0] + 1);
+		thisTime.push_back(times[0]);
+		for (size_t i = times.size() - 1; i > 0; i--) {
+			decnumber<> t = times[i] * (n[i] + 1);
+			if (t < time) {
+				done = false;
+				thisTime = std::vector<decnumber<>>();
+				time = t;
+				thisTime.push_back(times[i]);
+			} else if (t == time) {
+				thisTime.push_back(times[i]);
+			} else {
+				done = false;
+			}
+		}
+		fprintf(stderr, "Found time: %s\n", time.str().c_str());
+		for (size_t i = 0; i < times.size(); i++) {
+			if (times[i] * (n[i] + 1) == time)
+				n[i]++;
+		}
+		ret[time] = thisTime;
+	}
+	return ret;
+}
+
+BCG_TYPE_STATE_NUMBER get_timed_target(BCG_TYPE_OBJECT_TRANSITION g,
+                                       decnumber<> t,
+                                       BCG_TYPE_STATE_NUMBER from)
+{
+	BCG_TYPE_STATE_NUMBER to;
+	BCG_TYPE_LABEL_NUMBER labnum;
+	BCG_OT_ITERATE_P_LN (g, from, labnum, to) {
+		BCG_TYPE_C_STRING label;
+		label = BCG_OT_LABEL_STRING(g, labnum);
+		if (!strncmp(label, "time ", 5)) {
+			decnumber<> v(label + 5);
+			if (v == t)
+				return to;
+		}
+	} BCG_OT_END_ITERATE;
+	return from;
+}
+
+static BCG_TYPE_STATE_NUMBER get_eventual_target(BCG_TYPE_OBJECT_TRANSITION g,
+                                                 std::vector<decnumber<>> ts,
+                                                 BCG_TYPE_STATE_NUMBER from)
+{
+	if (ts.empty())
+		return from;
+	size_t imm = get_timed_target(g, ts[0], from);
+	if (ts.size() == 1)
+		return imm;
+	std::vector<decnumber<>> rest = ts;
+	rest.erase(rest.begin());
+	BCG_TYPE_STATE_NUMBER claim = get_eventual_target(g, rest, imm);
+	for (size_t i = 1; i < ts.size(); i++) {
+		imm = get_timed_target(g, ts[i], from);
+		rest = ts;
+		rest.erase(rest.begin() + i);
+		BCG_TYPE_STATE_NUMBER fin = get_eventual_target(g, rest, imm);
+		if (fin != claim)
+			fprintf(stderr, "Non-spurious nondeterminism in equal-timed transitions at time %s from state %zu.\n", ts[i].str().c_str(), (size_t)from);
+	}
+	return claim;
+}
+
+std::vector<BCG_TYPE_STATE_NUMBER>
+	get_timed_transitions(BCG_TYPE_OBJECT_TRANSITION g,
+	                      std::map<decnumber<>, std::vector<decnumber<>>> ts,
+	                      BCG_TYPE_STATE_NUMBER from)
+{
+	std::vector<BCG_TYPE_STATE_NUMBER> ret;
+	for (auto tl : ts) {
+		std::vector<decnumber<>> times = tl.second;
+		size_t tgt = get_eventual_target(g, times, from);
+		ret.push_back(tgt);
+	}
+	return ret;
+}
+
+static std::map<BCG_TYPE_STATE_NUMBER, std::string>
+	get_rate_targets(BCG_TYPE_OBJECT_TRANSITION g,
+	                 std::vector<BCG_TYPE_STATE_NUMBER> timed,
+			 stateStateMap renames,
+                         BCG_TYPE_STATE_NUMBER from)
+{
+	std::map<BCG_TYPE_STATE_NUMBER, std::string> ret;
+	BCG_TYPE_STATE_NUMBER to;
+	BCG_TYPE_LABEL_NUMBER labnum;
+	BCG_OT_ITERATE_P_LN (g, from, labnum, to) {
+		BCG_TYPE_C_STRING label;
+		label = BCG_OT_LABEL_STRING(g, labnum);
+		if (!strncmp(label, "rate ", 5)) {
+			auto ren = renames.find(to);
+			if (ren != renames.end())
+				to = ren->second;
+			ret[to] = std::string(label + 5);
+		}
+	} BCG_OT_END_ITERATE;
+	for (BCG_TYPE_STATE_NUMBER n : timed) {
+		if (ret.find(n) == ret.end())
+			ret[n] = "0";
+	}
+	return ret;
 }
 
 int main(int argc, char* argv[])
@@ -98,9 +254,13 @@ int main(int argc, char* argv[])
 	/* First, identify all reachable states. */
 	std::unordered_set<BCG_TYPE_STATE_NUMBER> reachable;
 	std::unordered_set<BCG_TYPE_STATE_NUMBER> reachable_queue;
+	/* timed_maxprog contains states that are reachable only from
+	 * Markovian transitions, i.e. states from which interactive
+	 * transitions override timed transitions.
+	 */
+	std::unordered_set<BCG_TYPE_STATE_NUMBER> timed_maxprog;
 
 	/* Renames: targets of interactive transitions */
-	typedef std::map<BCG_TYPE_STATE_NUMBER, BCG_TYPE_STATE_NUMBER> stateStateMap;
 	stateStateMap renames;
 	reachable.insert(0);
 	reachable_queue.insert(0);
@@ -119,9 +279,13 @@ int main(int argc, char* argv[])
 			BCG_TYPE_C_STRING label;
 			label = BCG_OT_LABEL_STRING(bcg_graph, labnum);
 			if (!strncmp(label, "rate ", 5)) {
-				; /* Do nothing */
+				if (reachable.insert(s2).second)
+					reachable_queue.insert(s2);
+			} else if (!strncmp(label, "time ", 5)) {
+				if (reachable.insert(s2).second)
+					reachable_queue.insert(s2);
 			} else if (interactive_target != s1) {
-				fprintf(stderr, "Model has nondeterminism, aborting.\n");
+				fprintf(stderr, "Model has nondeterminism in state %zu, aborting.\n", (size_t)s1);
 				return EXIT_FAILURE;
 			} else if (!strcmp(label, faillabel)) {
 				interactive_target = s2;
@@ -137,7 +301,6 @@ int main(int argc, char* argv[])
 			}
 		} BCG_OT_END_ITERATE;
 		if (interactive_target != s1) {
-			printf("Renaming %zu to %zu\n", (std::size_t)s1, (std::size_t)interactive_target);
 			renames[s1] = interactive_target;
 			if (state_labels[interactive_target] != target_label
 			    && state_labels[interactive_target] != 0)
@@ -150,13 +313,6 @@ int main(int argc, char* argv[])
 				reachable_queue.insert(interactive_target);
 			continue;
 		}
-		/* We are in a Markovian state or the block above would
-		 * have skipped this part.
-		 */
-		BCG_OT_ITERATE_P_LN (bcg_graph, s1, labnum, s2) {
-			if (reachable.insert(s2).second)
-				reachable_queue.insert(s2);
-		} BCG_OT_END_ITERATE;
 	}
 
 	/* Next, collapse any chains of renames. */
@@ -174,7 +330,6 @@ int main(int argc, char* argv[])
 				if (state_labels[tgt] != state_labels[newTgt])
 					invalid_label();
 				renames[src] = newTgt;
-				printf("Renaming %zu to %zu\n", (std::size_t)src, (std::size_t)newTgt);
 				it = renames.begin();
 			}
 		}
@@ -189,17 +344,32 @@ int main(int argc, char* argv[])
 	}
 
 	/* Renumber the reachable states consecutively */
-	std::vector<std::size_t> stateNums;
+	std::vector<BCG_TYPE_STATE_NUMBER> stateNums;
 	size_t i = 1;
 	for (bcg_s1 = 0; bcg_s1 < bcg_nb_states; bcg_s1++) {
 		if (reachable.find(bcg_s1) != reachable.end()) {
-			printf("Numbering %zu to %zu labeled %d\n", (std::size_t)bcg_s1, i, state_labels[bcg_s1]);
 			stateNums.push_back(i++);
 		} else
 			stateNums.push_back(0);
 	}
+	std::vector<decnumber<>> times = get_times(bcg_graph, stateNums);
+	auto allTimes = expand_times(times);
 
 	/* Header information */
+	if (times.size() > 0) {
+		fprintf(tra, "MODES");
+		for (size_t i = allTimes.size(); i > 0; i--)
+			fprintf(tra, " ctmc dtmc");
+		fprintf(tra, "\n");
+		fprintf(tra, "TIMES");
+		decnumber<> prev(0);
+		for (auto time : allTimes) {
+			decnumber<> t = time.first - prev;
+			fprintf(tra, " %s 1", t.str().c_str());
+			prev = time.first;
+		}
+		fprintf(tra, "\n");
+	}
 	fprintf(tra, "STATES %zu\n", reachable.size());
 	fprintf(tra, "TRANSITIONS ");
 	long transition_count_pos = ftell(tra);
@@ -208,30 +378,43 @@ int main(int argc, char* argv[])
 
 	unsigned long long n_transitions = 0;
 	for (bcg_s1 = 0; bcg_s1 < bcg_nb_states; bcg_s1++) {
-		std::size_t s1 = stateNums[bcg_s1];
+		BCG_TYPE_STATE_NUMBER s1 = stateNums[bcg_s1];
 		if (s1 == 0)
 			continue;
-		BCG_TYPE_LABEL_NUMBER labnum;
-		BCG_TYPE_STATE_NUMBER s2;
 
-		BCG_OT_ITERATE_P_LN (bcg_graph, bcg_s1, labnum, s2) {
+		std::vector<BCG_TYPE_STATE_NUMBER> ttgts
+			= get_timed_transitions(bcg_graph, allTimes, bcg_s1);
+		for (size_t i = 0; i < ttgts.size(); i++) {
+			auto rename = renames.find(ttgts[i]);
+			if (rename != renames.end()) {
+				ttgts[i] = rename->second;
+			}
+		}
+		std::map<BCG_TYPE_STATE_NUMBER, std::string> tgts;
+		tgts = get_rate_targets(bcg_graph, ttgts, renames, bcg_s1);
+		for (auto pair : tgts) {
+			BCG_TYPE_STATE_NUMBER s2 = pair.first;
+			BCG_TYPE_STATE_NUMBER t = stateNums[s2];
+			if (t == 0) {
+				fprintf(stderr, "Error: Unreachable state %zu reached from %zu via timed transition.\n", (std::size_t)s2, (size_t)bcg_s1);
+				return EXIT_FAILURE;
+			}
+			const char *rate = pair.second.c_str();
+			fprintf(tra, "%zu %zu %s", s1, t, rate);
 			auto rename = renames.find(s2);
 			if (rename != renames.end())
 				s2 = rename->second;
-			BCG_TYPE_C_STRING nm;
-			nm = BCG_OT_LABEL_STRING(bcg_graph, labnum);
-			std::size_t t = stateNums[s2];
-			if (t == 0) {
-				fprintf(stderr, "Error: Unreachable state %zu reached.\n", (std::size_t)s2);
-				return EXIT_FAILURE;
+			for (size_t i = 0; i < ttgts.size(); i++) {
+				if (ttgts[i] == s2)
+					fprintf(tra, " 1");
+				else
+					fprintf(tra, " 0");
+				if (i != ttgts.size() - 1)
+					fprintf(tra, " %s", rate);
 			}
-			if (strncmp(nm, "rate ", 5)) {
-				fprintf(stderr, "Error: Interactive state left after Markovianization.");
-				return EXIT_FAILURE;
-			}
-			fprintf(tra, "%zu %zu %s\n", s1, t, nm + 5);
+			fprintf(tra, "\n");
 			n_transitions++;
-		} BCG_OT_END_ITERATE;
+		}
 	}
 	char fstring[6+(sizeof(edge_count_chars)*CHAR_BIT)/3+1];
 	sprintf(fstring, "%%%dllu", edge_count_chars);
@@ -265,8 +448,10 @@ int main(int argc, char* argv[])
 			BCG_OT_ITERATE_P_LN (bcg_graph, s1, labnum, s2) {
 				BCG_TYPE_C_STRING nm;
 				nm = BCG_OT_LABEL_STRING(bcg_graph, labnum);
+				if (!strncmp(nm, "time ", 5))
+					continue;
 				if (strncmp(nm, "rate ", 5)) {
-					fprintf(stderr, "Reachable interactive state, should have been caught earlier.\n");
+					fprintf(stderr, "Reachable interactive state %zu (label %s), should have been caught earlier.\n", (size_t)s1, nm);
 					return EXIT_FAILURE;
 				}
 				if (state_label == 1) {
@@ -281,7 +466,7 @@ int main(int argc, char* argv[])
 						invalid_label();
 				}
 			} BCG_OT_END_ITERATE;
-			state_labels[bcg_s1] *= 2;
+			state_labels[s1] *= 2;
 		}
 	}
 

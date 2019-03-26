@@ -25,7 +25,7 @@
 %{
 	#include <stdio.h>
 	#include <cstring>
-	#include <string.h>
+	#include <climits>
 	#include <string>
 	//#ifndef __PARSER_Y_HPP
 	//#define __PARSER_Y_HPP
@@ -107,7 +107,7 @@ number        [-+]?{posnumber}
 rate          {posnumber}([.]{posnumber})?((e|E){number})?
 number_exp    e|E
 voting        {number}of{number}
-inspection    {number}insp{rate}
+inspection    {number}?insp{rate}
 replacement   {number}rep{rate}
 hexdigit	  {digit}|[A-F]
 newline       \r?\n
@@ -233,27 +233,27 @@ transfer      "accepts transfers from"
 	return VOTING;
 }
 {inspection} {
-    char buffer[101];
-    
-    // Read first number (phases)
-    char* dst = buffer;
-    char* src = yytext;
-    while(isdigit(*src)) {
-        *dst++ = *src++;
-    }
-    *dst = '\0';
-    yylval->inspection.n = atoi(buffer);
-    
-    // Read second number (lambda)
-    dst = buffer;
-    src+=4;
-    while(ispunct(*src) || isdigit(*src) || *src == 'e' || *src == 'E') {
-        *dst++ = *src++;
-    }
-    *dst = '\0';
-    yylval->inspection.k = atof(buffer);
-    
-    return INSPECTION;
+	unsigned long n;
+	char *insp;
+	yylval->inspection = new Inspection;
+	if (*yytext != 'i') {
+		// Read the number of phases before the 'insp' part.
+		n = strtoul(yytext, &insp, 10);
+		if (n > INT_MAX || n == ULONG_MAX) {
+			compiler_lexer_report_warning("Too many phases in inspection");
+			n = 0;
+		}
+		yylval->inspection->n = n;
+	} else {
+		yylval->inspection->n = 0;
+		insp = yytext;
+	}
+
+	// Read the rate after the 'insp' part.
+	insp += 4;
+	yylval->inspection->k = decnumber<>(insp);
+
+	return INSPECTION;
 }
 {replacement} {
     char buffer[101];

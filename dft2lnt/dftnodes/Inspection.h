@@ -20,10 +20,10 @@ namespace DFT {
         class Inspection: public Gate {
         private:
             int phases;
-            double lambda;
+            decnumber<> lambda;
             mutable std::string cachedName;
         public:
-            Inspection(Location loc, std::string name, int phases, double lambda):
+            Inspection(Location loc, std::string name, int phases, decnumber<> lambda):
                 Gate(loc,name,InspectionType),
                 phases(phases),
                 lambda(lambda) {
@@ -36,12 +36,13 @@ namespace DFT {
             virtual bool repairsChildren() const { return true; }
             
             int getPhases() const {return phases;}
-            double getLambda() const {return lambda;}
+            decnumber<> getLambda() const {return lambda;}
 
             virtual const std::string& getTypeStr() const {
                 if(cachedName.empty()) {
                     std::stringstream ss;
-                    ss << phases;
+		    if (phases > 1)
+			    ss << phases;
                     ss << "insp";
                     cachedName = ss.str();
                 }

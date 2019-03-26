@@ -145,7 +145,10 @@ std::string DFT::DFTreeEXPBuilder::getINSPProc(const DFT::Nodes::Inspection& ins
     
     ss << "total rename ";
     // Insert lambda value
-    ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_INSPECTION << " !1" << "\" -> \"rate " << insp.getLambda() << "\"";
+	std::string rate = "rate " + insp.getLambda().str();
+	if (insp.getPhases() == 0)
+		rate = "time " + insp.getLambda().str();
+    ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_INSPECTION << " !1" << "\" -> \"" << rate << "\"";
     
     ss << " in \"";
     ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(insp);
@@ -189,7 +192,10 @@ void DFT::DFTreeEXPBuilder::printSyncLine(const EXPSyncRule& rule, const vector<
 		exp_body << "_";
 		++c;
 	}
-	exp_body << " -> " << rule.toLabel;
+	if (rule.toLabel.find(' ') == std::string::npos)
+		exp_body << " -> " << rule.toLabel;
+	else
+		exp_body << " -> \"" << rule.toLabel << "\"";
 }
 
 DFT::DFTreeEXPBuilder::DFTreeEXPBuilder(std::string root, std::string tmp, std::string nameBCG, std::string nameEXP, DFT::DFTree* dft, CompilerContext* cc):
@@ -916,7 +922,20 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 							 syncFail(0), "inspf_", n);
 			addInvBroadcastRule(repairRules, node, syncRepair((size_t)0),
 						        syncRepair(false), "rep_", n);
+			const DFT::Nodes::Inspection *insp = static_cast<const DFT::Nodes::Inspection *>(&node);
+			if (insp->getPhases() == 0) {
+				std::string l = "time " + insp->getLambda().str();
+				EXPSyncItem *RR = new EXPSyncItem(l);
+				unsigned int nodeID = nodeIDs[&node];
 
+				EXPSyncRule rule(l, false);
+				rule.syncOnNode = &node;
+				rule.insertLabel(nodeID, RR);
+				std::stringstream report("Added new timed sync rule: ");
+				printSyncLineShort(report, rule);
+				cc->reportAction2(report.str(),VERBOSITY_RULES);
+				inspectionRules.push_back(rule);
+			}
 		} else if(DFT::Nodes::Node::typeMatch(node.getType(),
 											  DFT::Nodes::ReplacementType))
 		{

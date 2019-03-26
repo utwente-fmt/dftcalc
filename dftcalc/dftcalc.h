@@ -49,9 +49,11 @@ namespace DFT {
 		File bcg2imcaExec;
 		File bcg2janiExec;
 		File bcg2tralabExec;
+		File maxprogExec;
 		File svlExec;
 		File bcgioExec;
 		File bcginfoExec;
+		File bcgminExec;
 		File stormExec;
 		File mrmcExec;
 		File imrmcExec;

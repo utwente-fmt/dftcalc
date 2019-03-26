@@ -558,6 +558,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 	File svlLog = dft.newWithExtension("log");
 	File exp    = dft.newWithExtension("exp");
 	File bcg    = dft.newWithExtension("bcg");
+	File aut    = dft.newWithExtension("aut");
 	File imc    = dft.newWithExtension("imc");
 	File ctmdpi = dft.newWithExtension("ctmdpi");
 	File tra = dft.newWithExtension("tra");
@@ -666,6 +667,22 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			std::string command = svlExec.getFilePath() + " \"" + svl.getFileRealPath() + "\"";
 
 			if (exec.runCommand(command, "svl", bcg) == "")
+				return 1;
+
+			messageFormatter->reportAction("Applying maximal progress to IMC...",VERBOSITY_FLOW);
+			command = maxprogExec.getFilePath() + " \"" + bcg.getFileRealPath() + "\" \"" + aut.getFileRealPath() + "\" FAIL ONLINE";
+
+			if (exec.runCommand(command, "maxprog", aut) == "")
+				return 1;
+
+			command = bcgioExec.getFilePath() + " \"" + aut.getFileRealPath() + "\" \"" + bcg.getFileRealPath() + "\"";
+
+			if (exec.runCommand(command, "bcg_io", bcg) == "")
+				return 1;
+
+			command = bcgminExec.getFilePath() + " -branching -rate -self -epsilon 5e-324 \"" + bcg.getFileRealPath() + "\"";
+
+			if (exec.runCommand(command, "bcg_min", bcg) == "")
 				return 1;
 		} else {
 			messageFormatter->reportAction("Reusing IMC",VERBOSITY_FLOW);
@@ -911,7 +928,7 @@ int main(int argc, char** argv) {
 	enum DFT::checker useChecker = DFT::checker::STORM;
 	enum DFT::converter useConverter = DFT::converter::SVL;
 	bool explicitChecker     = false;
-	bool checkMin            = true;
+	bool checkMin            = false;
 	bool minMaxSet           = false;
 	bool expOnly             = false;
 	
@@ -1503,6 +1520,7 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 		bcg2janiExec = File(dft2lntRoot+"/bin/bcg2jani");
 	} else if (checker == IMRMC) {
 		bcg2tralabExec = File(dft2lntRoot+"/bin/bcg2tralab");
+		maxprogExec = File(dft2lntRoot+"/bin/maxprog");
 	}
 	maxprogExec = File(dft2lntRoot+"/bin/maxprog");
 
@@ -1605,6 +1623,7 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 
 	ok &= findInPath("bcg_io", bcgioExec);
 	ok &= findInPath("bcg_info", bcginfoExec);
+	ok &= findInPath("bcg_min", bcgminExec);
 
 	/* Find dot executable (based on PATH environment variable) */
 	if (!buildDot.empty())

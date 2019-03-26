@@ -140,5 +140,6 @@ std::vector<DFT::DFTCalculationResultItem> ModestRunner::analyze(std::vector<Que
 		}
 		ret.push_back(it);
 	}
+	messageFormatter->reportAction("Done calculating probability with Modest", DFT::VERBOSITY_FLOW);
 	return ret;
 }

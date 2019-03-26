@@ -84,12 +84,12 @@ std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& no
         }
         if(!be.hasRepairModule()) {
 			if (be.hasInspectionModule())
-				ss << "_imrm";
+				ss << "_im";
 			else
 				ss << "_repair";
         } else if(be.isRepairable()) {
 			if (be.hasInspectionModule())
-				ss << "_im";
+				ss << "_imrm";
 			else
 				ss << "_rm";
 		}
@@ -591,7 +591,7 @@ int DFT::DFTreeBCGNodeBuilder::generateInspection(FileWriter& out, const DFT::No
 		<< "," << GATE_RATE_INSPECTION
 		<< "] ("
 		<< total << " of NAT"
-		", " << phases << " of NAT)"
+		", " << (phases ? phases : 1) << " of NAT)"
 		<< out.applypostfix;
     
 	out.outdent();

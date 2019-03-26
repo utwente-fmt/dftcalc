@@ -77,7 +77,7 @@ int DFT::DFTreePrinter::printGate(std::ostream& out, const DFT::Nodes::Gate* gat
 		if(gate->matchesType(DFT::Nodes::InspectionType)) {
 			const DFT::Nodes::Inspection *insp;
 			insp = static_cast<const DFT::Nodes::Inspection *>(gate);
-			out << insp->getLambda();
+			out << insp->getLambda().str();
 		}
 		for(DFT::Nodes::Node* node: gate->getChildren()) {
 			out << " \"" << node->getName() << "\"";

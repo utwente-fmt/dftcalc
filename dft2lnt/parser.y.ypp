@@ -58,10 +58,12 @@
 		std::string str_val;
 	} RealWithString;
     
-    typedef struct Inspection {
+    class Inspection {
+	public:
         int n;
-        double k;
-    } Inspection;
+        decnumber<> k;
+		Inspection() : k(0) { }
+    };
     
     typedef struct Replacement {
         int n;
@@ -78,7 +80,7 @@
 		char* address;
 		Voting voting;
         Replacement replacement;
-        Inspection inspection;
+        Inspection *inspection;
 		DFT::AST::ASTNodes* nodes;
 		DFT::AST::ASTNode* node;
 		DFT::DFTree* dft;
@@ -505,7 +507,10 @@ gate //{
 	|	RU_F      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitFcfsType); free($1); }
 	|	RU_P      { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitPrioType); free($1); }
 	|	RU_ND     { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::RepairUnitNdType  ); free($1); }
-    |	INSPECTION{ $$ = new DFT::AST::ASTInspectionType(@$,$1.n,$1.k);                                          }
+    |	INSPECTION{
+				$$ = new DFT::AST::ASTInspectionType(@$,$1->n,decnumber<>($1->k));
+				delete $1;
+		}
     |	REPLACEMENT{ $$ = new DFT::AST::ASTReplacementType(@$,$1.n,$1.k);                                        }
 	|	TRANSFER  { $$ = new DFT::AST::ASTGateType(@1,std::string($1),DFT::Nodes::GateTransferType  ); free($1); }
 	;

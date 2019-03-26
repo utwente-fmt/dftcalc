@@ -604,12 +604,12 @@ public:
 			target_sign = -1;
 
 		ET emax = std::numeric_limits<ET>::max();
-		ET emin = std::numeric_limits<ET>::max();
+		ET emin = std::numeric_limits<ET>::min();
 		ET target_exponent = other.exponent;
 		if ((target_exponent > 0 && exponent > emax - target_exponent)
 		 || (target_exponent < 0 && exponent < emin - target_exponent))
 		{
-			throw std::overflow_error("Multiplication result too large" + std::to_string(target_exponent) + " plus " + std::to_string(exponent));
+			throw std::overflow_error("Multiplication result too large: " + std::to_string(target_exponent) + " plus " + std::to_string(exponent));
 		}
 		target_exponent += exponent;
 
@@ -675,7 +675,7 @@ public:
 		if (other.num_blocks == 0)
 			return sign < 0;
 		if (other.sign != sign)
-			sign < other.sign;
+			return sign < other.sign;
 		if (other.exponent != exponent)
 			return exponent < other.exponent;
 		if (other.num_blocks != num_blocks)
