@@ -10,6 +10,7 @@
 
 #include "Node.h"
 #include "Gate.h"
+#include "GateFDEP.h"
 #include <string>
 #include <unordered_set>
 
@@ -68,10 +69,21 @@ namespace Nodes {
 					if (subtree.find(c) == subtree.end())
 						to_explore.insert(c);
 				}
+				if (g->matchesType(DFT::Nodes::NodeType::GateFDEPType)) {
+					const GateFDEP *f = static_cast<const GateFDEP *>(g);
+					for (Node *c : f->getDependers()) {
+						if (subtree.find(c) == subtree.end())
+							to_explore.insert(c);
+					}
+				}
 			}
 			if (current == this)
 				continue;
 			for (Node *par : current->parents) {
+				if (subtree.find(par) == subtree.end())
+					to_explore.insert(par);
+			}
+			for (Node *par : current->triggers) {
 				if (subtree.find(par) == subtree.end())
 					to_explore.insert(par);
 			}

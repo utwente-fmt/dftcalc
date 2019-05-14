@@ -24,6 +24,7 @@ namespace DFT {
 namespace Nodes {
 
 class Gate;
+class GateFDEP;
 
 /**
  * The supported DFT Node types
@@ -159,6 +160,8 @@ private:
 	
 	/// List of parents, instances are freed by DFTree instance.
 	std::vector<Nodes::Gate*> parents;
+	// List of FDEP gates triggering this node
+	std::vector<Nodes::GateFDEP *>triggers;
 public:
 	Node(Location location, NodeType type):
 		location(location),
@@ -224,6 +227,9 @@ public:
 	void setParents(std::vector<Nodes::Gate*> parents) { this->parents = parents;}
 	std::vector<Gate*>& getParents() {return parents;}
 	const std::vector<Gate*>& getParents() const {return parents;}
+
+	std::vector<GateFDEP *>& getTriggers() {return triggers;}
+	const std::vector<GateFDEP *>& getTriggers() const {return triggers;}
 	
 	/**
 	 * Returns the type of this Node.

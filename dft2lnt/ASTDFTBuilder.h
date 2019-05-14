@@ -432,6 +432,7 @@ public:
 			for(int i=1; i<gate->getChildren()->size(); ++i) {
 				DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(i)->getString());
 				g->getDependers().push_back(node);
+				node->getTriggers().push_back(g);
 			}
 		} else {
 			// Fix the parent-child relationship for this Gate and its children

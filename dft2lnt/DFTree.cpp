@@ -117,6 +117,17 @@ namespace DFT {
 			}
 		}
 		std::unordered_set<Nodes::Node *> to_remove;
+		for (Nodes::Node *node : reachable) {
+			if (!node->matchesType(Nodes::GateFDEPType))
+				continue;
+			Nodes::GateFDEP *f = static_cast<Nodes::GateFDEP *>(node);
+			vector<DFT::Nodes::Node*> keep;
+			for (Nodes::Node *dep : f->getDependers()) {
+				if (reachable.find(dep) != reachable.end())
+					keep.push_back(dep);
+			}
+			f->getDependers().swap(keep);
+		}
 		for (Nodes::Node *node : nodes) {
 			if (reachable.find(node) == reachable.end()) {
 				to_remove.insert(node);

@@ -14,6 +14,10 @@ static void writeModules(std::ostream &out, DFT::DFTree *dft, DFT::Nodes::Node *
 			return;
 		}
 	}
+	if (root->outputIsDumb()) {
+		out << "=0\n";
+		return;
+	}
 	if (!(root->matchesType(DFT::Nodes::NodeType::GateAndType)
 	      || root->matchesType(DFT::Nodes::NodeType::GateOrType)
 	      || root->matchesType(DFT::Nodes::NodeType::GateVotingType)))
