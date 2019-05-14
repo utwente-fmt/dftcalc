@@ -104,6 +104,17 @@ namespace DFT {
 				if (reachable.find(par) == reachable.end())
 					to_explore.insert(par);
 			}
+			for (Nodes::Node *node : nodes) {
+				if (!node->matchesType(Nodes::GateFDEPType))
+					continue;
+				Nodes::GateFDEP *f = static_cast<Nodes::GateFDEP *>(node);
+				if (reachable.find(f) != reachable.end())
+					continue;
+				for (Nodes::Node *dep : f->getDependers()) {
+					if (dep == current)
+						to_explore.insert(f);
+				}
+			}
 		}
 		std::unordered_set<Nodes::Node *> to_remove;
 		for (Nodes::Node *node : nodes) {
