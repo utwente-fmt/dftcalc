@@ -25,7 +25,7 @@ std::string StormRunner::getCommandOptions(Query q)
 {
 	std::string ret = " --constants T=1,L=0 ";
 	if (q.errorBoundSet)
-		ret = " --precision " + q.errorBound.str();
+		ret += " --precision " + q.errorBound.str();
 	if (runExact) {
 		if (q.type == TIMEBOUND) {
 			messageFormatter->reportWarning("Storm does not compute exact time-bounded properties, defaulting to approximate");
