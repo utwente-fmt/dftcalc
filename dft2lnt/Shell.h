@@ -40,6 +40,8 @@ public:
 				cw << "terminate " << ConsoleWriter::Color::MagentaBright << "j" << ConsoleWriter::Color::WhiteBright << "ob or " << ConsoleWriter::Color::MagentaBright << "p" << ConsoleWriter::Color::WhiteBright << "rogram?" << ConsoleWriter::Color::Reset;
 				char answer[10];
 				std::cin.getline(answer,9);
+				if (cin.eof())
+					exit(signal);
 				if(!strncmp("j",answer,1)) {
 					break;
 				} else if(!strncmp("p",answer,1)) {
