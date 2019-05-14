@@ -43,7 +43,7 @@ const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECT   ("INSPECT");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECTED   ("INSPECTED");
 const std::string DFT::DFTreeBCGNodeBuilder::GATE_IMPOSSIBLE   ("IMPOSSIBLE");
 
-const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 7;
+const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 8;
 
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_LNTISVALID = 2;
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_BCGISVALID = 2;

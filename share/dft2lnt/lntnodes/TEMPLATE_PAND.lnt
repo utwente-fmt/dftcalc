@@ -7,11 +7,10 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 		done : BOOL,
 		never_fail: BOOL,
 		nr : NAT,
-		last : NAT,
 		nr_act: NAT
 	in
 		done := FALSE;
-		nr_failed := 1 of NAT;
+		nr_failed := 0 of NAT;
 		nr_act := 0 of NAT;
 		never_fail := FALSE;
 		loop
@@ -19,21 +18,13 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 
 			(*
 			 * Listen for any child to be triggered.
-			 * If this happens, we add the localNodeID of the failing node to
-			 * the list of failed nodes.
-			 * The PAnd children should all fail from left to right. Note that
-			 * for a PAnd with two children supporting repair, the following
-			 * sequence would cause the PAnd to fail:
-			 *   - Fail B
-			 *   - Fail A
-			 *   - Repair B
-			 *   - Fail B
 			 *)
-				FAIL (?nr) where (0 < nr) and (nr <= total) and not(never_fail);
-				if(nr == nr_failed) then
-					nr_failed:=nr_failed+1
-				else
-					never_fail:=TRUE
+				FAIL (?nr) where (0 < nr) and (nr <= total);
+				if (nr > (nr_failed + 1)) then
+					never_fail := TRUE
+				end if;
+				if (nr == (nr_failed + 1)) then
+					nr_failed := nr_failed + 1
 				end if;
 				nr := 0
 
@@ -43,7 +34,7 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 			 * notifies its parents.
 			 *)
 			[]
-				if (nr_failed > total) and not (done) and not(never_fail) then
+				if (nr_failed == total) and not(done) and not(never_fail) then
 					FAIL (!0 of NAT); done := TRUE
 				end if
 
