@@ -719,6 +719,16 @@ public:
 				neg_exponent = 0;
 				ret = "0" + ret;
 				dot_pos = 1;
+			} else if (digits == neg_exponent - 1) {
+				digits += 2;
+				neg_exponent = 0;
+				ret = "00" + ret;
+				dot_pos = 1;
+			} else if (digits == neg_exponent - 2) {
+				digits += 3;
+				neg_exponent = 0;
+				ret = "000" + ret;
+				dot_pos = 1;
 			} else if (digits > neg_exponent) {
 				dot_pos = digits - neg_exponent;
 				neg_exponent = 0;
