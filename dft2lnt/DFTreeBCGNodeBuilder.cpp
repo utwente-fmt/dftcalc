@@ -167,14 +167,6 @@ int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out,
 											  int threshold)
 {
 	int total = gate.getChildren().size();
-	// FIXME: add this directly as gate information
-	int repairable = 0;
-	for(size_t n = 0; n<gate.getChildren().size(); ++n) {
-		// Get the current child and associated childID
-		const DFT::Nodes::Node& child = *gate.getChildren().at(n);
-		if(child.isRepairable())
-			repairable++;
-	}
 
 	out << out.applyprefix;
 	out << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING_REPAIR) is";
@@ -200,7 +192,7 @@ int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out,
 	    << GATE_ONLINE << "]";
 	out << " (" << threshold << " of NAT, "
 	    << total << " of NAT, "
-	    << repairable << " of NAT, "
+	    << total << " of NAT, "
 	    << (gate.isAlwaysActive() ? "TRUE" : "FALSE")
 	    << ")" << out.applypostfix;
 	out.outdent();
