@@ -70,6 +70,38 @@ std::string DFT::DFTCalculationResultItem::valStr(size_t deltaDigits) const {
 		uexp = upper.substr(upper.find('e'));
 		upper = upper.substr(0, upper.find('e'));
 	}
+
+	/* If the value is given in scientific notation but does not
+	 * contain a decimal point, add one so that rounding works
+	 * properly.
+	 */
+	if (lower.find('.') == std::string::npos && lexp != "") {
+		long e = std::stol(lexp.substr(1, lexp.length() - 1));
+		e += lower.length() - 1;
+		lower += '.';
+		for (size_t i = lower.length() - 2; i > 0; i--) {
+			lower[i + 1] = lower[i];
+			lower[i] = '.';
+		}
+		if (e)
+			lexp = "e" + std::to_string(e);
+	}
+	if (upper.find('.') == std::string::npos && uexp != "") {
+		long e = std::stol(uexp.substr(1, uexp.length() - 1));
+		e += upper.length() - 1;
+		upper += '.';
+		for (size_t i = upper.length() - 2; i > 0; i--) {
+			upper[i + 1] = upper[i];
+			upper[i] = '.';
+		}
+		if (e)
+			uexp = "e" + std::to_string(e);
+	}
+
+	/* Different exponents: Just don't merge.
+	 * (We could add a special case allowing ranges like [9.9, 10.0]
+	 * or [0.99, 1]e-7)
+	 */
 	if (lexp != uexp) {
 		lower = round(lower, deltaDigits, 0);
 		upper = round(upper, deltaDigits, 1);
