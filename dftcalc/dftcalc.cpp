@@ -366,9 +366,16 @@ int DFT::DFTCalc::calcModular(const bool reuse,
 	} else {
 		messageFormatter->reportAction("Reusing modules file",VERBOSITY_FLOW);
 	}
-	std::string* modules = FileSystem::load(mod);
+	std::string* tmp = FileSystem::load(mod);
+	if (!tmp) {
+		messageFormatter->reportError("Error loading modules file");
+		return 1;
+	}
+	std::string modules;
+	std::swap(modules, *tmp);
+	delete tmp;
 	return checkModule(reuse, cwd, dftOriginal, queries, useChecker,
-	                   useConverter, warnNonDeterminism, ret, expOnly,*modules);
+	                   useConverter, warnNonDeterminism, ret, expOnly, modules);
 }
 
 static void addVoteResults(DFT::DFTCalculationResultItem &ret,
