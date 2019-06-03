@@ -463,6 +463,7 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 		expandRangeQueries(tmp);
 		for (Query q : tmp) {
 			DFT::DFTCalculationResultItem it(q);
+			it.exactBounds = true;
 			it.lowerBound = it.upperBound = val;
 			ret.failProbs.push_back(it);
 		}
