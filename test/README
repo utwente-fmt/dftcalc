@@ -1,0 +1,13 @@
+This directory contains automated tests of DFTCalc.
+
+To run the tests, execute 'sh test.sh [options]', where [options] is a
+list of options accepted by DFTCalc (e.g. --exact or -M). If you have a
+lot of time on your hands, run 'sh test.sh --all [options]', which will
+automatically run the tests with all the model checkers and converters,
+and with and without modularization.
+
+The tests are listed in 'tests.txt', formatted as:
+	filename	"options"	reference_result
+where the options should specify the metric to calculate (and -M for
+large trees for which non-modular analysis is impractical), and the
+reference result should be an interval known to contain the true value.

@@ -22,3 +22,4 @@ dftcalc/compiletime.h
 dftcalc/dftcalc
 dfttest/compiletime.h
 dfttest/dfttest
+test/output
