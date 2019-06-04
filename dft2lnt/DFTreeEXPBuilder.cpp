@@ -920,8 +920,11 @@ int DFT::DFTreeEXPBuilder::createSyncRule(
 							 syncInspection(0), "insp_", n);
 			addBroadcastRule(failRules, node, syncInspection(n+1),
 							 syncFail(0), "inspf_", n);
-			addInvBroadcastRule(repairRules, node, syncRepair((size_t)0),
-						        syncRepair(false), "rep_", n);
+			/* Don't send repair signals to gates */
+			if (!child->matchesType(DFT::Nodes::GateType)) {
+				addInvBroadcastRule(repairRules, node, syncRepair((size_t)0),
+				                    syncRepair(false), "rep_", n);
+			}
 			const DFT::Nodes::Inspection *insp = static_cast<const DFT::Nodes::Inspection *>(&node);
 			if (insp->getPhases() == 0) {
 				std::string l = "time " + insp->getLambda().str();
