@@ -43,6 +43,14 @@ std::string DFT::DFTCalculationResultItem::valStr(size_t deltaDigits) const {
 			middle = middle.substr(0, middle.find('e'));
 		}
 		size_t wantedDigits = -std::log10(margin / (double)midVal);
+		if (exp == "") {
+			size_t i = 0;
+			while (middle[i] == '0' || middle[i] == '.') {
+				if (middle[i] == '0')
+					wantedDigits++;
+				i++;
+			}
+		}
 		size_t dot = middle.find('.');
 		if (dot < wantedDigits)
 			wantedDigits++;
