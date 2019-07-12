@@ -9,6 +9,10 @@ else()
 		OUTPUT_VARIABLE git_output OUTPUT_STRIP_TRAILING_WHITESPACE
 	)
 	execute_process(
+		COMMAND git describe HEAD
+		OUTPUT_VARIABLE git_descr OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+	execute_process(
 		COMMAND git diff --exit-code
 		OUTPUT_QUIET
 		ERROR_QUIET
@@ -23,6 +27,11 @@ else()
 		COMMAND git branch
 		OUTPUT_VARIABLE git_test OUTPUT_STRIP_TRAILING_WHITESPACE
 	)
+endif()
+
+if (git_version STREQUAL git_descr)
+else()
+	set(git_version ${git_version}+)
 endif()
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/compiletime.h
