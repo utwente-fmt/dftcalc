@@ -16,7 +16,6 @@ message(STATUS "NOTE: When installed, dft2lnt will be installed in ${DFTROOT}")
 message(STATUS "      You can change this behaviour by running cmake with:")
 message(STATUS "         -DDFTROOT=/path/to/dft2lntroot")
 
-add_subdirectory(yaml-cpp EXCLUDE_FROM_ALL)
 add_subdirectory(dft2lnt)
 add_subdirectory(dft2lntc)
 add_subdirectory(dftcalc)

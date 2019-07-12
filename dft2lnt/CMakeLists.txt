@@ -20,7 +20,6 @@ add_definitions(-std=c++17)
 include_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}
-	${CMAKE_CURRENT_SOURCE_DIR}/../yaml-cpp/include
 )
 
 ## Generate parser and lexer files to the target directory, because they depend on the selected Build (Debug/Release)
@@ -56,11 +55,6 @@ add_library(dft2lnt
 )
 
 target_link_libraries(dft2lnt rt)
-
-# For clock_gettime() (to measure elapsed time), we need this
-if(UNIX AND NOT APPLE AND NOT WIN32)
-	target_link_libraries(dft2lnt rt)
-endif()
 
 ## Installation
 install (TARGETS dft2lnt DESTINATION lib)

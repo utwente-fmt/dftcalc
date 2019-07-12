@@ -17,7 +17,6 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/../dft2lnt
 	${CMAKE_CURRENT_SOURCE_DIR}/../dftcalc
-	${CMAKE_CURRENT_SOURCE_DIR}/../yaml-cpp/include
 	${CMAKE_CURRENT_SOURCE_DIR}/../pcre
 	${CMAKE_CURRENT_BINARY_DIR}/../pcre/
 )
@@ -37,19 +36,15 @@ add_executable(dfttest
 
 ## Depends on:
 ##   - dft2lnt (libdft2lnt.a)
-add_dependencies(dfttest dft2lntc yaml-cpp)
+add_dependencies(dfttest dft2lntc)
 
 ## Link with:
 ##   - libdft2lnt.a
 target_link_libraries(dfttest
 	${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a
-	${CMAKE_CURRENT_BINARY_DIR}/../yaml-cpp/libyaml-cpp.a
 #	${CMAKE_CURRENT_BINARY_DIR}/../pcre/libpcrecpp.a
+	yaml-cpp
 	)
-
-if(UNIX AND NOT APPLE AND NOT WIN32)
-	target_link_libraries(dfttest rt)
-endif()
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 

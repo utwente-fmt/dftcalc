@@ -16,7 +16,6 @@ include_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/../dft2lnt
-	${CMAKE_CURRENT_SOURCE_DIR}/../yaml-cpp/include
 )
 
 ## Link directories
@@ -42,7 +41,7 @@ add_dependencies(dftcalc dft2lntc)
 
 ## Link with:
 ##   - libdft2lnt.a
-target_link_libraries(dftcalc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a ${CMAKE_CURRENT_BINARY_DIR}/../yaml-cpp/libyaml-cpp.a)
+target_link_libraries(dftcalc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a yaml-cpp)
 
 if(UNIX AND NOT APPLE AND NOT WIN32)
 	target_link_libraries(dftcalc rt)

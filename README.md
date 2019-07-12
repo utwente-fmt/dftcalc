@@ -19,6 +19,9 @@ CADP. Beyond that, you need either MRMC, IMRMC, IMCA, Storm, or Modest. For
 exact operation (the --exact switch), you need DFTRES and IMRMC, Storm,
 or Modest.
 
+**yaml-cpp**
+Install using your favorite package manager, e.g. 'dnf install yaml-cpp-devel' on Fedora.
+
 **CADP**
 See the [CADP website](http://www.inrialpes.fr/vasy/cadp/) on how to obtain a license and download the CADP toolkit.
 
