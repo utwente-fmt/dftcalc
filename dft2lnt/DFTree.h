@@ -137,6 +137,15 @@ public:
 	}
 
 	/**
+	 * Returns the list of nodes.
+	 * @return The list of nodes.
+	 */
+	std::vector<const Nodes::Node*> getNodes() const {
+		std::vector<const Nodes::Node*> ret(nodes.begin(), nodes.end());
+		return ret;
+	}
+
+	/**
 	 * Sets the Top Node to the specified Node.
 	 * The Node has to be already added to this DFT.
 	 * @param The Top Node to set.

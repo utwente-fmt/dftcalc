@@ -9,7 +9,6 @@
 
 #include "DFTree.h"
 #include "dftnodes/nodes.h"
-#include "dft_parser.h"
 #include <unordered_set>
 
 namespace DFT {

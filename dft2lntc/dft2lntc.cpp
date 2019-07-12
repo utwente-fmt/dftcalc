@@ -34,7 +34,7 @@
 #include "DFTreeValidator.h"
 #include "DFTreePrinter.h"
 #include "DFTreeBCGNodeBuilder.h"
-#include "DFTreeSVLAndLNTBuilder.h"
+#include "DFTreeAUTNodeBuilder.h"
 #include "DFTreeEXPBuilder.h"
 #include "compiletime.h"
 #include "Settings.h"
@@ -145,6 +145,14 @@ std::string getRoot(CompilerContext* compilerContext) {
 	if(stat((dft2lntRoot+DFT2LNT::BCGSUBROOT).c_str(),&rootStat)) {
 		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::BCGSUBROOT,0755)) {
 			compilerContext->reportError("Could not create BCG Nodes directory (`" + dft2lntRoot+DFT2LNT::BCGSUBROOT + "')");
+			dft2lntRoot = "";
+			goto end;
+		}
+	}
+
+	if(stat((dft2lntRoot+DFT2LNT::AUTSUBROOT).c_str(),&rootStat)) {
+		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::AUTSUBROOT,0755)) {
+			compilerContext->reportError("Could not create AUT Nodes directory (`" + dft2lntRoot+DFT2LNT::AUTSUBROOT + "')");
 			dft2lntRoot = "";
 			goto end;
 		}
@@ -658,45 +666,43 @@ int main(int argc, char** argv) {
 	}
 	compilerContext.flush();
 
-	/* Building SVL and LNT out of DFT */
-//	if(dftValid) {
-//		compilerContext.notify("Building SVL and LNT...");
-//		DFT::DFTreeSVLAndLNTBuilder builder(dft2lntRoot,".","try",dft,&compilerContext);
-//		builder.build();
-//	}
-
 	/* Building needed BCG files for DFT */
 	if(rootValid && dftValid) {
-		compilerContext.notify("Building needed BCG files...",VERBOSITY_FLOW);
+		compilerContext.notify("Building needed AUT files...",VERBOSITY_FLOW);
 		compilerContext.flush();
-		DFT::DFTreeBCGNodeBuilder builder(dft2lntRoot,dft, &compilerContext);
-		builder.generate();
-	}
+		DFT::DFTreeBCGNodeBuilder bcgBuilder(dft2lntRoot,dft, &compilerContext);
+		DFT::DFTreeAUTNodeBuilder autBuilder(dft2lntRoot,dft, &compilerContext);
+		DFT::DFTreeNodeBuilder *nodeBuilder = &autBuilder;
+		if (autBuilder.generate()) {
+			compilerContext.notify("Unable to make AUT files, building needed BCG files...",VERBOSITY_FLOW);
+			bcgBuilder.generate();
+			nodeBuilder = &bcgBuilder;
+		}
+		if (outputFileSet) {
+			/* Building EXP out of DFT */
+			compilerContext.notify("Building EXP...",VERBOSITY_FLOW);
+			compilerContext.flush();
+			DFT::DFTreeEXPBuilder builder(dft2lntRoot,".",outputBCGFileName,outputEXPFileName,dft, nodeBuilder, &compilerContext);
+			builder.build();
 
-	/* Building EXP out of DFT */
-	if(rootValid && dftValid && outputFileSet) {
-		compilerContext.notify("Building EXP...",VERBOSITY_FLOW);
-		compilerContext.flush();
-		DFT::DFTreeEXPBuilder builder(dft2lntRoot,".",outputBCGFileName,outputEXPFileName,dft, &compilerContext);
-		builder.build();
-		
-		if(outputSVLFileName!="") {
-			std::ofstream svlFile (outputSVLFileName);
-			builder.printSVL(svlFile);
-		} else {
-			std::stringstream out;
-			builder.printSVL(out);
-			compilerContext.reportFile("SVL",out.str());
+			if(outputSVLFileName!="") {
+				std::ofstream svlFile (outputSVLFileName);
+				builder.printSVL(svlFile);
+			} else {
+				std::stringstream out;
+				builder.printSVL(out);
+				compilerContext.reportFile("SVL",out.str());
+			}
+			if(outputEXPFileName!="") {
+				std::ofstream expFile (outputEXPFileName);
+				builder.printEXP(expFile);
+			} else {
+				std::stringstream out;
+				builder.printEXP(out);
+				compilerContext.reportFile("EXP",out.str());
+			}
+
 		}
-		if(outputEXPFileName!="") {
-			std::ofstream expFile (outputEXPFileName);
-			builder.printEXP(expFile);
-		} else {
-			std::stringstream out;
-			builder.printEXP(out);
-			compilerContext.reportFile("EXP",out.str());
-		}
-		
 	}
 	compilerContext.flush();
 	

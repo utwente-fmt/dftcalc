@@ -18,6 +18,7 @@
 #include <fcntl.h>
 
 #include "DFTreeBCGNodeBuilder.h"
+#include "automata/signals.h"
 #include "files.h"
 #include "FileSystem.h"
 #include "FileWriter.h"
@@ -27,21 +28,7 @@
 //#include "utimes.h"
 //#endif
 
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_FAIL        ("FAIL");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE    ("ACTIVATE");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_DEACTIVATE  ("DEACTIVATE");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIR      ("REPAIR");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_ONLINE      ("ONLINE");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRED    ("REPAIRED");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL   ("RATE_FAIL");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_MAINTAIN   ("RATE_MAINTAIN");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR ("RATE_REPAIR");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_INSPECTION ("RATE_INSPECTION");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_RATE_PERIOD ("RATE_PERIOD");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING   ("REPAIRING");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECT   ("INSPECT");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_INSPECTED   ("INSPECTED");
-const std::string DFT::DFTreeBCGNodeBuilder::GATE_IMPOSSIBLE   ("IMPOSSIBLE");
+using namespace automata::signals;
 
 const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 8;
 
@@ -52,84 +39,12 @@ const int DFT::DFTreeBCGNodeBuilder::VERBOSE_FILE_LNT   = 3;
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_FILE_SVL   = 3;
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_GENERATION = 1;
 
+std::string DFT::DFTreeBCGNodeBuilder::getFileForTopLevel() {
+	return "toplevel.bcg";
+}
+
 std::string DFT::DFTreeBCGNodeBuilder::getFileForNode(const DFT::Nodes::Node& node) {
-	std::stringstream ss;
-	
-	if(node.getType()==DFT::Nodes::GateVotingType) {
-		ss << "v";
-	}
-    
-    if(node.getType()==DFT::Nodes::InspectionType) {
-        ss << "i";
-    }
-    
-    if(node.getType()==DFT::Nodes::ReplacementType) {
-        ss << "r";
-    }
-
-	if (node.getType() == DFT::Nodes::RepairUnitNdType) {
-		const DFT::Nodes::Gate& gate = *static_cast<const DFT::Nodes::Gate*>(&node);
-		ss << "ru_nd_" << gate.getChildren().size();
-		return ss.str();
-	}
-	
-	ss << node.getTypeStr();
-	if(node.isBasicEvent()) {
-		const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&node);
-		if(be.getMu().is_zero()) {
-			ss << "_cold";
-		}
-        if(be.getMaintain()>0) {
-            ss << "_maintain";
-        }
-        if(!be.hasRepairModule()) {
-			if (be.hasInspectionModule())
-				ss << "_im";
-			else
-				ss << "_repair";
-        } else if(be.isRepairable()) {
-			if (be.hasInspectionModule())
-				ss << "_imrm";
-			else
-				ss << "_rm";
-		}
-        if(be.getLambda().is_zero()) {
-            ss << "_dummy";
-        }
-		if(be.getFailed()) {
-			ss << "_failed";
-		}
-		if(be.getPhases()>1){
-			ss << "_erl" << be.getPhases();
-		}
-		if(be.getInterval()>0){
-			ss << "_interval" << be.getInterval();
-		}
-		if (be.isAlwaysActive())
-			ss << "_aa";
-	} else if(node.isGate()) {
-		const DFT::Nodes::Gate& gate = *static_cast<const DFT::Nodes::Gate*>(&node);
-		ss << "_c" << gate.getChildren().size();
-		if(node.getType()==DFT::Nodes::GateVotingType) {
-			const DFT::Nodes::GateVoting& gateVoting = *static_cast<const DFT::Nodes::GateVoting*>(&node);
-			ss << "_t" << gateVoting.getThreshold();
-		} if(node.getType()==DFT::Nodes::GateFDEPType) {
-			const DFT::Nodes::GateFDEP& gateFDEP = *static_cast<const DFT::Nodes::GateFDEP*>(&node);
-			ss << "_d" << gateFDEP.getDependers().size();
-        } if(node.getType()==DFT::Nodes::ReplacementType) {
-            const DFT::Nodes::Replacement& replacement = *static_cast<const DFT::Nodes::Replacement*>(&node);
-            ss << "_p" << replacement.getPhases();
-        }
-		if(node.isRepairable()) {
-			ss << "_r";
-		}
-		if (node.isAlwaysActive())
-			ss << "_aa";
-	} else {
-		assert(0 && "getFileForNode(): Unknown node type");
-	}
-
-	return ss.str();
+	return getNodeName(node) + ".bcg";
 }
 
 int DFT::DFTreeBCGNodeBuilder::bcgIsValid(std::string bcgFilePath) {
@@ -169,7 +84,7 @@ int DFT::DFTreeBCGNodeBuilder::generateVoting(FileWriter& out,
 	int total = gate.getChildren().size();
 
 	out << out.applyprefix;
-	out << "module " << getFileForNode(gate) << "(TEMPLATE_VOTING_REPAIR) is";
+	out << "module " << getNodeName(gate) << "(TEMPLATE_VOTING_REPAIR) is";
 	out << out.applypostfix;
 	out.indent();
 
@@ -220,7 +135,7 @@ int DFT::DFTreeBCGNodeBuilder::generateSAnd(FileWriter& out, const DFT::Nodes::G
     generateHeaderClose(out);
     
     if(!gate.isRepairable()){
-        out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_SEQUENCE_AND) is" << out.applypostfix;
+        out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_SEQUENCE_AND) is" << out.applypostfix;
         out.indent();
         
         out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
@@ -260,7 +175,7 @@ int DFT::DFTreeBCGNodeBuilder::generatePAnd(FileWriter& out, const DFT::Nodes::G
 	out << out.applyprefix << " * Generating PAnd(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_PAND) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_PAND) is" << out.applypostfix;
 	out.indent();
 		out << out.applyprefix << "type NAT_ARRAY is array[1.." << total << "] of NAT end type" << out.applypostfix;
 		out << out.applyprefix << "process MAIN [" << GATE_IMPOSSIBLE << ", " << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_CHANNEL] is" << out.applypostfix;
@@ -279,7 +194,7 @@ int DFT::DFTreeBCGNodeBuilder::generatePor(FileWriter& out, const DFT::Nodes::Ga
 	out << out.applyprefix << " * Generating POR(parents=" << nr_parents << ", children= " << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
     
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_POR) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_POR) is" << out.applypostfix;
 	out.indent();
     out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
     out << out.applyprefix << "process MAIN [" << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_BOOL_CHANNEL] is" << out.applypostfix;
@@ -307,7 +222,7 @@ int DFT::DFTreeBCGNodeBuilder::generateSpare(FileWriter& out, const DFT::Nodes::
 	out << out.applyprefix << " * Generating Spare(parents=" << nr_parents << ", setting= " << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_SPARE) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_SPARE) is" << out.applypostfix;
 	out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
@@ -344,7 +259,7 @@ int DFT::DFTreeBCGNodeBuilder::generateFDEP(FileWriter& out, const DFT::Nodes::G
 	generateHeaderClose(out);
 	bool triggerAA = gate.getChildren().at(0)->isAlwaysActive();
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_FDEP) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_FDEP) is" << out.applypostfix;
 	out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << dependers << "] of BOOL end type" << out.applypostfix;
@@ -383,7 +298,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
 			<< ", interval=" << be.getInterval()
 			<< ")" << out.applypostfix;
 		generateHeaderClose(out);
-		out << out.applyprefix << "module " << getFileForNode(be)
+		out << out.applyprefix << "module " << getNodeName(be)
 			<< "(TEMPLATE_BE) is" << out.applypostfix;
 		out.appendLine("");
 		out.indent();
@@ -435,7 +350,7 @@ int DFT::DFTreeBCGNodeBuilder::generateBE(FileWriter& out,
 		out << out.applyprefix << " * Generating BE(parents="
 			<< nr_parents << ")" << out.applypostfix;
 		generateHeaderClose(out);
-		out << out.applyprefix << "module " << getFileForNode(be)
+		out << out.applyprefix << "module " << getNodeName(be)
 			<<"(TEMPLATE_BE_DUMMY) is" << out.applypostfix;
 		out.appendLine("");
 		out.indent();
@@ -466,7 +381,7 @@ int DFT::DFTreeBCGNodeBuilder::generateRU(FileWriter& out, const DFT::Nodes::Rep
 	out << out.applyprefix << " * Generating RepairUnit(dependers=" << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_REPAIRUNIT_ARB) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_REPAIRUNIT_ARB) is" << out.applypostfix;
 	out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
@@ -489,7 +404,7 @@ int DFT::DFTreeBCGNodeBuilder::generateRU_FCFS(FileWriter& out, const DFT::Nodes
 	out << out.applyprefix << " * Generating RepairUnit(dependers=" << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_REPAIRUNIT) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_REPAIRUNIT) is" << out.applypostfix;
 	out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
@@ -512,7 +427,7 @@ int DFT::DFTreeBCGNodeBuilder::generateRU_Prio(FileWriter& out, const DFT::Nodes
 	out << out.applyprefix << " * Generating RepairUnit(dependers=" << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_REPAIRUNIT_PRIO) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_REPAIRUNIT_PRIO) is" << out.applypostfix;
 	out.indent();
 
 		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
@@ -545,7 +460,7 @@ int DFT::DFTreeBCGNodeBuilder::generateRU_Nd(FileWriter& out,
 	out << out.applyprefix << " * Generating RepairUnitNd(dependers=" << total << ")" << out.applypostfix;
 	generateHeaderClose(out);
 
-	out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_REPAIRUNIT_ND) is" << out.applypostfix;
+	out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_REPAIRUNIT_ND) is" << out.applypostfix;
 	out.indent();
 
 	out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
@@ -567,7 +482,7 @@ int DFT::DFTreeBCGNodeBuilder::generateInspection(FileWriter& out, const DFT::No
     out << out.applyprefix << " * Generating Inspection(children=" << total << ")" << out.applypostfix;
     generateHeaderClose(out);
     
-    out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_INSPECTION) is" << out.applypostfix;
+    out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_INSPECTION) is" << out.applypostfix;
     out.indent();
 
     out << out.applyprefix << "process MAIN ["
@@ -601,7 +516,7 @@ int DFT::DFTreeBCGNodeBuilder::generateReplacement(FileWriter& out, const DFT::N
     out << out.applyprefix << " * Generating Replacement(dependers=" << total << ")" << out.applypostfix;
     generateHeaderClose(out);
 
-    out << out.applyprefix << "module " << getFileForNode(gate) << "(TEMPLATE_PERIODIC_REPAIRUNIT) is" << out.applypostfix;
+    out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_PERIODIC_REPAIRUNIT) is" << out.applypostfix;
     out.indent();
     
         out << out.applyprefix << "process MAIN [" << GATE_REPAIR << " : NAT_CHANNEL, " << GATE_REPAIRED << " : NAT_BOOL_CHANNEL, " << GATE_RATE_PERIOD << " : NAT_CHANNEL ] is" << out.applypostfix;
@@ -620,11 +535,10 @@ int DFT::DFTreeBCGNodeBuilder::generateReplacement(FileWriter& out, const DFT::N
 
 int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string>& triedToGenerate) {
 
-	// If the LNT file for the node was not generated before in this iteration
-	if(triedToGenerate.find(getFileForNode(node)) != triedToGenerate.end()) {
+	/* If the LNT file for the node was already generated, we're done */
+	if(triedToGenerate.find(getNodeName(node)) != triedToGenerate.end())
 		return 0;
-	}
-	triedToGenerate.insert(getFileForNode(node));
+	triedToGenerate.insert(getNodeName(node));
 
 	ConsoleWriter out(std::cout);
 	FileWriter lntOut;
@@ -637,7 +551,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 	bool lntGenerationNeeded = false;
 	bool bcgGenerationNeeded = false;
 	
-	std::string fileName = getFileForNode(node);
+	std::string fileName = getNodeName(node);
 	std::string lntFileName = fileName + "." + DFT::FileExtensions::LOTOSNT;
 	std::string svlFileName = fileName + "." + DFT::FileExtensions::SVL;
 	std::string bcgFileName = fileName + "." + DFT::FileExtensions::BCG;
@@ -718,14 +632,14 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 		// Get the info if the BCG file, enable (re)generation on error
 		if(stat((lntFilePath).c_str(),&lntFileStat)) {
 			lntGenerationNeeded = true;
-			cc->reportAction("LNT file `" + getFileForNode(node) + ".lnt' not found",VERBOSE_GENERATION);
+			cc->reportAction("LNT file `" + getNodeName(node) + ".lnt' not found",VERBOSE_GENERATION);
 			break;
 		}
 
 		// Get the info if the LNT Valid file, enable (re)generation on error
 		if(stat((lntFilePath+".valid").c_str(),&lntValidFileStat)) {
 			lntGenerationNeeded = true;
-			cc->reportAction("LNT file `" + getFileForNode(node) + ".lnt' is invalid",VERBOSE_GENERATION);
+			cc->reportAction("LNT file `" + getNodeName(node) + ".lnt' is invalid",VERBOSE_GENERATION);
 			break;
 		}
 
@@ -739,7 +653,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 				
 			} else {
 				lntGenerationNeeded = true;
-				cc->reportAction("LNT file `" + getFileForNode(node) + ".lnt' is invalid",VERBOSE_GENERATION);
+				cc->reportAction("LNT file `" + getNodeName(node) + ".lnt' is invalid",VERBOSE_GENERATION);
 				break;
 			}
 		}
@@ -747,14 +661,14 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 		// Get the info if the BCG file, enable (re)generation on error
 		if(stat((bcgFilePath).c_str(),&bcgFileStat)) {
 			bcgGenerationNeeded = true;
-			cc->reportAction("BCG file `" + getFileForNode(node) + ".bcg' not found",VERBOSE_GENERATION);
+			cc->reportAction("BCG file `" + getNodeName(node) + ".bcg' not found",VERBOSE_GENERATION);
 			break;
 		}
 		
 		// Get the info if the BCG Valid file, enable (re)generation on error
 		if(stat((bcgFilePath+".valid").c_str(),&bcgValidFileStat)) {
 			bcgGenerationNeeded = true;
-			cc->reportAction("BCG file `" + getFileForNode(node) + ".bcg' is invalid",VERBOSE_GENERATION);
+			cc->reportAction("BCG file `" + getNodeName(node) + ".bcg' is invalid",VERBOSE_GENERATION);
 			break;
 		}
 
@@ -764,7 +678,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 		// If the LNT file is newer than the BCG file, regeneration is needed
 		if(lntFileStat.st_mtime > bcgFileStat.st_mtime) {
 			bcgGenerationNeeded = true;
-			cc->reportAction("BCG file `" + getFileForNode(node) + ".bcg' is out of date",VERBOSE_GENERATION);
+			cc->reportAction("BCG file `" + getNodeName(node) + ".bcg' is out of date",VERBOSE_GENERATION);
 			break;
 		}
 		
@@ -779,7 +693,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			
 			} else {
 				bcgGenerationNeeded = true;
-				cc->reportAction("BCG file `" + getFileForNode(node) + ".bcg' is invalid",VERBOSE_GENERATION);
+				cc->reportAction("BCG file `" + getNodeName(node) + ".bcg' is invalid",VERBOSE_GENERATION);
 				break;
 			}
 		}
@@ -798,7 +712,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 		if(lntFile.rdstate()&ifstream::failbit) {
 			lntFile.clear();
 			lntGenerationNeeded = true;
-			cc->reportAction("LNT file `" + getFileForNode(node) + ".lnt' is invalid",VERBOSE_GENERATION);
+			cc->reportAction("LNT file `" + getNodeName(node) + ".lnt' is invalid",VERBOSE_GENERATION);
 			
 		// If successfully read 11 characters from the LNT file
 		} else {
@@ -808,7 +722,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			// If the header does not match
 			if(strncmp("(** V",header_c,5)) {
 				lntGenerationNeeded = true;
-				cc->reportAction("LNT file `" + getFileForNode(node) + ".lnt' has invalid header",VERBOSE_GENERATION);
+				cc->reportAction("LNT file `" + getNodeName(node) + ".lnt' has invalid header",VERBOSE_GENERATION);
 			
 			// If the header matches, compare the versions
 			} else {
@@ -816,7 +730,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 				//std::cout << "File: " << version << ", mine: " << VERSION << endl;
 				if(version < VERSION) {
 					lntGenerationNeeded = true;
-					cc->reportAction("LNT file `" + getFileForNode(node) + ".lnt' out of date",VERBOSE_GENERATION);
+					cc->reportAction("LNT file `" + getNodeName(node) + ".lnt' out of date",VERBOSE_GENERATION);
 				}
 			}
 			char buffer[200];
@@ -862,7 +776,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			case DFT::Nodes::BasicEventType: {
 				const DFT::Nodes::BasicEvent& be = static_cast<const DFT::Nodes::BasicEvent&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(be) << " (parents=" << be.getParents().size() << ")";
+				report << "Generating " << getNodeName(be) << " (parents=" << be.getParents().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generateBE(lntOut,be);
 				break;
@@ -873,7 +787,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			case DFT::Nodes::GateOrType: {
 				const DFT::Nodes::GateOr& gate = static_cast<const DFT::Nodes::GateOr&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
+				report << "Generating " << getNodeName(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generateOr(lntOut,gate);
 				break;
@@ -881,7 +795,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			case DFT::Nodes::GateAndType: {
 				const DFT::Nodes::GateAnd& gate = static_cast<const DFT::Nodes::GateAnd&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
+				report << "Generating " << getNodeName(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generateAnd(lntOut,gate);
 				break;
@@ -889,7 +803,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
             case DFT::Nodes::GateSAndType: {
                 const DFT::Nodes::GateSAnd& gate = static_cast<const DFT::Nodes::GateSAnd&>(node);
                 FileWriter report;
-                report << "Generating " << getFileForNode(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
+                report << "Generating " << getNodeName(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
                 cc->reportAction(report.toString(),VERBOSE_GENERATION);
                 generateSAnd(lntOut,gate);
                 break;
@@ -900,7 +814,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			case DFT::Nodes::GateWSPType: {
 				const DFT::Nodes::GateWSP& gate = static_cast<const DFT::Nodes::GateWSP&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
+				report << "Generating " << getNodeName(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generateSpare(lntOut,gate);
 				break;
@@ -911,7 +825,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			case DFT::Nodes::GatePAndType: {
 				const DFT::Nodes::GatePAnd& gate = static_cast<const DFT::Nodes::GatePAnd&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
+				report << "Generating " << getNodeName(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generatePAnd(lntOut,gate);
 				break;
@@ -919,7 +833,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
             case DFT::Nodes::GatePorType: {
 				const DFT::Nodes::GatePor& gate = static_cast<const DFT::Nodes::GatePor&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
+				report << "Generating " << getNodeName(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generatePor(lntOut,gate);
 				break;
@@ -930,7 +844,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			case DFT::Nodes::GateVotingType: {
 				const DFT::Nodes::GateVoting& gate = static_cast<const DFT::Nodes::GateVoting&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ", threshold=" << gate.getThreshold() << ")";
+				report << "Generating " << getNodeName(node) << " (parents=" << gate.getParents().size() << ", children=" << gate.getChildren().size() << ", threshold=" << gate.getThreshold() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generateVoting(lntOut,gate);
 				break;
@@ -938,7 +852,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			case DFT::Nodes::GateFDEPType: {
 				const DFT::Nodes::GateFDEP& gate = static_cast<const DFT::Nodes::GateFDEP&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+				report << "Generating " << getNodeName(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generateFDEP(lntOut,gate);
 				break;
@@ -946,7 +860,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			case DFT::Nodes::RepairUnitType: {
 				const DFT::Nodes::RepairUnit& gate = static_cast<const DFT::Nodes::RepairUnit&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+				report << "Generating " << getNodeName(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generateRU(lntOut,gate);
 				break;
@@ -954,7 +868,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			case DFT::Nodes::RepairUnitFcfsType: {
 				const DFT::Nodes::RepairUnit& gate = static_cast<const DFT::Nodes::RepairUnit&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+				report << "Generating " << getNodeName(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generateRU_FCFS(lntOut,gate);
 				break;
@@ -962,7 +876,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			case DFT::Nodes::RepairUnitPrioType: {
 				const DFT::Nodes::RepairUnit& gate = static_cast<const DFT::Nodes::RepairUnit&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+				report << "Generating " << getNodeName(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generateRU_Prio(lntOut,gate);
 				break;
@@ -970,7 +884,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 			case DFT::Nodes::RepairUnitNdType: {
 				const DFT::Nodes::RepairUnit& gate = static_cast<const DFT::Nodes::RepairUnit&>(node);
 				FileWriter report;
-				report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+				report << "Generating " << getNodeName(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
 				cc->reportAction(report.toString(),VERBOSE_GENERATION);
 				generateRU_Nd(lntOut,gate);
 				break;
@@ -978,7 +892,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
             case DFT::Nodes::InspectionType: {
                 const DFT::Nodes::Inspection& gate = static_cast<const DFT::Nodes::Inspection&>(node);
                 FileWriter report;
-                report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ")";
+                report << "Generating " << getNodeName(node) << " (children=" << gate.getChildren().size() << ")";
                 cc->reportAction(report.toString(),VERBOSE_GENERATION);
                 generateInspection(lntOut,gate);
                 break;
@@ -986,7 +900,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
             case DFT::Nodes::ReplacementType: {
                 const DFT::Nodes::Replacement& gate = static_cast<const DFT::Nodes::Replacement&>(node);
                 FileWriter report;
-                report << "Generating " << getFileForNode(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
+                report << "Generating " << getNodeName(node) << " (children=" << gate.getChildren().size() << ", dependers=" << gate.getDependers().size() << ")";
                 cc->reportAction(report.toString(),VERBOSE_GENERATION);
                 generateReplacement(lntOut,gate);
                 break;
@@ -1037,7 +951,7 @@ int DFT::DFTreeBCGNodeBuilder::generate(const DFT::Nodes::Node& node, set<string
 		if(lntGenerationNeeded || bcgGenerationNeeded) {
 			cc->reportAction("Generating: " + bcgFileName,VERBOSE_GENERATION);
 			// Generate SVL
-			generateSVLBuilder(svlOut,getFileForNode(node));
+			generateSVLBuilder(svlOut,getNodeName(node));
 			if(bcgGenerationOK) {
 				// call SVL
 				//cc->reportFile(svlOut.toString());
@@ -1350,16 +1264,11 @@ int DFT::DFTreeBCGNodeBuilder::generate() {
 		return 1;
 	}
 	set<std::string> triedToGenerate;
-	std::vector<DFT::Nodes::Node*>::iterator it = dft->getNodes().begin();
-	for(;it!=dft->getNodes().end(); it++) {
-		int bad = generate(**it,triedToGenerate);
+	std::vector<const Nodes::Node *> nodes = dft->getNodes();
+	for (const Nodes::Node *node : nodes) {
+		int bad = generate(*node,triedToGenerate);
 		if(bad) {
-			std::vector<DFT::Nodes::Node*>::iterator it2 = dft->getNodes().begin();
-			for(;it2!=dft->getNodes().end(); it2++) {
-				if(getFileForNode(**it)==getFileForNode(**it2)) {
-					cc->reportErrorAt((*it2)->getLocation(),"... for this node: `" + (*it2)->getName() + "'");
-				}
-			}
+			cc->reportErrorAt(node->getLocation(),"... for this node: `" + node->getName() + "'");
 		}
 	}
 	return 0;

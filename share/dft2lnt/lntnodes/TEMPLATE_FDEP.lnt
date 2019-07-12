@@ -3,12 +3,10 @@ module TEMPLATE_FDEP(TEMPLATE_COMMON) is
 	process FDEP [FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL] (total : NAT, notified : BOOL_ARRAY, trigger_always_active : BOOL) is
 	var
 		nr : NAT,
-		done : BOOL,
 		act : NAT,
 		failed : BOOL
 	in
 		failed := FALSE;
-		done := FALSE;
 		act := 0;
 		loop
 			select	

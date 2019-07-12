@@ -1,0 +1,6 @@
+toplevel "System";
+"System" or "A" "B";
+"F" fdep "C" "B";
+"A" lambda=0.1;
+"B" lambda=0.2;
+"C" lambda=0.3;

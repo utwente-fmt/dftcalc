@@ -10,7 +10,6 @@
 #ifndef DFT2LNT_H
 #define DFT2LNT_H
 
-#include "dft_ast.h"
 #include "DFTree.h"
 #include "ConsoleWriter.h"
 #include "compiler.h"
@@ -19,6 +18,7 @@ class DFT2LNT {
 public:
 	static const std::string LNTSUBROOT;
 	static const std::string BCGSUBROOT;
+	static const std::string AUTSUBROOT;
 	static const std::string TESTSUBROOT;
 
 };

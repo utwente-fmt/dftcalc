@@ -55,9 +55,9 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 
 	if(be.getMode() == DFT::Nodes::BE::CalculationMode::APH) {
 		ss << "total rename ";
-		ss << "\"ACTIVATE\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE << " !0 !FALSE\"";
+		ss << "\"ACTIVATE\" -> \"" << automata::signals::GATE_ACTIVATE << " !0 !FALSE\"";
 		ss << ", ";
-		ss << "\"FAIL\" -> \"" << DFT::DFTreeBCGNodeBuilder::GATE_FAIL << " !0\"";
+		ss << "\"FAIL\" -> \"" << automata::signals::GATE_FAIL << " !0\"";
 		ss << " in \"";
 		ss << be.getFileToEmbed();
 		ss << "\" end rename";
@@ -75,7 +75,7 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 			rateFailSafe = be.getLambda() * (decnumber<>(1) - be.getProb());
 		}
 
-		const std::string GATE = DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL;
+		const std::string GATE = automata::signals::GATE_RATE_FAIL;
 		ss << "total rename ";
 		// Insert lambda value
 		ss << "\"" << GATE << " !1 !2\" -> \"rate " << l.str() << "\"";
@@ -89,24 +89,24 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		if(!be.getMu().is_zero()) {
 			decnumber<> mu = be.getMu() * be.getProb();
 			rateFailSafe = be.getMu() * (decnumber<>(1) - be.getProb());
-			ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << mu.str() << "\"";
+			ss << ", \"" << automata::signals::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << mu.str() << "\"";
 			if (!rateFailSafe.is_zero())
-				ss << ", \"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_FAIL << " !2 !1\" -> \"rate " << rateFailSafe.str() << "\"";
+				ss << ", \"" << automata::signals::GATE_RATE_FAIL << " !2 !1\" -> \"rate " << rateFailSafe.str() << "\"";
 			for (int i = be.getPhases(); i > 1; i--) {
 				ss << ", \"" << GATE << " !" << i << " !2\" -> \"rate " << be.getMu().str() << "\"";
 			}
 		}
         if (be.getRepair()>0) {
 			ss << ", ";
-            ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR << "\" -> \"rate " << be.getRepair() << "\"";
+            ss << "\"" << automata::signals::GATE_RATE_REPAIR << "\" -> \"rate " << be.getRepair() << "\"";
         }
 		ss << " in \"";
-		ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
-		ss << ".bcg\" end rename";
+		ss << nodeBuilder->getRoot() << nodeBuilder->getFileForNode(be);
+		ss << "\" end rename";
 	} else {
 		ss << "\"";
-		ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(be);
-		ss << ".bcg\"";
+		ss << nodeBuilder->getRoot() << nodeBuilder->getFileForNode(be);
+		ss << "\"";
     }
 	return ss.str();
 }
@@ -125,7 +125,7 @@ std::string DFT::DFTreeEXPBuilder::getRUProc(const DFT::Nodes::Gate& ru) const {
 			const DFT::Nodes::BasicEvent& be = *static_cast<const DFT::Nodes::BasicEvent*>(&child);
 
 			// Insert repair values
-			ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR << " !1 !" << n+1 << "\" -> \"rate " << be.getRepair() << "\"";
+			ss << "\"" << automata::signals::GATE_RATE_REPAIR << " !1 !" << n+1 << "\" -> \"rate " << be.getRepair() << "\"";
 			if(n < ru.getChildren().size()-1){
 				ss << ", ";
 			}
@@ -134,8 +134,8 @@ std::string DFT::DFTreeEXPBuilder::getRUProc(const DFT::Nodes::Gate& ru) const {
 	}
 
 	ss << " in \"";
-	ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(ru);
-	ss << ".bcg\" end rename";
+	ss << nodeBuilder->getRoot() << nodeBuilder->getFileForNode(ru);
+	ss << "\" end rename";
 
 	return ss.str();
 }
@@ -148,11 +148,11 @@ std::string DFT::DFTreeEXPBuilder::getINSPProc(const DFT::Nodes::Inspection& ins
 	std::string rate = "rate " + insp.getLambda().str();
 	if (insp.getPhases() == 0)
 		rate = "time " + insp.getLambda().str();
-    ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_INSPECTION << " !1" << "\" -> \"" << rate << "\"";
+    ss << "\"" << automata::signals::GATE_RATE_INSPECTION << " !1" << "\" -> \"" << rate << "\"";
     
     ss << " in \"";
-    ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(insp);
-    ss << ".bcg\" end rename";
+    ss << nodeBuilder->getRoot() << nodeBuilder->getFileForNode(insp);
+    ss << "\" end rename";
     
     return ss.str();
 }
@@ -162,11 +162,11 @@ std::string DFT::DFTreeEXPBuilder::getREPProc(const DFT::Nodes::Replacement& rep
     
     ss << "total rename ";
     // Insert lambda value
-    ss << "\"" << DFT::DFTreeBCGNodeBuilder::GATE_RATE_PERIOD << " !1 !" << "\" -> \"rate " << rep.getLambda() << "\"";
+    ss << "\"" << automata::signals::GATE_RATE_PERIOD << " !1 !" << "\" -> \"rate " << rep.getLambda() << "\"";
     
     ss << " in \"";
-    ss << bcgRoot << DFT::DFTreeBCGNodeBuilder::getFileForNode(rep);
-    ss << ".bcg\" end rename";
+    ss << nodeBuilder->getRoot() << nodeBuilder->getFileForNode(rep);
+    ss << "\" end rename";
     
     return ss.str();
 }
@@ -198,17 +198,16 @@ void DFT::DFTreeEXPBuilder::printSyncLine(const EXPSyncRule& rule, const vector<
 		exp_body << " -> \"" << rule.toLabel << "\"";
 }
 
-DFT::DFTreeEXPBuilder::DFTreeEXPBuilder(std::string root, std::string tmp, std::string nameBCG, std::string nameEXP, DFT::DFTree* dft, CompilerContext* cc):
+DFT::DFTreeEXPBuilder::DFTreeEXPBuilder(std::string root, std::string tmp, std::string nameBCG, std::string nameEXP, DFT::DFTree* dft, DFTreeNodeBuilder *nb, CompilerContext* cc):
 	root(root),
-	bcgRoot(root+DFT2LNT::BCGSUBROOT+"/"),
 	tmp(tmp),
 	nameBCG(nameBCG),
 	nameEXP(nameEXP),
 	nameTop(""),
 	dft(dft),
-	cc(cc) {
-	
-}
+	cc(cc),
+	nodeBuilder(nb)
+{ }
 
 int DFT::DFTreeEXPBuilder::build() {
 
@@ -330,7 +329,7 @@ int DFT::DFTreeEXPBuilder::parseDFT(
 					addIndepRule(inspectionRules, be, syncInspection(0), "i_");
 				} else if (be.getRepair() <= 0) {
 					EXPSyncItem *RR = new EXPSyncItem(
-								DFT::DFTreeBCGNodeBuilder::GATE_RATE_REPAIR);
+								automata::signals::GATE_RATE_REPAIR);
 					addIndepRule(repairRules, be, RR, "rr_");
 				}
 			}
@@ -435,7 +434,7 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 	exp_body << exp_body.applyprefix << "in" << exp_body.applypostfix;
 	exp_body.indent();
 	exp_body << exp_body.applyprefix;
-	exp_body << "\"" << bcgRoot << "toplevel.bcg\"";
+	exp_body << "\"" << nodeBuilder->getRoot() << nodeBuilder->getFileForTopLevel() << "\"";
 	exp_body << exp_body.applypostfix;
 	int c=0;
 	it = dft->getNodes().begin();
@@ -463,9 +462,10 @@ int DFT::DFTreeEXPBuilder::buildEXPBody(
 				exp_body << exp_body.applyprefix << getREPProc(*rep)
 				         << exp_body.applypostfix;
 			} else {
-				exp_body << exp_body.applyprefix << "\"" << bcgRoot
-				         << DFT::DFTreeBCGNodeBuilder::getFileForNode(node)
-				         << ".bcg\"" << exp_body.applypostfix;
+				exp_body << exp_body.applyprefix << "\""
+				         << nodeBuilder->getRoot()
+				         << nodeBuilder->getFileForNode(node)
+				         << "\"" << exp_body.applypostfix;
 			}
 		} else {
 			assert(0 && "buildEXPBody(): Unknown node type");
@@ -541,7 +541,7 @@ int DFT::DFTreeEXPBuilder::createSyncRuleTop(
 	unsigned int topNode = nodeIDs[dft->getTopNode()];
 
 	// Generate the Top Node Activate rule
-	ss << DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE;
+	ss << automata::signals::GATE_ACTIVATE;
 	if(!nameTop.empty())
 		ss << "_" << nameTop;
 	DFT::EXPSyncRule ruleA(ss.str(), true);
@@ -567,7 +567,7 @@ int DFT::DFTreeEXPBuilder::createSyncRuleTop(
 
 	// Generate the Top Node Fail rule
 	ss.str(std::string());
-	ss << DFT::DFTreeBCGNodeBuilder::GATE_FAIL;
+	ss << automata::signals::GATE_FAIL;
 	if(!nameTop.empty())
 		ss << "_" << nameTop;
 	DFT::EXPSyncRule ruleF(ss.str(),false);
@@ -578,7 +578,7 @@ int DFT::DFTreeEXPBuilder::createSyncRuleTop(
 	if(dft->getTopNode()->isRepairable()){
 		// Generate the Top Node Online rule
 		ss.str("");
-		ss << DFT::DFTreeBCGNodeBuilder::GATE_ONLINE;
+		ss << automata::signals::GATE_ONLINE;
 		DFT::EXPSyncRule ruleO(ss.str(),false);
 		if(!nameTop.empty())
 			ss << "_" << nameTop;

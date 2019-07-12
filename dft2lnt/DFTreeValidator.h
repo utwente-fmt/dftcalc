@@ -15,7 +15,7 @@ class DFTreeValidator;
 #define DFTREEVALIDATOR_H
 
 #include "DFTree.h"
-#include "dft_parser.h"
+#include "compiler.h"
 
 namespace DFT {
 

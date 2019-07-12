@@ -20,31 +20,11 @@ class DFTreePrinter;
 #include "DFTree.h"
 #include "dft_parser.h"
 #include "dft2lnt.h"
+#include "DFTreeNodeBuilder.h"
 
 namespace DFT {
 
-class DFTreeBCGNodeBuilder {
-public:
-	static const std::string GATE_FAIL;
-	static const std::string GATE_ACTIVATE;
-	static const std::string GATE_DEACTIVATE;
-	/* REPAIR?: Insp to BE: Start repairing
-	 * REPAIR!: BE to RU: In need of repair.
-	 */
-	static const std::string GATE_REPAIR;
-	/* REPAIRED: BE to RU: Repair finished */
-	static const std::string GATE_REPAIRED;
-	static const std::string GATE_ONLINE;
-	static const std::string GATE_RATE_FAIL;
-    static const std::string GATE_RATE_MAINTAIN;
-	static const std::string GATE_RATE_REPAIR;
-    static const std::string GATE_RATE_PERIOD;
-    static const std::string GATE_RATE_INSPECTION;
-	/* REPAIRING: RU to BE: Start repair time */
-	static const std::string GATE_REPAIRING;
-    static const std::string GATE_INSPECT;
-    static const std::string GATE_INSPECTED;
-    static const std::string GATE_IMPOSSIBLE;
+class DFTreeBCGNodeBuilder : public DFTreeNodeBuilder {
 private:
 	static const unsigned int VERSION;
 	static const int VERBOSE_LNTISVALID;
@@ -54,11 +34,8 @@ private:
 	static const int VERBOSE_FILE_SVL;
 	static const int VERBOSE_GENERATION;
 	
-	std::string root;
 	std::string lntRoot;
 	std::string bcgRoot;
-	DFT::DFTree* dft;
-	CompilerContext* cc;
 
 	int generateHeader(FileWriter& out);
 	int generateHeaderClose(FileWriter& out);
@@ -86,25 +63,25 @@ private:
 public:
 	
 	DFTreeBCGNodeBuilder(std::string root, DFT::DFTree* dft, CompilerContext* cc):
-		root(root),
+		DFTreeNodeBuilder(dft, cc),
 		lntRoot(root+DFT2LNT::LNTSUBROOT+"/"),
-		bcgRoot(root+DFT2LNT::BCGSUBROOT+"/"),
-		dft(dft),
-		cc(cc) {
-	}
+		bcgRoot(root+DFT2LNT::BCGSUBROOT+"/")
+	{ }
+
 	virtual ~DFTreeBCGNodeBuilder() {
 	}
-	
-	/**
-	 * Returns the Lotos NT File needed for the specified node.
-	 * @return he Lotos NT File needed for the specified node.
-	 */
-	static std::string getFileForNode(const DFT::Nodes::Node& node);
-	
+
+	virtual std::string getFileForNode(const Nodes::Node& node);
+	virtual std::string getFileForTopLevel();
+	virtual std::string getRoot() {
+		return bcgRoot;
+	}
+
+	virtual int generate();
+
+private:
 	int generate(const DFT::Nodes::Node& node, set<string>& triedToGenerate);
-	int generate();
 	int generateTopLevel();
-	
 	/**
 	 * Checks is the BCG file at the specified file is a valid BCG file.
 	 * Uses the return value of a call to bcg_info.

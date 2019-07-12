@@ -29,7 +29,7 @@ using namespace std;
 #include "test.h"
 #include "Shell.h"
 #include "MessageFormatter.h"
-#include "DFTreeBCGNodeBuilder.h"
+#include "dft2lnt.h"
 #include "compiletime.h"
 #include "dftcalc.h"
 #include "CADP.h"

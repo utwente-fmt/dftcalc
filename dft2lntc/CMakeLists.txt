@@ -21,7 +21,18 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CM
 add_executable(dft2lntc
 	dft2lntc.cpp
 	modularize.cpp
+	DFTreeAUTNodeBuilder.cpp
+	DFTreeBCGNodeBuilder.cpp
+	DFTreeEXPBuilder.cpp
+	DFTreeNodeBuilder.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/compiletime.h
+	automata/automata.cpp
+	automata/automaton.cpp
+	automata/be.cpp
+	automata/fdep.cpp
+	automata/insp.cpp
+	automata/spare.cpp
+	automata/voting.cpp
 )
 
 ## Depends on:

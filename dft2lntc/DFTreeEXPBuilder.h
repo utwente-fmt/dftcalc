@@ -24,6 +24,8 @@ class DFTreeEXPBuilder;
 #include "dft_parser.h"
 #include "FileWriter.h"
 #include "files.h"
+#include "DFTreeNodeBuilder.h"
+#include "automata/signals.h"
 
 namespace DFT {
 
@@ -201,13 +203,13 @@ public:
 class DFTreeEXPBuilder {
 private:
 	std::string root;
-	std::string bcgRoot;
 	std::string tmp;
 	std::string nameBCG;
 	std::string nameEXP;
 	std::string nameTop;
 	DFT::DFTree* dft;
 	CompilerContext* cc;
+	DFTreeNodeBuilder *nodeBuilder;
 	
 	FileWriter svl_header;
 	FileWriter svl_body;
@@ -262,7 +264,7 @@ public:
 	 * @param dft The DFT to be validated.
 	 * @param cc The CompilerConstruct used for eg error reports.
 	 */
-	DFTreeEXPBuilder(std::string root, std::string tmp, std::string nameBCG, std::string nameEXP, DFT::DFTree* dft, CompilerContext* cc);
+	DFTreeEXPBuilder(std::string root, std::string tmp, std::string nameBCG, std::string nameEXP, DFT::DFTree* dft, DFTreeNodeBuilder *nb, CompilerContext* cc);
 	virtual ~DFTreeEXPBuilder() {
 	}
 
@@ -349,11 +351,11 @@ public:
 	 * @return A new EXPSyncItem instance.
 	 */
 	EXPSyncItem *syncActivate(unsigned int localNodeID, bool sending) {
-		return new EXPSyncItemIB(DFT::DFTreeBCGNodeBuilder::GATE_ACTIVATE,localNodeID,sending);
+		return new EXPSyncItemIB(automata::signals::GATE_ACTIVATE,localNodeID,sending);
 	}
 
 	EXPSyncItem *syncDeactivate(unsigned int localNodeID, bool sending) {
-		return new EXPSyncItemIB(DFT::DFTreeBCGNodeBuilder::GATE_DEACTIVATE,localNodeID,sending);
+		return new EXPSyncItemIB(automata::signals::GATE_DEACTIVATE,localNodeID,sending);
 	}
 
 	/**
@@ -363,11 +365,11 @@ public:
 	 * @return A new EXPSyncItem instance.
 	 */
 	EXPSyncItem *syncFail(unsigned int localNodeID) {
-		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_FAIL,localNodeID);
+		return new EXPSyncItem(automata::signals::GATE_FAIL,localNodeID);
 	}
 
 	EXPSyncItem *syncImpossible() {
-		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_IMPOSSIBLE);
+		return new EXPSyncItem(automata::signals::GATE_IMPOSSIBLE);
 	}
 
 	/**
@@ -376,7 +378,7 @@ public:
 	 * @return A new EXPSyncItem instance.
 	 */
 	EXPSyncItem *syncRepair(bool direction) {
-		return new EXPSyncItemB(DFT::DFTreeBCGNodeBuilder::GATE_REPAIR,direction);
+		return new EXPSyncItemB(automata::signals::GATE_REPAIR,direction);
 	}
 
 	/**
@@ -386,7 +388,7 @@ public:
 	 * @return A new EXPSyncItem instance.
 	 */
 	EXPSyncItem *syncRepair(size_t localNodeID) {
-		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_REPAIR,localNodeID);
+		return new EXPSyncItem(automata::signals::GATE_REPAIR,localNodeID);
 	}
 
 	/**
@@ -396,7 +398,7 @@ public:
 	 * @return A new EXPSyncItem instance.
 	 */
 	EXPSyncItem *syncRepairing(unsigned int localNodeID) {
-		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING,localNodeID);
+		return new EXPSyncItem(automata::signals::GATE_REPAIRING,localNodeID);
 	}
 
 	/**
@@ -407,7 +409,7 @@ public:
 	 * @return A new EXPSyncItem instance.
 	 */
 	EXPSyncItem *syncRepairing(unsigned int localNodeID, bool direction) {
-		return new EXPSyncItemIB(DFT::DFTreeBCGNodeBuilder::GATE_REPAIRING,localNodeID, direction);
+		return new EXPSyncItemIB(automata::signals::GATE_REPAIRING,localNodeID, direction);
 	}
 
 	/**
@@ -417,7 +419,7 @@ public:
 	 * @return A new EXPSyncItem instance.
 	 */
 	EXPSyncItem *syncOnline(unsigned int localNodeID) {
-		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_ONLINE,localNodeID);
+		return new EXPSyncItem(automata::signals::GATE_ONLINE,localNodeID);
 	}
 
 	/**
@@ -428,7 +430,7 @@ public:
 	 * @return A new EXPSyncItem instance.
 	 */
 	EXPSyncItem *syncRepaired(unsigned int localNodeID) {
-		return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_REPAIRED,localNodeID);
+		return new EXPSyncItem(automata::signals::GATE_REPAIRED,localNodeID);
 	}
     
     /**
@@ -438,7 +440,7 @@ public:
      * @return A new EXPSyncItem instance.
      */
     EXPSyncItem *syncInspection(unsigned int localNodeID) {
-        return new EXPSyncItem(DFT::DFTreeBCGNodeBuilder::GATE_INSPECT,localNodeID);
+        return new EXPSyncItem(automata::signals::GATE_INSPECT,localNodeID);
     }
 
 	int createSyncRuleGateFDEP(vector<DFT::EXPSyncRule>& activationRules, vector<DFT::EXPSyncRule>& failRules, const DFT::Nodes::GateFDEP& node, unsigned int nodeID);
