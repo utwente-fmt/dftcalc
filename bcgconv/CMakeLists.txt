@@ -1,6 +1,6 @@
-project (bcg2jani)
+project (bcgconv)
 set (bcg2jani_VERSION_MAJOR 1)
-set (bcg2jani_VERSION_MINOR 0)
+set (bcg2jani_VERSION_MINOR 3)
 set (bcg2jani_VERSION_PATCH 0)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra")

@@ -1,7 +1,7 @@
 ## DFT2LNT Library project
 project (dft2lnt)
 set (dft2lnt_VERSION_MAJOR 1)
-set (dft2lnt_VERSION_MINOR 1)
+set (dft2lnt_VERSION_MINOR 3)
 set (dft2lnt_VERSION_PATCH 0)
 
 ## Needed for bison and flex
@@ -11,10 +11,7 @@ cmake_minimum_required (VERSION 2.8)
 include(FindBISON)
 include(FindFLEX)
 
-## Not sure if needed
-add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS )
 add_definitions(-std=c++17)
-#add_definitions(-std=gnu++0x -Wall)
 
 ## Include source directory and the build directory (for generated files)
 include_directories(

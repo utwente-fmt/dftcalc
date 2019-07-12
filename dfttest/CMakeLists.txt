@@ -1,14 +1,12 @@
 ## The DFT2LNT Compiler project
 project (dfttest)
 set (dfttest_VERSION_MAJOR 1)
-set (dfttest_VERSION_MINOR 0)
-set (dfttest_VERSION_PATCH 2)
+set (dfttest_VERSION_MINOR 3)
+set (dfttest_VERSION_PATCH 0)
 
 ## Not sure if needed
 cmake_minimum_required (VERSION 2.6)
 
-## Not sure if needed
-add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS )
 add_definitions(-std=c++11)
 
 ## Include source directory, the build directory (for generated files) and the dft2lnt library path

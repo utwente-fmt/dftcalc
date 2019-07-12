@@ -1,13 +1,12 @@
 ## The DFT2LNT Compiler project
 project (dft2lntc)
 set (dft2lntc_VERSION_MAJOR 1)
-set (dft2lntc_VERSION_MINOR 1)
+set (dft2lntc_VERSION_MINOR 3)
 set (dft2lntc_VERSION_PATCH 0)
 
 ## Not sure if needed
 cmake_minimum_required (VERSION 2.6)
 
-## Not sure if needed
 add_definitions(-std=c++11)
 if (DEFINED ENV{CADP})
 	add_definitions(-DHAVE_CADP)

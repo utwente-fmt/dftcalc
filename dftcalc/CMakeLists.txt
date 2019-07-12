@@ -1,14 +1,12 @@
 ## The DFT2LNT Compiler project
 project (dftcalc)
 set (dftcalc_VERSION_MAJOR 1)
-set (dftcalc_VERSION_MINOR 1)
+set (dftcalc_VERSION_MINOR 3)
 set (dftcalc_VERSION_PATCH 0)
 
 ## Not sure if needed
 cmake_minimum_required (VERSION 2.6)
 
-## Not sure if needed
-add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS )
 add_definitions(-std=c++11)
 if(DEFINED ENV{CADP})
 	add_definitions(-DHAVE_CADP)
@@ -72,4 +70,3 @@ install (TARGETS dftcalc DESTINATION bin)
 				-P ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
 				../..
 	)
-message("CMAKE ARGS: ${CMAKE_COMMAND}")
