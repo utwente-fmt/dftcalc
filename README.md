@@ -1,23 +1,26 @@
 # DFTCalc: A Dynamic Fault Tree calculator for reliability and availability
 
-DFTCalc calculates the failure probability of a DFT by making use of the compositional semantics of I/O-IMCs. In this process it docks on several state-of- the-art tools and languages: All leaves and gates of the input DFT are expressed by I/O-IMCs with the process algebra language Lotos NT; CADP is used to efficiently compose the individual I/O-IMCs; and a model checker (Storm, MRMC, IMRMC, or IMCA) finally calculate the failure probability for a certain point in time. The following section describes how DFTCalc aligns all these tools and formats to orchestrate the analysis of a DFT.
+DFTCalc calculates the failure probability of a DFT by making use of the compositional semantics of I/O-IMCs. In this process it docks on several state-of- the-art tools and languages: All leaves and gates of the input DFT are expressed by I/O-IMCs; CADP or DFTRES are used to efficiently compose the individual I/O-IMCs; and a model checker (Storm, Modest, MRMC, IMRMC, or IMCA) finally calculate the failure probability for a certain point in time. The following section describes how DFTCalc aligns all these tools and formats to orchestrate the analysis of a DFT.
 
 DFTCalc takes as input a DFT in Galileo’s textual format. This intuitive format describes a DFT top-down from its root to the basic components. Each subtree is identified by a name, logically connected with other subtrees by gates, and then refined down to the basic components. On execution, DFTCalc processes a given DFT in various stages and analyzes the system’s reliability. The tool’s output is a quantification of this attribute which is expressed as either the failure probability for a given mission time or the mean time to failure.
 
 ## Supported systems
 
-- GNU/Linux (tested on Ubuntu, Debian)
-- MacOS X (tested on 10.9, needs a seperate build of imc2ctmdp if MRMC is used)
+- GNU/Linux (tested on Fedora, Debian)
+- MacOS X (not tested for several years)
 - Windows may work with use of cygwin (not tested)
 
 ## Build Dependencies
 
 To build and run DFTCalc, you need some external libraries. Which ones
 exactly depends on which options you wish to use. Below we list the
-external libraries and tools required. In any operation you require
-CADP. Beyond that, you need either MRMC, IMRMC, IMCA, Storm, or Modest. For
-exact operation (the --exact switch), you need DFTRES and IMRMC, Storm,
-or Modest.
+external libraries and tools required. The yaml-cpp library is always
+needed. Either CADP or DFTRES is needed: DFTRES is always needed for
+the --exact switch, CADP is needed for some unusual gates, in all other
+cases you can decide which is desired.
+Beyond that, you need at least one of MRMC, IMRMC, IMCA, Storm, or
+Modest. For exact operation (the --exact switch), you need DFTRES and
+IMRMC, Storm, or Modest.
 
 **yaml-cpp**
 Install using your favorite package manager, e.g. 'dnf install yaml-cpp-devel' on Fedora.
