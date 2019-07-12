@@ -26,7 +26,7 @@ std::string ModestRunner::getCommandOptions(Query q)
 		ret = " -E 'T=" + q.upperBound.str() + ",L=" + q.lowerBound.str() + "'" ;
 	}
 	if (q.errorBoundSet)
-		ret = " --epsilon " + q.errorBound.str();
+		ret += " --epsilon " + q.errorBound.str();
 	return ret;
 }
 
