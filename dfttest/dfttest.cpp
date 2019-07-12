@@ -32,7 +32,9 @@ using namespace std;
 #include "dft2lnt.h"
 #include "compiletime.h"
 #include "dftcalc.h"
+#ifdef HAVE_CADP
 #include "CADP.h"
+#endif
 
 const int VERBOSITY_FLOW = 1;
 const int VERBOSITY_DATA = 2;
@@ -42,13 +44,17 @@ void DFTTestResult::readYAMLNodeSpecific(const YAML::Node& node) {
 	if(const YAML::Node itemNode = node["failprob"]) {
 		failprob = itemNode.as<double>();
 	}
+#ifdef HAVE_CADP
 	if(const YAML::Node itemNode = node["bcginfo"]) {
 		itemNode >> bcgInfo;
 	}
+#endif
 }
 void DFTTestResult::writeYAMLNodeSpecific(YAML::Emitter& out) const {
 	out << YAML::Key << "failprob" << YAML::Value << failprob;
+#ifdef HAVE_CADP
 	if(bcgInfo.willWriteSomething()) out << YAML::Key << "bcginfo" << YAML::Value << bcgInfo;
+#endif
 }
 
 Test::ResultStatus DFTTestResult::getResultStatus(Test::TestSpecification* testGeneric) {
@@ -237,6 +243,7 @@ std::string getRoot(MessageFormatter* messageFormatter) {
 		goto end;
 	}
 	
+#ifdef HAVE_CADP
 	if(stat((dft2lntRoot+DFT2LNT::LNTSUBROOT).c_str(),&rootStat)) {
 		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::LNTSUBROOT,0755)) {
 			if(messageFormatter) messageFormatter->reportError("Could not create LNT Nodes directory (`" + dft2lntRoot+DFT2LNT::LNTSUBROOT + "')");
@@ -252,6 +259,7 @@ std::string getRoot(MessageFormatter* messageFormatter) {
 			goto end;
 		}
 	}
+#endif
 	
 	if(messageFormatter) messageFormatter->reportAction("DFT2LNTROOT is: " + dft2lntRoot,VERBOSITY_DATA);
 end:
@@ -701,7 +709,8 @@ DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 			break;
 		}
 	}
-	
+
+#ifdef HAVE_CADP
 	// Read memory usage from SVL log file
 	Shell::RunStatistics svlStats;
 	if(Shell::readMemtimeStatisticsFromLog(svlLogFile,svlStats)) {
@@ -719,7 +728,8 @@ DFTTestResult* DFTTestRun::runDftcalc(DFTTest* test) {
 		result->bcgInfo = bcgInfo;
 		messageFormatter->reportAction2("Read from BCG file `" + bcgFile.getFileRealPath() + "'",VERBOSITY_DATA);
 	}
-	
+#endif
+
 	return result;
 }
 
@@ -766,6 +776,7 @@ void DFTTestRun::fillDisplayMap(Test::TestSpecification* testGeneric, string tim
 	} else {
 		content["failprob"] = "-";
 	}
+#ifdef HAVE_CADP
 	if(result->bcgInfo.states>0) {
 		std::stringstream ss;
 		ss << result->bcgInfo.states;
@@ -780,6 +791,7 @@ void DFTTestRun::fillDisplayMap(Test::TestSpecification* testGeneric, string tim
 	} else {
 		content["transitions"] = "-";
 	}
+#endif
 	
 	// Fill in relative result to compareBase
 	if(result->failprob>=0) {

@@ -63,9 +63,11 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -M              Use modularization to check static parts of DFT.");
 		messageFormatter->message("  --storm         Use Storm. (standard setting)");
 		messageFormatter->message("  --modest        Use Modest instead of Storm.");
+#ifdef HAVE_CADP
 		messageFormatter->message("  --mrmc          Use MRMC instead of Storm.");
-		messageFormatter->message("  --imrmc         Use IMRMC instead of Storm.");
 		messageFormatter->message("  --imca          Use IMCA instead of MRMC.");
+#endif
+		messageFormatter->message("  --imrmc         Use IMRMC instead of Storm.");
 		messageFormatter->message("  --exact         Use DFTRES to give (more) exact results.");
 		messageFormatter->message("  --no-nd-warning Do not warn (but give notice) for non-determinism.");
 		messageFormatter->message("");
@@ -271,7 +273,8 @@ std::string DFT::DFTCalc::getRoot() {
 		dft2lntRoot = "";
 		goto end;
 	}
-	
+
+#ifdef HAVE_CADP
 	if(stat((dft2lntRoot+DFT2LNT::LNTSUBROOT).c_str(),&rootStat)) {
 		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::LNTSUBROOT,0755)) {
 			if(messageFormatter) messageFormatter->reportError("Could not create LNT Nodes directory (`" + dft2lntRoot+DFT2LNT::LNTSUBROOT + "')");
@@ -287,6 +290,7 @@ std::string DFT::DFTCalc::getRoot() {
 			goto end;
 		}
 	}
+#endif
 
 	if(stat((dft2lntRoot+DFT2LNT::AUTSUBROOT).c_str(),&rootStat)) {
 		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::AUTSUBROOT,0755)) {
@@ -301,15 +305,13 @@ end:
 	return dft2lntRoot;
 }
 
+#ifdef HAVE_CADP
 std::string DFT::DFTCalc::getCADPRoot() {
 	string cadp = CADP::getRoot();
 
-	if(cadp=="") {
-		if(messageFormatter) messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
-	}
-	
 	return cadp;
 }
+#endif
 
 
 int isReal(string s, double *res) {
@@ -677,6 +679,10 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 	delete tmpContents;
 
 	if (useConverter == DFT::converter::SVL) {
+#ifndef HAVE_CADP
+		messageFormatter->reportError("CADP support has not been compiled in, but is required by your requested analysis.");
+		return 1;
+#else
 		if (!reuse || !FileSystem::exists(bcg)) {
 			// svl, exp -> bcg
 			messageFormatter->reportAction("Building IMC...",VERBOSITY_FLOW);
@@ -743,6 +749,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		} else {
 			messageFormatter->notify("No impossible labels detected.");
 		}
+#endif /* HAVE_CADP */
 	} else if (!reuse
 	           || (useChecker == IMRMC && !FileSystem::exists(exactTra))
 	           || (useChecker == STORM && !FileSystem::exists(jani))
@@ -775,6 +782,10 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 	switch (useChecker) {
 	case MRMC:
+#ifndef HAVE_CADP
+		messageFormatter->reportError("CADP is not compiled in, but is required for MRMC analysis.");
+		return 1;
+#else
 		if(!reuse || !FileSystem::exists(ctmdpi)) {
 			// bcg -> ctmdpi, lab
 			messageFormatter->reportAction("Translating IMC to CTMDPI...",VERBOSITY_FLOW);
@@ -791,8 +802,13 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 		checker = std::unique_ptr<Checker>(new MRMCRunner(messageFormatter, &exec, false, mrmcExec, ctmdpi, lab));
 		break;
+#endif /* HAVE_CADP */
 	case IMRMC:
 		if(useConverter != DFTRES && (!reuse || !FileSystem::exists(tra))) {
+#ifndef HAVE_CADP
+			messageFormatter->reportError("Internal error: tried to use bcg2jani in non-CADP program.");
+			return 1;
+#else
 			// bcg -> tra, lab
 			messageFormatter->reportAction("Translating IMC to .tra/.lab ...",VERBOSITY_FLOW);
 			std::string cmd = bcg2tralabExec.getFilePath()
@@ -802,6 +818,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 			if (exec.runCommand(cmd, "bcg2tralab", tra) == "")
 				return 1;
+#endif /* HAVE_CADP */
 		} else {
 			messageFormatter->reportAction("Reusing IMC to .tra/.lab translation result",VERBOSITY_FLOW);
 		}
@@ -818,6 +835,10 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		}
 		break;
 	case IMCA:
+#ifndef HAVE_CADP
+		messageFormatter->reportError("CADP is not compiled in, but is required for IMCA analysis.");
+		return 1;
+#else
 		if(!reuse || !FileSystem::exists(ma)) {
 			// bcg -> ma
 			messageFormatter->reportAction("Translating IMC to IMCA format...",VERBOSITY_FLOW);
@@ -834,8 +855,13 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		checker = std::unique_ptr<Checker>(new IMCARunner(messageFormatter, &exec, imcaExec, ma));
 
 		break;
+#endif /* HAVE_CADP */
 	case STORM: {
 		if(useConverter == SVL && (!reuse || !FileSystem::exists(jani))) {
+#ifndef HAVE_CADP
+			messageFormatter->reportError("Internal error: tried to use bcg2jani in non-CADP program.");
+			return 1;
+#else
 			// bcg -> jani
 			messageFormatter->reportAction("Translating IMC to JANI format...",VERBOSITY_FLOW);
 			std::string cmd = bcg2janiExec.getFilePath()
@@ -845,6 +871,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 			if (exec.runCommand(cmd, "bcg2jani", jani) == "")
 				return 1;
+#endif /* HAVE_CADP */
 		} else if (useConverter == SVL) {
 			messageFormatter->reportAction("Reusing IMC to JANI format translation result",VERBOSITY_FLOW);
 		}
@@ -857,6 +884,10 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 	}
 	case MODEST:
 		if(useConverter == SVL && (!reuse || !FileSystem::exists(jani))) {
+#ifndef HAVE_CADP
+			messageFormatter->reportError("Internal error: tried to use bcg2jani in non-CADP program.");
+			return 1;
+#else
 			// bcg -> jani
 			messageFormatter->reportAction("Translating IMC to JANI format...",VERBOSITY_FLOW);
 			std::string cmd = bcg2janiExec.getFilePath()
@@ -866,6 +897,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 			if (exec.runCommand(cmd, "bcg2jani", jani) == "")
 				return 1;
+#endif /* HAVE_CADP */
 		} else if (useConverter == SVL) {
 			messageFormatter->reportAction("Reusing IMC to JANI format translation result",VERBOSITY_FLOW);
 		}
@@ -881,6 +913,10 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 	ret.stats = stats;
 
 	if(!buildDot.empty()) {
+#ifndef HAVE_CADP
+		messageFormatter->reportAction("DOT output required CADP, but CADP support is not compiled in.");
+		return 1;
+#else
 		// bcg -> dot
 		messageFormatter->reportAction("Building DOT from IMC...",VERBOSITY_FLOW);
 		std::string cmd = bcgioExec.getFilePath()
@@ -900,6 +936,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 					;
 		if (exec.runCommand(cmd, "dot", png) == "")
 			return 1;
+#endif /* HAVE_CADP */
 	}
 
 	cachedResults[expContents] = ret;
@@ -1156,6 +1193,13 @@ int main(int argc, char** argv) {
 	messageFormatter->useColoredMessages(useColoredMessages);
 	messageFormatter->setVerbosity(verbosity);
 	messageFormatter->setAutoFlush(true);
+
+#ifndef HAVE_CADP
+	if (useConverter == DFT::converter::SVL) {
+		messageFormatter->reportWarningAt(Location("commandline"),"CADP mode not compiled in, enabling --exact");
+		useConverter = DFT::converter::DFTRES;
+	}
+#endif
 
 	if (useConverter == DFT::converter::DFTRES
 		&& useChecker != DFT::checker::IMRMC
@@ -1526,6 +1570,7 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 
 	/* Obtain all needed root information from environment */
 	dft2lntRoot = getRoot();
+#ifdef HAVE_CADP
 	if (checker == MRMC) {
 		coralRoot = getCoralRoot();
 		imc2ctmdpExec = File(coralRoot+"/bin/imc2ctmdp");
@@ -1541,12 +1586,14 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 	maxprogExec = File(dft2lntRoot+"/bin/maxprog");
 
 	cadpRoot = getCADPRoot();
+	if (cadpRoot != "")
+		svlExec = File(cadpRoot+"/com/svl");
+#endif
 
 	/* These tools should be easy to find in the roots. Note that an added
 	 * bonus would be to locate them using PATH as well.
 	 */
 	dft2lntcExec = File(dft2lntRoot+"/bin/dft2lntc");
-	svlExec = File(cadpRoot+"/com/svl");
 
 	/* Find dft2lntc executable (based on DFT2LNTROOT environment variable) */
 	if(dft2lntRoot.empty()) {
@@ -1572,6 +1619,7 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 	} else if(checker == MRMC && !FileSystem::hasAccessTo(File(coralRoot),X_OK)) {
 		messageFormatter->reportError("Could not enter coral directory (environment variable `CORAL'");
 		ok = false;
+#ifdef HAVE_CADP
 	} else if(checker == MRMC && !FileSystem::hasAccessTo(imc2ctmdpExec,F_OK)) {
 		messageFormatter->reportError("imc2ctmdp not found (in " + coralRoot+"/bin)");
 		ok = false;
@@ -1580,10 +1628,12 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 		ok = false;
 	} else if (checker == MRMC) {
 		messageFormatter->reportAction("Using imc2ctmdp [" + imc2ctmdpExec.getFilePath() + "]",VERBOSITY_SEARCHING);
+#endif
 	}
 
-	/* Find bcg2imca */
 
+#ifdef HAVE_CADP
+	/* Find bcg2imca */
 	if(checker == IMCA && !FileSystem::hasAccessTo(bcg2imcaExec,F_OK)) {
 		messageFormatter->reportError("bcg2imca not found (in " + imcaRoot+"/bin)");
 		ok = false;
@@ -1613,7 +1663,11 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 				messageFormatter->reportAction("Using svl [" + svlExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 			}
 		}
+		ok &= findInPath("bcg_io", bcgioExec);
+		ok &= findInPath("bcg_info", bcginfoExec);
+		ok &= findInPath("bcg_min", bcgminExec);
 	}
+#endif
 
 	if (conv == DFTRES) {
 		dftresJar = getDftresJar();
@@ -1636,10 +1690,6 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 	/* Find an imca executable (based on PATH environment variable) */
 	if (checker == IMCA)
 		ok &= findInPath("imca", imcaExec);
-
-	ok &= findInPath("bcg_io", bcgioExec);
-	ok &= findInPath("bcg_info", bcginfoExec);
-	ok &= findInPath("bcg_min", bcgminExec);
 
 	/* Find dot executable (based on PATH environment variable) */
 	if (!buildDot.empty())

@@ -8,8 +8,10 @@ set (dft2lntc_VERSION_PATCH 0)
 cmake_minimum_required (VERSION 2.6)
 
 ## Not sure if needed
-add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS )
 add_definitions(-std=c++11)
+if (DEFINED ENV{CADP})
+	add_definitions(-DHAVE_CADP)
+endif()
 
 ## Include source directory, the build directory (for generated files) and the dft2lnt library path
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../dft2lnt)
@@ -17,12 +19,18 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CM
 ## Link directories
 #link_directories(${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt)
 
+if (DEFINED ENV{CADP})
+	set(ADDITIONAL_SOURCES DFTreeBCGNodeBuilder.cpp)
+else()
+	set(ADDITIONAL_SOURCES)
+endif()
+
+
 ## Specify the executable and its sources
 add_executable(dft2lntc
 	dft2lntc.cpp
 	modularize.cpp
 	DFTreeAUTNodeBuilder.cpp
-	DFTreeBCGNodeBuilder.cpp
 	DFTreeEXPBuilder.cpp
 	DFTreeNodeBuilder.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/compiletime.h
@@ -33,6 +41,7 @@ add_executable(dft2lntc
 	automata/insp.cpp
 	automata/spare.cpp
 	automata/voting.cpp
+	${ADDITIONAL_SOURCES}
 )
 
 ## Depends on:

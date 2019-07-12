@@ -13,12 +13,16 @@
 #include <sstream>
 #include "test.h"
 #include "DFTCalculationResult.h"
+#ifdef HAVE_CADP
 #include "CADP.h"
+#endif
 
 class DFTTestResult: public Test::TestResult {
 public:
 	double failprob;
+#ifdef HAVE_CADP
 	DFT::CADP::BCGInfo bcgInfo;
+#endif
 
 	DFTTestResult():
 		failprob(-1.0f) {

@@ -23,6 +23,9 @@ split_interval () {
 # 3:   Returned value is more than $ERROR_BOUND outside the reference
 #      range or is not a valid number.
 compare () {
+	if [ -z "$1" ]; then
+		return 3;
+	fi
 	VAL="$1";
 	REF="$2";
 	split_interval "$VAL" VAL_LOW VAL_HIGH;
@@ -72,7 +75,11 @@ do_tests() {
 			MSG="within bounds, got $RESULT, want $REF";
 		else
 			VERDICT="FAIL";
-			MSG="got $RESULT, want $REF";
+			if ! [ -z "$RESULT" ]; then
+				MSG="got $RESULT, want $REF";
+			else
+				MSG="Got no result";
+			fi
 		fi
 		printf "\r$VERDICT: $FILE ($DFTCALC_OPTS $OPTS)";
 		if ! [ -z "$MSG" ]; then
@@ -98,7 +105,7 @@ if [ "$1" = "--all" ]; then
 		DFTCALC_OPTS="$CHECKER $*";
 		do_tests < tests.txt
 	done
-	for CHECKER in --imrmc --storm; do
+	for CHECKER in --imrmc --storm --modest; do
 		DFTCALC_OPTS="--exact $CHECKER $*";
 		do_tests < tests.txt
 	done

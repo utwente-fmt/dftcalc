@@ -43,8 +43,9 @@ namespace DFT {
 		std::string dft2lntRoot;
 		std::string coralRoot;
 		std::string imcaRoot;
-		std::string cadpRoot;
 		File dft2lntcExec;
+#ifdef HAVE_CADP
+		std::string cadpRoot;
 		File imc2ctmdpExec;
 		File bcg2imcaExec;
 		File bcg2janiExec;
@@ -54,6 +55,8 @@ namespace DFT {
 		File bcgioExec;
 		File bcginfoExec;
 		File bcgminExec;
+		std::string getCADPRoot();
+#endif
 		File stormExec;
 		File mrmcExec;
 		File imrmcExec;
@@ -64,7 +67,6 @@ namespace DFT {
 		std::string getCoralRoot();
 		std::string getImcaRoot();
 		std::string getRoot();
-		std::string getCADPRoot();
 		File getDftresJar();
 
 		std::vector<std::string> evidence;

@@ -24,6 +24,10 @@ include_directories(
 ## Link directories
 #link_directories(${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt)
 
+if (DEFINED ENV{CADP})
+	add_definitions(-DHAVE_CADP)
+endif()
+
 ## Specify the executable and its sources
 add_executable(dfttest
 	dfttest.cpp

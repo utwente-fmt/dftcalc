@@ -14,7 +14,6 @@
 #include "yaml-cpp/yaml.h"
 #include "decnumber.h"
 #include "query.h"
-#include "CADP.h"
 
 namespace DFT {
 class DFTCalculationResultItem {

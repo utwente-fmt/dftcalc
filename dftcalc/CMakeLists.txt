@@ -10,6 +10,9 @@ cmake_minimum_required (VERSION 2.6)
 ## Not sure if needed
 add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS )
 add_definitions(-std=c++11)
+if(DEFINED ENV{CADP})
+	add_definitions(-DHAVE_CADP)
+endif()
 
 ## Include source directory, the build directory (for generated files) and the dft2lnt library path
 include_directories(

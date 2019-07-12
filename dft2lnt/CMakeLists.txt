@@ -22,6 +22,12 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+if(DEFINED ENV{CADP})
+	set(CADP_SOURCES CADP.cpp)
+else()
+	set(CADP_SOURCES)
+endif()
+
 ## Generate parser and lexer files to the target directory, because they depend on the selected Build (Debug/Release)
 ## We need to explicitely state that we want a lexer header file
 bison_target(par ${CMAKE_CURRENT_SOURCE_DIR}/parser.y.ypp ${CMAKE_CURRENT_BINARY_DIR}/parser.y.cpp COMPILE_FLAGS "${BISON_CFLAGS}")
@@ -50,7 +56,7 @@ add_library(dft2lnt
 	Shell.cpp
 	FileSystem.cpp
 	System.cpp
-	CADP.cpp
+	${CADP_SOURCES}
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
 )
 

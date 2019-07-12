@@ -33,7 +33,9 @@
 #include "DFTree.h"
 #include "DFTreeValidator.h"
 #include "DFTreePrinter.h"
+#ifdef HAVE_CADP
 #include "DFTreeBCGNodeBuilder.h"
+#endif
 #include "DFTreeAUTNodeBuilder.h"
 #include "DFTreeEXPBuilder.h"
 #include "compiletime.h"
@@ -133,7 +135,8 @@ std::string getRoot(CompilerContext* compilerContext) {
 		dft2lntRoot = "";
 		goto end;
 	}
-	
+
+#ifdef HAVE_CADP
 	if(stat((dft2lntRoot+DFT2LNT::LNTSUBROOT).c_str(),&rootStat)) {
 		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::LNTSUBROOT,0755)) {
 			compilerContext->reportError("Could not create LNT Nodes directory (`" + dft2lntRoot+DFT2LNT::LNTSUBROOT + "')");
@@ -149,6 +152,7 @@ std::string getRoot(CompilerContext* compilerContext) {
 			goto end;
 		}
 	}
+#endif
 
 	if(stat((dft2lntRoot+DFT2LNT::AUTSUBROOT).c_str(),&rootStat)) {
 		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::AUTSUBROOT,0755)) {
@@ -670,14 +674,20 @@ int main(int argc, char** argv) {
 	if(rootValid && dftValid) {
 		compilerContext.notify("Building needed AUT files...",VERBOSITY_FLOW);
 		compilerContext.flush();
-		DFT::DFTreeBCGNodeBuilder bcgBuilder(dft2lntRoot,dft, &compilerContext);
 		DFT::DFTreeAUTNodeBuilder autBuilder(dft2lntRoot,dft, &compilerContext);
 		DFT::DFTreeNodeBuilder *nodeBuilder = &autBuilder;
+#ifdef HAVE_CADP
+		DFT::DFTreeBCGNodeBuilder bcgBuilder(dft2lntRoot,dft, &compilerContext);
 		if (autBuilder.generate()) {
 			compilerContext.notify("Unable to make AUT files, building needed BCG files...",VERBOSITY_FLOW);
 			bcgBuilder.generate();
 			nodeBuilder = &bcgBuilder;
 		}
+#else
+		if (autBuilder.generate()) {
+			compilerContext.reportError("Unable to create AUT files.");
+		}
+#endif
 		if (outputFileSet) {
 			/* Building EXP out of DFT */
 			compilerContext.notify("Building EXP...",VERBOSITY_FLOW);
