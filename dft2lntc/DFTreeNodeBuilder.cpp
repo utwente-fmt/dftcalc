@@ -29,7 +29,7 @@ std::string DFT::DFTreeNodeBuilder::getNodeName(const DFT::Nodes::Node& node) {
 		if(!be.hasRepairModule()) {
 			if (be.hasInspectionModule())
 				ss << "_im";
-			else
+			else if (be.isRepairable())
 				ss << "_repair";
 		} else if(be.isRepairable()) {
 			if (be.hasInspectionModule())
