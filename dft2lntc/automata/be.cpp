@@ -75,6 +75,14 @@ void be::be_state::initialize_outgoing() {
 		if (phase == par->phases) {
 			target.emit_fail = 1;
 			target.status = DOWN;
+			if (par->repairable && par->self_repair
+			    && repair_status==NONE)
+			{
+				if (par->independent_repair)
+					target.repair_status = BUSY;
+				else
+					target.repair_status = NEEDED;
+			}
 		}
 		if (phase == par->threshold)
 			target.emit_inspect = true;
@@ -111,17 +119,6 @@ void be::be_state::initialize_outgoing() {
 		add_transition(ONLINE(0), target);
 	}
 
-	if (par->repairable && par->self_repair && status==DOWN
-	    && repair_status==NONE)
-	{
-		target = *this;
-		if (par->independent_repair)
-			target.repair_status = BUSY;
-		else
-			target.repair_status = NEEDED;
-		add_transition("", target);
-	}
-
 	target = *this;
 	if (!par->repairable)
 		target.status = IMPOSSIBLE;
@@ -135,7 +132,7 @@ void be::be_state::initialize_outgoing() {
 
 	if (repair_status == NEEDED) {
 		target = *this;
-		target.repair_status == WAITING;
+		target.repair_status = WAITING;
 		add_transition(REPAIR(true), target);
 	}
 

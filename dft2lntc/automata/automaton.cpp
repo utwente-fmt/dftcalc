@@ -27,8 +27,8 @@ void automaton::write(std::ostream &out)
 	}
 }
 
-static void merge(std::multimap<std::string, size_t> target,
-                  const std::multimap<std::string, size_t> source)
+static void merge(std::multimap<std::string, size_t> &target,
+                  const std::multimap<std::string, size_t> &source)
 {
 	for (auto &entry : source) {
 		auto it = target.find(entry.first);
@@ -41,7 +41,7 @@ static void merge(std::multimap<std::string, size_t> target,
 			++it;
 		}
 		if (needs_add)
-			target.emplace(it->first, it->second);
+			target.emplace(entry.first, entry.second);
 	}
 }
 

@@ -17,7 +17,8 @@ namespace automata {
 			bool signal : 1;
 
 			insp_state(insp *parent)
-				:automaton::state(parent)
+				:automaton::state(parent),
+				 counter(0), signal(0)
 			{ }
 
 			friend class insp;

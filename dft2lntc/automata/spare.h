@@ -27,8 +27,11 @@ namespace automata {
 
 			spare_state(spare *parent)
 				:automaton::state(parent),
+				 repairing_deactivate(0),
 				 cur_using(parent->always_active ? 1 : 0),
-				 activated(parent->always_active)
+				 prev_using(0), done(0),
+				 activated(parent->always_active),
+				 impossible(0), terminated(0)
 			{
 				for (size_t i = 1; i <= parent->total; i++) {
 					unfailed.insert(i);

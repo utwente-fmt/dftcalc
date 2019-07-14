@@ -1,0 +1,3 @@
+toplevel "A";
+"I" 2insp2 "A";
+"A" lambda=0.1 prob=0.4 interval=1;

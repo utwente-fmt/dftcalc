@@ -8,6 +8,14 @@
 #include <vector>
 #include <iostream>
 
+/* Warning to new automata:
+ * Internal actions can be indicated by leaving the action empty.
+ * However, these will be collapsed before the automaton is output.
+ * The tau-reduction does not consider probabilistic behaviour (as
+ * stochastic behaviour may not be known before the later renaming
+ * step), and will produce incorrect results if a tau-action decides
+ * what stochastic transitions will be enabled.
+ */
 class automaton {
 public:
 	class state {
@@ -19,6 +27,7 @@ public:
 		state(automaton *parent)
 			:parent(parent)
 		{ }
+
 		virtual void initialize_outgoing() = 0;
 		void add_transition(std::string label, const state &target) {
 			size_t target_num = parent->add_state(&target);
@@ -29,6 +38,8 @@ public:
 		virtual size_t hashcode() const noexcept = 0;
 		virtual bool operator==(const state &other) const noexcept = 0;
 		virtual state *copy() const = 0;
+
+		virtual ~state() { }
 
 		virtual operator std::string() const {
 			return "";

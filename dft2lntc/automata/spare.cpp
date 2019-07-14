@@ -13,7 +13,7 @@ void spare::spare_state::initialize_outgoing() {
 		add_transition(GATE_IMPOSSIBLE, target);
 		return;
 	}
-	size_t nr_act, i;
+	size_t i;
 	const spare *par = (const spare *)get_parent();
 	set<size_t> avail;
 	for (size_t j : unfailed) {
@@ -76,7 +76,7 @@ void spare::spare_state::initialize_outgoing() {
 		target.impossible = true;
 	add_transition(DEACTIVATE(0, false), target);
 
-	for (i = 1; i < par->total; i++) {
+	for (i = 1; i <= par->total; i++) {
 		if (i == cur_using)
 			continue;
 		target = *this;
@@ -86,7 +86,7 @@ void spare::spare_state::initialize_outgoing() {
 		add_transition(ACTIVATE(i, false), target);
 	}
 
-	for (i = 1; i < par->total; i++) {
+	for (i = 1; i <= par->total; i++) {
 		target = *this;
 		if (i == 1 && par->always_active)
 			target.impossible = 1;
@@ -114,7 +114,7 @@ void spare::spare_state::initialize_outgoing() {
 
 	add_transition(REPAIRED(0), *this);
 
-	if (activated && !(avail.empty() || prev_using && repairing_deactivate))
+	if (activated && !(avail.empty() || prev_using || repairing_deactivate))
 	{
 		size_t new_using = *avail.begin();
 		if (new_using != cur_using) {

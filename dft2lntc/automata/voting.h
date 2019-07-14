@@ -18,7 +18,7 @@ namespace automata {
 
 		class voting_state : public automaton::state {
 			private:
-			size_t nr_failed;
+			size_t nr_failed = 0;
 			bool done : 1;
 			bool running : 1;
 			bool impossible : 1;
@@ -28,6 +28,8 @@ namespace automata {
 
 			voting_state(voting *parent)
 				:automaton::state(parent),
+				 done(0), running(0),
+				 impossible(0), terminated(0),
 				 received(parent->total + 1),
 				 activated(parent->total + 1)
 			{ }
