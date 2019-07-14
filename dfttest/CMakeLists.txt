@@ -2,7 +2,7 @@
 project (dfttest)
 set (dfttest_VERSION_MAJOR 1)
 set (dfttest_VERSION_MINOR 3)
-set (dfttest_VERSION_PATCH 0)
+set (dfttest_VERSION_PATCH 1)
 
 ## Not sure if needed
 cmake_minimum_required (VERSION 2.6)
