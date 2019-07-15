@@ -55,7 +55,7 @@ std::string DFT::DFTCalculationResultItem::valStr(size_t deltaDigits) const {
 		if (dot < wantedDigits)
 			wantedDigits++;
 		middle = middle.substr(0, wantedDigits);
-		return middle + exp + " (" + lowerBound.str() + " - " + upperBound.str() + ")";
+		return middle + exp;
 	}
 	if (lowerBound == upperBound)
 		return lowerBound.str();
