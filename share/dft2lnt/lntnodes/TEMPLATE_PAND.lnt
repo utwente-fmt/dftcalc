@@ -1,32 +1,55 @@
 module TEMPLATE_PAND(TEMPLATE_COMMON) is
 
-	process PAND [IMPOSSIBLE : none, FAIL : NAT_CHANNEL, ACTIVATE : NAT_BOOL_CHANNEL]
-		(total : NAT, failed : NAT_ARRAY, always_active : BOOL) is
+	process PAND [IMPOSSIBLE : none, FAIL : NAT_CHANNEL,
+	              ACTIVATE : NAT_BOOL_CHANNEL, ONLINE: NAT_CHANNEL]
+		(total : NAT, always_active : BOOL, repairable : BOOL) is
 	var
-		nr_failed : NAT,
+		failed : BOOL_ARRAY,
+		nr_failed: NAT,
+		in_order_mark : NAT,
 		done : BOOL,
-		never_fail: BOOL,
-		nr : NAT,
-		nr_act: NAT
+		nr_act : NAT
 	in
 		done := FALSE;
-		nr_failed := 0 of NAT;
-		nr_act := 0 of NAT;
-		never_fail := FALSE;
+		failed := BOOL_ARRAY(FALSE);
+		nr_act := 0;
+		nr_failed := 0;
+		in_order_mark := 0;
 		loop
 			select
 
 			(*
 			 * Listen for any child to be triggered.
 			 *)
+			var nr : NAT in
 				FAIL (?nr) where (0 < nr) and (nr <= total);
-				if (nr > (nr_failed + 1)) then
-					never_fail := TRUE
+				if (nr == (in_order_mark + 1)) then
+					in_order_mark := nr
 				end if;
-				if (nr == (nr_failed + 1)) then
+				if not(failed[nr]) then
 					nr_failed := nr_failed + 1
 				end if;
-				nr := 0
+				failed[nr] := TRUE
+			end var
+
+			(*
+			 * Listen for any child to be repaired.
+			 *)
+
+			[]
+			var nr : NAT in
+				if repairable then
+					ONLINE (?nr) where (0 < nr) and (nr <= total);
+					if (nr <= in_order_mark) then
+						in_order_mark := nr - 1
+					end if;
+					if not(failed[nr]) then
+						IMPOSSIBLE; stop
+					end if;
+					failed[nr] := FALSE;
+					nr_failed := nr_failed - 1
+				end if
+			end var
 
 			(*
 			 * Checks if all the children have failed and if they failed in
@@ -34,15 +57,22 @@ module TEMPLATE_PAND(TEMPLATE_COMMON) is
 			 * notifies its parents.
 			 *)
 			[]
-				if (nr_failed == total) and not(done) and not(never_fail) then
-					FAIL (!0 of NAT); done := TRUE
+				if (in_order_mark == total) and not(done) then
+					FAIL (!0 of NAT);
+					done := TRUE
+				end if
+
+			[]
+				if (in_order_mark < total) and done then
+					ONLINE(!0 of NAT);
+					done := FALSE
 				end if
 
 			(*
 			 * If this node is activated, enable the activation of the source.
 			 *)
 			[]
-				ACTIVATE (?nr,FALSE) where (nr == (0 of NAT));
+				ACTIVATE (!0 of NAT, !FALSE);
 				if (not(always_active)) then
 					if (nr_act == 0 of NAT) then
 						nr_act := 1 of NAT

@@ -1,0 +1,5 @@
+toplevel "A";
+"A" pand "B" "C";
+"I" 2insp2 "B" "C";
+"B" lambda=0.1 dorm=1 phases=1 interval=1;
+"C" lambda=0.1 dorm=1 phases=1 interval=1;

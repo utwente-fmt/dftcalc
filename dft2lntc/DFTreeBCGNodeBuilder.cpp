@@ -30,7 +30,7 @@
 
 using namespace automata::signals;
 
-const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 8;
+const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 9;
 
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_LNTISVALID = 2;
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_BCGISVALID = 2;
@@ -177,10 +177,10 @@ int DFT::DFTreeBCGNodeBuilder::generatePAnd(FileWriter& out, const DFT::Nodes::G
 
 	out << out.applyprefix << "module " << getNodeName(gate) << "(TEMPLATE_PAND) is" << out.applypostfix;
 	out.indent();
-		out << out.applyprefix << "type NAT_ARRAY is array[1.." << total << "] of NAT end type" << out.applypostfix;
-		out << out.applyprefix << "process MAIN [" << GATE_IMPOSSIBLE << ", " << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_CHANNEL] is" << out.applypostfix;
+		out << out.applyprefix << "type BOOL_ARRAY is array[1.." << total << "] of BOOL end type" << out.applypostfix;
+		out << out.applyprefix << "process MAIN [" << GATE_IMPOSSIBLE << ", " << GATE_FAIL << " : NAT_CHANNEL, " << GATE_ACTIVATE << " : NAT_CHANNEL, " << GATE_ONLINE << " : NAT_CHANNEL] is" << out.applypostfix;
 		out.indent();
-			out << out.applyprefix << "PAND [" << GATE_IMPOSSIBLE << ", " << GATE_FAIL << "," << GATE_ACTIVATE << "] (" << total << " of NAT, (NAT_ARRAY(0 of NAT)), " << (alwaysActive ? "TRUE" : "FALSE") << ")" << out.applypostfix;
+			out << out.applyprefix << "PAND [" << GATE_IMPOSSIBLE << ", " << GATE_FAIL << "," << GATE_ACTIVATE << "," << GATE_ONLINE << "] (" << total << " of NAT, " << (alwaysActive ? "TRUE" : "FALSE") << ", " << "TRUE" << ")" << out.applypostfix;
 		out.outdent();
 		out << out.applyprefix << "end process" << out.applypostfix;
 	out.outdent();

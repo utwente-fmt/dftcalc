@@ -51,7 +51,7 @@ namespace automata {
 	public:
 		insp(const DFT::Nodes::Inspection &gate)
 			: total(gate.getChildren().size()),
-			  phases(gate.getPhases()),
+			  phases(gate.getPhases() ? gate.getPhases() : 1),
 			  initial_insp_state(this)
 		{ }
 
