@@ -2,6 +2,8 @@
  * Input rates:
  * RATE_FAIL !x !1: Dormant rate from phase x (1-indexed)
  * RATE_FAIL !x !2: Active rate from phase x (1-indexed)
+ * RATE_FAIL !x !3: Dormant immediate repair rate from phase x (1-indexed)
+ * RATE_FAIL !x !4: Active immediate repair rate from phase x (1-indexed)
  * RATE_FAIL !0 !y: Non-fail rate from first phase (p * lambda)
  * RATE_REPAIR    : Repair rate from any failed state.
  *
@@ -10,12 +12,13 @@
  * determined that it can fail (by undergoing any degradation at all)
  * will never enter a failsafe state after repairs. Similarly, a
  * failsafe BE with remain failsafe after attempted repairs.
+ *
  *)
 module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 	function can_failsig (cold:BOOL, isactive:BOOL, status:STATUS) : BOOL is
 		return (status == UP) and (not(cold or isactive) or isactive)
 	end function
-		
+
 	process fail_sig [RATE_FAIL : NAT_NAT_CHANNEL]
 			(active:BOOL, phase:NAT, canfail:BOOL)
 	is
@@ -38,6 +41,32 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 				RATE_FAIL(!phase, 1 of NAT)
 			else
 				RATE_FAIL(!phase, 2 of NAT)
+			end if
+		end if
+	end process
+
+	process fail_res [RATE_FAIL : NAT_NAT_CHANNEL]
+			(active:BOOL, phase:NAT, canfail:BOOL)
+	is
+		if (canfail and (phase == 1)) then
+			if not(active) then
+				select
+					RATE_FAIL(!phase, 3 of NAT)
+				[]
+					RATE_FAIL(!0 of NAT, 3 of NAT)
+				end select
+			else
+				select
+					RATE_FAIL(!phase, 4 of NAT)
+				[]
+					RATE_FAIL(!0 of NAT, 4 of NAT)
+				end select
+			end if
+		else
+			if not(active) then
+				RATE_FAIL(!phase, 3 of NAT)
+			else
+				RATE_FAIL(!phase, 4 of NAT)
 			end if
 		end if
 	end process
@@ -120,6 +149,19 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 					phase := phase + 1
 				end if
 
+			(*
+			 * Due to a restoration factor, the BE may
+			 * `fail' back to its first phase. This
+			 * nonsensical behaviour is specified by the
+			 * Galileo manual, so we follow it.
+			 *)
+			[]
+				if can_failsig(cold, isactive, status) then
+					fail_res[RATE_FAIL](isactive, phase);
+					can_definitely_fail := TRUE;
+					phase := 1
+				end if
+
 			 (* If the BE is in the first degradation phase,
 			  * and has a non-failure probability
 			  * (converted to a rate), the BE might move to
@@ -132,7 +174,11 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 				    and not(can_definitely_fail)
 				    and (phase == 1))
 				then
-					RATE_FAIL (!0 of NAT,1 of NAT);
+					select
+						RATE_FAIL (!0 of NAT,1 of NAT)
+						[]
+						RATE_FAIL (!0 of NAT,3 of NAT)
+					end select;
 					status := FAILSAFE
 				end if
 
@@ -142,7 +188,11 @@ module TEMPLATE_BE(TEMPLATE_COMMON_APH_REPAIR) is
 				    and (phase == 1)
 				    and not(can_definitely_fail))
 				then
-					RATE_FAIL (!0 of NAT,2 of NAT);
+					select
+						RATE_FAIL (!0 of NAT,2 of NAT)
+						[]
+						RATE_FAIL (!0 of NAT,4 of NAT)
+					end select;
 					status := FAILSAFE
 				end if
 

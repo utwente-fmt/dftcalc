@@ -165,35 +165,33 @@ public:
 		DFT::Nodes::BE::CalculationMode calcMode = DFT::Nodes::BE::CalculationMode::UNDEFINED;
 		
 		// Find lambda
-		{
-			for (auto attr : *basicEvent->getAttributes()) {
-				if(attr->getLabel()==DFT::Nodes::BE::AttrLabelLambda) {
-					if(calcMode == Nodes::BE::CalculationMode::EXPONENTIAL) {
-						cc->reportWarningAt(attr->getLocation(),"setting lambda twice, ignoring");
-					} else if(calcMode!=Nodes::BE::CalculationMode::PROBABILITY) {
-						decnumber<> v(attr->getValue()->origString);
-						be->setLambda(v);
-						calcMode = Nodes::BE::CalculationMode::EXPONENTIAL;
-					} else if(calcMode!=Nodes::BE::CalculationMode::UNDEFINED) {
-						cc->reportErrorAt(attr->getLocation(),"setting lambda would override previous calculation mode: " + DFT::Nodes::BE::getCalculationModeStr(calcMode));
-					} else {
-						decnumber<> v(attr->getValue()->origString);
-						be->setLambda(v);
-						calcMode = DFT::Nodes::BE::CalculationMode::EXPONENTIAL;
-					}
-				} else if(attr->getLabel()==DFT::Nodes::BE::AttrLabelProb) {
-					if(calcMode==DFT::Nodes::BE::CalculationMode::PROBABILITY) {
-						cc->reportWarningAt(attr->getLocation(),"setting prob twice, ignoring");
-					} else if(calcMode==DFT::Nodes::BE::CalculationMode::EXPONENTIAL) {
-						decnumber<> v(attr->getValue()->origString);
-						be->setProb(v);
-					} else if(calcMode!=DFT::Nodes::BE::CalculationMode::UNDEFINED) {
-						cc->reportErrorAt(attr->getLocation(),"setting prob would override previous calculation mode: " + DFT::Nodes::BE::getCalculationModeStr(calcMode));
-					} else {
-						decnumber<> v(attr->getValue()->origString);
-						be->setProb(v);
-						calcMode = DFT::Nodes::BE::CalculationMode::PROBABILITY;
-					}
+		for (auto attr : *basicEvent->getAttributes()) {
+			if(attr->getLabel()==DFT::Nodes::BE::AttrLabelLambda) {
+				if(calcMode == Nodes::BE::CalculationMode::EXPONENTIAL) {
+					cc->reportWarningAt(attr->getLocation(),"setting lambda twice, ignoring");
+				} else if(calcMode!=Nodes::BE::CalculationMode::PROBABILITY) {
+					decnumber<> v(attr->getValue()->origString);
+					be->setLambda(v);
+					calcMode = Nodes::BE::CalculationMode::EXPONENTIAL;
+				} else if(calcMode!=Nodes::BE::CalculationMode::UNDEFINED) {
+					cc->reportErrorAt(attr->getLocation(),"setting lambda would override previous calculation mode: " + DFT::Nodes::BE::getCalculationModeStr(calcMode));
+				} else {
+					decnumber<> v(attr->getValue()->origString);
+					be->setLambda(v);
+					calcMode = DFT::Nodes::BE::CalculationMode::EXPONENTIAL;
+				}
+			} else if(attr->getLabel()==DFT::Nodes::BE::AttrLabelProb) {
+				if(calcMode==DFT::Nodes::BE::CalculationMode::PROBABILITY) {
+					cc->reportWarningAt(attr->getLocation(),"setting prob twice, ignoring");
+				} else if(calcMode==DFT::Nodes::BE::CalculationMode::EXPONENTIAL) {
+					decnumber<> v(attr->getValue()->origString);
+					be->setProb(v);
+				} else if(calcMode!=DFT::Nodes::BE::CalculationMode::UNDEFINED) {
+					cc->reportErrorAt(attr->getLocation(),"setting prob would override previous calculation mode: " + DFT::Nodes::BE::getCalculationModeStr(calcMode));
+				} else {
+					decnumber<> v(attr->getValue()->origString);
+					be->setProb(v);
+					calcMode = DFT::Nodes::BE::CalculationMode::PROBABILITY;
 				}
 			}
 		}
@@ -206,6 +204,15 @@ public:
 					decnumber<> v((*it)->getValue()->origString);
 					be->setDorm(decnumber<>(v));
 				}
+			}
+		}
+
+		// Find restoration factor.
+		for (auto attr : *basicEvent->getAttributes()) {
+			if(attr->getLabel()==DFT::Nodes::BE::AttrLabelRes) {
+				decnumber<> v(attr->getValue()->origString);
+				std::cerr << "Res set: " << attr->getValue()->origString << "\n";
+				be->setRes(v);
 			}
 		}
         

@@ -11,6 +11,7 @@
 #include "DFTreeEXPBuilder.h"
 #include "FileWriter.h"
 #include "dft2lnt.h"
+#include "automata/signals.h"
 
 #include <map>
 #include <fstream>
@@ -50,6 +51,17 @@ void DFT::DFTreeEXPBuilder::printSyncLineShort(std::ostream& stream, const EXPSy
 	stream << " > @ " << (rule.syncOnNode?rule.syncOnNode->getName():"NOSYNC") << " -> " << rule.toLabel;
 }
 
+static std::string rename(bool comma, std::string gate, const decnumber<> &rate)
+{
+	std::string start(comma ? ", \"" : "\"");
+	if (!rate.is_zero())
+		return start + gate + "\" -> \"rate " + rate.str() + '"';
+	else if (!comma) /* Return something to avoid a spurious comma */
+		return start + gate + "\" -> \"" + gate + '"';
+	else
+		return "";
+}
+
 std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) const {
 	std::stringstream ss;
 
@@ -62,44 +74,51 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		ss << be.getFileToEmbed();
 		ss << "\" end rename";
 	} else if (!be.getLambda().is_zero() || !be.getProb().is_zero()) {
-		decnumber<> l = be.getLambda() * be.getProb();
-		decnumber<> rateFailSafe = 0;
+		using namespace automata::signals;
+		const decnumber<> ONE(1);
+		decnumber<> l = be.getLambda(), mu = be.getMu();
+		decnumber<> p = be.getProb();
+		decnumber<> failSafe = 0;
+		decnumber<> res = be.getRes(), cov = ONE - res;
 		if ((double)l < 0) {
 			/* Purely probabilistic BE. Assign arbitrary rate
 			 * since only time-unbounded properties make sense
 			 * anyway.
 			 */
-			l = be.getProb();
-			rateFailSafe = decnumber<>(1) - l;
+			l = ONE;
+			failSafe = ONE - l*p;
 		} else {
-			rateFailSafe = be.getLambda() * (decnumber<>(1) - be.getProb());
+			failSafe = l * (ONE - p);
 		}
 
 		const std::string GATE = automata::signals::GATE_RATE_FAIL;
 		ss << "total rename ";
 		// Insert lambda value
-		ss << "\"" << GATE << " !1 !2\" -> \"rate " << l.str() << "\"";
-		if (!rateFailSafe.is_zero())
-			ss << ", \"" << GATE << " !0 !2\" -> \"rate " << rateFailSafe.str() << "\"";
+		ss << rename(0, RATE_FAIL(1, 2), l * p * cov);
+		ss << rename(1, RATE_FAIL(1, 4), l * p * res);
+		ss << rename(1, RATE_FAIL(0, 2), failSafe * cov);
+		ss << rename(1, RATE_FAIL(0, 4), failSafe * res);
+		l = be.getLambda() * cov;
+		res = be.getLambda() * res;
 		for (int i = be.getPhases(); i > 1; i--) {
-			ss << ", \"" << GATE << " !" << i << " !2\" -> \"rate " << be.getLambda().str() << "\"";
+			ss << rename(1, RATE_FAIL(i, 2), l * res);
+			ss << rename(1, RATE_FAIL(i, 4), l * cov);
 		}
 	
 		// Insert mu value (only for non-cold BE's)
-		if(!be.getMu().is_zero()) {
-			decnumber<> mu = be.getMu() * be.getProb();
-			rateFailSafe = be.getMu() * (decnumber<>(1) - be.getProb());
-			ss << ", \"" << automata::signals::GATE_RATE_FAIL << " !1 !1\" -> \"rate " << mu.str() << "\"";
-			if (!rateFailSafe.is_zero())
-				ss << ", \"" << automata::signals::GATE_RATE_FAIL << " !2 !1\" -> \"rate " << rateFailSafe.str() << "\"";
-			for (int i = be.getPhases(); i > 1; i--) {
-				ss << ", \"" << GATE << " !" << i << " !2\" -> \"rate " << be.getMu().str() << "\"";
-			}
+		failSafe = mu * (ONE - p);
+		ss << rename(1, RATE_FAIL(1, 1), mu * p * cov);
+		ss << rename(1, RATE_FAIL(1, 3), mu * p * res);
+		ss << rename(1, RATE_FAIL(1, 1), failSafe * cov);
+		ss << rename(1, RATE_FAIL(1, 3), failSafe * res);
+		for (int i = be.getPhases(); i > 1; i--) {
+			ss << rename(1, RATE_FAIL(i, 1), mu * cov);
+			ss << rename(1, RATE_FAIL(i, 3), mu * res);
 		}
-        if (be.getRepair()>0) {
+		if (be.getRepair()>0) {
 			ss << ", ";
-            ss << "\"" << automata::signals::GATE_RATE_REPAIR << "\" -> \"rate " << be.getRepair() << "\"";
-        }
+			ss << "\"" << automata::signals::GATE_RATE_REPAIR << "\" -> \"rate " << be.getRepair() << "\"";
+		}
 		ss << " in \"";
 		ss << nodeBuilder->getRoot() << nodeBuilder->getFileForNode(be);
 		ss << "\" end rename";
@@ -107,7 +126,7 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		ss << "\"";
 		ss << nodeBuilder->getRoot() << nodeBuilder->getFileForNode(be);
 		ss << "\"";
-    }
+	}
 	return ss.str();
 }
 

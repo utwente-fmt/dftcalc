@@ -46,7 +46,7 @@ static int try_sync(const std::string &filename) {
 #endif
 
 namespace DFT {
-const unsigned int DFTreeAUTNodeBuilder::VERSION = 0;
+const unsigned int DFTreeAUTNodeBuilder::VERSION = 1;
 
 std::string DFTreeAUTNodeBuilder::getFileForNode(const DFT::Nodes::Node& node) {
 	return getNodeName(node) + ".aut";

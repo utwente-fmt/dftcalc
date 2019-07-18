@@ -244,6 +244,7 @@ class BasicEvent: public Node {
 private:
 	DFT::Nodes::BE::CalculationMode mode;
 	decnumber<> lambda, prob, dorm;
+	decnumber<> restorationFactor;
     double maintain_rate;
 	double repair_rate;
 	int priority;
@@ -255,7 +256,9 @@ private:
 	bool failed;
 	std::string fileToEmbed;
 public:
-	
+	void setRes(decnumber<> res) {
+		this->restorationFactor = res;
+	}
 	void setLambda(decnumber<> lambda) {
 		this->lambda = lambda;
 	}
@@ -317,6 +320,12 @@ public:
 	 */
 	decnumber<> getDorm()   const { return dorm; }
 
+	/**
+	 * Returns the restoration factor  of this Basic Event.
+	 * @return The restoration factor of this Basic Event.
+	 */
+	decnumber<> getRes()   const { return restorationFactor; }
+
     /**
      * Returns the repair rate of this Basic Event.
      * @return The repair rate of this Basic Event.
@@ -369,6 +378,7 @@ public:
 		lambda(-1),
 		prob(1),
 		dorm(0),
+		restorationFactor(0),
 		maintain_rate(0),
 		repair_rate(-1),
 		priority(0),

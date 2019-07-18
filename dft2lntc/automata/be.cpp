@@ -27,6 +27,25 @@ void be::be_state::fail_sig(bool active,size_t phase,
 	}
 }
 
+void be::be_state::fail_res(bool active,size_t phase,
+                            bool canfail, be_state &target)
+{
+	if (canfail && phase == 1) {
+		if (!active) {
+			add_transition(RATE_FAIL(phase, 3), target);
+			add_transition(RATE_FAIL(0, 3), target);
+		} else {
+			add_transition(RATE_FAIL(phase, 4), target);
+			add_transition(RATE_FAIL(0, 4), target);
+		}
+	} else {
+		if (!active)
+			add_transition(RATE_FAIL(phase, 3), target);
+		else
+			add_transition(RATE_FAIL(phase, 4), target);
+	}
+}
+
 void be::be_state::add_transition(std::string label, be_state &target)
 {
 	const be *par = (const be *)get_parent();
@@ -88,6 +107,11 @@ void be::be_state::initialize_outgoing() {
 			target.emit_inspect = true;
 		target.phase++;
 		fail_sig(isactive, phase, can_definitely_fail, target);
+
+		target = *this;
+		target.can_definitely_fail = 1;
+		target.phase = 1;
+		fail_res(isactive, phase, can_definitely_fail, target);
 	}
 
 	if (status == UP && phase == 1 && !can_definitely_fail) {
@@ -95,11 +119,13 @@ void be::be_state::initialize_outgoing() {
 			target = *this;
 			target.status = FAILSAFE;
 			add_transition(RATE_FAIL(0, 1), target);
+			add_transition(RATE_FAIL(0, 3), target);
 		}
 		if (isactive) {
 			target = *this;
 			target.status = FAILSAFE;
 			add_transition(RATE_FAIL(0, 2), target);
+			add_transition(RATE_FAIL(0, 4), target);
 		}
 	}
 

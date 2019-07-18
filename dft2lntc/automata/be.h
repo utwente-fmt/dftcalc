@@ -24,6 +24,7 @@ namespace automata {
 		const bool self_repair : 1;
 		const bool independent_repair : 1;
 		const bool always_active : 1;
+		const bool has_res : 1;
 
 		class be_state : public automaton::state {
 			private:
@@ -57,6 +58,7 @@ namespace automata {
 			}
 
 			void fail_sig(bool active, size_t phase, bool canfail, be_state &target);
+			void fail_res(bool active, size_t phase, bool canfail, be_state &target);
 			void add_transition(std::string label, be_state &target);
 			friend class be;
 
@@ -121,6 +123,7 @@ namespace automata {
 			  self_repair(!be.hasInspectionModule()),
 			  independent_repair(!be.hasRepairModule()),
 			  always_active(be.isAlwaysActive()),
+			  has_res(be.getRes() != 1),
 			  initial_be_state(this,
 			                   be.getFailed() ? FAILING : UP)
 		{

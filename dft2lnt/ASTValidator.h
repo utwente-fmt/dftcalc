@@ -442,12 +442,42 @@ public:
 				}
 				break;
 
+			case DFT::Nodes::BE::AttrLabelRes:
+				if(!value) {
+					valid = false;
+					cc->reportErrorAt(attribute->getLocation(),"res label without value");
+					break;
+				}
+				if(value->isFloat()) {
+					float v = static_cast<DFT::AST::ASTAttribFloat*>(value)->getValue();
+					if(v < 0) {
+						valid = false;
+						cc->reportErrorAt(attribute->getLocation(),"negative res");
+					}
+					if(v > 1) {
+						valid = false;
+						cc->reportErrorAt(attribute->getLocation(),"res greater than 1");
+					}
+				} else if(value->isNumber()) {
+					int v = static_cast<DFT::AST::ASTAttribNumber*>(value)->getValue();
+					if(v < 0) {
+						valid = false;
+						cc->reportErrorAt(attribute->getLocation(),"negative res");
+					}
+					if(v > 1) {
+						valid = false;
+						cc->reportErrorAt(attribute->getLocation(),"res greater than 1");
+					}
+				} else {
+					valid = false;
+					cc->reportErrorAt(attribute->getLocation(),"res label needs float value");
+				}
+				break;
 			case DFT::Nodes::BE::AttrLabelRate:
 			case DFT::Nodes::BE::AttrLabelShape:
 			case DFT::Nodes::BE::AttrLabelMean:
 			case DFT::Nodes::BE::AttrLabelStddev:
 			case DFT::Nodes::BE::AttrLabelCov:
-			case DFT::Nodes::BE::AttrLabelRes:
 			case DFT::Nodes::BE::AttrLabelRepl:
 
 			case DFT::Nodes::BE::AttrLabelNone:

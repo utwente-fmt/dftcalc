@@ -1,5 +1,6 @@
-repair-spare.dft	"-s"	0.00835816420232004[512; 74]
-repair-pand.dft         "-s"    0.0041790821011600232379453158673937894717115496336275557[0;1]
+repair-spare.dft	"-s"	446/53361
+repair-pand.dft         "-s"    223/53361
 repair-prob.dft 	"-u"	0.4
 WQDN.dft		"-M -u"	0.16254539595015734248166373164453125
 simple-fdep.dft         "-t 1"  0.451188363905973[5551; 6162]
+repair-res.dft          "-s"    0.25

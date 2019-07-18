@@ -30,7 +30,7 @@
 
 using namespace automata::signals;
 
-const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 9;
+const unsigned int DFT::DFTreeBCGNodeBuilder::VERSION   = 10;
 
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_LNTISVALID = 2;
 const int DFT::DFTreeBCGNodeBuilder::VERBOSE_BCGISVALID = 2;
