@@ -1462,7 +1462,7 @@ int main(int argc, char** argv) {
 		for(auto it: results) {
 			std::string fName = it.first;
 			for(auto it2: it.second.failProbs) {
-				if (mttf) {
+				if (it2.query.type == EXPECTEDTIME) {
 					out << "MTTF(`" << fName << "'" << ")=" << it2.valStr() << std::endl;
 				} else {
 					out << "P(`" << fName << "'" << ", " << it2.mrmcCommand << ", " << it2.missionTime << ", " << "fails)=" << it2.valStr() << std::endl;;
