@@ -21,7 +21,8 @@ namespace automata {
 			fdep_state(fdep *parent)
 				:automaton::state(parent),
 				 act(0),
-				 notified(parent->total)
+				 notified(parent->total),
+				 failed(0)
 			{ }
 
 			friend class fdep;

@@ -1,7 +1,7 @@
 #ifndef AUTOMATA_H
 #define AUTOMATA_H
 
-#include <map>
+#include <set>
 #include <ostream>
 #include <unordered_map>
 #include <unordered_set>
@@ -20,7 +20,7 @@ class automaton {
 public:
 	class state {
 	private:
-		std::multimap<std::string, size_t> outgoing;
+		std::set<std::pair<std::string, size_t>> outgoing;
 		automaton * parent;
 
 	protected:
@@ -31,7 +31,7 @@ public:
 		virtual void initialize_outgoing() = 0;
 		void add_transition(std::string label, const state &target) {
 			size_t target_num = parent->add_state(&target);
-			outgoing.emplace(label, target_num);
+			outgoing.emplace(std::make_pair(label, target_num));
 		}
 
 	public:

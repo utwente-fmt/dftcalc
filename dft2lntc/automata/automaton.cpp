@@ -1,4 +1,5 @@
 #include "automata/automaton.h"
+#include <set>
 
 void automaton::write(std::ostream &out)
 {
@@ -27,22 +28,11 @@ void automaton::write(std::ostream &out)
 	}
 }
 
-static void merge(std::multimap<std::string, size_t> &target,
-                  const std::multimap<std::string, size_t> &source)
+static void merge(std::set<std::pair<std::string, size_t>> &target,
+                  const std::set<std::pair<std::string, size_t>> &source)
 {
-	for (auto &entry : source) {
-		auto it = target.find(entry.first);
-		bool needs_add = true;
-		while (it != target.end() && it->first == entry.first) {
-			if (it->second == entry.second) {
-				needs_add = false;
-				break;
-			}
-			++it;
-		}
-		if (needs_add)
-			target.emplace(entry.first, entry.second);
-	}
+	for (auto &entry : source)
+		target.emplace(entry.first, entry.second);
 }
 
 void automaton::tau_collapse()

@@ -6,7 +6,7 @@ namespace automata {
 	namespace signals {
 		static const std::string GATE_FAIL("FAIL");
 		static const std::string GATE_ACTIVATE("ACTIVATE");
-		static const std::string GATE_DEACTIVATE("DEACTIVE");
+		static const std::string GATE_DEACTIVATE("DEACTIVATE");
 		/* REPAIR?: Insp to BE: Start repairing
 		 * REPAIR!: BE to RU: In need of repair.
 		 */
