@@ -19,6 +19,7 @@ namespace automata {
 		class voting_state : public automaton::state {
 			private:
 			size_t nr_failed = 0;
+			bool emit_fail : 1;
 			bool done : 1;
 			bool running : 1;
 			bool impossible : 1;
@@ -28,6 +29,7 @@ namespace automata {
 
 			voting_state(voting *parent)
 				:automaton::state(parent),
+				 emit_fail(0),
 				 done(0), running(0),
 				 impossible(0), terminated(0),
 				 received(parent->total + 1),
@@ -43,6 +45,7 @@ namespace automata {
 				if (impossible)
 					return 1;
 				size_t ret = 2;
+				ret = (ret * 33) + emit_fail;
 				ret = (ret * 33) + nr_failed;
 				ret = (ret * 33) + done;
 				ret = (ret * 33) + running;
@@ -68,6 +71,7 @@ namespace automata {
 				if (o.impossible)
 					return 0;
 				return nr_failed == o.nr_failed
+				       && emit_fail == o.emit_fail
 				       && done == o.done
 				       && running == o.running
 				       && received == o.received

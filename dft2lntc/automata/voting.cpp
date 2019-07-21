@@ -35,13 +35,16 @@ void voting::voting_state::initialize_outgoing() {
 		if (!received[i]) {
 			target.received[i] = 1;
 			target.nr_failed++;
+			if (target.nr_failed == par->threshold && !done)
+				target.emit_fail = 1;
 		}
 		add_transition(FAIL(i), target);
 	}
 
-	if (nr_failed >= par->threshold && !done) {
+	if (emit_fail && !done) {
 		target = *this;
 		target.done = 1;
+		target.emit_fail = 0;
 		add_transition(FAIL(0), target);
 	}
 
