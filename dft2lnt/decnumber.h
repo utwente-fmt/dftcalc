@@ -23,10 +23,8 @@ class decnumber
 	 */
 private:
 	static constexpr BT base = (std::numeric_limits<BT>::max() / 10) * 10;
+
 	std::size_t num_blocks;
-	/* Blocks store the integer portion of the number in base 250
-	 * (largest number that fits but is conveniently 
-	 * */
 	BT *blocks;
 	ET exponent;
 	int sign;
@@ -583,11 +581,12 @@ public:
 			}
 		}
 		if (carry) {
-			return other - *this;
+			ret = other - *this;
+			ret.sign = -1;
 		} else {
 			ret.normalize();
-			return ret;
 		}
+		return ret;
 	}
 
 	decnumber<BT, ET>& operator*=(const decnumber<BT, ET> &other) {
@@ -676,14 +675,17 @@ public:
 			return sign < 0;
 		if (other.sign != sign)
 			return sign < other.sign;
-		if (other.exponent != exponent)
-			return exponent < other.exponent;
-		if (other.num_blocks != num_blocks)
-			return num_blocks < other.num_blocks;
-		for (size_t i = 0; i < num_blocks; i++)
-			if (blocks[i] != other.blocks[i])
-				return blocks[i] < other.blocks[i];
-		return 0; /* Equal */
+		if (other.exponent == exponent) {
+			if (other.num_blocks != num_blocks)
+				return num_blocks < other.num_blocks;
+			for (size_t i = 0; i < num_blocks; i++)
+				if (blocks[i] != other.blocks[i])
+					return blocks[i] < other.blocks[i];
+		}
+		decnumber<BT, ET> delta = (*this) - other;
+		if (delta.sign < 0)
+			return true;
+		return false;
 	}
 
 	bool operator<=(const decnumber<BT, ET> &other) const {

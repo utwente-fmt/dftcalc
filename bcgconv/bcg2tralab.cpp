@@ -100,7 +100,6 @@ static std::map<decnumber<>, std::vector<decnumber<>>>
 				done = false;
 			}
 		}
-		fprintf(stderr, "Found time: %s\n", time.str().c_str());
 		for (size_t i = 0; i < times.size(); i++) {
 			if (times[i] * (n[i] + 1) == time)
 				n[i]++;
@@ -373,7 +372,7 @@ int main(int argc, char* argv[])
 	fprintf(tra, "STATES %zu\n", reachable.size());
 	fprintf(tra, "TRANSITIONS ");
 	long transition_count_pos = ftell(tra);
-	fprintf(tra, "%llu%n\n", (unsigned long long) bcg_nb_edges, &edge_count_chars);
+	fprintf(tra, "%llu     %n\n", (unsigned long long) bcg_nb_edges, &edge_count_chars);
 	fprintf(lab, "#DECLARATION\nmarked\n#END\n");
 
 	unsigned long long n_transitions = 0;
