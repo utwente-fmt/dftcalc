@@ -119,6 +119,11 @@ int DFTreeAUTNodeBuilder::generate(const Nodes::Node &node) {
 		to_output = std::unique_ptr<automaton>(new automata::voting(gate));
 		}
 		break;
+	case DFT::Nodes::GatePAndType: {
+		const Nodes::GatePAnd& gate = static_cast<const Nodes::GatePAnd&>(node);
+		to_output = std::unique_ptr<automaton>(new automata::pand(gate));
+		}
+		break;
 	case DFT::Nodes::GateWSPType: {
 		const Nodes::GateWSP& gate = static_cast<const Nodes::GateWSP&>(node);
 		to_output = std::unique_ptr<automaton>(new automata::spare(gate));

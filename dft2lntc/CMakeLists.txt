@@ -40,6 +40,7 @@ add_executable(dft2lntc
 	automata/insp.cpp
 	automata/spare.cpp
 	automata/voting.cpp
+	automata/pand.cpp
 	${ADDITIONAL_SOURCES}
 )
 
