@@ -54,6 +54,8 @@ std::string DFT::DFTCalculationResultItem::valStr(size_t deltaDigits) const {
 		size_t dot = middle.find('.');
 		if (dot < wantedDigits)
 			wantedDigits++;
+		if (wantedDigits == 0)
+			return "0";
 		middle = middle.substr(0, wantedDigits);
 		return middle + exp;
 	}

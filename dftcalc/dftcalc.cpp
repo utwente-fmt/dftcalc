@@ -1469,6 +1469,13 @@ int main(int argc, char** argv) {
 				} else {
 					out << "P(`" << fName << "'" << ", " << it2.mrmcCommand << ", " << it2.missionTime << ", " << "fails)=" << it2.valStr() << std::endl;;
 				}
+				if (!it2.exactBounds) {
+					double b = 0.5*(double)(it2.upperBound + it2.lowerBound);
+					double eb = (double)it2.query.errorBound;
+					if (eb > b / 10) {
+						out << "WARNING: Value is too small for requested error bound (" << it2.query.errorBound.str() << "), best guess: [" << it2.lowerBound.str() << "; " << it2.upperBound.str() << "]\n";
+					}
+				}
 			}
 		}
 		std::cout << out.str();
