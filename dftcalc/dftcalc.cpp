@@ -1227,6 +1227,8 @@ int main(int argc, char** argv) {
 
 	if (minMaxSet)
 		q.min = checkMin;
+	else if (useChecker != DFT::checker::MODEST)
+		q.min = false;
 
 	if (mttf && modularize) {
 		messageFormatter->reportWarningAt(Location("commandline"),"MTTF flag (-m) has been given: Disabling modularization.");
