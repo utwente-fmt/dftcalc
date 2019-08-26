@@ -2,7 +2,7 @@
 project (dft2lntc)
 set (dft2lntc_VERSION_MAJOR 1)
 set (dft2lntc_VERSION_MINOR 3)
-set (dft2lntc_VERSION_PATCH 2)
+set (dft2lntc_VERSION_PATCH 3)
 
 ## Not sure if needed
 cmake_minimum_required (VERSION 2.6)
