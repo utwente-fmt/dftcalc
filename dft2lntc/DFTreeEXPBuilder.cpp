@@ -101,8 +101,8 @@ std::string DFT::DFTreeEXPBuilder::getBEProc(const DFT::Nodes::BasicEvent& be) c
 		l = be.getLambda() * cov;
 		res = be.getLambda() * res;
 		for (int i = be.getPhases(); i > 1; i--) {
-			ss << rename(1, RATE_FAIL(i, 2), l * res);
-			ss << rename(1, RATE_FAIL(i, 4), l * cov);
+			ss << rename(1, RATE_FAIL(i, 2), l * cov);
+			ss << rename(1, RATE_FAIL(i, 4), l * res);
 		}
 	
 		// Insert mu value (only for non-cold BE's)
