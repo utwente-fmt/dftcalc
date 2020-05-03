@@ -2,7 +2,7 @@
 project (dft2lnt)
 set (dft2lnt_VERSION_MAJOR 1)
 set (dft2lnt_VERSION_MINOR 3)
-set (dft2lnt_VERSION_PATCH 3)
+set (dft2lnt_VERSION_PATCH 4)
 
 ## Needed for bison and flex
 cmake_minimum_required (VERSION 2.8)
