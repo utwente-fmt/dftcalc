@@ -60,18 +60,18 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 install (TARGETS dft2lntc DESTINATION bin)
 
 # Generate compile time information
-	set(GENINFOFILE ${CMAKE_CURRENT_BINARY_DIR}/compiletime.h)
-	get_property(gendepSOURCES TARGET dft2lntc PROPERTY SOURCES)
-	LIST(REMOVE_ITEM gendepSOURCES ${GENINFOFILE})
-	add_custom_command(
-		OUTPUT ${GENINFOFILE}
-	#	TARGET dft2lntc
-	#	PRE_BUILD
-		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake ${gendepSOURCES}
-		COMMAND ${CMAKE_COMMAND} -DCMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
-				-DCMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
-				-DDFTROOT=${DFTROOT}
-				-DUSECOMMANDLINEGITINFO=${USECOMMANDLINEGITINFO} -Dgit_output=${git_output} -Dgit_changed=${git_changed} -Dgit_version=${git_version} -Dgit_test=${git_test}
-				-P ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
-				../..
-	)
+set(GENINFOFILE ${CMAKE_CURRENT_BINARY_DIR}/compiletime.h)
+get_property(gendepSOURCES TARGET dft2lntc PROPERTY SOURCES)
+LIST(REMOVE_ITEM gendepSOURCES ${GENINFOFILE})
+add_custom_command(
+	OUTPUT ${GENINFOFILE}
+#	TARGET dft2lntc
+#	PRE_BUILD
+	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake ${gendepSOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/../.git/HEAD
+	COMMAND ${CMAKE_COMMAND} -DCMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+			-DCMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+			-DDFTROOT=${DFTROOT}
+			-DUSECOMMANDLINEGITINFO=${USECOMMANDLINEGITINFO} -Dgit_output=${git_output} -Dgit_changed=${git_changed} -Dgit_version=${git_version} -Dgit_test=${git_test}
+			-P ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
+			../..
+)
