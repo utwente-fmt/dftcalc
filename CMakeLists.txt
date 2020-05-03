@@ -1,3 +1,4 @@
+project(dftcalc-suite)
 message("Building configuration: ${CMAKE_BUILD_TYPE}")
 #message("CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 #message("CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
