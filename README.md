@@ -1,3 +1,5 @@
+![Compile and Test](https://github.com/utwente-fmt/dftcalc/workflows/Compile%20and%20Test/badge.svg?branch=master)
+
 # DFTCalc: A Dynamic Fault Tree calculator for reliability and availability
 
 DFTCalc calculates the failure probability of a DFT by making use of the compositional semantics of I/O-IMCs. In this process it docks on several state-of- the-art tools and languages: All leaves and gates of the input DFT are expressed by I/O-IMCs; CADP or DFTRES are used to efficiently compose the individual I/O-IMCs; and a model checker (Storm, Modest, MRMC, IMRMC, or IMCA) finally calculate the failure probability for a certain point in time. The following section describes how DFTCalc aligns all these tools and formats to orchestrate the analysis of a DFT.
