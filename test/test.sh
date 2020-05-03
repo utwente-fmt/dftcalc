@@ -118,6 +118,8 @@ fi
 printf "\n";
 if [ "$TESTS_FAILED" = "0" ]; then
 	echo "$TESTS_TOTAL tests executed, all passed";
+	exit 0;
 else
 	echo "$TESTS_TOTAL tests executed, $TESTS_FAILED failed";
+	exit 1;
 fi
