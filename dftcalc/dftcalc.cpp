@@ -1032,6 +1032,7 @@ int main(int argc, char** argv) {
 				break;
 
 			case 'x':
+				useChecker = DFT::checker::EXP_ONLY;
 				expOnly = true;
 				break;
 			
@@ -1207,6 +1208,7 @@ int main(int argc, char** argv) {
 #endif
 
 	if (useConverter == DFT::converter::DFTRES
+		&& useChecker != DFT::checker::EXP_ONLY
 		&& useChecker != DFT::checker::IMRMC
 		&& useChecker != DFT::checker::MODEST
 		&& useChecker != DFT::checker::STORM)
