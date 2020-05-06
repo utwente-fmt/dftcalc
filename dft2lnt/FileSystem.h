@@ -17,17 +17,7 @@ class File;
 #include <vector>
 #include <string>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-char *realpath(const char *path, char resolved_path[PATH_MAX]);
-char *cwd_realpath(const char *path, char resolved_path[PATH_MAX]);
 char* path_basename(const char* path);
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 class FileSystem {
 private:
@@ -65,12 +55,12 @@ public:
 	PushD();
 	PushD(const std::string& path);
 	PushD(const File& path);
-	
+
 	virtual ~PushD();
-	
+
 	int pushd(const std::string& dir);
 	int pushd(const File& dir);
-	
+
 	int popd();
 };
 

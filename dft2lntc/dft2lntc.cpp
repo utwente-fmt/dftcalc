@@ -435,64 +435,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	#if 0
-
-		/* If an outputFile was set on command line, use that for the precompiler
-		 * output. If there was no outputFile set, use a temporary file.
-		 */
-		string pp_outputFileName;
-
-		bool useTmpFile = outputFileName.empty();
-
-		if(useTmpFile) {
-			pp_outputFileName = "";
-			pp_outputFile = tmpfile();
-		} else {
-			pp_outputFileName = outputFileName;
-			pp_outputFile = fopen(outputFileName.c_str(),"wb+");
-		}
-
-		/* Check if the output file could be opened */
-		if(!pp_outputFile) {
-			printf("DID NOT WRITE\n");
-			exit(-1);
-		}
-
-		/* Here a preprocessor would go... */
-
-		// Close the outputFile if it was set on the commandline.
-		// If the file is temporary, reset it to start
-		// This means the temporary file is kept open for later use!
-		if(useTmpFile) fseek(pp_outputFile,0,SEEK_SET);
-		else fclose(pp_outputFile);
-
-		if(stopAfterPreproc) return 0;
-	//	return 0;
-
-		// Set the correct filename for the inputFile
-		inputFileName = inputFileSet ? pp_outputFileName : "stdin";
-		inputFileSet = 1;
-		FILE* inputFile = useTmpFile   ? pp_outputFile :
-		                  inputFileSet ? fopen(pp_outputFileName.c_str(),"rb") :
-		                  stdin ;
-	#else
-		FILE* inputFile = inputFileSet ? fopen(inputFileName.c_str(),"rb") : stdin ;
-	#endif
-
-/*	for(int i=0;i<100;++i) {
-		char c;
-		fread(&c,1,1,inputFile);
-		if(c==0 || c==EOF) {
-			break;
-		}
-		putchar(c);
-	}
-*/
-//	if(inputFileName.empty()) {
-//		printf("No inputfile specified. See dft2lntc --help\n");
-//		return 0;
-//	}
-//
+	FILE* inputFile = inputFileSet ? fopen(inputFileName.c_str(),"rb") : stdin ;
 
 	if(!origFileSet) {
 		origFileName = inputFileName;
@@ -500,10 +443,6 @@ int main(int argc, char** argv) {
 	
 	compilerContext.notify("Running dft2lntc...");
 
-	//char* real_path = new char[PATH_MAX];
-	//cwd_realpath(inputFileName.c_str(),real_path);
-	//std::string parserInputFilePath(real_path);
-	//delete[] real_path;
 	std::string parserInputFilePath(origFileName);
 
 	std::string parserInputFileName(path_basename(inputFileName.c_str()));
