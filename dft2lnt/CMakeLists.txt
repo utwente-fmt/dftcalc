@@ -8,8 +8,8 @@ set (dft2lnt_VERSION_PATCH 4)
 cmake_minimum_required (VERSION 2.8)
 
 ## Make sure we have Bison and FLEX available
-include(FindBISON)
-include(FindFLEX)
+find_package(BISON 3.4)
+find_package(FLEX 2.6.3)
 
 add_definitions(-std=c++17)
 
