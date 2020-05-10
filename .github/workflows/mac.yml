@@ -1,0 +1,43 @@
+name: Compile and Test on MacOS
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-java@v1
+      with:
+        java-version: 14
+    - name: Install dependencies
+      run: brew install bison flex yaml-cpp gsl
+    - name: Get number of cores
+      run: echo ::set-env name=NUMCORES::$(system_profiler SPHardwareDataType | grep 'Number of Cores' | grep -o '[[:digit:]]\+')
+    - name: Set PATH
+      run: echo ::set-env name=PATH::$(echo "/usr/local/opt/bison/bin:/usr/local/opt/flex/bin:$PATH:${{github.workspace}}/imrmc/bin:${{github.workspace}}/dftroot/bin")
+    - name: Prepare to build DFTCalc
+      run: mkdir build && cd build && cmake -DDFTROOT=$GITHUB_WORKSPACE/dftroot ..
+    - name: Compile DFTCalc
+      run: cd build && make -j$NUMCORES install
+    - name: Checkout DFTRES
+      uses: actions/checkout@v2
+      with:
+        repository: utwente-fmt/DFTRES
+        path: DFTRES
+    - name: Compile DFTRES
+      run: cd DFTRES && make jar
+    - name: Checkout IMRMC
+      run: git clone --depth 1 git://git.ennoruijters.nl/imrmc.git imrmc
+    - name: Compile IMRMC
+      run: cd imrmc && make all -j$NUMCORES
+    - name: Tests
+      env:
+        DFTRES: ${{github.workspace}}/DFTRES
+      run: cd test && bash test.sh --exact --imrmc
