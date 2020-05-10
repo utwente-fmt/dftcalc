@@ -668,7 +668,7 @@ int main(int argc, char** argv) {
 	delete parser;
 	
 	if(settings["warn-code"] && compilerContext.getWarnings()>0) {
-		return true;
+		return EXIT_FAILURE;
 	}
 	return compilerContext.getErrors()>0;
 }

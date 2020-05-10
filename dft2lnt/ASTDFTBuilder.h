@@ -386,7 +386,6 @@ public:
 	ASTDFTBuilder(DFT::AST::ASTNodes* ast, CompilerContext* cc):
 		ASTVisitor<int>(ast,cc,&f_aggregate),
 		ast(ast),
-		parser(parser),
 		dft(NULL),
 		topNode("") {
 	}

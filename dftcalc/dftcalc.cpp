@@ -140,7 +140,6 @@ void print_version(MessageFormatter* messageFormatter) {
 		FileWriter out;
 		std::string version = COMPILETIME_GITVERSION;
 		out << string("  git version: ") << version;
-		char last = COMPILETIME_GITVERSION[sizeof(COMPILETIME_GITVERSION) - 1];
 		if (version.back() == '+' || COMPILETIME_GITCHANGED)
 			out << " (nearest)";
 		out << out.applypostfix;
@@ -316,16 +315,6 @@ std::string DFT::DFTCalc::getCADPRoot() {
 
 	return cadp;
 }
-#endif
-
-
-int isReal(string s, double *res) {
-	char *end;
-	*res = strtod(s.c_str(), &end);
-	if (*end)
-		return 0;
-	return 1;
-}
 
 static bool hasHiddenLabels(const File& file) {
 	std::string* fileContents = FileSystem::load(file);
@@ -345,6 +334,15 @@ static bool hasImpossibleLabel(const File& file) {
 		delete fileContents;
 	}
 	return res;
+}
+#endif
+
+int isReal(string s, double *res) {
+	char *end;
+	*res = strtod(s.c_str(), &end);
+	if (*end)
+		return 0;
+	return 1;
 }
 
 int DFT::DFTCalc::calcModular(const bool reuse,
@@ -546,7 +544,7 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 					old.upperBound = (one - (one - old.upperBound)
 					                      * (one - add.upperBound));
 				} else {
-					messageFormatter->reportError("Unknown module type: " + op);
+					messageFormatter->reportError(std::string("Unknown module type: ") + op);
 					return 1;
 				}
 			}
@@ -620,7 +618,6 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 	CommandExecutor exec(messageFormatter, cwd, dftFileName);
 	this->exec = &exec;
-	int com = 0;
 
 	if(!reuse || !FileSystem::exists(dft)) {
 		messageFormatter->reportAction("Canonicalizing DFT...",VERBOSITY_FLOW);
@@ -907,9 +904,13 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			messageFormatter->reportAction("Reusing IMC to JANI format translation result",VERBOSITY_FLOW);
 		}
 		
-		ModestRunner *sr = new ModestRunner(messageFormatter, &exec, "mcsta", jani);
-		checker = std::unique_ptr<Checker>(sr);
+		{
+			ModestRunner *sr = new ModestRunner(messageFormatter, &exec, "mcsta", jani);
+			checker = std::unique_ptr<Checker>(sr);
+		}
 		break;
+	default:
+		messageFormatter->reportError("Unexpected checker type");
 	}
 
 	std::vector<DFT::DFTCalculationResultItem> results;
@@ -966,7 +967,6 @@ int main(int argc, char** argv) {
 	string dotToType          = "png";
 	int    dotToTypeSet       = 0;
 	string outputFolder       = "output";
-	int    outputFolderSet    = 0;
 	string calcCommand        = "";
 	int    calcCommandSet     = 0;
 	bool   steadyState        = 0;
@@ -1001,7 +1001,6 @@ int main(int argc, char** argv) {
 			// -C FILE
 			case 'C':
 				outputFolder = string(optarg);
-				outputFolderSet = 1;
 				break;
 			
 			// -r FILE
@@ -1341,22 +1340,17 @@ int main(int argc, char** argv) {
 			messageFormatter->reportErrorAt(Location("commandline -t flag"),"Given mission time list of values is empty");
 		}
 	} else if (timeIntervalSet) {
-		bool hasItems = false;
-		bool intervalErrorReported = false;
 		double lwb;
 		if(!isReal(timeIntervalLwb, &lwb) || lwb<0) {
 			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval lwb is not a non-negative real: "+timeIntervalLwb);
-			intervalErrorReported = true;
 		}
 		double upb;
 		if(!isReal(timeIntervalUpb, &upb) || upb<=0) {
 			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval upb is not a positive real: "+timeIntervalUpb);
-			intervalErrorReported = true;
 		}
 		double step;
 		if(!isReal(timeIntervalStep, &step) || step<=0) {
 			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval step is not a positive real: "+timeIntervalStep);
-			intervalErrorReported = true;
 		}
 		if (lwb > upb) {
 			messageFormatter->reportErrorAt(Location("commandline -i flag"),"Given interval is empty (lwb > upb)");
@@ -1378,7 +1372,6 @@ int main(int argc, char** argv) {
 	 */
 	vector<File> dfts;
 	if(optind<argc) {
-		int isSet = 0;
 		for(unsigned int i=optind; i<(unsigned int)argc; ++i) {
 			if(argv[i][0]=='-') {
 				if(strlen(argv[i])==1) {
@@ -1433,6 +1426,7 @@ int main(int argc, char** argv) {
 				}
 			} catch (std::exception &e) {
 				messageFormatter->reportError(e.what());
+				res = true;
 			}
 			results[dft.getFileName()] = ret;
 			hasErrors = hasErrors || res;
@@ -1556,13 +1550,11 @@ int main(int argc, char** argv) {
 }
 
 bool DFT::DFTCalc::findInPath(std::string tool, File &ret) {
-	bool exists = false;
 	bool accessible = false;
 	vector<File> progs;
 	FileSystem::findInPath(progs, File(tool));
 	for(File bin: progs) {
 		accessible = false;
-		exists = true;
 		if(FileSystem::hasAccessTo(bin, X_OK)) {
 			accessible = true;
 			ret = bin;
