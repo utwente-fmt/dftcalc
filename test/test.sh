@@ -54,9 +54,9 @@ compare () {
 do_tests() {
 	while read LINE; do
 		TESTS_TOTAL=$(( $TESTS_TOTAL + 1 ));
-		FILE=$(echo "$LINE" | sed -e 's/\s.*//');
+		FILE=$(echo "$LINE" | sed -e 's/[[:space:]].*//');
 		OPTS=$(echo "$LINE" | sed -e 's/^[^"]*"//' | sed -e 's/".*//');
-		REF=$(echo "$LINE" | sed -e 's/^.*"\s*//');
+		REF=$(echo "$LINE" | sed -e 's/^.*"[[:space:]]*//');
 		printf "Test $FILE ($DFTCALC_OPTS $OPTS)";
 		RESULT=$(dftcalc -p $DFTCALC_OPTS $OPTS "$FILE" 2>/dev/null | grep -o "=[^=]*$" | sed -e 's/=//' | sed -e 's/ (.*//');
 		compare "$RESULT" "$REF";
