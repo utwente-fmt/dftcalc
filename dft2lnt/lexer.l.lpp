@@ -143,7 +143,7 @@ transfer      "accepts transfers from"
 %}
 
 {pp_line} {
-	register int c;
+	int c;
 	while( (c = yyinput(yyscanner)) == ' ' ) {
 	}
 
@@ -174,7 +174,7 @@ transfer      "accepts transfers from"
 }
 
 "/*" {
-	register int c;
+	int c;
 
 	for(;;) {
 		while( (c = yyinput(yyscanner)) != '*' && c != EOF && c != '\r' && c != '\n' ) {
@@ -430,7 +430,7 @@ char *my_strdup(const char *str) {
 int lex_char(yyscan_t yyscanner) {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	Parser* currentParser = yyextra;\
-	register int c = yyinput(yyscanner);
+	int c = yyinput(yyscanner);
 
 		if(c == EOF) {
 		} else if(c == '\\') {
