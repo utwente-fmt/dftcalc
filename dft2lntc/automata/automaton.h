@@ -76,7 +76,7 @@ public:
 
 	void write(std::ostream &out);
 
-	~automaton() {
+	virtual ~automaton() {
 		for (state *entry : states) {
 			delete entry;
 		}

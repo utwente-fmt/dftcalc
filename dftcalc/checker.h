@@ -32,5 +32,8 @@ public:
 	 */
 	virtual std::vector<DFT::DFTCalculationResultItem> analyze(
 			std::vector<Query> queries) = 0;
+
+	virtual ~Checker()
+	{}
 };
 #endif
