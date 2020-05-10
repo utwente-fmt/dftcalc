@@ -1223,8 +1223,8 @@ int main(int argc, char** argv) {
 			messageFormatter->reportErrorAt(Location("commandline -E flag"),"Given error bound is not a positive real: "+errorBound);
 		}
 		q.errorBound = decnumber<>(errorBound);
-		q.errorBoundSet = true;
 	}
+	q.errorBoundSet = errorBoundSet;
 
 	if (minMaxSet)
 		q.min = checkMin;
