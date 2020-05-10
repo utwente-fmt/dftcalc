@@ -9,7 +9,7 @@ DFTCalc takes as input a DFT in Galileo’s textual format. This intuitive forma
 ## Supported systems
 
 - GNU/Linux (tested on Fedora, Debian)
-- MacOS X (not tested for several years)
+- MacOS X (tested on Catalina)
 - Windows may work with use of cygwin (not tested)
 
 ## Build Dependencies
