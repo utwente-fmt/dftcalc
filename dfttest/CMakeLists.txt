@@ -15,8 +15,6 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/../dft2lnt
 	${CMAKE_CURRENT_SOURCE_DIR}/../dftcalc
-	${CMAKE_CURRENT_SOURCE_DIR}/../pcre
-	${CMAKE_CURRENT_BINARY_DIR}/../pcre/
 )
 
 ## Link directories
@@ -40,12 +38,20 @@ add_executable(dfttest
 ##   - dft2lnt (libdft2lnt.a)
 add_dependencies(dfttest dft2lntc)
 
+# Find yaml.h on MacOS with Homebrew
+find_path(YAML_INCLUDE_PATH "yaml-cpp/yaml.h")
+target_include_directories(dfttest PRIVATE ${YAML_INCLUDE_PATH})
+
 ## Link with:
 ##   - libdft2lnt.a
+##   - yaml-cpp
+find_library(YAML_CPP_LIB yaml-cpp)
+if("${YAML_CPP_LIB}" STREQUAL "YAML_CPP_LIB-NOTFOUND")
+	set(YAML_CPP_LIB yaml-cpp)
+endif()
 target_link_libraries(dfttest
 	${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a
-#	${CMAKE_CURRENT_BINARY_DIR}/../pcre/libpcrecpp.a
-	yaml-cpp
+	${YAML_CPP_LIB}
 	)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)

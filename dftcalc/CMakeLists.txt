@@ -39,10 +39,18 @@ add_executable(dftcalc
 ##   - dft2lnt (libdft2lnt.a)
 add_dependencies(dftcalc dft2lntc)
 
+# Find yaml.h on MacOS with Homebrew
+find_path(YAML_INCLUDE_PATH "yaml-cpp/yaml.h")
+target_include_directories(dftcalc PRIVATE ${YAML_INCLUDE_PATH})
 
 ## Link with:
 ##   - libdft2lnt.a
-target_link_libraries(dftcalc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a yaml-cpp)
+##   - yaml-cpp
+find_library(YAML_CPP_LIB yaml-cpp)
+if("${YAML_CPP_LIB}" STREQUAL "YAML_CPP_LIB-NOTFOUND")
+	set(YAML_CPP_LIB yaml-cpp)
+endif()
+target_link_libraries(dftcalc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a ${YAML_CPP_LIB})
 
 if(UNIX AND NOT APPLE AND NOT WIN32)
 	target_link_libraries(dftcalc rt)

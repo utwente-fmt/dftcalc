@@ -63,6 +63,10 @@ message(${YAML_INCLUDE_PATH})
 
 target_link_libraries(dft2lnt rt)
 
+# Find yaml.h on MacOS with Homebrew
+find_path(YAML_INCLUDE_PATH "yaml-cpp/yaml.h")
+target_include_directories(dft2lnt PRIVATE ${YAML_INCLUDE_PATH})
+
 ## Installation
 install (TARGETS dft2lnt DESTINATION lib)
 install (FILES dft2lnt.h DESTINATION include/dft2lnt)

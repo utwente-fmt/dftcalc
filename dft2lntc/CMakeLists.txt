@@ -48,10 +48,19 @@ add_executable(dft2lntc
 ##   - dft2lnt (libdft2lnt.a)
 add_dependencies(dft2lntc dft2lnt)
 
+# Find yaml.h on MacOS with Homebrew
+find_path(YAML_INCLUDE_PATH "yaml-cpp/yaml.h")
+target_include_directories(dft2lntc PRIVATE ${YAML_INCLUDE_PATH})
+
+find_library(YAML_CPP_LIB yaml-cpp)
+if("${YAML_CPP_LIB}" STREQUAL "YAML_CPP_LIB-NOTFOUND")
+	set(YAML_CPP_LIB yaml-cpp)
+endif()
 
 ## Link with:
 ##   - libdft2lnt.a
-target_link_libraries(dft2lntc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a yaml-cpp)
+##   - yaml-cpp
+target_link_libraries(dft2lntc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a ${YAML_CPP_LIB})
 
 ## POST_BUILD: copy the executable to the bin/ folder
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
