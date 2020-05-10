@@ -64,10 +64,15 @@ static std::pair<decnumber<>, decnumber<>> readOutputFile(const File& file) {
 	if (!fp)
 		return ret;
 	fseek(fp,0,SEEK_END);
-	len = ftell(fp)+1;
+	len = ftell(fp);
 	fseek(fp,0,SEEK_SET);
-	buffer = (char *)malloc(len);
-	fread(buffer,len,1,fp); //read into buffer
+	buffer = (char *)malloc(len + 1);
+	if (fread(buffer, len, 1, fp) != 1) {
+		fclose(fp);
+		free(buffer);
+		throw std::ios_base::failure("Error reading IMRMC output file");
+	}
+	buffer[len] = 0;
 	fclose(fp);
 
 	const char *resultString, *c;
