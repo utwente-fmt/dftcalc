@@ -9,10 +9,11 @@
  * @author Freark van der Berg and extended by Dennis Guck
  */
 
-%pure-parser
+%define api.pure
 %locations
 %defines
-%error-verbose
+%define parse.error verbose
+%require "3.4"
 
 %parse-param{ Parser* currentParser}
 %parse-param{ yyscan_t scanner}
