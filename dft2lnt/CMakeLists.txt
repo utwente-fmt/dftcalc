@@ -57,6 +57,10 @@ add_library(dft2lnt
 	${BISON_par_OUTPUTS} ${FLEX_lex_OUTPUTS}
 )
 
+# Find yaml-cpp
+find_path(YAML_INCLUDE_PATH "yaml-cpp/yaml.h")
+message(${YAML_INCLUDE_PATH})
+
 target_link_libraries(dft2lnt rt)
 
 ## Installation
