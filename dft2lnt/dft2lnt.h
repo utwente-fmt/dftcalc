@@ -18,9 +18,8 @@ class DFT2LNT {
 public:
 	static const std::string LNTSUBROOT;
 	static const std::string BCGSUBROOT;
-	static const std::string AUTSUBROOT;
 	static const std::string TESTSUBROOT;
-
+	static const std::string AUT_CACHE_DIR;
 };
 
 #endif // DFT2LNT_H

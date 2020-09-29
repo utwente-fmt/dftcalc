@@ -8,9 +8,9 @@ class DFTreeAUTNodeBuilder : public DFTreeNodeBuilder {
 public:
 	static const unsigned int VERSION;
 
-	DFTreeAUTNodeBuilder(std::string root, DFT::DFTree* dft, CompilerContext* cc)
+	DFTreeAUTNodeBuilder(std::string cacheDir, DFT::DFTree* dft, CompilerContext* cc)
 		:DFTreeNodeBuilder(dft, cc),
-		 autRoot(root+DFT2LNT::AUTSUBROOT+"/")
+		 autRoot(cacheDir + DFT2LNT::AUT_CACHE_DIR + "/")
 	{ }
 
 	virtual std::string getFileForNode(const Nodes::Node& node);

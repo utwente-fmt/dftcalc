@@ -296,14 +296,6 @@ std::string DFT::DFTCalc::getRoot() {
 	}
 #endif
 
-	if(stat((dft2lntRoot+DFT2LNT::AUTSUBROOT).c_str(),&rootStat)) {
-		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::AUTSUBROOT,0755)) {
-			if(messageFormatter) messageFormatter->reportError("Could not create AUT Nodes directory (`" + dft2lntRoot+DFT2LNT::AUTSUBROOT + "')");
-			dft2lntRoot = "";
-			goto end;
-		}
-	}
-
 	if(messageFormatter) messageFormatter->reportAction("DFT2LNTROOT is: " + dft2lntRoot,VERBOSITY_DATA);
 end:
 	return dft2lntRoot;
