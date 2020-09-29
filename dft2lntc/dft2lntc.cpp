@@ -20,7 +20,13 @@
 #include <sys/types.h>
 
 #ifdef WIN32
+#include <locale>
 #include <io.h>
+#include <shlobj.h>
+#include <codecvt>
+#include <winerror.h>
+#include <combaseapi.h>
+#include <Knownfolders.h>
 #endif
 
 #include "dft_parser.h"
@@ -105,6 +111,43 @@ void print_version(MessageFormatter* messageFormatter) {
 	messageFormatter->flush();
 }
 
+static std::string getCache(CompilerContext* compilerContext) {
+	std::string root;
+#ifdef WIN32
+	PWSTR rootStr;
+	HRESULT hr = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &rootStr);
+	if (!SUCCEEDED(hr)) {
+		compilerContext->reportError("Unable to lookup Application Data directory");
+		exit(EXIT_FAILURE);
+	}
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	root = converter.to_bytes(rootStr);
+	CoTaskMemFree(rootStr);
+#elif defined __APPLE__
+	root = std::getenv("HOME");
+	root += "/Library/Caches";
+#else
+	root = std::getenv("HOME");
+	root += "/.cache";
+#endif
+	/* End of OS-specific part */
+	std::string cache = root + "/dftcalc";
+	if (!FileSystem::isDir(File(cache))) {
+		if (FileSystem::mkdir(File(cache))) {
+			compilerContext->reportError("Could not create cache directory (" + cache + ")");
+		}
+	}
+
+	std::string autDir = cache + DFT2LNT::AUT_CACHE_DIR;
+	if (!FileSystem::isDir(File(autDir))) {
+		if (FileSystem::mkdir(File(autDir))) {
+			compilerContext->reportError("Could not create .aut directory (" + autDir + ")");
+		}
+	}
+
+	return cache;
+}
+
 std::string getRoot(CompilerContext* compilerContext) {
 	char* root = getenv((const char*)"DFT2LNTROOT");
 	std::string dft2lntRoot = root?string(root):"";
@@ -153,15 +196,6 @@ std::string getRoot(CompilerContext* compilerContext) {
 		}
 	}
 #endif
-
-	if(stat((dft2lntRoot+DFT2LNT::AUTSUBROOT).c_str(),&rootStat)) {
-		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::AUTSUBROOT,0755)) {
-			compilerContext->reportError("Could not create AUT Nodes directory (`" + dft2lntRoot+DFT2LNT::AUTSUBROOT + "')");
-			dft2lntRoot = "";
-			goto end;
-		}
-	}
-	
 	compilerContext->reportAction("DFT2LNTROOT is: " + dft2lntRoot,VERBOSITY_DATA);
 end:
 	return dft2lntRoot;
@@ -446,9 +480,11 @@ int main(int argc, char** argv) {
 	std::string parserInputFilePath(origFileName);
 
 	std::string parserInputFileName(path_basename(inputFileName.c_str()));
-	
+
 	std::string dft2lntRoot = getRoot(&compilerContext);
 	bool rootValid = dft2lntRoot!="";
+
+	std::string cacheDir = getCache(&compilerContext);
 
 	/* Parse input file */
 	compilerContext.notify("Checking syntax...",VERBOSITY_FLOW);
@@ -613,7 +649,7 @@ int main(int argc, char** argv) {
 	if(rootValid && dftValid) {
 		compilerContext.notify("Building needed AUT files...",VERBOSITY_FLOW);
 		compilerContext.flush();
-		DFT::DFTreeAUTNodeBuilder autBuilder(dft2lntRoot,dft, &compilerContext);
+		DFT::DFTreeAUTNodeBuilder autBuilder(cacheDir, dft, &compilerContext);
 		DFT::DFTreeNodeBuilder *nodeBuilder = &autBuilder;
 #ifdef HAVE_CADP
 		DFT::DFTreeBCGNodeBuilder bcgBuilder(dft2lntRoot,dft, &compilerContext);
