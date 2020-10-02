@@ -1,7 +1,3 @@
-execute_process(
-	COMMAND date "+%Y-%m-%d %H:%M:%S"
-	OUTPUT_VARIABLE date_output OUTPUT_STRIP_TRAILING_WHITESPACE
-)
 if(USECOMMANDLINEGITINFO STREQUAL "YES")
 else()
 	execute_process(
@@ -34,12 +30,14 @@ else()
 	set(git_version ${git_version}+)
 endif()
 
+string(TIMESTAMP date "%Y-%m-%d %H:%M:%S")
+
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/compiletime.h
 "/**
- * Generated at compile time on ${date_output}
+ * Generated at compile time on ${date}
  */
 #define DFT2LNTROOT \"${DFTROOT}\"
-#define COMPILETIME_DATE \"${date_output}\"
+#define COMPILETIME_DATE \"${date}\"
 #define COMPILETIME_GITREV \"${git_output}\"
 #define COMPILETIME_GITCHANGED ${git_changed}
 #define COMPILETIME_GITVERSION \"${git_version}\"
