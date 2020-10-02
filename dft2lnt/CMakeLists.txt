@@ -28,7 +28,7 @@ endif()
 ## Generate parser and lexer files to the target directory, because they depend on the selected Build (Debug/Release)
 ## We need to explicitely state that we want a lexer header file
 bison_target(par ${CMAKE_CURRENT_SOURCE_DIR}/parser.y.ypp ${CMAKE_CURRENT_BINARY_DIR}/parser.y.cpp COMPILE_FLAGS "${BISON_CFLAGS}")
-flex_target(lex ${CMAKE_CURRENT_SOURCE_DIR}/lexer.l.lpp ${CMAKE_CURRENT_BINARY_DIR}/lexer.l.cpp COMPILE_FLAGS "--header-file=${CMAKE_CURRENT_BINARY_DIR}/lexer.l.h")
+flex_target(lex ${CMAKE_CURRENT_SOURCE_DIR}/lexer.l.lpp ${CMAKE_CURRENT_BINARY_DIR}/lexer.l.cpp DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/lexer.l.h)
 ADD_FLEX_BISON_DEPENDENCY(lex par)
 
 ## By default the header is not cleaned up (nor built)
