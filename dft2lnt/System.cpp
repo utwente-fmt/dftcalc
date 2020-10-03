@@ -8,9 +8,11 @@
  * @author Freark van der Berg
  */
 
-#include <unistd.h>
+#ifndef WIN32
+# include <unistd.h>
+# include <sys/time.h>
+#endif
 #include <stdint.h>
-#include <sys/time.h>
 #include "System.h"
 
 System::Timer::Timer() {
@@ -90,14 +92,30 @@ void System::generateUUID(size_t bytes,std::string& uuid) {
 	}
 }
 
-uint64_t System::getCurrentTimeMillis() {
-	timeval now;
-	gettimeofday(&now, NULL);
-	return now.tv_sec*1000 + now.tv_usec/1000;
-}
+#ifndef WIN32
+	uint64_t System::getCurrentTimeMillis() {
+		timeval now;
+		gettimeofday(&now, NULL);
+		return now.tv_sec*1000 + now.tv_usec/1000;
+	}
 
-uint64_t System::getCurrentTimeMicros() {
-	timeval now;
-	gettimeofday(&now, NULL);
-	return now.tv_sec*1000000 + now.tv_usec;
-}
+	uint64_t System::getCurrentTimeMicros() {
+		timeval now;
+		gettimeofday(&now, NULL);
+		return now.tv_sec*1000000 + now.tv_usec;
+	}
+#else // WIN32
+	uint64_t System::getCurrentTimeMillis() {
+		return System::getCurrentTimeMicros() / 1000;
+	}
+
+	uint64_t System::getCurrentTimeMicros() {
+		FILETIME now;
+		GetSystemTimeAsFileTime(&now);
+		uint64_t ret;
+		ret = now.dwHighDateTime;
+		ret = (ret << 32) + now.dwLowDateTime;
+		ret /= 10;
+		return ret;
+	}
+#endif

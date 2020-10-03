@@ -58,6 +58,10 @@ target_link_libraries(dfttest
 	${YAML_CPP_LIB}
 )
 
+if (WIN32)
+	target_link_libraries(dfttest pathcch)
+endif()
+
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 ## Installation

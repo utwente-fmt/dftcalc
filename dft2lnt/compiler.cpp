@@ -23,7 +23,7 @@ bool CompilerContext::testWritable(std::string fileName) {
 			reportError("no permission to open outputfile '" + fileName + "' for writing");
 			return false;
 		}
-	} else if(FileSystem::hasAccessTo(folder,W_OK)) {
+	} else if(folder.isWritableDirectory()) {
 		return true;
 	} else {
 		reportError("unable to open outputfile '" + fileName + "' for writing");

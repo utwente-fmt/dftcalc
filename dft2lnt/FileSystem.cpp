@@ -4,6 +4,7 @@
  * Part of a general library.
  * 
  * Adapted by Gerjan Stokkink to support Mac OS X.
+ * Adapted by Enno Ruijters to support Win32
  *
  * @author Freark van der Berg
  */
@@ -14,7 +15,15 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#ifdef WIN32
+#	define WIN32_LEAN_AND_MEAN // Omit rarely-used and architecture-specific stuff from WIN32
+#	include <windows.h>
+#	include <PathCch.h>
+#	include <io.h>
+#else
+#	include <unistd.h>
+#	include <libgen.h>
+#endif
 #include <string>
 #include <assert.h>
 #include <iostream>
@@ -24,7 +33,7 @@
 #ifdef WIN32
 	int dir_make(const char* path, int mode) {
 		(void)mode;
-		return mkdir(path);
+		return !CreateDirectoryA(path, NULL);
 	}
 #else
 	int dir_make(const char* path, mode_t mode) {
@@ -43,35 +52,64 @@ char* path_basename(const char* path) {
 	return (char *) base;
 }
 
-std::string FileSystem::getRealPath(const std::string& filePath) {
-	char path[PATH_MAX];
-	realpath(filePath.c_str(),path);
-	return std::string(path);
-}
+#ifndef WIN32
+	std::string FileSystem::getRealPath(const std::string& filePath) {
+		char path[PATH_MAX];
+		realpath(filePath.c_str(),path);
+		return std::string(path);
+	}
 
-std::string FileSystem::getDirName(const std::string& filePath) {
-	char* fp = strdup(filePath.c_str());
-	if(!fp) return "";
-	char* result = dirname(fp);
-	std::string p(result);
-	free(fp);
-	return p;
-}
+	std::string FileSystem::getDirName(const std::string& filePath) {
+		char* fp = strdup(filePath.c_str());
+		if (!fp) return "";
+		char* result = dirname(fp);
+		std::string p(result);
+		free(fp);
+		return p;
+	}
 
-std::string FileSystem::getBaseName(const std::string& filePath) {
-	char* fp = strdup(filePath.c_str());
-	if(!fp) return "";
-	char* result = basename(fp);
-	std::string p(result);
-	free(fp);
-	return p;
-}
+	std::string FileSystem::getBaseName(const std::string& filePath) {
+		char* fp = strdup(filePath.c_str());
+		if (!fp) return "";
+		char* result = basename(fp);
+		std::string p(result);
+		free(fp);
+		return p;
+	}
+#else
+	std::string FileSystem::getRealPath(const std::string& filePath) {
+		char path[MAX_PATH];
+		GetFullPathNameA(filePath.c_str(), sizeof(path), path, NULL);
+		return std::string(path);
+	}
+
+	std::string FileSystem::getDirName(const std::string& filePath) {
+		wchar_t path[MAX_PATH];
+		wchar_t fullPath[MAX_PATH];
+		char utf8Path[MAX_PATH];
+		if (!MultiByteToWideChar(CP_ACP, 0, filePath.c_str(), -1, path, sizeof(path)))
+			throw std::runtime_error("Error converting path to wide string: " + filePath);
+		GetFullPathNameW(path, sizeof(fullPath) / sizeof(*fullPath), fullPath, NULL);
+		if (PathCchRemoveFileSpec(fullPath, sizeof(fullPath) / sizeof(*fullPath)) != S_OK)
+			throw std::runtime_error("Error getting directory of: " + filePath);
+		WideCharToMultiByte(CP_ACP, 0, fullPath, -1, utf8Path, sizeof(utf8Path), NULL, NULL);
+		return std::string(utf8Path);
+	}
+
+	std::string FileSystem::getBaseName(const std::string& filePath) {
+		char path[MAX_PATH];
+		char *file;
+		GetFullPathNameA(filePath.c_str(), sizeof(path), path, &file);
+		return std::string(file);
+	}
+#endif
+
+
 
 std::string FileSystem::getFileExtension(const std::string& filePath) {
-	char* fp = strdup(filePath.c_str());
-	if(!fp) return "";
-	char* result = basename(fp);
-	char* extension = NULL;
+	std::string base = FileSystem::getBaseName(filePath);
+	const char *result = base.c_str();
+	const char *extension = NULL;
 	while (*result) {
 		if (*result++ == '.') {
 			extension = result;
@@ -81,25 +119,20 @@ std::string FileSystem::getFileExtension(const std::string& filePath) {
 	if(extension) {
 		p = std::string(extension);
 	}
-	free(fp);
 	return p;
 }
 std::string FileSystem::getFileBase(const std::string& filePath) {
-	char* fp = strdup(filePath.c_str());
-	if(!fp) return "";
-	char* result = basename(fp);
-	char* extension = NULL;
+	std::string base = FileSystem::getBaseName(filePath);
+	const char* result = base.c_str();
+	const char* extension = NULL;
 	while (*result) {
 		if (*result++ == '.') {
 			extension = result;
 		}
 	}
 	std::string p("");
-	if(extension) {
-		*extension = '\0';
-		p = std::string(result);
-	}
-	free(fp);
+	if(extension)
+		p = base.substr(0, extension - result);
 	return p;
 }
 void FileSystem::getFileBaseAndExtension(std::string& fileBase, std::string& fileExtension, const std::string& filePath) {
@@ -108,9 +141,14 @@ void FileSystem::getFileBaseAndExtension(std::string& fileBase, std::string& fil
 	char* result = fp;
 	char* fileName = fp;
 	while (*result) {
+#ifdef WIN32
+		if (*result == '\\')
+			fileName = result + 1;
+#endif
 		if (*result++ == '/') {
 			fileName = result;
 		}
+
 	}
 	char* extension = NULL;
 	result = fileName;
@@ -198,13 +236,24 @@ int FileSystem::mkdir(const File& dir, int mode) {
 }
 
 int FileSystem::chdir(const File& dir) {
+#ifndef WIN32
 	return ::chdir(dir.getFileRealPath().c_str());
+#else
+	return SetCurrentDirectory(dir.getFileRealPath().c_str());
+#endif
 }
 
 int FileSystem::isDir(const File& file) {
+#ifndef WIN32
 	struct stat fileStat;
 	stat(file.getFileRealPath().c_str(),&fileStat);
 	return S_ISDIR(fileStat.st_mode);
+#else
+	DWORD attributes = GetFileAttributesA(file.getFileRealPath().c_str());
+	if (attributes == INVALID_FILE_ATTRIBUTES)
+		return false;
+	return !!(attributes & FILE_ATTRIBUTE_DIRECTORY);
+#endif
 }
 
 int FileSystem::remove(const File& file) {
@@ -237,6 +286,25 @@ bool FileSystem::canCreateOrModify(const File& file) {
 
 bool FileSystem::hasAccessTo(const File& file, int mode) {
 	return !access(file.getFileRealPath().c_str(),mode);
+}
+
+bool File::isWritableDirectory(void) {
+#ifndef WIN32
+	return !access(getFileRealPath().c_str(), W_OK);
+#else
+	/* Windows has no convenient way to test this, other than to try to create a file. */
+	if (!FileSystem::isDir(*this))
+		return false;
+	wchar_t path[MAX_PATH];
+	wchar_t tempPath[MAX_PATH];
+	if (!MultiByteToWideChar(CP_ACP, 0, filePath.c_str(), -1, path, sizeof(path)))
+		throw std::runtime_error("Error converting path to wide string: " + filePath);
+	if (!GetTempFileNameW(path, L"d2l", 0, tempPath))
+		return false;
+	std::cerr << "Good\n";
+	DeleteFileW(tempPath);
+	return true;
+#endif
 }
 
 int FileSystem::findInPath(std::vector<File>& result, const File& file) {
@@ -343,15 +411,19 @@ PushD::~PushD() {
 }
 
 int PushD::pushd(const std::string& dir) {
+#ifndef WIN32
 	char buffer[PATH_MAX];
 	char* res = getcwd(buffer,PATH_MAX);
-	if(res) {
-		dirStack.push_back( std::string(buffer) );
-		chdir(dir.c_str());
-		return 0;
-	} else {
+	if (!res)
 		return 1;
-	}
+#else
+	char buffer[MAX_PATH];
+	if (!GetCurrentDirectoryA(sizeof(buffer), buffer))
+		return 1;
+#endif
+	dirStack.push_back( std::string(buffer) );
+	FileSystem::chdir(dir);
+	return 0;
 }
 
 int PushD::pushd(const File& dir) {
@@ -360,7 +432,8 @@ int PushD::pushd(const File& dir) {
 
 int PushD::popd() {
 	if(dirStack.size()>0) {
-		chdir(dirStack.back().c_str());
+		std::string dir = dirStack.back();
+		FileSystem::chdir(dir);
 		dirStack.pop_back();
 		return 0;
 	} else {

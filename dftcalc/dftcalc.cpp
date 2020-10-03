@@ -22,7 +22,10 @@
 #include <fstream>
 #include <memory>
 #include <limits.h>
-#include <CADP.h>
+
+#ifdef HAVE_CADP
+# include <CADP.h>
+#endif
 
 #ifdef WIN32
 #include <io.h>
@@ -158,21 +161,17 @@ File DFT::DFTCalc::getDftresJar() {
 
 	if(dftresRoot == "") {
 		File ret("DFTRES.jar");
-		if(!FileSystem::hasAccessTo(ret, F_OK)) {
+		if(!FileSystem::exists(ret)) {
 			if(messageFormatter)
 				messageFormatter->reportError("Environment variable `DFTRES' not set. Please set it to where DFTRES.jar can be found.");
 		}
 		return ret;
 	}
 
-	// \ to /
-	std::size_t pos;
-	while ((pos = dftresRoot.find_first_of('\\')) != std::string::npos)
-		dftresRoot[pos] = '/';
 	File ret(dftresRoot + "/DFTRES.jar");
-	if(!FileSystem::hasAccessTo(ret, F_OK)) {
+	if(!FileSystem::exists(ret)) {
 		if(messageFormatter)
-			messageFormatter->reportError("DFTRES.jar not found.");
+			messageFormatter->reportError("DFTRES.jar not found at " + ret.getFileRealPath());
 	}
 	return ret;
 }
@@ -183,29 +182,20 @@ std::string DFT::DFTCalc::getCoralRoot() {
 		return coralRoot;
 	}
 	
-	char* root = getenv((const char*)"CORAL");
+	char* root = getenv("CORAL");
 	std::string coralRoot = root?string(root):"";
 	
 	if(coralRoot=="") {
 		if(messageFormatter) messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
 		goto end;
 	}
-	
-	// \ to /
-	{
-		char buf[coralRoot.length()+1];
-		for(int i=coralRoot.length();i--;) {
-			if(coralRoot[i]=='\\')
-				buf[i] = '/';
-			else
-				buf[i] = coralRoot[i];
-		}
-		buf[coralRoot.length()] = '\0';
-		if(buf[coralRoot.length()-1]=='/') {
-			buf[coralRoot.length()-1] = '\0';
-		}
-		coralRoot = string(buf);
+
+	for (int i = coralRoot.length() - 1; i >= 0; i--) {
+		if (coralRoot[i] == '\\')
+			coralRoot[i] = '/';
 	}
+	if (coralRoot[coralRoot.length() - 1] == '/')
+		coralRoot = coralRoot.substr(0, coralRoot.length() - 1);
 end:
 	return coralRoot;
 }
@@ -216,28 +206,19 @@ std::string DFT::DFTCalc::getImcaRoot() {
 		return imcaRoot;
 	}
 	
-	char* root = getenv((const char*)"IMCA");
+	char* root = getenv("IMCA");
 	std::string imcaRoot = root?string(root):"";
 	if(imcaRoot=="") {
 		if(messageFormatter) messageFormatter->reportError("Environment variable `IMCA' not set. Please set it to where IMCA can be found.");
 		goto end;
 	}
 	
-	// \ to /
-	{
-		char buf[imcaRoot.length()+1];
-		for(int i=imcaRoot.length();i--;) {
-			if(imcaRoot[i]=='\\')
-				buf[i] = '/';
-			else
-				buf[i] = imcaRoot[i];
-		}
-		buf[imcaRoot.length()] = '\0';
-		if(buf[imcaRoot.length()-1]=='/') {
-			buf[imcaRoot.length()-1] = '\0';
-		}
-		imcaRoot = string(buf);
+	for (int i = imcaRoot.length() - 1; i >= 0; i--) {
+		if (imcaRoot[i] == '\\')
+			imcaRoot[i] = '/';
 	}
+	if (imcaRoot[imcaRoot.length() - 1] == '/')
+		imcaRoot = imcaRoot.substr(0, imcaRoot.length() - 1);
 end:
 	return imcaRoot;
 }
@@ -254,31 +235,20 @@ std::string DFT::DFTCalc::getRoot() {
 	if(dft2lntRoot=="")
 		dft2lntRoot = DFT2LNTROOT;
 	
-	// \ to /
-	{
-		char buf[dft2lntRoot.length()+1];
-		for(int i=dft2lntRoot.length();i--;) {
-			if(dft2lntRoot[i]=='\\')
-				buf[i] = '/';
-			else
-				buf[i] = dft2lntRoot[i];
-		}
-		buf[dft2lntRoot.length()] = '\0';
-		if(buf[dft2lntRoot.length()-1]=='/') {
-			buf[dft2lntRoot.length()-1] = '\0';
-		}
-		dft2lntRoot = string(buf);
+	for (int i = dft2lntRoot.length() - 1; i >= 0; i--) {
+		if (dft2lntRoot[i] == '\\')
+			dft2lntRoot[i] = '/';
 	}
-	
-	struct stat rootStat;
-	if(stat((dft2lntRoot).c_str(),&rootStat)) {
-		// report error
-		if(messageFormatter) messageFormatter->reportError("Could not stat DFT2LNTROOT (`" + dft2lntRoot + "')");
-		dft2lntRoot = "";
-		goto end;
+	if (dft2lntRoot[dft2lntRoot.length() - 1] == '/')
+		dft2lntRoot = dft2lntRoot.substr(0, dft2lntRoot.length() - 1);
+
+	if (!FileSystem::isDir(dft2lntRoot)) {
+		if (messageFormatter)
+			messageFormatter->reportError("DFT2LNTROOT does not exist or is not a directory: " + dft2lntRoot);
 	}
 
 #ifdef HAVE_CADP
+	struct stat rootStat;
 	if(stat((dft2lntRoot+DFT2LNT::LNTSUBROOT).c_str(),&rootStat)) {
 		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::LNTSUBROOT,0755)) {
 			if(messageFormatter) messageFormatter->reportError("Could not create LNT Nodes directory (`" + dft2lntRoot+DFT2LNT::LNTSUBROOT + "')");
@@ -361,12 +331,12 @@ int DFT::DFTCalc::calcModular(const bool reuse,
 	}
 	if(!reuse || !FileSystem::exists(mod)) {
 		messageFormatter->reportAction("Modularizing DFT...",VERBOSITY_FLOW);
-		std::stringstream ss;
-		ss << dft2lntcExec.getFilePath()
-		   << " --verbose=" << messageFormatter->getVerbosity()
-		   << " -m \"" << mod.getFileRealPath() << "\""
-           << " \"" << dftOriginal.getFileRealPath() << "\"";
-		if (exec.runCommand(ss.str(), "dft2lntc", mod) == "")
+		std::vector<std::string> arguments;
+		arguments.push_back("--verbose=" + std::to_string(messageFormatter->getVerbosity()));
+		arguments.push_back("-m");
+		arguments.push_back(mod.getFileRealPath());
+		arguments.push_back(dftOriginal.getFileRealPath());
+		if (exec.runCommand(dft2lntcExec.getFilePath(), arguments, "dft2lntc", mod) == "")
 			return 1;
 	} else {
 		messageFormatter->reportAction("Reusing modules file",VERBOSITY_FLOW);
@@ -613,14 +583,16 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 	if(!reuse || !FileSystem::exists(dft)) {
 		messageFormatter->reportAction("Canonicalizing DFT...",VERBOSITY_FLOW);
-		std::stringstream ss;
-		ss << dft2lntcExec.getFilePath()
-		   << " --verbose=" << messageFormatter->getVerbosity()
-		   << " -t \"" + dft.getFileRealPath() << "\"";
-		if (root != "")
-			ss << " -r \"" << root << "\"";
-        ss << " \""    + dftOriginal.getFileRealPath() + "\"";
-		if (exec.runCommand(ss.str(), "dft2lntc", dft) == "")
+		std::vector<std::string> arguments;
+		arguments.push_back("--verbose=" + std::to_string(messageFormatter->getVerbosity()));
+		arguments.push_back("-t");
+		arguments.push_back(dft.getFileRealPath());
+		if (!root.empty()) {
+			arguments.push_back("-r");
+			arguments.push_back(root);
+		}
+		arguments.push_back(dftOriginal.getFileRealPath());
+		if (exec.runCommand(dft2lntcExec.getFilePath(), arguments, "dft2lntc", dft) == "")
 			return 1;
 	} else {
 		messageFormatter->reportAction("Reusing copy of original dft file",VERBOSITY_FLOW);
@@ -632,29 +604,31 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 	if(!reuse || !FileSystem::exists(exp) || !FileSystem::exists(svl)) {
 		// dft -> exp, svl
 		messageFormatter->reportAction("Translating DFT to EXP...",VERBOSITY_FLOW);
-		std::stringstream ss;
-		ss << dft2lntcExec.getFilePath()
-		   << " --verbose=" << messageFormatter->getVerbosity()
-		   << " -s \"" + svl.getFileRealPath() + "\""
-		   << " -x \"" + exp.getFileRealPath() + "\""
-		   << " -b \"" + bcg.getFileRealPath() + "\""
-		   << " -n \"" + dftOriginal.getFileRealPath() + "\"";
-		   //<< " \""    + dft.getFileRealPath() + "\"";
-		//   << " --warn-code";
+		std::vector<std::string> arguments;
+		arguments.push_back("--verbose=" + std::to_string(messageFormatter->getVerbosity()));
+		arguments.push_back("-s");
+		arguments.push_back(svl.getFileRealPath());
+		arguments.push_back("-x");
+		arguments.push_back(exp.getFileRealPath());
+		arguments.push_back("-b");
+		arguments.push_back(bcg.getFileRealPath());
+		arguments.push_back("-n");
+		arguments.push_back(dftOriginal.getFileRealPath());
 		if(!evidence.empty()) {
-			ss << " -e \"";
+			arguments.push_back("-e");
+			std::stringstream ss;
 			for(std::string e: evidence) {
 				ss << e << ",";
 			}
-			ss << "\"";
-        }
+			arguments.push_back(ss.str());
+		}
 		if (!messageFormatter->usingColoredMessages())
-			ss << " --no-color";
-        ss << " \""    + dft.getFileRealPath() + "\"";
-		std::vector<File> outputs;
+			arguments.push_back(" --no-color");
+		arguments.push_back(dft.getFileRealPath());
+        std::vector<File> outputs;
 		outputs.push_back(exp);
 		outputs.push_back(svl);
-		if (exec.runCommand(ss.str(), "dft2lntc", outputs) == "")
+		if (exec.runCommand(dft2lntcExec.getFilePath(), arguments, "dft2lntc", outputs) == "")
 			return 1;
 	} else {
 		messageFormatter->reportAction("Reusing DFT to EXP translation result",VERBOSITY_FLOW);
@@ -680,25 +654,37 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		if (!reuse || !FileSystem::exists(bcg)) {
 			// svl, exp -> bcg
 			messageFormatter->reportAction("Building IMC...",VERBOSITY_FLOW);
-			std::string command = svlExec.getFilePath() + " \"" + svl.getFileRealPath() + "\"";
-
-			if (exec.runCommand(command, "svl", bcg) == "")
+			std::vector<std::string> arguments;
+			arguments.push_back(svl.getFileRealPath());
+			if (exec.runCommand(svlExec.getFilePath(), arguments, "svl", bcg) == "")
 				return 1;
 
 			messageFormatter->reportAction("Applying maximal progress to IMC...",VERBOSITY_FLOW);
-			command = maxprogExec.getFilePath() + " \"" + bcg.getFileRealPath() + "\" \"" + aut.getFileRealPath() + "\" FAIL ONLINE";
+			arguments = std::vector<std::string>();
+			arguments.push_back(bcg.getFileRealPath());
+			arguments.push_back(aut.getFileRealPath());
+			arguments.push_back("FAIL");
+			arguments.push_back("ONLINE");
 
-			if (exec.runCommand(command, "maxprog", aut) == "")
+			if (exec.runCommand(maxprogExec.getFilePath(), arguments, "maxprog", aut) == "")
 				return 1;
 
-			command = bcgioExec.getFilePath() + " \"" + aut.getFileRealPath() + "\" \"" + bcg.getFileRealPath() + "\"";
+			arguments = std::vector<std::string>();
+			arguments.push_back(aut.getFileRealPath());
+			arguments.push_back(bcg.getFileRealPath());
 
-			if (exec.runCommand(command, "bcg_io", bcg) == "")
+			if (exec.runCommand(bcgioExec.getFilePath(), arguments, "bcg_io", bcg) == "")
 				return 1;
 
-			command = bcgminExec.getFilePath() + " -branching -rate -self -epsilon 5e-324 \"" + bcg.getFileRealPath() + "\"";
+			arguments = std::vector<std::string>();
+			arguments.push_back("-branching");
+			arguments.push_back("-rate");
+			arguments.push_back("-self");
+			arguments.push_back("-epsilon");
+			arguments.push_back("5e-324");
+			arguments.push_back(bcg.getFileRealPath());
 
-			if (exec.runCommand(command, "bcg_min", bcg) == "")
+			if (exec.runCommand(bcgminExec.getFilePath(), arguments, "bcg_min", bcg) == "")
 				return 1;
 		} else {
 			messageFormatter->reportAction("Reusing IMC",VERBOSITY_FLOW);
@@ -711,10 +697,13 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 		// test for non-determinism
 		messageFormatter->reportAction("Testing for non-determinism...",VERBOSITY_FLOW);
-		std::string cmd = bcginfoExec.getFilePath() + " -hidden \""
-		                  + bcg.getFileRealPath() + "\"";
-
-		std::string hids = exec.runCommand(cmd, "bcg_info");
+		std::vector<std::string> arguments;
+		arguments.push_back("-hidden");
+		arguments.push_back(bcg.getFileRealPath());
+		std::string hids = exec.runCommand(
+				bcginfoExec.getFilePath(),
+				arguments,
+				"bcg_info");
 		if (hids == "")
 			return 1;
 		if (hasHiddenLabels(File(hids))) {
@@ -729,11 +718,14 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 		// test for composition errors.
 		messageFormatter->reportAction("Testing for composition/modelling errors...",VERBOSITY_FLOW);
-		cmd  = bcginfoExec.getFilePath()
-					       + " -labels"
-					       + " \""    + bcg.getFileRealPath() + "\"";
+		arguments = std::vector<std::string>();
+		arguments.push_back("-labels");
+		arguments.push_back(bcg.getFileRealPath());
 
-		std::string labs = exec.runCommand(cmd, "bcg_info");
+		std::string labs = exec.runCommand(
+				bcginfoExec.getFilePath(),
+				arguments,
+				"bcg_info");
 		if (labs == "")
 			return 1;
 
@@ -751,24 +743,26 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 	{
 		/* DFTRES Converter to tra/lab */
 		std::vector<File> outputs;
-		std::string cmd;
+		std::vector<std::string> arguments;
+		arguments.push_back("-jar");
+		arguments.push_back(dftresJar.getFileRealPath());
+
 		if (useChecker == IMRMC) {
 			messageFormatter->reportAction("Building CTMC...",VERBOSITY_FLOW);
-			cmd = std::string("java -jar ") + dftresJar.getFilePath()
-				+ " --export-tralab \""
-				+ tra.newWithExtension("exact").getFileRealPath() + "\" \""
-				+ exp.getFileRealPath() + "\"";
+			arguments.push_back("--export-tralab");
+			arguments.push_back(tra.newWithExtension("exact").getFileRealPath());
+			arguments.push_back(exp.getFileRealPath());
 			outputs.push_back(exactTra);
 			outputs.push_back(exactLab);
 		} else {
 			messageFormatter->reportAction("Building JANI...",VERBOSITY_FLOW);
-			cmd = std::string("java -jar ") + dftresJar.getFilePath()
-				+ " --export-jani \"" + jani.getFileRealPath() + "\" \""
-				+ exp.getFileRealPath() + "\"";
+			arguments.push_back("--export-jani");
+			arguments.push_back(jani.getFileRealPath());
 			outputs.push_back(jani);
 		}
+		arguments.push_back(exp.getFileRealPath());
 
-		if (exec.runCommand(cmd, "dftres", outputs) == "")
+		if (exec.runCommand("java", arguments, "dftres", outputs) == "")
 			return 1;
 	}
 
@@ -783,12 +777,14 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		if(!reuse || !FileSystem::exists(ctmdpi)) {
 			// bcg -> ctmdpi, lab
 			messageFormatter->reportAction("Translating IMC to CTMDPI...",VERBOSITY_FLOW);
-			std::string cmd = imc2ctmdpExec.getFilePath()
-			                + " -a FAIL"
-			                + " -o \"" + ctmdpi.getFileRealPath() + "\""
-                            + " \""    + bcg.getFileRealPath() + "\"";
+			std::vector<std::string> arguments;
+			arguments.push_back("-a");
+			arguments.push_back("FAIL");
+			arguments.push_back("-o");
+			arguments.push_back(ctmdpi.getFileRealPath());
+			arguments.push_back(bcg.getFileRealPath());
 
-			if (exec.runCommand(cmd, "imc2ctmdpi", ctmdpi) == "")
+			if (exec.runCommand(imc2ctmdpExec.getFilePath(), arguments, "imc2ctmdpi", ctmdpi) == "")
 				return 1;
 		} else {
 			messageFormatter->reportAction("Reusing IMC to CTMDPI translation result",VERBOSITY_FLOW);
@@ -805,12 +801,13 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 #else
 			// bcg -> tra, lab
 			messageFormatter->reportAction("Translating IMC to .tra/.lab ...",VERBOSITY_FLOW);
-			std::string cmd = bcg2tralabExec.getFilePath()
-			                  + " \"" + bcg.getFileRealPath() + "\" \""
-			                  + tra.newWithExtension("").getFileRealPath()
-			                  + "\" FAIL ONLINE";
+			std::vector<std::string> arguments;
+			arguments.push_back(bcg.getFileRealPath());
+			arguments.push_back(tra.newWithExtension("").getFileRealPath());
+			arguments.push_back("FAIL");
+			arguments.push_back("ONLINE");
 
-			if (exec.runCommand(cmd, "bcg2tralab", tra) == "")
+			if (exec.runCommand(bcg2tralabExec.getFilePath(), arguments, "bcg2tralab", tra) == "")
 				return 1;
 #endif /* HAVE_CADP */
 		} else {
@@ -836,12 +833,12 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		if(!reuse || !FileSystem::exists(ma)) {
 			// bcg -> ma
 			messageFormatter->reportAction("Translating IMC to IMCA format...",VERBOSITY_FLOW);
-			std::string cmd = bcg2imcaExec.getFilePath()
-			                + " " + bcg.getFileRealPath()
-			                + " " + ma.getFileRealPath()
-			                + " FAIL";
+			std::vector<std::string> arguments;
+			arguments.push_back(bcg.getFileRealPath());
+			arguments.push_back(ma.getFileRealPath());
+			arguments.push_back("FAIL");
 
-			if (exec.runCommand(cmd, "bcg2imca", ma) == "")
+			if (exec.runCommand(bcg2imcaExec.getFilePath(), arguments, "bcg2imca", ma) == "")
 				return 1;
 		} else {
 			messageFormatter->reportAction("Reusing IMC to IMCA format translation result",VERBOSITY_FLOW);
@@ -858,12 +855,13 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 #else
 			// bcg -> jani
 			messageFormatter->reportAction("Translating IMC to JANI format...",VERBOSITY_FLOW);
-			std::string cmd = bcg2janiExec.getFilePath()
-						+ " " + bcg.getFileRealPath()
-						+ " " + jani.getFileRealPath()
-						+ " FAIL ONLINE";
+			std::vector<std::string> arguments;
+			arguments.push_back(bcg.getFileRealPath());
+			arguments.push_back(jani.getFileRealPath());
+			arguments.push_back("FAIL");
+			arguments.push_back("ONLINE");
 
-			if (exec.runCommand(cmd, "bcg2jani", jani) == "")
+			if (exec.runCommand(bcg2janiExec.getFilePath(), arguments, "bcg2jani", jani) == "")
 				return 1;
 #endif /* HAVE_CADP */
 		} else if (useConverter == SVL) {
@@ -884,12 +882,14 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 #else
 			// bcg -> jani
 			messageFormatter->reportAction("Translating IMC to JANI format...",VERBOSITY_FLOW);
-			std::string cmd = bcg2janiExec.getFilePath()
-						+ " " + bcg.getFileRealPath()
-						+ " " + jani.getFileRealPath()
-						+ " FAIL ONLINE";
+			std::vector<std::string> arguments;
+			arguments.push_back(bcg.getFileRealPath());
+			arguments.push_back(jani.getFileRealPath());
+			arguments.push_back("FAIL");
+			arguments.push_back("ONLINE");
 
-			if (exec.runCommand(cmd, "bcg2jani", jani) == "")
+			if (exec.runCommand(bcg2janiExec.getFilePath(), arguments, "bcg2jani", jani) == "")
+
 				return 1;
 #endif /* HAVE_CADP */
 		} else if (useConverter == SVL) {
@@ -917,22 +917,22 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 #else
 		// bcg -> dot
 		messageFormatter->reportAction("Building DOT from IMC...",VERBOSITY_FLOW);
-		std::string cmd = bcgioExec.getFilePath()
-					+ " \""    + bcg.getFileRealPath() + "\""
-					+ " \""    + dot.getFileRealPath() + "\""
-					;
+		std::vector<std::string> arguments;
+		arguments.push_back(bcg.getFileRealPath());
+		arguments.push_back(dot.getFileRealPath());
 		
-		if (exec.runCommand(cmd, "bcg_io", dot) == "")
+		if (exec.runCommand(bcgioExec.getFilePath(), arguments, "bcg_io", dot) == "")
 			return 1;
 		
 		// dot -> png
 		messageFormatter->reportAction("Translating DOT to " + buildDot + "...",VERBOSITY_FLOW);
-		cmd = dotExec.getFilePath()
-					+ " -T" + buildDot
-					+ " \""    + dot.getFileRealPath() + "\""
-					+ " -o \"" + png.getFileRealPath() + "\""
-					;
-		if (exec.runCommand(cmd, "dot", png) == "")
+		arguments.clear();
+		arguments.push_back("-T");
+		arguments.push_back(buildDot);
+		arguments.push_back(dot.getFileRealPath());
+		arguments.push_back("-o");
+		arguments.push_back(png.getFileRealPath());
+		if (exec.runCommand(dotExec.getFilePath(), arguments, "dot", png) == "")
 			return 1;
 #endif /* HAVE_CADP */
 	}
@@ -1594,16 +1594,20 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 	 * bonus would be to locate them using PATH as well.
 	 */
 	dft2lntcExec = File(dft2lntRoot+"/bin/dft2lntc");
+	if (!FileSystem::exists(dft2lntcExec)) {
+		if (FileSystem::exists(File(dft2lntRoot + "/bin/dft2lntc.exe")))
+			dft2lntcExec = File(dft2lntRoot + "/bin/dft2lntc.exe");
+	}
 
 	/* Find dft2lntc executable (based on DFT2LNTROOT environment variable) */
 	if(dft2lntRoot.empty()) {
 		messageFormatter->reportError("Environment variable `DFT2LNTROOT' not set. Please set it to where /bin/dft2lntc can be found.");
 		ok = false;
-	} else if(!FileSystem::hasAccessTo(File(dft2lntRoot),X_OK)) {
+	} else if(!FileSystem::isDir(File(dft2lntRoot))) {
 		messageFormatter->reportError("Could not enter dft2lntroot directory (environment variable `DFT2LNTROOT'");
 		ok = false;
-	} else if(!FileSystem::hasAccessTo(dft2lntcExec,F_OK)) {
-		messageFormatter->reportError("dft2lntc not found (in " + dft2lntRoot+"/bin)");
+	} else if(!FileSystem::exists(dft2lntcExec)) {
+		messageFormatter->reportError("dft2lntc not found (in " + dft2lntRoot + "/bin)");
 		ok = false;
 	} else if(!FileSystem::hasAccessTo(dft2lntcExec,X_OK)) {
 		messageFormatter->reportError("dft2lntc not executable (in " + dft2lntRoot+"/bin)");
@@ -1671,7 +1675,7 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 
 	if (conv == DFTRES) {
 		dftresJar = getDftresJar();
-		if(!FileSystem::hasAccessTo(dftresJar, F_OK))
+		if(!FileSystem::exists(dftresJar))
 			ok = false;
 	}
 

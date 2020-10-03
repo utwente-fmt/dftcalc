@@ -64,6 +64,9 @@ endif()
 ##   - libdft2lnt.a
 ##   - yaml-cpp
 target_link_libraries(dft2lntc dft2lnt ${YAML_CPP_LIB})
+if (WIN32)
+	target_link_libraries(dft2lntc pathcch)
+endif()
 
 ## POST_BUILD: copy the executable to the bin/ folder
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)

@@ -7,6 +7,11 @@
  */
 
 #include "Shell.h"
+#ifdef WIN32
+# define WIN32_LEAN_AND_MEAN // Omit rarely-used and architecture-specific stuff from WIN32
+# include <windows.h>
+# include <iostream>
+#endif
 
 MessageFormatter* Shell::messageFormatter = NULL;
 
@@ -58,35 +63,52 @@ int Shell::system(std::string command, int verbosity, RunStatistics* stats) {
 	return system(command,".","","",verbosity,stats);
 }
 
+static File getTempFile(void) {
+#ifndef WIN32
+	char buffer[] = P_tmpdir"/XXXXXX";
+	int ret = mkstemp(buffer);
+	if (ret < 0)
+		throw std::runtime_error("Could not create temporary file");
+	close(ret);
+#else
+	char buffer[MAX_PATH];
+	char tmpDir[MAX_PATH + 1];
+	std::cerr << "Creating temporary file\n";
+	if (!GetTempPathA(sizeof(tmpDir), tmpDir))
+		throw std::runtime_error("Could not get temporary directory");
+	if (!GetTempFileNameA(tmpDir, "dft", 0, buffer))
+		throw std::runtime_error("Could not create temporary file");
+#endif
+	return File(string(buffer));
+}
+
+#ifndef WIN32
 int Shell::system(const SystemOptions& options, RunStatistics* stats) {
-	std::string command = options.command;
+	std::string command = '"' + options.command + '"';
+
+	for (std::string argument : options.arguments) {
+		command += " \"" + argument + "\"";
+	}
+
+	if (!options.inFile.empty())
+		command += "<\"" + options.inFile + '"';
 	
 	// Pipe stdout to /dev/null if no outFile is specified
 	command += " > ";
 	if(options.outFile.empty()) {
-#ifdef WIN32
-		command += "NUL";
-#else
 		command += "/dev/null";
-#endif
-
-	// If there is an outFile specified, pipe stdout to it
 	} else {
-		command += options.outFile;
+		// If there is an outFile specified, pipe stdout to it
+		command += '"' + options.outFile + '"';
 	}
-	command += " 2> ";
 
 	// Pipe stderr to /dev/null if no errFile is specified
+	command += " 2> ";
 	if(options.errFile.empty()) {
-#ifdef WIN32
-		command += "NUL";
-#else
 		command += "/dev/null";
-#endif
-
-	// If there is an errFile specified, pipe stderr to it
 	} else {
-		command += options.errFile;
+		// If there is an errFile specified, pipe stderr to it
+		command += '"' + options.errFile + '"';
 	}
 	
 	// If no statProgram is specified, use this default
@@ -103,12 +125,7 @@ int Shell::system(const SystemOptions& options, RunStatistics* stats) {
 	// If no statFile was specified, use a temporary
 	File statFile = File(options.statFile);
 	if(options.statFile.empty()) {
-		char buffer[] = P_tmpdir"/XXXXXX";
-		int ret = mkstemp(buffer);
-		if (ret < 0)
-			return -1;
-		close(ret);
-		statFile = File(string(buffer));
+		statFile = getTempFile();
 		removeTmpFile = true;
 	}
 	
@@ -130,7 +147,7 @@ int Shell::system(const SystemOptions& options, RunStatistics* stats) {
 	string realCWD = FileSystem::getRealPath(options.cwd);
 	PushD dir(realCWD);
 	if(messageFormatter) messageFormatter->reportAction("Entering directory: `" + realCWD + "'", options.verbosity);
-	
+
 	// Execute the command
 	int result = 0;
 	if(messageFormatter) messageFormatter->reportAction("Executing: " + command, options.verbosity);
@@ -170,16 +187,154 @@ int Shell::system(const SystemOptions& options, RunStatistics* stats) {
 		FileSystem::remove(statFile);
 	
 	// Check if the command was killed, e.g. by ctrl-c
-#ifdef WIN32
-#else
 	if (options.signalHandler && WIFSIGNALED(result)) {
 		result = options.signalHandler(result);
 	}
-#endif
 	
 	// Return the result of the command
 	return result;
 }
+#else // WIN32 version
+/* Escape an argument so that CommandLineToArgv parses it correctly */
+static void escapeArgument(std::stringstream& out, const std::string& argument) {
+	int num_backslashes = 0;
+	out << '"';
+	for (char c : argument) {
+		if (c == '\\') {
+			num_backslashes++;
+		} else if (c == '"') {
+			for (int i = 0; i < num_backslashes; i++)
+				out << "\\\\";
+			num_backslashes = 0;
+			out << "\\\"";
+		} else {
+			for (int i = 0; i < num_backslashes; i++)
+				out << '\\';
+			num_backslashes = 0;
+			out << c;
+		}
+	}
+	out << '"';
+}
+
+int Shell::system(const SystemOptions& options, RunStatistics* stats) {
+	STARTUPINFOA startupInfo = {0};
+	startupInfo.dwFlags = STARTF_USESTDHANDLES;
+
+	// Child process gets no input
+	const char *inputFile = "NUL";
+	if (!options.inFile.empty())
+		inputFile = options.inFile.c_str();
+	startupInfo.hStdInput = CreateFileA(inputFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (startupInfo.hStdInput == INVALID_HANDLE_VALUE) {
+		messageFormatter->reportError("Could not open NUL for input?", options.verbosity);
+		return 1;
+	}
+	SetHandleInformation(startupInfo.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+
+	// Pipe stdout to NUL if no outFile is specified
+	std::string stdOutFile = "NUL";
+	if (!options.outFile.empty())
+		stdOutFile = options.outFile;
+
+	startupInfo.hStdOutput = CreateFileA(stdOutFile.c_str(), FILE_WRITE_DATA, FILE_SHARE_WRITE | FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (startupInfo.hStdOutput == INVALID_HANDLE_VALUE) {
+		CloseHandle(startupInfo.hStdInput);
+		messageFormatter->reportError("Could not open: " + stdOutFile, options.verbosity);
+		return 1;
+	}
+	SetHandleInformation(startupInfo.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+
+	// Pipe stderr to NUL if no outFile is specified
+	std::string stdErrFile = "NUL";
+	if (!options.errFile.empty())
+		stdErrFile = options.errFile;
+
+	startupInfo.hStdError = CreateFileA(stdErrFile.c_str(), FILE_WRITE_DATA, FILE_SHARE_WRITE | FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (startupInfo.hStdError == INVALID_HANDLE_VALUE) {
+		CloseHandle(startupInfo.hStdInput);
+		CloseHandle(startupInfo.hStdOutput);
+		messageFormatter->reportError("Could not open: " + stdErrFile, options.verbosity);
+		return 1;
+	}
+	SetHandleInformation(startupInfo.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+
+	std::stringstream argumentstream;
+	escapeArgument(argumentstream, options.command);
+
+	for (std::string argument : options.arguments) {
+		argumentstream << ' ';
+		escapeArgument(argumentstream, argument);
+	}
+
+	std::string arguments = argumentstream.str();
+	std::unique_ptr<char[]> argument_cstr = std::make_unique<char[]>(arguments.length() + 1);
+	strcpy(argument_cstr.get(), arguments.c_str());
+
+	if (messageFormatter)
+          messageFormatter->reportAction("Executing: " + arguments, options.verbosity);
+
+	string realCWD = FileSystem::getRealPath(options.cwd);
+
+	PROCESS_INFORMATION processInfo;
+	BOOL ret = CreateProcessA(
+		options.command.c_str(),
+		argument_cstr.get(),
+		NULL,
+		NULL,
+		TRUE,
+		CREATE_NO_WINDOW,
+		NULL,
+		realCWD.c_str(),
+		&startupInfo,
+		&processInfo
+	);
+
+	CloseHandle(startupInfo.hStdInput);
+	CloseHandle(startupInfo.hStdOutput);
+	CloseHandle(startupInfo.hStdError);
+
+	if (!ret) {
+		messageFormatter->reportError("Error executing: " + arguments, options.verbosity);
+        return 1;
+	}
+
+	WaitForSingleObject(processInfo.hProcess, INFINITE);
+
+	CloseHandle(processInfo.hThread);
+	DWORD exitCode = 0;
+	if (!GetExitCodeProcess(processInfo.hProcess, &exitCode)) {
+		messageFormatter->reportError("Could not get exit code for: " + arguments, options.verbosity);
+		exitCode = 1;
+	}
+
+	// If statistics are requested, set up the command
+	if (stats) {
+		*stats = RunStatistics();
+		FILETIME start, exit, user, kernel;
+		if (!GetProcessTimes(processInfo.hProcess, &start, &exit, &kernel, &user)) {
+			messageFormatter->reportError("Could not get timing information for: " + arguments, options.verbosity);
+		} else {
+			uint64_t startTime = (((uint64_t)start.dwHighDateTime) << 32) + start.dwLowDateTime;
+			uint64_t endTime = (((uint64_t)exit.dwHighDateTime) << 32) + exit.dwLowDateTime;
+			uint64_t kernelTime = (((uint64_t)kernel.dwHighDateTime) << 32) + kernel.dwLowDateTime;
+			uint64_t userTime = (((uint64_t)user.dwHighDateTime) << 32) + user.dwLowDateTime;
+			stats->time_elapsed = (endTime - startTime) / 10000000.0;
+			stats->time_system = kernelTime / 10000000.0;
+			stats->time_user = userTime / 10000000.0;
+		}
+	}
+
+	if (messageFormatter) {
+		std::stringstream str;
+		str << "Process exited with result: " << exitCode;
+		messageFormatter->reportAction(str.str(), options.verbosity);
+	}
+
+	// Return the result of the command
+	return exitCode;
+}
+#endif // WIN32
 
 bool Shell::readSvlStatisticsFromLog(File logFile, Shell::SvlStatistics& stats) {
     if(!FileSystem::exists(logFile)) {

@@ -212,42 +212,25 @@ void print_version(MessageFormatter* messageFormatter) {
 std::string getRoot(MessageFormatter* messageFormatter) {
 	
 	char* root = getenv((const char*)"DFT2LNTROOT");
-	std::string dft2lntRoot = root?string(root):"";
+	std::string dft2lntRoot = root ? string(root) : "";
 
-#ifdef DFT2LNTROOT
 	if (dft2lntRoot == "")
 		dft2lntRoot = DFT2LNTROOT;
-#endif
-	if(dft2lntRoot=="") {
-		if(messageFormatter) messageFormatter->reportError("Environment variable `DFT2LNTROOT' not set. Please set it to where lntnodes/ can be found.");
-		goto end;
+
+	for (int i = dft2lntRoot.length() - 1; i >= 0; i--) {
+		if (dft2lntRoot[i] == '\\')
+			dft2lntRoot[i] = '/';
 	}
-	
-	// \ to /
-	{
-		char buf[dft2lntRoot.length()+1];
-		for(int i=dft2lntRoot.length();i--;) {
-			if(dft2lntRoot[i]=='\\')
-				buf[i] = '/';
-			else
-				buf[i] = dft2lntRoot[i];
-		}
-		buf[dft2lntRoot.length()] = '\0';
-		if(buf[dft2lntRoot.length()-1]=='/') {
-			buf[dft2lntRoot.length()-1] = '\0';
-		}
-		dft2lntRoot = string(buf);
-	}
-	
-	struct stat rootStat;
-	if(stat((dft2lntRoot).c_str(),&rootStat)) {
-		// report error
-		if(messageFormatter) messageFormatter->reportError("Could not stat DFT2LNTROOT (`" + dft2lntRoot + "')");
-		dft2lntRoot = "";
-		goto end;
+	if (dft2lntRoot[dft2lntRoot.length() - 1] == '/')
+		dft2lntRoot = dft2lntRoot.substr(0, dft2lntRoot.length() - 1);
+
+	if (!FileSystem::isDir(dft2lntRoot)) {
+		if (messageFormatter)
+			messageFormatter->reportError("DFT2LNTROOT does not exist or is not a directory: " + dft2lntRoot);
 	}
 	
 #ifdef HAVE_CADP
+	struct stat rootStat;
 	if(stat((dft2lntRoot+DFT2LNT::LNTSUBROOT).c_str(),&rootStat)) {
 		if(FileSystem::mkdir(dft2lntRoot+DFT2LNT::LNTSUBROOT,0755)) {
 			if(messageFormatter) messageFormatter->reportError("Could not create LNT Nodes directory (`" + dft2lntRoot+DFT2LNT::LNTSUBROOT + "')");
@@ -643,7 +626,11 @@ int DFTTestRun::handleSignal(int signal) {
 				return SIGINT;
 			} else if(!strncmp("p",answer,1)) {
 				requestStopSuite = true;
+#ifndef WIN32
 				return SIGQUIT;
+#else
+				return SIGTERM;
+#endif
 			} else {
 				cw << " " << ConsoleWriter::Color::CyanBright << ">" << ConsoleWriter::Color::WhiteBright << "  ";
 			}

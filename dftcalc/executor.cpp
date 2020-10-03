@@ -24,18 +24,23 @@ string DFT::CommandExecutor::genInputFile(std::string extension) {
 }
 
 string DFT::CommandExecutor::runCommand(std::string command,
+                                        std::vector<std::string> arguments,
                                         std::string cmdName,
-                                        std::vector<File> outputFiles)
+                                        std::vector<File> outputFiles,
+                                        File *inputFile)
 {
 	Shell::SystemOptions sysOps;
 	sysOps.verbosity = VERBOSITY_EXECUTIONS;
 	sysOps.cwd = workingDir;
 	sysOps.command = command;
+	sysOps.arguments = arguments;
 	string base = workingDir + "/" + baseFile + "."
 	              + std::to_string(commandNum++) + "." + cmdName;
 	sysOps.reportFile = base + ".report";
 	sysOps.errFile    = base + ".err";
 	sysOps.outFile    = base + ".out";
+	if (inputFile != nullptr)
+		sysOps.inFile     = inputFile->getFileRealPath();
 	int result = Shell::system(sysOps);
 
 	if(result) {

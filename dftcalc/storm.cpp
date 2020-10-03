@@ -21,21 +21,23 @@
 
 static const char needle[] = "Result (for initial states): ";
 
-std::string StormRunner::getCommandOptions(Query q)
+void StormRunner::getCommandOptions(Query q, std::vector<std::string> &options)
 {
-	std::string ret = " --constants T=1,L=0 ";
-	if (q.errorBoundSet)
-		ret += " --precision " + q.errorBound.str();
+	options.push_back("--constants");
+	options.push_back("T=1,L=0");
+	if (q.errorBoundSet) {
+		options.push_back("--precision");
+		options.push_back(q.errorBound.str());
+	}
 	if (runExact) {
 		if (q.type == TIMEBOUND) {
 			messageFormatter->reportWarning("Storm does not compute exact time-bounded properties, defaulting to approximate");
 		} else {
-			ret += " --exact ";
+			options.push_back("--exact");
 		}
 	}
 	if (q.type == STEADY && !runExact)
-		ret += " --to-nondet ";
-	return ret;
+		options.push_back("--to-nondet");
 }
 
 static std::string getQuery(Query q)
@@ -110,11 +112,12 @@ std::vector<DFT::DFTCalculationResultItem> StormRunner::analyze(std::vector<Quer
 	expandRangeQueries(queries);
 	messageFormatter->reportAction("Calculating probability with " + stormExec.getFileName(), DFT::VERBOSITY_FLOW);
 	for (Query q : queries) {
-		std::string qText = getQuery(q);
-		std::string cmd = stormExec.getFilePath()
-		                  + getCommandOptions(q)
-		                  + " --prop \"" + qText + "\""
-		                  + " --jani \"" + janiFile.getFileRealPath()+ "\"";
+		std::vector<std::string> arguments;
+		getCommandOptions(q, arguments);
+		arguments.push_back("--prop");
+		arguments.push_back(getQuery(q));
+		arguments.push_back("--jani");
+		arguments.push_back(janiFile.getFileRealPath());
 		DFT::DFTCalculationResultItem it(q);
 		int result;
 		std::string of;
@@ -122,7 +125,7 @@ std::vector<DFT::DFTCalculationResultItem> StormRunner::analyze(std::vector<Quer
 			/* Special case since Storm fails to compute otherwise. */
 			result = 0;
 		} else {
-			of = exec->runCommand(cmd, stormExec.getFileName());
+			of = exec->runCommand(stormExec.getFilePath(), arguments, stormExec.getFileName());
 			if (of == "") {
 				messageFormatter->reportError("Could not calculate.");
 				return ret;

@@ -11,6 +11,7 @@
 #include <iostream>
 
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN // Omit rarely-used and architecture-specific stuff from WIN32
 #include <windows.h>
 const ConsoleWriter::Color ConsoleWriter::Color::Error  (FOREGROUND_RED   );
 const ConsoleWriter::Color ConsoleWriter::Color::Warning(FOREGROUND_RED   | FOREGROUND_GREEN);

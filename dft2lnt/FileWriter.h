@@ -215,6 +215,16 @@ public:
 	}
 
 	/**
+	 * Add the specified integer to the stream converted to a string.
+	 * Nothing will be prefixed or postfixed.
+	 * @param i The integer to add.
+	 */
+	virtual FileWriter& operator<<(long long unsigned int i) {
+		ss() << i;
+		return *this;
+	}
+
+	/**
 	 * Add the specified float to the stream converted to a string.
 	 * Nothing will be prefixed or postfixed.
 	 * @param f The float to add.

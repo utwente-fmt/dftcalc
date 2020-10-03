@@ -19,14 +19,19 @@
 #include <iostream>
 #include <stdexcept>
 
-std::string ModestRunner::getCommandOptions(Query q)
+std::vector<std::string> ModestRunner::getCommandOptions(Query q)
 {
-	std::string ret = " -E T=1,L=0 ";
+	std::vector<std::string> ret;
+	ret.push_back("-E");
 	if (q.type == TIMEBOUND) {
-		ret = " -E 'T=" + q.upperBound.str() + ",L=" + q.lowerBound.str() + "'" ;
+		ret.push_back("T=" + q.upperBound.str() + ",L=" + q.lowerBound.str());
+	} else {
+		ret.push_back("T=1,L=0");
 	}
-	if (q.errorBoundSet)
-		ret += " --epsilon " + q.errorBound.str();
+	if (q.errorBoundSet) {
+		ret.push_back("--epsilon");
+		ret.push_back(q.errorBound.str());
+	}
 	return ret;
 }
 
@@ -97,14 +102,12 @@ std::vector<DFT::DFTCalculationResultItem> ModestRunner::analyze(std::vector<Que
 	expandRangeQueries(queries);
 	messageFormatter->reportAction("Calculating probability with Modest", DFT::VERBOSITY_FLOW);
 	for (Query q : queries) {
-		std::string qText = getQuery(q);
-		std::string cmd = modestCmd
-		                  + getCommandOptions(q)
-		                  + " \"" + janiFile.getFileRealPath()+ "\"";
+		std::vector<std::string> arguments = getCommandOptions(q);
+		arguments.push_back(janiFile.getFileRealPath());
 		DFT::DFTCalculationResultItem it(q);
 		int result;
 		if (q.type != TIMEBOUND || q.upperBound != 0) {
-			std::string of = exec->runCommand(cmd, "modest");
+			std::string of = exec->runCommand(modestCmd, arguments, "modest");
 			if (of == "")
 				return ret; /* Exec should have reported already */
 			result = readOutputFile(of, it);

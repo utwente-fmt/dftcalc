@@ -23,8 +23,21 @@ public:
 	std::string genInputFile(std::string extension);
 
 	std::string runCommand(std::string command,
-                               std::string cmdName,
-                               std::vector<File> outputFiles);
+	                       std::vector<std::string> arguments,
+                           std::string cmdName,
+                           std::vector<File> outputFiles = std::vector<File>(),
+	                   File *inputFile = nullptr
+	);
+
+	std::string runCommand(std::string command,
+		std::vector<std::string> arguments,
+		std::string cmdName,
+		File outputFile)
+	{
+		std::vector<File> outputs;
+		outputs.push_back(outputFile);
+		return runCommand(command, arguments, cmdName, outputs);
+	}
 
 	std::string runCommand(std::string command,
 	                       std::string cmdName,
@@ -32,13 +45,13 @@ public:
 	{
 		std::vector<File> outputs;
 		outputs.push_back(outputFile);
-		return runCommand(command, cmdName, outputs);
+		return runCommand(command, std::vector<std::string>(), cmdName, outputs);
 	}
 
 	std::string runCommand(std::string command,
 	                       std::string cmdName)
 	{
-		return runCommand(command, cmdName, std::vector<File>());
+		return runCommand(command, std::vector<std::string>(), cmdName, std::vector<File>());
 	}
 };
 };

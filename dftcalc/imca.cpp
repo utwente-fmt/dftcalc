@@ -21,32 +21,38 @@
 
 using std::vector;
 
-static std::string getOptions(Query q) {
-	std::string ret;
+static void getOptions(Query q, std::vector<std::string> &options) {
 	if (q.min)
-		ret = "-min";
+		options.push_back("-min");
 	else
-		ret = "-max";
-	if (q.errorBoundSet)
-		ret += " -e " + q.errorBound.str();
+		options.push_back("-max");
+	if (q.errorBoundSet) {
+		options.push_back("-e");
+		options.push_back(q.errorBound.str());
+	}
 	switch (q.type) {
 	case EXPECTEDTIME:
-		ret += " -et ";
+		options.push_back("-et");
 		break;
 	case TIMEBOUND:
-		ret += " -tb -T " + q.upperBound.str();
-		if (q.lowerBound != 0)
-			ret += " -F " + q.lowerBound.str();
-		if (q.step != -1)
-			ret += " -i " + q.step.str();
+		options.push_back("-tb");
+		options.push_back("-T");
+		options.push_back(q.upperBound.str());
+		if (q.lowerBound != 0) {
+			options.push_back("-F");
+			options.push_back(q.lowerBound.str());
+		}
+		if (q.step != -1) {
+			options.push_back("-i");
+			options.push_back(q.step.str());
+		}
 		break;
 	case UNBOUNDED:
-		ret += " -ub";
+		options.push_back("-ub");
 		break;
 	default:
 		throw std::logic_error("Unsupported query type for IMCA.");
 	}
-	return ret;
 }
 
 bool parseOutputFile(File file, Query q,
@@ -223,11 +229,12 @@ std::vector<DFT::DFTCalculationResultItem> IMCARunner::analyze(vector<Query> que
 	messageFormatter->reportAction("Calculating probability with IMCA...",DFT::VERBOSITY_FLOW);
 	for(Query query: queries) {
 		// imca -> calculation
-		std::string cmd = imcaExec.getFilePath()
-		+ " " + modelFile.getFileRealPath()
-		+ " " + getOptions(query);
+		std::vector<std::string> arguments;
+		arguments.push_back(modelFile.getFileRealPath());
+		getOptions(query, arguments);
 
-		std::string out = exec->runCommand(cmd, "imca");
+		std::string out = exec->runCommand(imcaExec.getFilePath(),
+				arguments, "imca");
 		if (out == "")
 			return ret;
 

@@ -53,6 +53,10 @@ if("${YAML_CPP_LIB}" STREQUAL "YAML_CPP_LIB-NOTFOUND")
 endif()
 target_link_libraries(dftcalc dft2lnt ${YAML_CPP_LIB})
 
+if (WIN32)
+target_link_libraries(dftcalc pathcch)
+endif()
+
 if(UNIX AND NOT APPLE AND NOT WIN32)
 	target_link_libraries(dftcalc rt)
 endif()

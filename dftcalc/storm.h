@@ -19,7 +19,7 @@ class StormRunner : public Checker{
 private:
 	const File janiFile;
 	const File stormExec;
-	std::string getCommandOptions(Query q);
+	void getCommandOptions(Query q, std::vector<std::string> &opts);
 public:
 	bool runExact;
 	StormRunner(MessageFormatter *mf, DFT::CommandExecutor *exec,

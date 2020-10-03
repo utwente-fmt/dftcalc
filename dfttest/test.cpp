@@ -556,8 +556,12 @@ void TestSuite::createTestFile(File file) {
 	{
 		messageFormatter->reportAction("No test suite file specified");
 		messageFormatter->getConsoleWriter() << " > Append to suite file [ " << ConsoleWriter::Color::Cyan << file.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
+#ifndef WIN32
 		char input[PATH_MAX+1];
-		std::cin.getline(input,PATH_MAX);
+#else
+		char input[MAX_PATH+1];
+#endif
+		std::cin.getline(input, sizeof(input) - 1);
 		std::string inputStr = std::string(input);
 		if(!inputStr.empty()) file = File(inputStr);
 	}
@@ -581,8 +585,12 @@ void TestSuite::testWritability() {
 		} else {
 			messageFormatter->reportAction("Test suite file ( `" + outFile.getFileRealPath() + "' ) is not writable, please enter new filename");
 			messageFormatter->getConsoleWriter() << " > Append to suite file [ " << ConsoleWriter::Color::Cyan << origin.getFileName() << ConsoleWriter::Color::Reset << " ]: ";
-			char input[PATH_MAX+1];
-			std::cin.getline(input,PATH_MAX);
+#ifndef WIN32
+			char input[PATH_MAX + 1];
+#else
+			char input[MAX_PATH + 1];
+#endif
+			std::cin.getline(input, sizeof(input) - 1);
 			std::string inputStr = std::string(input);
 			if(inputStr.empty()) inputStr = origin.getFileName();
 			outFile = File(inputStr);

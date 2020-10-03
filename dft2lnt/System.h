@@ -16,10 +16,10 @@
 #define SYSTEM_TIMER_BACKEND_WINDOWS       3
 #define SYSTEM_TIMER_BACKEND_APPLE         4
 
-#include <time.h>
 #include <string>
 #include <random>
 #ifdef WIN32
+#	define WIN32_LEAN_AND_MEAN // Omit rarely-used and architecture-specific stuff from WIN32
 #	include <windows.h>
 #	define SYSTEM_TIMER_BACKEND SYSTEM_TIMER_BACKEND_WINDOWS
 #elif defined __APPLE__

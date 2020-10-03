@@ -9,6 +9,11 @@
 #ifndef DECNUMBER_H
 #define DECNUMBER_H
 
+#ifdef max
+// Windows.h defines a max() macro that conflicts with C++ std::numeric_limits<T>::max
+# undef max
+# undef min
+#endif
 template <class BT = unsigned int, class ET = long>
 class decnumber
 {

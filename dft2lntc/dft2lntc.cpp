@@ -20,13 +20,13 @@
 #include <sys/types.h>
 
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN // Omit rarely-used and architecture-specific stuff from WIN32
 #include <locale>
 #include <io.h>
 #include <shlobj.h>
 #include <codecvt>
-#include <winerror.h>
-#include <combaseapi.h>
-#include <Knownfolders.h>
+#include <windows.h>
+#include <memory>
 #endif
 
 #include "dft_parser.h"
@@ -120,9 +120,11 @@ static std::string getCache(CompilerContext* compilerContext) {
 		compilerContext->reportError("Unable to lookup Application Data directory");
 		exit(EXIT_FAILURE);
 	}
+	char bytes[MAX_PATH];
+	WideCharToMultiByte(CP_ACP, 0, rootStr, -1, bytes, sizeof(bytes), NULL, NULL);
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-	root = converter.to_bytes(rootStr);
 	CoTaskMemFree(rootStr);
+	root = std::string(bytes);
 #elif defined __APPLE__
 	root = std::getenv("HOME");
 	root += "/Library/Caches";
@@ -157,7 +159,12 @@ std::string getRoot(CompilerContext* compilerContext) {
 	
 	// \ to /
 	{
+#ifndef WIN32
 		char buf[dft2lntRoot.length()+1];
+#else
+		std::unique_ptr<char[]> for_dealloc_only = std::make_unique<char[]>(dft2lntRoot.length() + 1);
+		char* buf = for_dealloc_only.get();
+#endif
 		for(int i=dft2lntRoot.length();i--;) {
 			if(dft2lntRoot[i]=='\\')
 				buf[i] = '/';
@@ -202,7 +209,6 @@ end:
 }
 
 int main(int argc, char** argv) {
-	
 	/* Set defaults */
 	Settings default_settings;
 	default_settings["warn-code"] = "0";
@@ -443,23 +449,23 @@ int main(int argc, char** argv) {
 		
 		// Test all the files that need to be written if they are writable
 		bool ok = true;
-		if(!outputSVLFileName.empty() && !compilerContext.testWritable(outputSVLFileName)) {
+		if(outputSVLFileSet && !compilerContext.testWritable(outputSVLFileName)) {
 			compilerContext.reportError("SVL output file is not writable: `" + outputSVLFileName + "'");
 			ok = false;
 		}
-		if(!outputEXPFileName.empty() && !compilerContext.testWritable(outputEXPFileName)) {
+		if(outputEXPFileSet && !compilerContext.testWritable(outputEXPFileName)) {
 			compilerContext.reportError("EXP output file is not writable: `" + outputEXPFileName + "'");
 			ok = false;
 		}
-		if(!outputDFTFileName.empty() && !compilerContext.testWritable(outputDFTFileName)) {
+		if(outputDFTFileSet && !compilerContext.testWritable(outputDFTFileName)) {
 			compilerContext.reportError("DFT output file is not writable: `" + outputDFTFileName + "'");
 			ok = false;
 		}
-		if(!outputASTFileName.empty() && !compilerContext.testWritable(outputASTFileName)) {
+		if(outputASTFileSet && !compilerContext.testWritable(outputASTFileName)) {
 			compilerContext.reportError("AST output file is not writable: `" + outputASTFileName + "'");
 			ok = false;
 		}
-		if(!outputMODFileName.empty() && !compilerContext.testWritable(outputMODFileName)) {
+		if(outputMODFileSet && !compilerContext.testWritable(outputMODFileName)) {
 			compilerContext.reportError("MOD output file is not writable: `" + outputMODFileName + "'");
 			ok = false;
 		}

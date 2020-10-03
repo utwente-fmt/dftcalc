@@ -173,12 +173,17 @@ std::vector<DFT::DFTCalculationResultItem> MRMCRunner::analyze(
 		out << "$RESULT[1]\n";
 		out << "quit\n";
 		out.close();
-		std::string cmd = mrmcExec.getFilePath()
-		                  + " " + (isCtmdp ? "ctmdpi" : "ctmc")
-		                  + " \""  + modelFile.getFileRealPath() + "\""
-		                  + " \""  + labFile.getFileRealPath()   + "\""
-		                  + " <\"" + inputFile.getFileRealPath() + "\"";
-		std::string res = exec->runCommand(cmd, mrmcExec.getFileName());
+		std::vector<std::string> arguments;
+		arguments.push_back(isCtmdp ? "ctmdpi" : "ctmc");
+		arguments.push_back(modelFile.getFileRealPath());
+		arguments.push_back(labFile.getFileRealPath());
+
+		std::string res = exec->runCommand(
+				mrmcExec.getFilePath(),
+				arguments,
+				mrmcExec.getFileName(),
+				std::vector<File>(),
+				&inputFile);
 		if (res == "")
 			return ret; /* Exec should have reported already */
 		auto result = readOutputFile(res);

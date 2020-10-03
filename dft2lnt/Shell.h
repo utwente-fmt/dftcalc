@@ -14,13 +14,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <string.h>
 #include <string>
+#include <cstring>
 #include <fstream>
 #include <time.h>
 #include <signal.h>
-#include <sys/time.h>
-#include <sys/wait.h>
 #include "MessageFormatter.h"
 #include "FileSystem.h"
 #include "System.h"
@@ -60,23 +58,27 @@ public:
 	class SystemOptions {
 	public:
 		std::string command;
+		std::vector<std::string> arguments;
 		std::string cwd;
 		std::string outFile;
 		std::string errFile;
 		std::string statFile;
 		std::string statProgram;
 		std::string reportFile;
+		std::string inFile;
 		int verbosity;
 		std::function<int(int)> signalHandler;
 		
 		SystemOptions():
 			command(""),
+			arguments(std::vector<std::string>()),
 			cwd("."),
 			outFile(""),
 			errFile(""),
 			statFile(""),
 			statProgram(""),
 			reportFile(""),
+			inFile(""),
 			verbosity(0),
 			signalHandler(&handleSignal) {
 		}

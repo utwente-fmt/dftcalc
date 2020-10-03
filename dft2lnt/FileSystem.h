@@ -11,11 +11,18 @@ class File;
 #ifndef FILESYSTEM_H
 #define FILESYSTEM_H
 
-#include <unistd.h>
 #include <limits.h>
-#include <libgen.h>
 #include <vector>
 #include <string>
+
+#ifndef WIN32
+# include <unistd.h>
+#endif
+
+#if defined(WIN32) && !defined(W_OK)
+#define W_OK 2
+#define X_OK 4 /* Actually read permission, but Windows has no separate execution permission. */
+#endif
 
 char* path_basename(const char* path);
 
@@ -129,7 +136,8 @@ public:
 	inline bool isAbsolute() {
 		return !pathTo.empty() && pathTo[0] == '/';
 	}
-	
+
+	bool isWritableDirectory(void);
 };
 
 std::ostream& operator<<(std::ostream& stream, const File& file);

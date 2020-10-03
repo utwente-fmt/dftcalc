@@ -19,7 +19,7 @@ class ModestRunner : public Checker{
 private:
 	const File janiFile;
 	const std::string modestCmd;
-	std::string getCommandOptions(Query q);
+	std::vector<std::string> getCommandOptions(Query q);
 public:
 	ModestRunner(MessageFormatter *mf, DFT::CommandExecutor *exec,
 	             std::string modestCmd, File model)
