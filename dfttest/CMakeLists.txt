@@ -3,6 +3,7 @@ project (dfttest)
 set (dfttest_VERSION_MAJOR 1)
 set (dfttest_VERSION_MINOR 3)
 set (dfttest_VERSION_PATCH 4)
+set (dfttest_VERSION "${dfttest_VERSION_MAJOR}.${dfttest_VERSION_MINOR}.${dfttest_VERSION_PATCH}")
 
 ## Not sure if needed
 cmake_minimum_required (VERSION 2.6)
@@ -63,15 +64,22 @@ install (TARGETS dfttest DESTINATION bin)
 set(GENINFOFILE ${CMAKE_CURRENT_BINARY_DIR}/compiletime.h)
 get_property(gendepSOURCES TARGET dfttest PROPERTY SOURCES)
 LIST(REMOVE_ITEM gendepSOURCES ${GENINFOFILE})
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../.git/HEAD")
+	set(GIT_HEAD_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/../.git/HEAD")
+	set(NO_GIT 0)
+else()
+	set(GIT_HEAD_DEPENDENCY "")
+	set(NO_GIT 1)
+endif()
 add_custom_command(
 	OUTPUT ${GENINFOFILE}
-#	TARGET dfttest
-#	PRE_BUILD
-	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake ${gendepSOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/../.git/HEAD
-	COMMAND ${CMAKE_COMMAND} -DCMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
-			-DCMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
-			-DDFTROOT=${DFTROOT}
-			-DUSECOMMANDLINEGITINFO=${USECOMMANDLINEGITINFO} -Dgit_output=${git_output} -Dgit_changed=${git_changed} -Dgit_version=${git_version} -Dgit_test=${git_test}
-			-P ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
-			../..
+	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
+		${gendepSOURCES}
+		${GIT_HEAD_DEPENDENCY}
+	COMMAND ${CMAKE_COMMAND}
+		-DOUTPUT_FILE=${GENINFOFILE}
+		-DDFTROOT=${DFTROOT}
+		-DFALLBACK_VERSION=${dfttest_VERSION}
+		-DNO_GIT=${NO_GIT}
+		-P ${CMAKE_CURRENT_SOURCE_DIR}/../compiletime.cmake
 )
