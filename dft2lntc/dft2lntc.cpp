@@ -14,8 +14,6 @@
 #include <stdarg.h>
 #include <string>
 #include <fstream>
-#include <libgen.h>
-#include <getopt.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -244,158 +242,130 @@ int main(int argc, char** argv) {
 	int printVersion         = 0;
 	
 	std::vector<std::string> failedBEs;
-	
-	/* Parse command line arguments */
-	char c;
-	while( (c = getopt(argc,argv,"o:m:n:a:b:e:r:t:s:x:hvq-:")) >= 0 ) {
-		switch(c) {
-
-			// -o FILE
-			case 'o':
-				if(strlen(optarg)==1 && optarg[0]=='-') {
-					outputFileName = "";
-					outputFileSet = 1;
-				} else {
-					outputFileName = string(optarg);
-					outputFileSet = 1;
-				}
-				break;
-
-			// -m FILE
-			case 'm':
-				if(strlen(optarg)==1 && optarg[0]=='-') {
-					outputMODFileName = "";
-					outputMODFileSet = 1;
-				} else {
-					outputMODFileName = string(optarg);
-					outputMODFileSet = 1;
-				}
-				break;
-
-			// -n FILENAME
-			case 'n':
-				origFileName = string(optarg);
-				origFileSet = 1;
-				break;
-
-			// -a FILE
-			case 'a':
-				if(strlen(optarg)==1 && optarg[0]=='-') {
-					outputASTFileName = "";
-					outputASTFileSet = 1;
-				} else {
-					outputASTFileName = string(optarg);
-					outputASTFileSet = 1;
-				}
-				break;
-
-			// -t FILE
-			case 't':
-				if(strlen(optarg)==1 && optarg[0]=='-') {
-					outputDFTFileName = "";
-					outputDFTFileSet = 1;
-				} else {
-					outputDFTFileName = string(optarg);
-					outputDFTFileSet = 1;
-				}
-				break;
-
-			// -s FILE
-			case 's':
-				if(strlen(optarg)==1 && optarg[0]=='-') {
-					outputSVLFileName = "";
-					outputSVLFileSet = 1;
-				} else {
-					outputSVLFileName = string(optarg);
-					outputSVLFileSet = 1;
-				}
-				break;
-
-			// -x FILE
-			case 'x':
-				if(strlen(optarg)==1 && optarg[0]=='-') {
-					outputEXPFileName = "";
-					outputEXPFileSet = 1;
-				} else {
-					outputEXPFileName = string(optarg);
-					outputEXPFileSet = 1;
-				}
-				break;
-
-			// -b FILE
-			case 'b':
-				if(strlen(optarg)==1 && optarg[0]=='-') {
-					outputBCGFileName = "";
-					outputBCGFileSet = 1;
-				} else {
-					outputBCGFileName = string(optarg);
-					outputBCGFileSet = 1;
-				}
-				break;
-			
-			// -h
-			case 'h':
-				printHelp = true;
-				break;
-				
-			// -v
-			case 'v':
-				++verbosity;
-				break;
-			
-			// -q
-			case 'q':
-				--verbosity;
-				break;
-			
-			// -e
-			case 'e': {
-				const char* begin = optarg;
-				const char* end = begin;
-				while(*begin) {
-					end = begin;
-					while(*end && *end!=',') ++end;
-					if(begin<end) {
-						failedBEs.push_back(std::string(begin,end));
-					}
-					if(!*end) break;
-					begin = end + 1;
-				}
-				break;
-				
-			}
-			case 'r':
-				  rootNode = string(optarg);
-				  break;
-			// --
-			case '-':
-				if(!strncmp("help",optarg,4)) {
-					printHelp = true;
-				} else if(!strcmp("version",optarg)) {
-					printVersion = true;
-				} else if(!strcmp("color",optarg)) {
-					useColoredMessages = true;
-				} else if(!strncmp("verbose",optarg,7)) {
-					if(strlen(optarg)>8 && optarg[7]=='=') {
-						verbosity = atoi(optarg+8);
-					} else if (strlen(optarg)==7) {
-						++verbosity;
-					}
-				} else if(!strcmp("no-color",optarg)) {
-					useColoredMessages = false;
-				} else if(!strcmp("warn-code",optarg)) {
-					settings["warn-code"] = "1";
-				}
-		}
-	}
-
-//	printf("args:\n");
-//	for(unsigned int i=0; i<(unsigned int)argc; i++) {
-//		printf("  %s\n",argv[i]);
-//	}
 
 	/* Create a new compiler context */
 	CompilerContext compilerContext(std::cerr);
+
+	/* Parse command line arguments */
+	int argi;
+	for (argi = 1; argi < argc; argi++) {
+		if (argv[argi][0] != '-')
+			break;
+		if (!strcmp(argv[argi], "--")) {
+			argi++;
+			break;
+		}
+
+		if (!argv[argi][1]) {
+			if (inputFileSet) {
+				compilerContext.reportError(string("Unknown argument: ") + argv[argi]);
+				printHelp = 1;
+				continue;
+			}
+			inputFileSet = 1;
+		}
+		if (!strcmp(argv[argi], "-o")) {
+			// -o FILE
+			outputFileName = string(argv[++argi]);
+			outputFileSet = 1;
+		} else if (!strcmp(argv[argi], "-m")) {
+			// -m FILE
+			outputMODFileName = string(argv[++argi]);
+			outputMODFileSet = 1;
+		} else if (!strcmp(argv[argi], "-n")) {
+			// -n FILENAME
+			origFileName = string(argv[++argi]);
+			origFileSet = 1;
+		} else if (!strcmp(argv[argi], "-a")) {
+			// -a FILE
+			outputASTFileName = string(argv[++argi]);
+			outputASTFileSet = 1;
+		} else if (!strcmp(argv[argi], "-t")) {
+			// -t FILE
+			outputDFTFileName = string(argv[++argi]);
+			outputDFTFileSet = 1;
+		} else if (!strcmp(argv[argi], "-s")) {
+			// -s FILE
+			outputSVLFileName = string(argv[++argi]);
+			outputSVLFileSet = 1;
+		} else if (!strcmp(argv[argi], "-x")) {
+			// -x FILE
+			outputEXPFileName = string(argv[++argi]);
+			outputEXPFileSet = 1;
+		} else if (!strcmp(argv[argi], "-b")) {
+			// -b FILE
+			outputBCGFileName = string(argv[++argi]);
+			outputBCGFileSet = 1;
+		} else if (!strcmp(argv[argi], "-h")
+				|| !strcmp(argv[argi], "--help"))
+		{
+			// -h
+			printHelp = true;
+		} else if (!strncmp(argv[argi], "-v", 2)) {
+			// -v
+			for (int i = 1; i < strlen(argv[argi]); i++) {
+				if (argv[argi][i] == 'v') {
+					++verbosity;
+				} else {
+					compilerContext.reportError(std::string("Unknown argument: ") + argv[argi]);
+					printHelp = true;
+					break;
+				}
+			}
+		} else if (!strcmp(argv[argi], "-q")) {
+			// -q
+			verbosity = 0;
+		} else if (!strcmp(argv[argi], "-e")) {
+			// -e EVIDENCE
+			const char* begin = argv[++argi];
+			const char* end = begin;
+			while(*begin) {
+				end = begin;
+				while(*end && *end != ',')
+					++end;
+				if(begin < end)
+					failedBEs.push_back(std::string(begin, end));
+				if(!*end)
+					break;
+				begin = end + 1;
+			}
+		} else if (!strcmp(argv[argi], "-e")) {
+			rootNode = string(argv[++argi]);
+		} else if(!strcmp("--help", argv[argi])) {
+			printHelp = true;
+		} else if(!strcmp("--version", argv[argi])) {
+			printVersion = true;
+		} else if(!strcmp("--color", argv[argi])) {
+			useColoredMessages = true;
+		} else if(!strncmp("--verbose", argv[argi], 9)) {
+			if(strlen(argv[argi]) > 10 && argv[argi][9] == '=') {
+				verbosity = atoi(argv[argi] + 10);
+			} else if (strlen(argv[argi]) == 9) {
+				++verbosity;
+			}
+		} else if(!strcmp("--no-color", argv[argi])) {
+			useColoredMessages = false;
+		} else if(!strcmp("--warn-code", argv[argi])) {
+			settings["warn-code"] = "1";
+		}
+	}
+	for (; argi < argc; argi++) {
+		if (inputFileSet) {
+			compilerContext.reportError(string("Unknown argument: ") + argv[argi]);
+			printHelp = 1;
+			break;
+		}
+		inputFileName = string(argv[argi]);
+		inputFileSet = 1;
+		FILE* f = fopen(argv[argi], "r");
+		if (f) {
+			fclose(f);
+		} else {
+			compilerContext.reportError("unable to open inputfile " + string(argv[argi]));
+			return 1;
+		}
+	}
+
 	compilerContext.useColoredMessages(useColoredMessages);
 	compilerContext.setVerbosity(verbosity);
 
@@ -407,34 +377,6 @@ int main(int argc, char** argv) {
 	if(printVersion) {
 		print_version(&compilerContext);
 		exit(0);
-	}
-
-	/* Parse command line arguments without a -X.
-	 * These specify the input files. Currently it will only allow
-	 * one input file.
-	 */
-	if(optind<argc) {
-		int isSet = 0;
-		for(unsigned int i=optind; i<(unsigned int)argc; ++i) {
-			if(isSet) {
-				compilerContext.reportError("too many input files: "+string(argv[i]));
-				continue;
-			}
-			isSet = 1;
-			if(strlen(argv[i])==1 && argv[i][0]=='-') {
-				inputFileName = "";
-			} else {
-				inputFileName = string(argv[i]);
-				inputFileSet = 1;
-				FILE* f = fopen(argv[i],"r");
-				if(f) {
-					fclose(f);
-				} else {
-					compilerContext.reportError("unable to open inputfile " + string(argv[i]));
-					return 1;
-				}
-			}
-		}
 	}
 	
 	/*

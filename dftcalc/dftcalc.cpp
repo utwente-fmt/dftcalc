@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <cstdio>
 #include <string.h>
-#include <getopt.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <iostream>
@@ -985,208 +984,155 @@ int main(int argc, char** argv) {
 	std::vector<std::string> failedBEs;
 	std::vector<Query> queries;
 
+	/* Create a new compiler context */
+	MessageFormatter* messageFormatter = new MessageFormatter(std::cerr);
+
 	/* Parse command line arguments */
-	char c;
-	while( (c = getopt(argc,argv,"C:e:E:f:mMpqr:Rc:st:ui:I:hxv-:")) >= 0 ) {
-		switch(c) {
-			
+	int argi;
+	for (argi = 1; argi < argc; argi++) {
+		if (argv[argi][0] != '-')
+			break;
+		if (argv[argi][1] == '-' && argv[argi][2] == 0) {
+			argi++;
+			break;
+		}
+
+		if (!strcmp(argv[argi], "-C")) {
 			// -C FILE
-			case 'C':
-				outputFolder = string(optarg);
-				break;
-			
+			outputFolder = string(argv[++argi]);
+		} else if (!strcmp(argv[argi], "-r")) {
 			// -r FILE
-			case 'r':
-				if(strlen(optarg)==1 && optarg[0]=='-') {
-					yamlFileName = "";
-					yamlFileSet = 1;
-				} else {
-					yamlFileName = string(optarg);
-					yamlFileSet = 1;
-				}
-				break;
-			
+			yamlFileName = string(argv[++argi]);
+			yamlFileSet = 1;
+		} else if (!strcmp(argv[argi], "-c")) {
 			// -c FILE
-			case 'c':
-				if(strlen(optarg)==1 && optarg[0]=='-') {
-					csvFileName = "";
-					csvFileSet = 1;
-				} else {
-					csvFileName = string(optarg);
-					csvFileSet = 1;
-				}
-				break;
-			
-			// -p
-			case 'p':
-				print = 1;
-				break;
-
-			case 'x':
-				useChecker = DFT::checker::EXP_ONLY;
-				expOnly = true;
-				break;
-			
-			// -R
-			case 'R':
-				reuse = 1;
-				break;
-			
+			csvFileName = string(argv[++argi]);
+			csvFileSet = 1;
+		} else if (!strcmp(argv[argi], "-p")) {
+			print = 1;
+		} else if (!strcmp(argv[argi], "-x")) {
+			useChecker = DFT::checker::EXP_ONLY;
+			expOnly = true;
+		} else if (!strcmp(argv[argi], "-R")) {
+			reuse = 1;
+		} else if (!strcmp(argv[argi], "-E")) {
 			// -E Error bound
-			case 'E':
-				errorBound = string(optarg);
-				errorBoundSet = true;
-				break;
-			
+			errorBound = string(argv[++argi]);
+			errorBoundSet = true;
+		} else if (!strcmp(argv[argi], "-f")) {
 			// -f MRMC/IMCA Command
-			case 'f':
-				calcCommand = string(optarg);
-				calcCommandSet = true;
-				//calcImca = false;
-				break;
-			
-			// -m
-			case 'm':
-				mttf = 1;
-				break;
-
-			// -M
-			case 'M':
-				modularize = 1;
-				break;
-
-			// -s
-			case 's':
-				steadyState = 1;
-				break;
-			
+			calcCommand = string(argv[++argi]);
+			calcCommandSet = true;
+		} else if (!strcmp(argv[argi], "-m")) {
+			mttf = 1;
+		} else if (!strcmp(argv[argi], "-M")) {
+			modularize = 1;
+		} else if (!strcmp(argv[argi], "-s")) {
+			steadyState = 1;
+		} else if (!strcmp(argv[argi], "-t")) {
 			// -t STRING containing time values separated by whitespace
-			case 't':
-				timeSpec = string(optarg);
-				timeSpecSet = 1;
-				break;
-
-			case 'u':
-				timeSpec = string("Eventually");
-				timeSpecSet = 1;
-				break;
-			
+			timeSpec = string(argv[++argi]);
+			timeSpecSet = 1;
+		} else if (!strcmp(argv[argi], "-u")) {
+			timeSpec = string("Eventually");
+			timeSpecSet = 1;
+		} else if (!strcmp(argv[argi], "-i")) {
 			// -i STRING STRING STRING
-			case 'i':
-				timeIntervalLwb = string(optarg);
-				timeIntervalUpb = string(argv[optind]);
-				optind++;
-				timeIntervalStep = string(argv[optind]);
-				optind++;
-				timeIntervalSet = 1;
-				break;
-			
+			timeIntervalLwb = string(argv[++argi]);
+			timeIntervalUpb = string(argv[++argi]);
+			timeIntervalStep = string(argv[++argi]);
+			timeIntervalSet = 1;
+		} else if (!strcmp(argv[argi], "-I")) {
 			// -I STRING STRING
-			case 'I':
-				timeLwb = string(optarg);
-				timeUpb = string(argv[optind]);
-				optind++;
-				timeLwbUpbSet = 1;
-				break;
-			
-			// -h
-			case 'h':
-				printHelp = true;
-				break;
-			
-			// -v
-			case 'v':
-				++verbosity;
-				break;
-			
-			// -q
-			case 'q':
-				--verbosity;
-				break;
-			
-			// -e
-			case 'e': {
-				const char* begin = optarg;
-				const char* end = begin;
-				while(*begin) {
-					end = begin;
-					while(*end && *end!=',') ++end;
-					if(begin<end) {
-						failedBEs.push_back(std::string(begin,end));
-					}
-					if(!*end) break;
-					begin = end + 1;
-				}
-				
-			}
-			
-			// --
-			case '-':
-				if(!strncmp("help",optarg,4)) {
+			timeLwb = string(argv[++argi]);
+			timeUpb = string(argv[++argi]);
+			timeLwbUpbSet = 1;
+		} else if (!strcmp(argv[argi], "-h")) {
+			printHelp = true;
+			break;
+		} else if (!strncmp(argv[argi], "-v", 2)) {
+			for (int i = 1; i < strlen(argv[argi]); i++) {
+				if (argv[argi][i] == 'v') {
+					++verbosity;
+				} else {
+					messageFormatter->reportError(std::string("Unknown argument: ") + argv[argi]);
 					printHelp = true;
-					if(strlen(optarg)>5 && optarg[4]=='=') {
-						printHelpTopic = string(optarg+5);
-					}
-				} else if(!strcmp("version",optarg)) {
-					printVersion = true;
-				} else if(!strcmp("color",optarg)) {
-					useColoredMessages = true;
-				} else if(!strcmp("times",optarg)) {
-					if(strlen(optarg)>6 && optarg[5]=='=') {
-					} else {
-						printf("%s: --times needs argument\n\n",argv[0]);
-						printHelp = true;
-					}
-				} else if(!strncmp("dot",optarg,3)) {
-					dotToTypeSet = true;
-					if(strlen(optarg)>4 && optarg[3]=='=') {
-						dotToType = string(optarg+4);
-						cerr << "DOT: " << dotToType << endl;
-					}
-				} else if(!strncmp("verbose",optarg,7)) {
-					if(strlen(optarg)>8 && optarg[7]=='=') {
-						verbosity = atoi(optarg+8);
-					} else if(strlen(optarg)==7) {
-						++verbosity;
-					}
-				} else if(!strcmp("no-color",optarg)) {
-					useColoredMessages = false;
-				} else if(!strcmp("no-nd-warning",optarg)) {
-					warnNonDeterminism = false;
-				} else if(!strcmp("min",optarg)) {
-					checkMin = true;
-					minMaxSet = true;
-				} else if(!strcmp("max",optarg)) {
-					checkMin = false;
-					minMaxSet = true;
+					break;
 				}
-				if (!strcmp("mrmc", optarg)) {
-					useChecker = DFT::checker::MRMC;
-					explicitChecker = true;
-				} else if (!strcmp("imrmc", optarg)) {
-					useChecker = DFT::checker::IMRMC;
-					explicitChecker = true;
-				} else if (!strcmp("imca", optarg)) {
-					useChecker = DFT::checker::IMCA;
-					explicitChecker = true;
-				} else if (!strcmp("storm", optarg)) {
-					useChecker = DFT::checker::STORM;
-					explicitChecker = true;
-				} else if (!strcmp("modest", optarg)) {
-					useChecker = DFT::checker::MODEST;
-					explicitChecker = true;
-				} else if (!strcmp("exact", optarg)) {
-					useConverter = DFT::converter::DFTRES;
-					if (!explicitChecker)
-						useChecker = DFT::checker::IMRMC;
+			}
+		} else if (!strcmp(argv[argi], "-q")) {
+			verbosity = 0;
+		} else if (!strcmp(argv[argi], "-e")) {
+			// -e EVIDENCE
+			const char* begin = argv[++argi];
+			const char* end = begin;
+			while(*begin) {
+				end = begin;
+				while(*end && *end != ',')
+					++end;
+				if(begin < end) {
+					failedBEs.push_back(std::string(begin, end));
 				}
+				if(!*end)
+					break;
+				begin = end + 1;
+			}
+		} else if(!strncmp("--help", argv[argi], 6)) {
+			printHelp = true;
+			if(strlen(argv[argi]) > 7 && argv[argi][6]=='=') {
+				printHelpTopic = string(argv[argi] + 7);
+			}
+		} else if(!strcmp("--version", argv[argi])) {
+			printVersion = true;
+		} else if(!strcmp("--color", argv[argi])) {
+			useColoredMessages = true;
+		} else if(!strncmp("--dot", argv[argi],5)) {
+			dotToTypeSet = true;
+			if(strlen(argv[argi]) > 6 && argv[argi][5]=='=') {
+				dotToType = string(argv[argi] + 6);
+				cerr << "DOT: " << dotToType << endl;
+			}
+		} else if(!strncmp("--verbose", argv[argi], 9)) {
+			if(strlen(argv[argi]) > 10 && argv[argi][9] == '=') {
+				verbosity = atoi(argv[argi] + 10);
+			} else if(strlen(argv[argi]) == 9) {
+				++verbosity;
+			}
+		} else if(!strcmp("--no-color", argv[argi])) {
+			useColoredMessages = false;
+		} else if(!strcmp("--no-nd-warning", argv[argi])) {
+			warnNonDeterminism = false;
+		} else if(!strcmp("--min", argv[argi])) {
+			checkMin = true;
+			minMaxSet = true;
+		} else if(!strcmp("--max", argv[argi])) {
+			checkMin = false;
+			minMaxSet = true;
+		}
+		if (!strcmp("--mrmc", argv[argi])) {
+			useChecker = DFT::checker::MRMC;
+			explicitChecker = true;
+		} else if (!strcmp("--imrmc", argv[argi])) {
+			useChecker = DFT::checker::IMRMC;
+			explicitChecker = true;
+		} else if (!strcmp("--imca", argv[argi])) {
+			useChecker = DFT::checker::IMCA;
+			explicitChecker = true;
+		} else if (!strcmp("--storm", argv[argi])) {
+			useChecker = DFT::checker::STORM;
+			explicitChecker = true;
+		} else if (!strcmp("--modest", argv[argi])) {
+			useChecker = DFT::checker::MODEST;
+			explicitChecker = true;
+		} else if (!strcmp("--exact", argv[argi])) {
+			useConverter = DFT::converter::DFTRES;
+			if (!explicitChecker)
+				useChecker = DFT::checker::IMRMC;
 		}
 	}
 	if (expOnly)
 		useChecker = DFT::checker::EXP_ONLY;
 
-	/* Create a new compiler context */
-	MessageFormatter* messageFormatter = new MessageFormatter(std::cerr);
 	messageFormatter->useColoredMessages(useColoredMessages);
 	messageFormatter->setVerbosity(verbosity);
 	messageFormatter->setAutoFlush(true);
@@ -1363,14 +1309,11 @@ int main(int argc, char** argv) {
 	 * These specify the input files.
 	 */
 	vector<File> dfts;
-	if(optind<argc) {
-		for(unsigned int i=optind; i<(unsigned int)argc; ++i) {
-			if(argv[i][0]=='-') {
-				if(strlen(argv[i])==1) {
-				}
-			} else {
-				dfts.push_back(File(string(argv[i])).fix());
-			}
+	for (; argi < argc; argi++) {
+		if(!strcmp(argv[argi], "-")) {
+			dfts.push_back(string());
+		} else {
+			dfts.push_back(File(string(argv[argi])).fix());
 		}
 	}
 	

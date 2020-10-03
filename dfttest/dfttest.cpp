@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <getopt.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <iostream>
@@ -293,96 +292,74 @@ int main(int argc, char** argv) {
 	bool forcedRunning       = false;
 	vector<string> limitTests;
 	string outputMode        = "nice";
-	
+
+	/* Create a new compiler context */
+	MessageFormatter* messageFormatter = new MessageFormatter(std::cerr);
+
 	/* Parse command line arguments */
-	char c;
-	while( (c = getopt(argc,argv,"Ccfh:Lqs:t:v-:")) >= 0 ) {
-		switch(c) {
+	int argi;
+	for (argi = 1; argi < argc; argi++) {
+		if (argv[argi][0] != '-')
+			break;
+		if (!strcmp(argv[argi], "--")) {
+			argi++;
+			break;
+		}
 
+		if (!strcmp(argv[argi], "-s")) {
 			// -s FILE
-			case 's':
-				if(strlen(optarg)==1 && optarg[0]=='-') {
-					testSuiteFileName = "";
-					testSuiteFileSet = 1;
+			if(!strcmp(argv[++argi], "-"))
+				testSuiteFileName = "";
+			else
+				testSuiteFileName = string(argv[++argi]);
+			testSuiteFileSet = 1;
+		} else if (!strcmp(argv[argi], "-c")) {
+			forcedRunning = false;
+			useCachedOnly = true;
+		} else if (!strcmp(argv[argi], "-f")) {
+			useCachedOnly = false;
+			forcedRunning = true;
+		} else if (!strcmp(argv[argi], "-t")) {
+			// -t TREE
+			limitTests.push_back(string(argv[++argi]));
+		} else if (!strcmp(argv[argi], "-h")) {
+			printHelp = true;
+		} else if (!strcmp(argv[argi], "-C")) {
+			outputMode = "csv";
+		} else if (!strcmp(argv[argi], "-L")) {
+			outputMode = "latex";
+		} else if (!strncmp(argv[argi], "-v", 2)) {
+			for (int i = 1; i < strlen(argv[argi]); i++) {
+				if (argv[argi][i] == 'v') {
+					++verbosity;
 				} else {
-					testSuiteFileName = string(optarg);
-					testSuiteFileSet = 1;
-				}
-				break;
-
-//			// -t FILE
-//			case 't':
-//				if(strlen(optarg)==1 && optarg[0]=='-') {
-//					testFileName = "";
-//					testFileSet = 1;
-//				} else {
-//					testFileName = string(optarg);
-//					testFileSet = 1;
-//				}
-//				break;
-
-			// -c
-			case 'c':
-				forcedRunning = false;
-				useCachedOnly = true;
-				break;
-
-			// -f
-			case 'f':
-				useCachedOnly = false;
-				forcedRunning = true;
-				break;
-
-			// -t
-			case 't':
-				limitTests.push_back(string(optarg));
-				break;
-
-			// -h
-			case 'h':
-				printHelp = true;
-				break;
-			
-			// -C
-			case 'C':
-				outputMode = "csv";
-				break;
-			
-			// -L
-			case 'L':
-				outputMode = "latex";
-				break;
-			
-			// -v
-			case 'v':
-				++verbosity;
-				break;
-
-			// -q
-			case 'q':
-				--verbosity;
-				break;
-
-			// --
-			case '-':
-				if(!strncmp("help",optarg,4)) {
+					messageFormatter->reportError(std::string("Unknown argument: ") + argv[argi]);
 					printHelp = true;
-					if(strlen(optarg)>5 && optarg[4]=='=') {
-						printHelpTopic = string(optarg+5);
-					}
-				} else if(!strcmp("version",optarg)) {
-					printVersion = true;
-				} else if(!strcmp("color",optarg)) {
-					useColoredMessages = true;
-				} else if(!strcmp("verbose",optarg)) {
-					if(strlen(optarg)>8 && optarg[7]=='=') {
-						verbosity = atoi(optarg+8);
-					} else {
-						++verbosity;
-					}
-				} else if(!strcmp("no-color",optarg)) {
-					useColoredMessages = false;
+					break;
 				}
+			}
+		} else if (!strcmp(argv[argi], "-q")) {
+			verbosity = 0;
+		} else if (!strncmp("--help", argv[argi], 6)) {
+			printHelp = true;
+			if(strlen(argv[argi]) > 7 && argv[argi][6]=='=') {
+				printHelpTopic = string(argv[argi] + 7);
+			}
+		} else if (!strcmp("--version", argv[argi])) {
+			printVersion = true;
+		} else if (!strcmp("--color", argv[argi])) {
+			useColoredMessages = true;
+		} else if (!strncmp("--verbose", argv[argi], 9)) {
+			if(strlen(argv[argi]) > 10 && argv[argi][9] == '=') {
+				verbosity = atoi(argv[argi] + 10);
+			} else {
+				++verbosity;
+			}
+		} else if (!strcmp("--no-color", argv[argi])) {
+			useColoredMessages = false;
+		} else {
+			std::cerr << "Unknown argument: " << argv[argi] << "\n";
+			printHelp = true;
 		}
 	}
 	
@@ -391,8 +368,6 @@ int main(int argc, char** argv) {
 //		printf("  %s\n",argv[i]);
 //	}
 	
-	/* Create a new compiler context */
-	MessageFormatter* messageFormatter = new MessageFormatter(std::cerr);
 	messageFormatter->useColoredMessages(useColoredMessages);
 	messageFormatter->setVerbosity(verbosity);
 	messageFormatter->setAutoFlush(true);
@@ -424,7 +399,7 @@ int main(int argc, char** argv) {
 	 * These specify the input files.
 	 */
 	 {
-		int argc_current = optind;
+		int argc_current = argi;
 		bool success = false;
 		if(argc_current<argc) {
 			string testSuiteFile = string(argv[argc_current]);
