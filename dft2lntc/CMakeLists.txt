@@ -8,16 +8,18 @@ set (dft2lntc_VERSION "${dft2lntc_VERSION_MAJOR}.${dft2lntc_VERSION_MINOR}.${dft
 ## Not sure if needed
 cmake_minimum_required (VERSION 2.6)
 
-add_definitions(-std=c++11)
+if (MSVC)
+	add_compile_options(/std:c++17)
+else()
+	add_compile_options(-std=c++17)
+endif()
+
 if (DEFINED ENV{CADP})
 	add_definitions(-DHAVE_CADP)
 endif()
 
 ## Include source directory, the build directory (for generated files) and the dft2lnt library path
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../dft2lnt)
-
-## Link directories
-#link_directories(${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt)
 
 if (DEFINED ENV{CADP})
 	set(ADDITIONAL_SOURCES DFTreeBCGNodeBuilder.cpp)
@@ -61,7 +63,7 @@ endif()
 ## Link with:
 ##   - libdft2lnt.a
 ##   - yaml-cpp
-target_link_libraries(dft2lntc ${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a ${YAML_CPP_LIB})
+target_link_libraries(dft2lntc dft2lnt ${YAML_CPP_LIB})
 
 ## POST_BUILD: copy the executable to the bin/ folder
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)

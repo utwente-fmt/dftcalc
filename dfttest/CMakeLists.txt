@@ -7,8 +7,11 @@ set (dfttest_VERSION "${dfttest_VERSION_MAJOR}.${dfttest_VERSION_MINOR}.${dfttes
 
 ## Not sure if needed
 cmake_minimum_required (VERSION 2.6)
-
-add_definitions(-std=c++11)
+if (MSVC)
+	add_definitions(/std:c++17)
+else()
+	add_definitions(-std=c++17)
+endif()
 
 ## Include source directory, the build directory (for generated files) and the dft2lnt library path
 include_directories(
@@ -37,7 +40,7 @@ add_executable(dfttest
 
 ## Depends on:
 ##   - dft2lnt (libdft2lnt.a)
-add_dependencies(dfttest dft2lntc)
+add_dependencies(dfttest dft2lnt)
 
 # Find yaml.h on MacOS with Homebrew
 find_path(YAML_INCLUDE_PATH "yaml-cpp/yaml.h")
@@ -51,9 +54,9 @@ if("${YAML_CPP_LIB}" STREQUAL "YAML_CPP_LIB-NOTFOUND")
 	set(YAML_CPP_LIB yaml-cpp)
 endif()
 target_link_libraries(dfttest
-	${CMAKE_CURRENT_BINARY_DIR}/../dft2lnt/libdft2lnt.a
+	dft2lnt
 	${YAML_CPP_LIB}
-	)
+)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 

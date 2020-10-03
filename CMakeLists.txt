@@ -1,14 +1,16 @@
 project(dftcalc-suite)
-message("Building configuration: ${CMAKE_BUILD_TYPE}")
-#message("CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-#message("CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
-#message("CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
+
 cmake_minimum_required(VERSION 2.8)
+
+if(CMAKE_BUILD_TYPE STREQUAL "")
+	message("Defaulting to Release configuration")
+	set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+message("Building configuration: ${CMAKE_BUILD_TYPE}")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG} -g -DDEBUG=1 -UNDEBUG -O0 -DYYDEBUG=1")
+	add_definitions(-DDEBUG=1 -DYYDEBUG=1)
 	set (BISON_CFLAGS "${BISON_CFLAGS} --verbose")
-else()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 -UDEBUG -O3")
 endif()
 
 set(DFTROOT "/opt/dft2lntroot" CACHE PATH "")

@@ -11,7 +11,11 @@ cmake_minimum_required (VERSION 2.8)
 find_package(BISON 3.4)
 find_package(FLEX 2.6.3)
 
-add_definitions(-std=c++17)
+if (MSVC)
+	add_compile_options(/std:c++17)
+else()
+	add_compile_options(-std=c++17)
+endif()
 
 ## Include source directory and the build directory (for generated files)
 include_directories(
@@ -63,12 +67,11 @@ add_library(dft2lnt
 
 # Find yaml-cpp
 find_path(YAML_INCLUDE_PATH "yaml-cpp/yaml.h")
-message(${YAML_INCLUDE_PATH})
 
-target_link_libraries(dft2lnt rt)
+if(UNIX AND NOT APPLE AND NOT WIN32)
+	target_link_libraries(dft2lnt rt)
+endif()
 
-# Find yaml.h on MacOS with Homebrew
-find_path(YAML_INCLUDE_PATH "yaml-cpp/yaml.h")
 target_include_directories(dft2lnt PRIVATE ${YAML_INCLUDE_PATH})
 
 ## Installation
