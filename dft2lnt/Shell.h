@@ -165,9 +165,7 @@ public:
 	static int system(std::string command, std::string cwd=".", std::string outFile="", std::string errFile="", int verbosity=0, RunStatistics* stats = NULL);
 	static int system(std::string command, int verbosity=0, RunStatistics* stats = NULL);
 	static int system(const SystemOptions& options, RunStatistics* stats = NULL);
-	
-	static int execute(const SystemOptions& options, RunStatistics* stats = NULL, unordered_map<string,string> environment = unordered_map<string,string>());
-	
+
 	static bool memtimeAvailable() {
 		vector<File> memtimes;
 		int n = FileSystem::findInPath(memtimes,File("memtime"));
