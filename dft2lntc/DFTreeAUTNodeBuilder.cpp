@@ -4,21 +4,30 @@
 #include <memory>
 #include <iostream>
 
-#if __has_include(<unistd.h>)
+#ifndef WIN32
 #include <unistd.h>
 #include <fcntl.h>
-static int try_sync(const std::string filename) {
+#include <cerrno>
+static int try_sync(const std::string filename, CompilerContext *cc) {
 	int fd = open(filename.c_str(), O_WRONLY);
-	if (!fd)
+	if (fd == -1) {
+		char *errstr = strerror(errno);
+		cc->reportError("Error opening " + filename + " to sync: " + errstr);
 		return -1;
+	}
 	int ret = fsync(fd);
 	if (ret) {
+		char *errstr = strerror(errno);
+		cc->reportError("Error syncing " + filename + ": " + errstr);
 		close(fd);
 		return ret;
 	}
 	ret = close(fd);
-	if (ret)
+	if (ret) {
+		char *errstr = strerror(errno);
+		cc->reportError("Error closing " + filename + " to sync: " + errstr);
 		return ret;
+	}
 	std::string dir;
 	size_t dir_end = filename.rfind('/');
 	if (dir_end == std::string::npos)
@@ -30,17 +39,22 @@ static int try_sync(const std::string filename) {
 #else
 	fd = open(dir.c_str(), O_RDONLY);
 #endif
-	if (!fd)
+	if (!fd) {
+		char *errstr = strerror(errno);
+		cc->reportError("Error opening dir " + dir + " to sync: " + errstr);
 		return -1;
+	}
 	ret = fsync(fd);
 	if (ret) {
+		char *errstr = strerror(errno);
+		cc->reportError("Error syncing dir " + dir + ": " + errstr);
 		close(fd);
 		return ret;
 	}
 	return close(fd);
 }
 #else /* unistd.h */
-static int try_sync(const std::string &filename) {
+static int try_sync(const std::string &filename, CompilerContext *cc) {
 	return 0;
 }
 #endif
@@ -78,15 +92,19 @@ static void make_valid(std::string filename)
 	out << DFTreeAUTNodeBuilder::VERSION;
 }
 
-static int generateTopLevel(std::string root) {
+static int generateTopLevel(std::string root, CompilerContext *cc) {
 	std::string filename(root + "toplevel.aut");
 	if (already_valid(filename))
 		return 0;
 	std::ofstream out(filename);
 	out << "des (0, 1, 2)\n";
 	out << "(0, \"" << automata::signals::ACTIVATE(0, true) << "\", 1)\n";
-	out.flush();
-	if (try_sync(filename))
+	out.close();
+	if (out.fail()) {
+		cc->reportError("Error writing " + filename);
+		return -1;
+	}
+	if (try_sync(filename, cc))
 		return -1;
 	make_valid(filename);
 	return 0;
@@ -145,8 +163,12 @@ int DFTreeAUTNodeBuilder::generate(const Nodes::Node &node) {
 	if (to_output) {
 		std::ofstream out(filename);
 		to_output->write(out);
-		out.flush();
-		if (try_sync(filename))
+		out.close();
+		if (out.fail()) {
+			cc->reportError("Error writing " + filename);
+			return -1;
+		}
+		if (try_sync(filename, cc))
 			return -1;
 		make_valid(filename);
 	}
@@ -154,8 +176,8 @@ int DFTreeAUTNodeBuilder::generate(const Nodes::Node &node) {
 }
 
 int DFTreeAUTNodeBuilder::generate() {
-	if (generateTopLevel(autRoot)) {
-		cc->reportError("Error generating Top Level BCG file");
+	if (generateTopLevel(autRoot, cc)) {
+		cc->reportError("Error generating Top Level AUT file");
 		return 1;
 	}
 	std::vector<const Nodes::Node *> nodes = dft->getNodes();
