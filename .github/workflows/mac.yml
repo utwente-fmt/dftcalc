@@ -25,13 +25,39 @@ jobs:
       with:
         repository: utwente-fmt/DFTRES
         path: DFTRES
-    - name: Compile DFTRES
+    - name: Get cache revisions
+      id: cache-revs
+      run: |
+        cd DFTRES && echo "::set-output name=dftres::$(git rev-parse HEAD)"
+        echo "::set-output name=imrmc::$(git ls-remote git://git.ennoruijters.nl/imrmc.git | grep '\srefs/heads/master$' | grep -o '^[0-9a-z]\+')"
+    - name: Cache DFTRES
+      id: cache-dftres
+      uses: actions/cache@v2
+      with:
+        path: DFTRES/DFTRES.jar
+        key: ${{ runner.os }}-dftres-${{ steps.cache-revs.outputs.dftres }}
+    - name: Compile DFTRES if needed
+      if: steps.cache-dftres.outputs.cache-hit != 'true'
       run: cd DFTRES && make jar
+    - name: Cache IMRMC
+      id: cache-imrmc
+      uses: actions/cache@v2
+      with:
+        path: imrmc/bin/imrmc
+        key: ${{ runner.os }}-imrmc-${{ steps.cache-revs.outputs.imrmc }}
     - name: Checkout IMRMC
+      if: steps.cache-imrmc.outputs.cache-hit != 'true'
       run: git clone --depth 1 git://git.ennoruijters.nl/imrmc.git imrmc
     - name: Compile IMRMC
+      if: steps.cache-imrmc.outputs.cache-hit != 'true'
       run: cd imrmc && make all -j$NUMCORES
     - name: Tests
       env:
         DFTRES: ${{github.workspace}}/DFTRES
       run: cd test && bash test.sh --exact --imrmc
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: test-results
+        path: test/output
