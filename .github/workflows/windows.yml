@@ -1,0 +1,123 @@
+name: Compile and Test on Windows
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: dftcalc
+    - uses: actions/setup-java@v1
+      with:
+        java-version: 11
+    - name: Checkout yaml-cpp
+      uses: actions/checkout@v2
+      with:
+        repository: jbeder/yaml-cpp
+        path: yaml-cpp
+    - name: Checkout DFTRES
+      uses: actions/checkout@v2
+      with:
+        repository: utwente-fmt/DFTRES
+        path: DFTRES
+    - name: Get cache commits
+      run: |
+        cd yaml-cpp
+        echo "YAML_REV=$(git rev-parse HEAD)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+        cd ..\DFTRES
+        echo "DFTRES_REV=$(git rev-parse HEAD)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        $REV=(git ls-remote git://git.ennoruijters.nl/imrmc.git refs/heads/master | Select-String -Pattern "[0-9a-f]+").Matches[0].Groups[0].Value
+        echo "IMRMC_REV=$REV" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    - name: Try to load yaml-cpp
+      id: cache-yaml-cpp
+      uses: actions/cache@v2
+      with:
+        path: |
+          yaml-cpp/yaml-cpp.dll
+          yaml-cpp/yaml-cpp.lib
+        key: ${{ runner.os }}-yaml-cpp-${{ env.YAML_REV }}
+    - name: Compile yaml-cpp if not cached
+      if: steps.cache-yaml-cpp.outputs.cache-hit != 'true'
+      run: |
+        & "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\Launch-VsDevShell.ps1"
+        mkdir yaml-cpp/build | Out-Null
+        cd yaml-cpp/build
+        cmake -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DYAML_BUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release ..
+        ninja yaml-cpp.dll
+        copy yaml-cpp.dll,yaml-cpp.lib ..
+    - name: Cache DFTRES
+      id: cache-dftres
+      uses: actions/cache@v2
+      with:
+        path: DFTRES\DFTRES.jar
+        key: ${{ runner.os }}-DFTRES-${{ env.DFTRES_REV }}
+    - name: Compile DFTRES if needed
+      if: steps.cache-dftres.outputs.cache-hit != 'true'
+      run: |
+        cd DFTRES
+        echo "package nl.utwente.ewi.fmt.EXPRES;" | Out-File -FilePath src\nl\utwente\ewi\fmt\EXPRES\Version.java
+        echo "public class Version {" | Out-File -FilePath src\nl\utwente\ewi\fmt\EXPRES\Version.java -Append
+        echo ' public static final String version = "Github-Test";' | Out-File -FilePath src\nl\utwente\ewi\fmt\EXPRES\Version.java -Append
+        echo '}' | Out-File -FilePath src\nl\utwente\ewi\fmt\EXPRES\Version.java -Append
+        mkdir bin | Out-Null
+        javac -sourcepath src -d bin src\Main.java
+        jar cfe DFTRES.jar Main -C bin .
+        java -jar DFTRES.jar --version
+    - name: Try to load win-flex and win-bison
+      id: cache-flex
+      uses: actions/cache@v2
+      with:
+        path: win_flex_bison-2.5.23.zip
+        key: ${{ runner.os }}-flex-2.5.53
+    - name: Download win-flex and win-bison if not cached
+      if: steps.cache-flex.outputs.cache-hit != 'true'
+      shell: powershell
+      run: Invoke-WebRequest -OutFile win_flex_bison-2.5.23.zip -Uri https://github.com/lexxmark/winflexbison/releases/download/v2.5.23/win_flex_bison-2.5.23.zip
+    - name: Uncompress flex and bison
+      shell: powershell
+      run: |
+        Expand-Archive -LiteralPath .\win_flex_bison-2.5.23.zip -DestinationPath flex_bison
+        "$Env:GITHUB_WORKSPACE\flex_bison" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    - name: Cache IMRMC
+      id: cache-imrmc
+      uses: actions/cache@v2
+      with:
+        path: imrmc\imrmc.exe
+        key: ${{ runner.os }}-imrmc-${{ env.IMRMC_REV }}
+    - name: Checkout IMRMC
+      if: steps.cache-imrmc.outputs.cache-hit != 'true'
+      run: git clone --depth 1 git://git.ennoruijters.nl/imrmc.git imrmc
+    - name: Compile IMRMC
+      if: steps.cache-imrmc.outputs.cache-hit != 'true'
+      run: |
+        & "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\Launch-VsDevShell.ps1"
+        cd imrmc
+        nmake /F makefile.win imrmc.exe
+    - name: Build DFTCalc
+      run: |
+        & "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\Launch-VsDevShell.ps1"
+        mkdir dftcalc\build | Out-Null
+        cd dftcalc\build
+        cmake -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DCMAKE_PREFIX_PATH="$Env:GITHUB_WORKSPACE\yaml-cpp" -DCMAKE_INCLUDE_PATH="$Env:GITHUB_WORKSPACE\yaml-cpp" -DDFTROOT="$Env:GITHUB_WORKSPACE\dftcalc" ..
+        ninja
+    - name: Set PATH
+      run: |
+        "$Env:GITHUB_WORKSPACE\imrmc" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        "$Env:GITHUB_WORKSPACE\dftcalc\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        "$Env:GITHUB_WORKSPACE\yaml-cpp" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    - name: Run tests
+      env:
+        DFTRES: ${{github.workspace}}\DFTRES
+      run: |
+        cd dftcalc\test
+        .\test.ps1 --imrmc
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: dftcalc
+        path: |
+          dftcalc\bin\*.exe
+          dftcalc\test
