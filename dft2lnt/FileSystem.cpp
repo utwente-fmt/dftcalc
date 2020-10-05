@@ -55,7 +55,9 @@ char* path_basename(const char* path) {
 #ifndef WIN32
 	std::string FileSystem::getRealPath(const std::string& filePath) {
 		char path[PATH_MAX];
-		realpath(filePath.c_str(),path);
+		char *ret = realpath(filePath.c_str(),path);
+		if (!ret)
+			return filePath;
 		return std::string(path);
 	}
 
