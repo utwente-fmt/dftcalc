@@ -12,10 +12,13 @@ jobs:
         java-version: 14
     - name: Install dependencies
       run: brew install bison flex yaml-cpp gsl
-    - name: Get number of cores
-      run: echo ::set-env name=NUMCORES::$(system_profiler SPHardwareDataType | grep 'Number of Cores' | grep -o '[[:digit:]]\+')
-    - name: Set PATH
-      run: echo ::set-env name=PATH::$(echo "/usr/local/opt/bison/bin:/usr/local/opt/flex/bin:$PATH:${{github.workspace}}/imrmc/bin:${{github.workspace}}/dftroot/bin")
+    - name: Set environment variables
+      run: |
+        echo "NUMCORES=$(system_profiler SPHardwareDataType | grep 'Number of Cores' | grep -o '[[:digit:]]\+')" > $GITHUB_ENV
+        echo /usr/local/opt/bison/bin >> $GITHUB_PATH
+        echo /usr/local/opt/flex/bin >> $GITHUB_PATH
+        echo ${{github.workspace}}/imrmc/bin >> $GITHUB_PATH
+        echo ${{github.workspace}}/dftroot/bin >> $GITHUB_PATH
     - name: Prepare to build DFTCalc
       run: mkdir build && cd build && cmake -DDFTROOT=$GITHUB_WORKSPACE/dftroot ..
     - name: Compile DFTCalc
