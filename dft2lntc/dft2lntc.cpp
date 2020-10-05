@@ -129,12 +129,20 @@ static std::string getCache(CompilerContext* compilerContext) {
 #else
 	root = std::getenv("HOME");
 	root += "/.cache";
+	if (!FileSystem::isDir(File(root))) {
+		if (FileSystem::mkdir(File(root))) {
+			compilerContext->reportError("Could not create cache root directory (" + root + ")");
+			return "";
+		}
+	}
 #endif
 	/* End of OS-specific part */
+
 	std::string cache = root + "/dftcalc";
 	if (!FileSystem::isDir(File(cache))) {
 		if (FileSystem::mkdir(File(cache))) {
 			compilerContext->reportError("Could not create cache directory (" + cache + ")");
+			return "";
 		}
 	}
 
@@ -142,6 +150,7 @@ static std::string getCache(CompilerContext* compilerContext) {
 	if (!FileSystem::isDir(File(autDir))) {
 		if (FileSystem::mkdir(File(autDir))) {
 			compilerContext->reportError("Could not create .aut directory (" + autDir + ")");
+			return "";
 		}
 	}
 
@@ -433,6 +442,10 @@ int main(int argc, char** argv) {
 	bool rootValid = dft2lntRoot!="";
 
 	std::string cacheDir = getCache(&compilerContext);
+	if (cacheDir == "") {
+		compilerContext.flush();
+		return EXIT_FAILURE;
+	}
 
 	/* Parse input file */
 	compilerContext.notify("Checking syntax...",VERBOSITY_FLOW);
