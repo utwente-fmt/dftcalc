@@ -750,7 +750,6 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			messageFormatter->reportAction("Building CTMC...",VERBOSITY_FLOW);
 			arguments.push_back("--export-tralab");
 			arguments.push_back(tra.newWithExtension("exact").getFileRealPath());
-			arguments.push_back(exp.getFileRealPath());
 			outputs.push_back(exactTra);
 			outputs.push_back(exactLab);
 		} else {
