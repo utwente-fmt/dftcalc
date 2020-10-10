@@ -295,7 +295,19 @@ int Shell::system(const SystemOptions& options, RunStatistics* stats) {
 	CloseHandle(startupInfo.hStdError);
 
 	if (!ret) {
-		messageFormatter->reportError("Error executing: " + arguments, options.verbosity);
+		DWORD error = GetLastError();
+		char errStr[1024];
+		error = FormatMessageA(
+			FORMAT_MESSAGE_FROM_SYSTEM,
+			NULL,
+			error,
+			0,
+			errStr,
+			sizeof(errStr),
+			NULL
+		);
+		messageFormatter->reportError("Error executing: " + arguments + ":", options.verbosity);
+		messageFormatter->reportError("Error message: " + std::string(errStr), options.verbosity);
         return 1;
 	}
 
