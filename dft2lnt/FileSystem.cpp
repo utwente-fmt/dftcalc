@@ -336,7 +336,11 @@ int FileSystem::findInPath(std::vector<File>& result, const File& file, const ch
 	for(;;) {
 		switch(*pathEntryEnd) {
 			case '\0':
+#ifndef WIN32
 			case ':': {
+#else
+			case ';': {
+#endif
 				std::string pathEntry = std::string(pathEntryStart,pathEntryEnd);
 				//std::cerr << "Trying path: " << pathEntry << std::endl;
 				File hit = file.newWithPathTo(pathEntry);
