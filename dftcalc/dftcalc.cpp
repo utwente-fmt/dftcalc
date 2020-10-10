@@ -761,7 +761,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		}
 		arguments.push_back(exp.getFileRealPath());
 
-		if (exec.runCommand("java", arguments, "dftres", outputs) == "")
+		if (exec.runCommand(javaExec.getFilePath(), arguments, "dftres", outputs) == "")
 			return 1;
 	}
 
@@ -1622,25 +1622,37 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 			ok = false;
 	}
 
+#ifdef WIN32
+	std::string executable_suffix = ".exe";
+#else
+	std::string executable_suffix = "";
+#endif
+
+	/* Find a java executable */
+	if (conv == DFTRES) {
+		dftresJar = getDftresJar();
+		ok &= findInPath("java" + executable_suffix, javaExec);
+	}
+
 	/* Find a storm executable */
 	if (checker == STORM)
-		ok &= findInPath("storm", stormExec);
+		ok &= findInPath("storm" + executable_suffix, stormExec);
 
 	/* Find an mrmc executable (based on PATH environment variable) */
 	if (checker == MRMC)
-		ok &= findInPath("mrmc", mrmcExec);
+		ok &= findInPath("mrmc" + executable_suffix, mrmcExec);
 
 	/* Find an imrmc executable (based on PATH environment variable) */
 	if (checker == IMRMC)
-		ok &= findInPath("imrmc", imrmcExec);
+		ok &= findInPath("imrmc" + executable_suffix, imrmcExec);
 
 	/* Find an imca executable (based on PATH environment variable) */
 	if (checker == IMCA)
-		ok &= findInPath("imca", imcaExec);
+		ok &= findInPath("imca" + executable_suffix, imcaExec);
 
 	/* Find dot executable (based on PATH environment variable) */
 	if (!buildDot.empty())
-		ok &= findInPath("dot", dotExec);
+		ok &= findInPath("dot" + executable_suffix, dotExec);
 
 	return !ok;
 }

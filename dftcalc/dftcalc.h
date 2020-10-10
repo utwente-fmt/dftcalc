@@ -62,6 +62,7 @@ namespace DFT {
 		File imrmcExec;
 		File imcaExec;
 		File dotExec;
+		File javaExec;
 		File dftresJar;
 		
 		std::string getCoralRoot();
