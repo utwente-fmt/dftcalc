@@ -99,12 +99,12 @@ static std::pair<decnumber<>, decnumber<>> readOutputFile(const File& file) {
 		return ret;
 
 	const char *end = c;
-	while (*end && *end != '\n')
+	while (*end && *end != '\n' && *end != '\r')
 		end++;
 	std::string res(c, end - c);
 	if (res.find('[') == std::string::npos) {
 		end = c;
-		while (*end && *end != '\n')
+		while (*end && *end != '\n' && *end != '\r')
 			end++;
 		res = std::string(c, end - c);
 		decnumber<> val(res);
