@@ -1,4 +1,6 @@
-![Compile and Test](https://github.com/utwente-fmt/dftcalc/workflows/Compile%20and%20Test/badge.svg?branch=master)
+![Linux](https://github.com/utwente-fmt/dftcalc/workflows/Compile%20and%20Test/badge.svg?branch=master)
+![Windows](https://github.com/utwente-fmt/dftcalc/workflows/Compile%20and%20Test%20on%20Windows/badge.svg)
+![MacOS](https://github.com/utwente-fmt/dftcalc/workflows/Compile%20and%20Test%20on%20MacOS/badge.svg)
 
 # DFTCalc: A Dynamic Fault Tree calculator for reliability and availability
 
@@ -10,7 +12,7 @@ DFTCalc takes as input a DFT in Galileo’s textual format. This intuitive forma
 
 - GNU/Linux (tested on Fedora, Debian)
 - MacOS X (tested on Catalina)
-- Windows may work with use of cygwin (not tested)
+- Windows (tested on Windows 10, Windows Server 2019)
 
 ## Build Dependencies
 
