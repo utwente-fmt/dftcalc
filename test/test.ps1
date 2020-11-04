@@ -1,4 +1,39 @@
-﻿function Split-Interval ($Interval) {
+﻿Function All-Match ($AllArgs, $Needed) {
+    $Positive = $Needed | Select-String -AllMatches '[+]"[^"]+"';
+    $Negative = $Needed | Select-String -AllMatches '[!]"[^"]+"';
+    $Ret = $true
+    $Positive | ForEach-Object {
+        $Pattern = $_.Matches.Value.Substring(2, $_.Matches.Value.Length - 3);
+        $Match = $AllArgs | Select-String -Quiet -SimpleMatch -Pattern "$Pattern";
+        if (!$Match) {
+            $Ret = $false;
+        }
+    }
+    $Negative | ForEach-Object {
+        $Pattern = $_.Matches.Value.Substring(2, $_.Matches.Value.Length - 3);
+        $Match = $AllArgs | Select-String -Quiet -SimpleMatch -Pattern "$Pattern";
+        if ($Match) {
+            $Ret = $false;
+        }
+    }
+    return $Ret;
+}
+
+Function Should-Fail ($Dft, $AllArgs) {
+    $Ret = $false;
+    Select-String -Pattern '(\S+)\s+(.*)' -Path 'expect-fail.txt' | ForEach-Object {
+        $File = $_.Matches.Groups[1].Value;
+        if ($File = $Dft) {
+            $Condition = $_.Matches.Groups[2].Value;
+            if (All-Match "$AllArgs" "$Condition") {
+                $Ret = $true;
+            }
+        }
+    }
+    return $Ret;
+}
+
+function Split-Interval ($Interval) {
     $Split = $Interval | Select-String "(.*)\[(.*);\s*(.*)\](.*)";
     if ($Split.Matches.Count -eq 0) {
         $Value = [System.Decimal]($Interval);
@@ -38,6 +73,7 @@ function Compare-Result ($Computed, $Expected) {
 function Run-Test {
     param ($File, $TestArgs, $Result)
     $AllArgs = "$TestArgs -p $File"
+    $ShouldFail = Should-Fail "$File" "$AllArgs"
 
     try  {
         Start-Process -FilePath dftcalc -ArgumentList $AllArgs.Split(" ") -NoNewWindow -Wait -RedirectStandardOutput "$File.output.txt" -RedirectStandardError "$File.error.txt"
@@ -48,6 +84,10 @@ function Run-Test {
     }
     $Results = Select-String -Path "$File.output.txt" ".*=(.*)";
     if ($Results.Matches.Count -eq 0) {
+        if ($ShouldFail) {
+            Write-Information "Pass: $File $Testargs (Failed as expected)"
+            return 0;
+        }
         Write-Information "FAIL: $File $TestArgs (No output)";
         return 1;
     } elseif ($Results.Matches.Count -ne 1) {
@@ -55,6 +95,10 @@ function Run-Test {
         return 1;
     }
     $Computed = $Results.Matches[0].Groups[1].Value;
+    if ($ShouldFail) {
+        Write-Information "FAIL: $File $TestArgs (Got $Computed, expected failure)";
+        return 1;
+    }
     $Judgement = "";
     $Judgement, $Failed, $Comment = Compare-Result $Computed $Result;
     Write-Information "${Judgement}: $File $TestArgs ($Comment)";

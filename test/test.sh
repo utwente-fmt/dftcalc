@@ -3,6 +3,49 @@
 ERROR_BOUND="10^-5";
 DFTCALC_OPTS=""
 
+all_match () {
+	VAL=$1;
+	while [ "$#" -gt 1 ]; do
+		shift;
+		GREP_CMD="grep -F"
+		PATTERN="$1";
+		if [ "${1#!\"}" != "$1" ]; then
+			GREP_CMD="$GREP_CMD -v";
+			PATTERN="${1#!\"}";
+		elif [ "${1#+\"}" != "$1" ]; then
+			PATTERN="${1#+\"}";
+		else
+			echo "Invalid expected failure criterion: '$1'"
+			exit 1;
+		fi
+		if [ "$PATTERN" == "${PATTERN%\"}" ]; then
+			echo "Invalid expected failure criterion: '$1'"
+			exit 1;
+		fi
+		PATTERN="${PATTERN%\"}";
+		if ! echo "$VAL" | $GREP_CMD -e "$PATTERN" > /dev/null; then
+			return 1;
+		fi
+	done
+	return 0;
+}
+
+expect_fail () {
+	DFT="$1";
+	ARGS="$2";
+	while read LINE; do
+		FILE=$(echo "$LINE" | sed -e 's/[[:space:]].*//');
+		if [ "$FILE" != "$DFT" ]; then
+			continue;
+		fi
+		NEED=$(echo "$LINE" | sed -e 's/^[^[:space:]]*[[:space:]]*//');
+		if all_match "$ARGS" $NEED; then
+			return 0;
+		fi
+	done
+	return 1;
+}
+
 # Split an interval value into lower and upper bounds.
 # Usage: split_interval "1.23[45; 67]e-1" VAR_LOW VAR_HIGH
 # sets $VAR_LOW to '1.2345e-1' and $VAR_HIGH to '1.2367e-1'.
@@ -59,26 +102,36 @@ do_tests() {
 		REF=$(echo "$LINE" | sed -e 's/^.*"[[:space:]]*//');
 		printf "Test $FILE ($DFTCALC_OPTS $OPTS)";
 		RESULT=$(dftcalc -p $DFTCALC_OPTS $OPTS "$FILE" 2>/dev/null | grep -o "=[^=]*$" | sed -e 's/=//' | sed -e 's/ (.*//');
-		compare "$RESULT" "$REF";
-		OUTCOME=$?
-		if [ "$OUTCOME" = "0" ]; then
-			VERDICT="PASS";
-			MSG="";
-		elif [ "$OUTCOME" = "1" ]; then
-			VERDICT="PASS";
-			MSG="overlap";
-		elif [ "$OUTCOME" = "2" ] && [ "$BOUND_OK" = "1" ]; then
-			VERDICT="PASS";
-			MSG="within bounds";
-		elif [ "$OUTCOME" = "2" ]; then
-			VERDICT="FAIL";
-			MSG="within bounds, got $RESULT, want $REF";
-		else
-			VERDICT="FAIL";
-			if ! [ -z "$RESULT" ]; then
-				MSG="got $RESULT, want $REF";
+		if expect_fail "$FILE" "$DFTCALC_OPTS $OPTS" <expect-fail.txt; then
+			if [ -z "$RESULT" ]; then
+				MSG="failed as expected";
+				VERDICT="PASS";
 			else
-				MSG="Got no result";
+				MSG="got $RESULT, expected failure";
+				VERDICT="FAIL";
+			fi
+		else
+			compare "$RESULT" "$REF";
+			OUTCOME=$?
+			if [ "$OUTCOME" = "0" ]; then
+				VERDICT="PASS";
+				MSG="";
+			elif [ "$OUTCOME" = "1" ]; then
+				VERDICT="PASS";
+				MSG="overlap";
+			elif [ "$OUTCOME" = "2" ] && [ "$BOUND_OK" = "1" ]; then
+				VERDICT="PASS";
+				MSG="within bounds";
+			elif [ "$OUTCOME" = "2" ]; then
+				VERDICT="FAIL";
+				MSG="within bounds, got $RESULT, want $REF";
+			else
+				VERDICT="FAIL";
+				if ! [ -z "$RESULT" ]; then
+					MSG="got $RESULT, want $REF";
+				else
+					MSG="Got no result";
+				fi
 			fi
 		fi
 		printf "\r$VERDICT: $FILE ($DFTCALC_OPTS $OPTS)";
