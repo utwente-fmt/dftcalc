@@ -1,0 +1,6 @@
+toplevel "A";
+"A" and "B" "C";
+"I1" insp3 "B";
+"I2" insp2 "C";
+"B" lambda=0.1 dorm=1 phases=1 interval=1;
+"C" lambda=0.1 dorm=1 phases=1 interval=1;
