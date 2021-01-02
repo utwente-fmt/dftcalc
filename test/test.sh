@@ -102,7 +102,7 @@ do_tests() {
 		REF=$(echo "$LINE" | sed -e 's/^.*"[[:space:]]*//');
 		printf "Test $FILE ($DFTCALC_OPTS $OPTS)";
 		RESULT=$(dftcalc -p $DFTCALC_OPTS $OPTS "$FILE" 2>/dev/null | grep -o "=[^=]*$" | sed -e 's/=//' | sed -e 's/ (.*//');
-		if expect_fail "$FILE" "$DFTCALC_OPTS $OPTS" <expect-fail.txt; then
+		if (expect_fail "$FILE" "$DFTCALC_OPTS $OPTS" <expect-fail.txt); then
 			if [ -z "$RESULT" ]; then
 				MSG="failed as expected";
 				VERDICT="PASS";
