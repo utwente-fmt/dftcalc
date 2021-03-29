@@ -70,7 +70,7 @@ jobs:
     - name: Tests
       env:
         DFTRES: ${{github.workspace}}/DFTRES
-      run: cd test && bash test.sh --exact --imrmc && bash test.sh --exact --storm
+      run: cd test && bash test.sh --exact --imrmc && bash test.sh --exact --storm && bash test.sh --storm
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       if: ${{ always() }}
