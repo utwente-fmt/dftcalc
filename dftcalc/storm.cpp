@@ -36,7 +36,7 @@ void StormRunner::getCommandOptions(Query q, std::vector<std::string> &options)
 			options.push_back("--exact");
 		}
 	}
-	if (q.type == STEADY && !runExact)
+	if (q.type == STEADY && !mayHaveNondeterminism)
 		options.push_back("--to-nondet");
 }
 

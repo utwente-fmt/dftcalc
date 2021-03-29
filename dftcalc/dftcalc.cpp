@@ -869,8 +869,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			messageFormatter->reportAction("Reusing IMC to JANI format translation result",VERBOSITY_FLOW);
 		}
 		
-		StormRunner *sr = new StormRunner(messageFormatter, &exec, stormExec, jani);
-		sr->runExact = exactMode;
+		StormRunner *sr = new StormRunner(messageFormatter, &exec, stormExec, jani, exactMode, useConverter == DFTRES);
 		checker = std::unique_ptr<Checker>(sr);
 		break;
 	}

@@ -20,11 +20,13 @@ private:
 	const File janiFile;
 	const File stormExec;
 	void getCommandOptions(Query q, std::vector<std::string> &opts);
-public:
 	bool runExact;
+	bool mayHaveNondeterminism;
+public:
 	StormRunner(MessageFormatter *mf, DFT::CommandExecutor *exec,
-	            File stormExec, File model)
-		:Checker(mf, exec), stormExec(stormExec), janiFile(model), runExact(0)
+	            File stormExec, File model, bool exact, bool maybeNonDet)
+		:Checker(mf, exec), stormExec(stormExec), janiFile(model), runExact(exact),
+		 mayHaveNondeterminism(maybeNonDet)
 	{}
 
 	virtual std::vector<DFT::DFTCalculationResultItem> analyze(vector<Query> queries);
