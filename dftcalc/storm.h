@@ -17,8 +17,8 @@
 
 class StormRunner : public Checker{
 private:
-	const File janiFile;
 	const File stormExec;
+	const File janiFile;
 	void getCommandOptions(Query q, std::vector<std::string> &opts);
 public:
 	bool runExact;

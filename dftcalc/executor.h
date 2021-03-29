@@ -14,8 +14,8 @@ public:
 	const std::string workingDir;
 	CommandExecutor(MessageFormatter *mf, std::string workingDir,
 	                std::string baseFile)
-		: mf(mf), workingDir(workingDir), baseFile(baseFile),
-	          commandNum(0)
+		: mf(mf), commandNum(0), baseFile(baseFile),
+		  workingDir(workingDir)
 	{}
 
 	void printOutput(const File& file, int status);

@@ -20,8 +20,8 @@
 class MRMCRunner : public Checker {
 private:
 	const std::string goalLabel;
-	const File modelFile, labFile;
 	const bool isCtmdp;
+	const File modelFile, labFile;
 	const File mrmcExec;
 public:
 	MRMCRunner(MessageFormatter *mf, DFT::CommandExecutor *exec,

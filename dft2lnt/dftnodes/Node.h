@@ -155,9 +155,9 @@ private:
 	Location location;
 	string name;
 	NodeType type;
-	bool repairable;
 	bool alwaysActive;
-	
+	bool repairable;
+
 	/// List of parents, instances are freed by DFTree instance.
 	std::vector<Nodes::Gate*> parents;
 	// List of FDEP gates triggering this node
