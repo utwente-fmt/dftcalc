@@ -154,7 +154,7 @@ BOUND_OK=1
 
 if [ "$1" = "--all" ]; then
 	shift;
-	for CHECKER in --modest --mrmc --imrmc --imca --storm; do
+	for CHECKER in --modest --imrmc --storm; do
 		DFTCALC_OPTS="$CHECKER $*";
 		do_tests < tests.txt
 	done
