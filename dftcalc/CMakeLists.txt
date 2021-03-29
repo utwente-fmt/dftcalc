@@ -28,7 +28,6 @@ include_directories(
 ## Specify the executable and its sources
 add_executable(dftcalc
 	dftcalc.cpp
-	imca.cpp
 	storm.cpp
 	executor.cpp
 	mrmc.cpp

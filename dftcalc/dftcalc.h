@@ -19,7 +19,7 @@
 namespace DFT {
 	extern const int VERBOSITY_FLOW;
 
-	enum checker {STORM, MRMC, IMRMC, IMCA, MODEST, EXP_ONLY};
+	enum checker {STORM, IMRMC, MODEST, EXP_ONLY};
 	enum converter {SVL, DFTRES};
 
 	class DFTCalc {
@@ -46,8 +46,6 @@ namespace DFT {
 		File dft2lntcExec;
 #ifdef HAVE_CADP
 		std::string cadpRoot;
-		File imc2ctmdpExec;
-		File bcg2imcaExec;
 		File bcg2janiExec;
 		File bcg2tralabExec;
 		File maxprogExec;
@@ -58,15 +56,12 @@ namespace DFT {
 		std::string getCADPRoot();
 #endif
 		File stormExec;
-		File mrmcExec;
 		File imrmcExec;
-		File imcaExec;
 		File dotExec;
 		File javaExec;
 		File dftresJar;
 		
 		std::string getCoralRoot();
-		std::string getImcaRoot();
 		std::string getRoot();
 		File getDftresJar();
 

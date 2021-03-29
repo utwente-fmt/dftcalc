@@ -41,7 +41,6 @@ using namespace std;
 #include "yaml-cpp/yaml.h"
 #include "mrmc.h"
 #include "modest.h"
-#include "imca.h"
 #include "storm.h"
 
 const int DFT::DFTCalc::VERBOSITY_SEARCHING = 2;
@@ -65,10 +64,6 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -M              Use modularization to check static parts of DFT.");
 		messageFormatter->message("  --storm         Use Storm. (standard setting)");
 		messageFormatter->message("  --modest        Use Modest instead of Storm.");
-#ifdef HAVE_CADP
-		messageFormatter->message("  --mrmc          Use MRMC instead of Storm.");
-		messageFormatter->message("  --imca          Use IMCA instead of MRMC.");
-#endif
 		messageFormatter->message("  --imrmc         Use IMRMC instead of Storm.");
 		messageFormatter->message("  --exact         Use DFTRES to give (more) exact results.");
 		messageFormatter->message("  --no-nd-warning Do not warn (but give notice) for non-determinism.");
@@ -83,8 +78,8 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  -c FILE         Output result as CSV format to this file. (see --help=output)");
 		messageFormatter->message("  -p              Print result to stdout.");
 		messageFormatter->message("  -e evidence     Comma separated list of BE names that fail at startup.");
-		messageFormatter->message("  -m              Calculate mean time to failure (requires --storm or --imca).");
-		messageFormatter->message("                  Overrules -i, -t, -u, -f, --mrmc, --imrmc.");
+		messageFormatter->message("  -m              Calculate mean time to failure (requires --storm or --imrmc).");
+		messageFormatter->message("                  Overrules -i, -t, -u, -f.");
 		messageFormatter->message("  -s              Calculate P(DFT failed) at steady-state (requires --storm or --imrmc).");
 		messageFormatter->message("  -i l u s        Calculate P(DFT fails in [0,x] time units) for each x in interval,");
 		messageFormatter->message("                  where interval is given by [l .. u] with step s ");
@@ -115,12 +110,9 @@ void print_help(MessageFormatter* messageFormatter, string topic="") {
 		messageFormatter->message("  The Calculation command can be manually set using -f.");
 		messageFormatter->message("  For Storm the defaults is:");
 		messageFormatter->message("    Pmax=? [F<=n failed=true ]             (default)");
-		messageFormatter->message("  For MRMC the defaults are:");
+		messageFormatter->message("  For IMRMC the defaults are:");
 		messageFormatter->message("    P{>1} [ tt U[0,n] reach ]             (default)");
 		messageFormatter->message("    P{<0} [ tt U[0,n] reach ]             (when --max is given)");
-		messageFormatter->message("  and for IMCA the defaults are:");
-		messageFormatter->message("    -min -tb -T n                         (default)");
-		messageFormatter->message("    -max -tb -T n                         (when --max is given)");
 		messageFormatter->message("  where n is the mission time (specified via -t or -i), default is 1.");
 	} else if(topic=="topics") {
 		messageFormatter->notify ("Help topics:");
@@ -199,29 +191,6 @@ end:
 	return coralRoot;
 }
 
-std::string DFT::DFTCalc::getImcaRoot() {
-	
-	if(!imcaRoot.empty()) {
-		return imcaRoot;
-	}
-	
-	char* root = getenv("IMCA");
-	std::string imcaRoot = root?string(root):"";
-	if(imcaRoot=="") {
-		if(messageFormatter) messageFormatter->reportError("Environment variable `IMCA' not set. Please set it to where IMCA can be found.");
-		goto end;
-	}
-	
-	for (int i = imcaRoot.length() - 1; i >= 0; i--) {
-		if (imcaRoot[i] == '\\')
-			imcaRoot[i] = '/';
-	}
-	if (imcaRoot[imcaRoot.length() - 1] == '/')
-		imcaRoot = imcaRoot.substr(0, imcaRoot.length() - 1);
-end:
-	return imcaRoot;
-}
-
 std::string DFT::DFTCalc::getRoot() {
 	
 	if(!dft2lntRoot.empty()) {
@@ -263,10 +232,10 @@ std::string DFT::DFTCalc::getRoot() {
 			goto end;
 		}
 	}
+end:
 #endif
 
 	if(messageFormatter) messageFormatter->reportAction("DFT2LNTROOT is: " + dft2lntRoot,VERBOSITY_DATA);
-end:
 	return dft2lntRoot;
 }
 
@@ -555,7 +524,6 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 	File dot    = dft.newWithExtension("dot");
 	File png    = dot.newWithExtension("png");
 	File input  = dft.newWithExtension("input");
-	File inputImca  = dft.newWithExtension("inputImca");
 
 	Shell::RunStatistics stats;
 
@@ -770,30 +738,6 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 	std::unique_ptr<Checker> checker;
 
 	switch (useChecker) {
-	case MRMC:
-#ifndef HAVE_CADP
-		messageFormatter->reportError("CADP is not compiled in, but is required for MRMC analysis.");
-		return 1;
-#else
-		if(!reuse || !FileSystem::exists(ctmdpi)) {
-			// bcg -> ctmdpi, lab
-			messageFormatter->reportAction("Translating IMC to CTMDPI...",VERBOSITY_FLOW);
-			std::vector<std::string> arguments;
-			arguments.push_back("-a");
-			arguments.push_back("FAIL");
-			arguments.push_back("-o");
-			arguments.push_back(ctmdpi.getFileRealPath());
-			arguments.push_back(bcg.getFileRealPath());
-
-			if (exec.runCommand(imc2ctmdpExec.getFilePath(), arguments, "imc2ctmdpi", ctmdpi) == "")
-				return 1;
-		} else {
-			messageFormatter->reportAction("Reusing IMC to CTMDPI translation result",VERBOSITY_FLOW);
-		}
-
-		checker = std::unique_ptr<Checker>(new MRMCRunner(messageFormatter, &exec, false, mrmcExec, ctmdpi, lab));
-		break;
-#endif /* HAVE_CADP */
 	case IMRMC:
 		if(useConverter != DFTRES && (!reuse || !FileSystem::exists(tra))) {
 #ifndef HAVE_CADP
@@ -826,28 +770,6 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 			checker = std::unique_ptr<Checker>(new MRMCRunner(messageFormatter, &exec, true, imrmcExec, tmpTra, tmpLab));
 		}
 		break;
-	case IMCA:
-#ifndef HAVE_CADP
-		messageFormatter->reportError("CADP is not compiled in, but is required for IMCA analysis.");
-		return 1;
-#else
-		if(!reuse || !FileSystem::exists(ma)) {
-			// bcg -> ma
-			messageFormatter->reportAction("Translating IMC to IMCA format...",VERBOSITY_FLOW);
-			std::vector<std::string> arguments;
-			arguments.push_back(bcg.getFileRealPath());
-			arguments.push_back(ma.getFileRealPath());
-			arguments.push_back("FAIL");
-
-			if (exec.runCommand(bcg2imcaExec.getFilePath(), arguments, "bcg2imca", ma) == "")
-				return 1;
-		} else {
-			messageFormatter->reportAction("Reusing IMC to IMCA format translation result",VERBOSITY_FLOW);
-		}
-		checker = std::unique_ptr<Checker>(new IMCARunner(messageFormatter, &exec, imcaExec, ma));
-
-		break;
-#endif /* HAVE_CADP */
 	case STORM: {
 		if(useConverter == SVL && (!reuse || !FileSystem::exists(jani))) {
 #ifndef HAVE_CADP
@@ -912,7 +834,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 
 	if(!buildDot.empty()) {
 #ifndef HAVE_CADP
-		messageFormatter->reportAction("DOT output required CADP, but CADP support is not compiled in.");
+		messageFormatter->reportAction("DOT output requires CADP, but CADP support is not compiled in.");
 		return 1;
 #else
 		// bcg -> dot
@@ -1111,14 +1033,8 @@ int main(int argc, char** argv) {
 			checkMin = false;
 			minMaxSet = true;
 		}
-		if (!strcmp("--mrmc", argv[argi])) {
-			useChecker = DFT::checker::MRMC;
-			explicitChecker = true;
-		} else if (!strcmp("--imrmc", argv[argi])) {
+		if (!strcmp("--imrmc", argv[argi])) {
 			useChecker = DFT::checker::IMRMC;
-			explicitChecker = true;
-		} else if (!strcmp("--imca", argv[argi])) {
-			useChecker = DFT::checker::IMCA;
 			explicitChecker = true;
 		} else if (!strcmp("--storm", argv[argi])) {
 			useChecker = DFT::checker::STORM;
@@ -1147,16 +1063,6 @@ int main(int argc, char** argv) {
 	}
 #endif
 
-	if (exactMode
-		&& useChecker != DFT::checker::EXP_ONLY
-		&& useChecker != DFT::checker::IMRMC
-		&& useChecker != DFT::checker::MODEST
-		&& useChecker != DFT::checker::STORM)
-	{
-		messageFormatter->reportWarningAt(Location("commandline"),"Exact flag has can only be used with IMRMC, Storm, or Modest, defaulting to IMRMC");
-		useChecker = DFT::checker::IMRMC;
-	}
-
 	Query q;
 	if (errorBoundSet) {
 		double t;
@@ -1175,18 +1081,6 @@ int main(int argc, char** argv) {
 	if (mttf && modularize) {
 		messageFormatter->reportWarningAt(Location("commandline"),"MTTF flag (-m) has been given: Disabling modularization.");
 		modularize = false;
-	}
-	if (mttf && useChecker == DFT::checker::MRMC) {
-		messageFormatter->reportWarningAt(Location("commandline"), "MTTF flag cannot be used with MRMC model checker, defaulting to Storm.");
-		useChecker = DFT::checker::STORM;
-	}
-	if (steadyState && useChecker == DFT::checker::MRMC) {
-		messageFormatter->reportWarningAt(Location("commandline"), "Steady-state flag cannot currently be used with MRMC model checker, defaulting to Storm.");
-		useChecker = DFT::checker::STORM;
-	}
-	if (steadyState && useChecker == DFT::checker::IMCA) {
-		messageFormatter->reportWarningAt(Location("commandline"), "Steady-state flag cannot currently be used with IMCA model checker, defaulting to Storm.");
-		useChecker = DFT::checker::STORM;
 	}
 	if (steadyState && useChecker == DFT::checker::MODEST) {
 		messageFormatter->reportWarningAt(Location("commandline"), "Steady-state flag cannot currently be used with Modest model checker, defaulting to Storm.");
@@ -1517,13 +1411,7 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 	/* Obtain all needed root information from environment */
 	dft2lntRoot = getRoot();
 #ifdef HAVE_CADP
-	if (checker == MRMC) {
-		coralRoot = getCoralRoot();
-		imc2ctmdpExec = File(coralRoot+"/bin/imc2ctmdp");
-	} else if (checker == IMCA) {
-		imcaRoot = getImcaRoot();
-		bcg2imcaExec = File(imcaRoot+"/bin/bcg2imca");
-	} else if (checker == STORM || checker == MODEST) {
+	if (checker == STORM || checker == MODEST) {
 		bcg2janiExec = File(dft2lntRoot+"/bin/bcg2jani");
 	} else if (checker == IMRMC) {
 		bcg2tralabExec = File(dft2lntRoot+"/bin/bcg2tralab");
@@ -1562,38 +1450,7 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 		messageFormatter->reportAction("Using dft2lntc [" + dft2lntcExec.getFilePath() + "]",VERBOSITY_SEARCHING);
 	}
 
-	/* Find imc2ctmdpi executable (based on CORAL environment variable) */
-	if(checker == MRMC && coralRoot.empty()) {
-		messageFormatter->reportError("Environment variable `CORAL' not set. Please set it to where coral can be found.");
-		ok = false;
-	} else if(checker == MRMC && !FileSystem::hasAccessTo(File(coralRoot),X_OK)) {
-		messageFormatter->reportError("Could not enter coral directory (environment variable `CORAL'");
-		ok = false;
 #ifdef HAVE_CADP
-	} else if(checker == MRMC && !FileSystem::hasAccessTo(imc2ctmdpExec,F_OK)) {
-		messageFormatter->reportError("imc2ctmdp not found (in " + coralRoot+"/bin)");
-		ok = false;
-	} else if(checker == MRMC && !FileSystem::hasAccessTo(imc2ctmdpExec,X_OK)) {
-		messageFormatter->reportError("imc2ctmdp not executable (in " + coralRoot+"/bin)");
-		ok = false;
-	} else if (checker == MRMC) {
-		messageFormatter->reportAction("Using imc2ctmdp [" + imc2ctmdpExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-#endif
-	}
-
-
-#ifdef HAVE_CADP
-	/* Find bcg2imca */
-	if(checker == IMCA && !FileSystem::hasAccessTo(bcg2imcaExec,F_OK)) {
-		messageFormatter->reportError("bcg2imca not found (in " + imcaRoot+"/bin)");
-		ok = false;
-	} else if(checker == IMCA && !FileSystem::hasAccessTo(bcg2imcaExec,X_OK)) {
-		messageFormatter->reportError("bcg2imca not executable (in " + imcaRoot+"/bin)");
-		ok = false;
-	} else if (checker == IMCA) {
-		messageFormatter->reportAction("Using bcg2imca [" + bcg2imcaExec.getFilePath() + "]",VERBOSITY_SEARCHING);
-	}
-
 	if (conv == SVL) {
 		/* Find svl executable (based on CADP environment variable) */
 		if(cadpRoot.empty()) {
@@ -1641,17 +1498,9 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 	if (checker == STORM)
 		ok &= findInPath("storm" + executable_suffix, stormExec);
 
-	/* Find an mrmc executable (based on PATH environment variable) */
-	if (checker == MRMC)
-		ok &= findInPath("mrmc" + executable_suffix, mrmcExec);
-
 	/* Find an imrmc executable (based on PATH environment variable) */
 	if (checker == IMRMC)
 		ok &= findInPath("imrmc" + executable_suffix, imrmcExec);
-
-	/* Find an imca executable (based on PATH environment variable) */
-	if (checker == IMCA)
-		ok &= findInPath("imca" + executable_suffix, imcaExec);
 
 	/* Find dot executable (based on PATH environment variable) */
 	if (!buildDot.empty())
