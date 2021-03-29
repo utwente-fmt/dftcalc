@@ -6,7 +6,7 @@ set (dfttest_VERSION_PATCH 4)
 set (dfttest_VERSION "${dfttest_VERSION_MAJOR}.${dfttest_VERSION_MINOR}.${dfttest_VERSION_PATCH}")
 
 ## Not sure if needed
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.0)
 if (MSVC)
 	add_definitions(/std:c++17)
 else()

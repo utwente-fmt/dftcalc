@@ -5,7 +5,7 @@ set (dft2lnt_VERSION_MINOR 3)
 set (dft2lnt_VERSION_PATCH 4)
 
 ## Needed for bison and flex
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.0)
 
 ## Make sure we have Bison and FLEX available
 find_package(BISON 3.4)

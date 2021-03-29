@@ -6,7 +6,7 @@ set (dft2lntc_VERSION_PATCH 4)
 set (dft2lntc_VERSION "${dft2lntc_VERSION_MAJOR}.${dft2lntc_VERSION_MINOR}.${dft2lntc_VERSION_PATCH}")
 
 ## Not sure if needed
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.0)
 
 if (MSVC)
 	add_compile_options(/std:c++17)
