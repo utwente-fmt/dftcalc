@@ -314,7 +314,8 @@ int DFT::DFTCalc::calcModular(const bool reuse,
                               enum DFT::converter useConverter,
                               bool warnNonDeterminism,
                               DFT::DFTCalculationResult &ret,
-                              bool expOnly)
+                              bool expOnly,
+                              bool exactMode)
 {
 	std::string dftFileName = dftOriginal.getFileBase();
 	messageFormatter->notify("Computing `"+dftFileName+"' with modularization");
@@ -349,7 +350,7 @@ int DFT::DFTCalc::calcModular(const bool reuse,
 	std::swap(modules, *tmp);
 	delete tmp;
 	return checkModule(reuse, cwd, dftOriginal, queries, useChecker,
-	                   useConverter, warnNonDeterminism, ret, expOnly, modules);
+	                   useConverter, warnNonDeterminism, ret, expOnly, exactMode, modules);
 }
 
 static void addVoteResults(DFT::DFTCalculationResultItem &ret,
@@ -422,6 +423,7 @@ int DFT::DFTCalc::checkModule(const bool reuse,
                               bool warnNonDeterminism,
                               DFT::DFTCalculationResult &ret,
                               bool expOnly,
+                              bool exactMode,
                               std::string &module)
 {
 	if (module.length() == 0) {
@@ -436,7 +438,7 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 		module = module.substr(eol + 1);
 		return calculateDFT(reuse, cwd, dft, queries, useChecker,
 		                    useConverter, warnNonDeterminism, root, ret,
-		                    expOnly);
+		                    expOnly, exactMode);
 	} else if (module[0] == '=') {
 		decnumber<> val(module.substr(1, eol - 1));
 		module = module.substr(eol + 1);
@@ -475,7 +477,7 @@ int DFT::DFTCalc::checkModule(const bool reuse,
 			return 1;
 		}
 		if (checkModule(reuse, cwd, dft, queries, useChecker, useConverter,
-		                warnNonDeterminism, tmp, expOnly, module))
+		                warnNonDeterminism, tmp, expOnly, exactMode, module))
 			return 1;
 		if (op == '/') {
 			votResults.push_back(tmp);
@@ -528,7 +530,8 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
                                bool warnNonDeterminism,
 							   std::string root,
                                DFT::DFTCalculationResult &ret,
-                               bool expOnly)
+                               bool expOnly,
+                               bool exactMode)
 {
 	File dft    = dftOriginal.newWithPathTo(cwd);
 	std::string dftFileName = dft.getFileBase();
@@ -867,8 +870,7 @@ int DFT::DFTCalc::calculateDFT(const bool reuse,
 		}
 		
 		StormRunner *sr = new StormRunner(messageFormatter, &exec, stormExec, jani);
-		if (useConverter == DFTRES)
-			sr->runExact = 1;
+		sr->runExact = exactMode;
 		checker = std::unique_ptr<Checker>(sr);
 		break;
 	}
@@ -979,6 +981,7 @@ int main(int argc, char** argv) {
 	bool checkMin            = false;
 	bool minMaxSet           = false;
 	bool expOnly             = false;
+	bool exactMode           = false;
 	
 	std::vector<std::string> failedBEs;
 	std::vector<Query> queries;
@@ -1124,6 +1127,7 @@ int main(int argc, char** argv) {
 			useChecker = DFT::checker::MODEST;
 			explicitChecker = true;
 		} else if (!strcmp("--exact", argv[argi])) {
+			exactMode = true;
 			useConverter = DFT::converter::DFTRES;
 			if (!explicitChecker)
 				useChecker = DFT::checker::IMRMC;
@@ -1138,12 +1142,12 @@ int main(int argc, char** argv) {
 
 #ifndef HAVE_CADP
 	if (useConverter == DFT::converter::SVL) {
-		messageFormatter->reportWarningAt(Location("commandline"),"CADP mode not compiled in, enabling --exact");
+		messageFormatter->reportWarningAt(Location("commandline"),"CADP mode not compiled in, using DFTRES for conversion");
 		useConverter = DFT::converter::DFTRES;
 	}
 #endif
 
-	if (useConverter == DFT::converter::DFTRES
+	if (exactMode
 		&& useChecker != DFT::checker::EXP_ONLY
 		&& useChecker != DFT::checker::IMRMC
 		&& useChecker != DFT::checker::MODEST
@@ -1354,9 +1358,9 @@ int main(int argc, char** argv) {
 			bool res;
 			try {
 				if (!modularize) {
-					res = calc.calculateDFT(reuse, outputFolderFile.getFileRealPath(),dft, queries, useChecker, useConverter, warnNonDeterminism, "", ret, expOnly);
+					res = calc.calculateDFT(reuse, outputFolderFile.getFileRealPath(),dft, queries, useChecker, useConverter, warnNonDeterminism, "", ret, expOnly, exactMode);
 				} else {
-					res = calc.calcModular(reuse, outputFolderFile.getFileRealPath(),dft, queries, useChecker, useConverter, warnNonDeterminism, ret, expOnly);
+					res = calc.calcModular(reuse, outputFolderFile.getFileRealPath(),dft, queries, useChecker, useConverter, warnNonDeterminism, ret, expOnly, exactMode);
 				}
 			} catch (std::exception &e) {
 				messageFormatter->reportError(e.what());

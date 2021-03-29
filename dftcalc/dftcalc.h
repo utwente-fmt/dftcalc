@@ -83,6 +83,7 @@ namespace DFT {
 		                bool warnNonDeterminism,
 		                DFT::DFTCalculationResult &ret,
 		                bool expOnly,
+		                bool exactMode,
 		                std::string &module);
 
 		bool findInPath(std::string tool, File &ret);
@@ -126,7 +127,8 @@ namespace DFT {
 		                enum DFT::converter useConverter,
 		                bool warnNonDeterminism,
 		                DFT::DFTCalculationResult &ret,
-		                bool expOnly);
+		                bool expOnly,
+		                bool exactMode);
 		/**
 		 * Calculates the specified DFT file.
 		 * @param reuse Whether to reuse intermediate files.
@@ -152,7 +154,8 @@ namespace DFT {
 		                 bool warnNonDeterminism,
 		                 std::string root,
 		                 DFT::DFTCalculationResult &ret,
-		                 bool expOnly);
+		                 bool expOnly,
+		                 bool exactMode);
 
 		void setEvidence(const std::vector<std::string>& evidence) {this->evidence = evidence;}
 		const std::vector<std::string>& getEvidence() const {return evidence;}
