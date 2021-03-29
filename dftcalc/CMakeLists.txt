@@ -11,7 +11,7 @@ cmake_minimum_required (VERSION 3.0)
 if (MSVC)
 	add_definitions(/std:c++17)
 else()
-	add_definitions(-std=c++17)
+	add_definitions(-std=c++17 -Wall)
 endif()
 
 if(DEFINED ENV{CADP})
