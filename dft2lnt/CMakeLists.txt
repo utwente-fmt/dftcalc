@@ -1,8 +1,8 @@
 ## DFT2LNT Library project
 project (dft2lnt)
 set (dft2lnt_VERSION_MAJOR 1)
-set (dft2lnt_VERSION_MINOR 3)
-set (dft2lnt_VERSION_PATCH 4)
+set (dft2lnt_VERSION_MINOR 4)
+set (dft2lnt_VERSION_PATCH 0)
 
 ## Needed for bison and flex
 cmake_minimum_required (VERSION 3.0)

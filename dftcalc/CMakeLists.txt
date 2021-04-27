@@ -1,8 +1,8 @@
 ## The DFT2LNT Compiler project
 project (dftcalc)
 set (dftcalc_VERSION_MAJOR 1)
-set (dftcalc_VERSION_MINOR 3)
-set (dftcalc_VERSION_PATCH 4)
+set (dftcalc_VERSION_MINOR 4)
+set (dftcalc_VERSION_PATCH 0)
 set (dftcalc_VERSION "${dftcalc_VERSION_MAJOR}.${dftcalc_VERSION_MINOR}.${dftcalc_VERSION_PATCH}")
 
 ## Not sure if needed
