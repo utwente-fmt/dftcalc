@@ -74,6 +74,14 @@ endif()
 
 target_include_directories(dft2lnt PRIVATE ${YAML_INCLUDE_PATH})
 
+if (NOT DEFINED LIB_INSTALL_DIR)
+	if (DEFINED CMAKE_INSTALL_LIBDIR)
+		set(LIB_INSTALL_DIR "lib")
+	else()
+		set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
+	endif()
+endif()
+
 ## Installation
-install (TARGETS dft2lnt DESTINATION lib)
+install (TARGETS dft2lnt DESTINATION ${LIB_INSTALL_DIR})
 install (FILES dft2lnt.h DESTINATION include/dft2lnt)
