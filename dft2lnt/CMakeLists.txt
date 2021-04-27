@@ -8,7 +8,7 @@ set (dft2lnt_VERSION_PATCH 0)
 cmake_minimum_required (VERSION 3.0)
 
 ## Make sure we have Bison and FLEX available
-find_package(BISON 3.4)
+find_package(BISON 3.3)
 find_package(FLEX 2.6.3)
 
 if (MSVC)

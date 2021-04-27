@@ -13,7 +13,7 @@
 %locations
 %defines
 %define parse.error verbose
-%require "3.4"
+%require "3.3"
 
 %parse-param{ Parser* currentParser}
 %parse-param{ yyscan_t scanner}
