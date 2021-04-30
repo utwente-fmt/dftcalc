@@ -1549,7 +1549,7 @@ bool DFT::DFTCalc::checkNeededTools(DFT::checker checker, converter conv) {
 		messageFormatter->reportError("Environment variable `DFT2LNTROOT' not set. Please set it to where /bin/dft2lntc can be found.");
 		ok = false;
 	} else if(!FileSystem::isDir(File(dft2lntRoot))) {
-		messageFormatter->reportError("Could not enter dft2lntroot directory (environment variable `DFT2LNTROOT'");
+		messageFormatter->reportError("Could not enter dft2lntroot directory (environment variable `DFT2LNTROOT': " + dft2lntRoot + ")");
 		ok = false;
 	} else if(!FileSystem::exists(dft2lntcExec)) {
 		messageFormatter->reportError("dft2lntc not found (in " + dft2lntRoot + "/bin)");
