@@ -18,7 +18,7 @@ all_match () {
 			echo "Invalid expected failure criterion: '$1'"
 			exit 1;
 		fi
-		if [ "$PATTERN" == "${PATTERN%\"}" ]; then
+		if [ "$PATTERN" = "${PATTERN%\"}" ]; then
 			echo "Invalid expected failure criterion: '$1'"
 			exit 1;
 		fi
