@@ -159,7 +159,7 @@ File DFT::DFTCalc::getDftresJar() {
 	std::string dftresRoot = root?string(root):"";
 
 	if(dftresRoot == "") {
-		File ret("DFTRES.jar");
+		File ret("/usr/share/dftres/DFTRES.jar");
 		if(!FileSystem::exists(ret)) {
 			if(messageFormatter)
 				messageFormatter->reportError("Environment variable `DFTRES' not set. Please set it to where DFTRES.jar can be found.");
