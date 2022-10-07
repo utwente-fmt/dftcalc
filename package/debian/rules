@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- -DDFTROOT=/usr
+
+override_dh_auto_test:
+	cd test && PATH="$(PATH):../bin" DFT2LNTROOT=$(PWD) HOME=/tmp sh test.sh --storm
+	#cd test && PATH="$(PATH):../bin" DFT2LNTROOT=$(PWD) HOME=/tmp dftcalc -vvvvv -p -s --exact --storm repair-spare.dft
+	# Disable the following line on Debian buster, where the version
+	# of Storm is compiled with a older version of Z3, and therefore
+	# unable to perform all the tests.
+	cd test && PATH="$(PATH):../bin" DFT2LNTROOT=$(PWD) HOME=/tmp sh test.sh --exact --storm #disable-for-buster

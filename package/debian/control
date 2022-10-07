@@ -1,0 +1,11 @@
+Source: dftcalc
+Maintainer: Enno Ruijters <mail@ennoruijters.nl>
+Section: science
+Priority: optional
+Standards-Version: 4.3.0
+Build-Depends: debhelper (>= 9), cmake, libfl-dev, libyaml-cpp-dev, libgsl-dev, bison (>=2:3.3), storm (>=1.6.2), dftres (>=1.0.2), bc
+
+Package: dftcalc
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, storm (>=1.6.2), dftres (>=1.0.2)
+Description: A Dynamic Fault Tree calculator for reliability and availability

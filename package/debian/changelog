@@ -1,0 +1,5 @@
+dftcalc (@VERSION) @DISTRO; urgency=low
+
+  * Initial packaged release
+
+ -- Enno Ruijters <mail@ennoruijters.nl>  Tue, 27 Apr 2021 18:00:00 +0200
