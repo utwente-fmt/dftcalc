@@ -18,6 +18,7 @@
 
 #include <string>
 #include <random>
+#include <ctime>
 #ifdef WIN32
 #	define WIN32_LEAN_AND_MEAN // Omit rarely-used and architecture-specific stuff from WIN32
 #	include <windows.h>
