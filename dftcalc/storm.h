@@ -25,7 +25,8 @@ private:
 public:
 	StormRunner(MessageFormatter *mf, DFT::CommandExecutor *exec,
 	            File stormExec, File model, bool exact, bool maybeNonDet)
-		:Checker(mf, exec), stormExec(stormExec), janiFile(model), runExact(exact),
+		:Checker(mf, exec),
+		 janiFile(model), stormExec(stormExec), runExact(exact),
 		 mayHaveNondeterminism(maybeNonDet)
 	{}
 

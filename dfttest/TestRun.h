@@ -34,10 +34,10 @@ public:
 	 * @param messageFormatter The message formatter to use to output to console
 	 */
 	TestRun(Test::OutputFormatter* outputFormatter, MessageFormatter* messageFormatter):
-		requestStopTest(false),
-		requestStopSuite(false),
 		outputFormatter(outputFormatter),
-		messageFormatter(messageFormatter) {
+		messageFormatter(messageFormatter),
+		requestStopTest(false),
+		requestStopSuite(false) {
 			//reportColumns.push_back(TestResultColumn("iteration", "Iteration", false));
 			reportColumns.push_back(Test::TestResultColumn("time"     , "Time"     , "s"   , true ));
 			reportColumns.push_back(Test::TestResultColumn("memory"   , "Memory"   , "MiB" , true ));

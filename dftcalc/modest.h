@@ -23,7 +23,7 @@ private:
 public:
 	ModestRunner(MessageFormatter *mf, DFT::CommandExecutor *exec,
 	             std::string modestCmd, File model)
-		:Checker(mf, exec), modestCmd(modestCmd), janiFile(model)
+		:Checker(mf, exec), janiFile(model), modestCmd(modestCmd)
 	{}
 
 	virtual std::vector<DFT::DFTCalculationResultItem> analyze(vector<Query> queries);
