@@ -34,7 +34,7 @@ void Test::OutputFormatterNice::displayTestStart(TestRun* testRun, TestSpecifica
 	}
 		consoleWriter.appendPostfix();
 	
-	for(const std::pair<std::string,TestResult*>& vtest: test->getVerifiedResults()) {
+	for(const std::pair<std::string,TestResult*> vtest: test->getVerifiedResults()) {
 		displayTestResult(testRun,test,"",vtest.first,vtest.second,false,Test::VERIFIEDOK);
 	}
 }
@@ -158,7 +158,7 @@ void Test::OutputFormatterLaTeX::displayTestStart(TestRun* testRun, TestSpecific
 	//
 	consoleWriter << "\\testname{" << escapeUnderscore(test->getShortName()) << "}" << consoleWriter.applypostfix;
 	
-	for(const std::pair<std::string,TestResult*>& vtest: test->getVerifiedResults()) {
+	for(const std::pair<std::string,TestResult*> vtest: test->getVerifiedResults()) {
 		displayTestResult(testRun,test,"",vtest.first,vtest.second,false,Test::VERIFIEDOK);
 	}
 }
