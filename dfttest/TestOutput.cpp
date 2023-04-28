@@ -163,8 +163,6 @@ void Test::OutputFormatterLaTeX::displayTestStart(TestRun* testRun, TestSpecific
 	}
 }
 void Test::OutputFormatterLaTeX::displayTestEnd(TestRun* testRun, TestSpecification* test) {
-	ConsoleWriter& consoleWriter = testRun->messageFormatter->getConsoleWriter();
-	
 }
 
 void Test::OutputFormatterLaTeX::displayTestResult(TestRun* testRun, TestSpecification* test, const string& timeStamp, const string& iteration, TestResult* result, bool cached, const Test::ResultStatus& resultStatus) {

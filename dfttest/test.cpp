@@ -594,7 +594,6 @@ void TestSuite::testWritability() {
 			std::string inputStr = std::string(input);
 			if(inputStr.empty()) inputStr = origin.getFileName();
 			outFile = File(inputStr);
-			bool changed = true;
 		}
 	}
 	

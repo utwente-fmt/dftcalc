@@ -344,8 +344,6 @@ public:
 	virtual int visitAttribute(DFT::AST::ASTAttribute* attribute) {
 		//assert(buildingBE && "visitAttribute called, without a BE being built");
 
-		DFT::AST::ASTAttrib* value = attribute->getValue();
-
 		return ASTVisitor<int>::visitAttribute(attribute);
 	}
 	virtual int visitAttrib(DFT::AST::ASTAttrib* attrib) {
@@ -415,10 +413,6 @@ public:
 		return ASTVisitor<int>::visitTopLevel(topLevel);
 	}
 	virtual int visitBasicEvent(DFT::AST::ASTBasicEvent* basicEvent) {
-		DFT::Nodes::Node* n = dft->getNode(basicEvent->getName()->getString());
-		assert(n);
-		assert(n->getType()==DFT::Nodes::BasicEventType);
-		DFT::Nodes::BasicEvent* be = static_cast<DFT::Nodes::BasicEvent*>(n);
 		return ASTVisitor<int>::visitBasicEvent(basicEvent);
 	}
 	virtual int visitGate(DFT::AST::ASTGate* gate) {
