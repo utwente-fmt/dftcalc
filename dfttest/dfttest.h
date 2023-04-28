@@ -83,8 +83,6 @@ public:
 	
 	void getLastResults(map<string,double>& results);
 	
-	virtual void appendSpecific(const TestSpecification& other);
-	
 	double getVerifiedValue() {
 		std::string reason;
 		return getVerifiedValue(reason);

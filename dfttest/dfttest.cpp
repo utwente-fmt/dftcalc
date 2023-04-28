@@ -489,10 +489,6 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-void DFTTest::appendSpecific(const TestSpecification& otherGeneric) {
-	const DFTTest& other = static_cast<const DFTTest&>(otherGeneric);
-}
-
 void DFTTestSuite::applyLimitTests(const vector<string>& limitTests) {
 	for(Test::TestSpecification* testGeneric: tests) {
 		DFTTest* test = static_cast<DFTTest*>(testGeneric);
