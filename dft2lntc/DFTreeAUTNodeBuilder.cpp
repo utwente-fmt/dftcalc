@@ -80,7 +80,7 @@ static bool already_valid(std::string filename)
 		if (!in.good())
 			return 0;
 		return currentVersion >= DFTreeAUTNodeBuilder::VERSION;
-	} catch (std::exception e) {
+	} catch (std::exception &e) {
 		return 0;
 	}
 }

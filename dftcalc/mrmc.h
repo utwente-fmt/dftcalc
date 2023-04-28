@@ -27,8 +27,10 @@ public:
 	MRMCRunner(MessageFormatter *mf, DFT::CommandExecutor *exec,
 	           bool imrmc, File executable, File model, File lab)
 	        :Checker(mf, exec),
-		 goalLabel(imrmc ? "marked" : "reach"), isCtmdp(!imrmc),
-		 modelFile(model), labFile(lab), mrmcExec(executable)
+		 goalLabel(imrmc ? "marked" : "reach"),
+		 modelFile(model), labFile(lab),
+		 isCtmdp(!imrmc),
+		 mrmcExec(executable)
 	{}
 
 	virtual std::vector<DFT::DFTCalculationResultItem> analyze(vector<Query> queries);

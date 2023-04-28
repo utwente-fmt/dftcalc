@@ -3,6 +3,7 @@
 #include <limits>
 #include <cctype>
 #include <cmath>
+#include <cstdint>
 #include <exception>
 #include <stdexcept>
 

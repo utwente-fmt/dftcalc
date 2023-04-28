@@ -344,8 +344,6 @@ public:
 	virtual int visitAttribute(DFT::AST::ASTAttribute* attribute) {
 		//assert(buildingBE && "visitAttribute called, without a BE being built");
 
-		DFT::AST::ASTAttrib* value = attribute->getValue();
-
 		return ASTVisitor<int>::visitAttribute(attribute);
 	}
 	virtual int visitAttrib(DFT::AST::ASTAttrib* attrib) {
@@ -415,10 +413,6 @@ public:
 		return ASTVisitor<int>::visitTopLevel(topLevel);
 	}
 	virtual int visitBasicEvent(DFT::AST::ASTBasicEvent* basicEvent) {
-		DFT::Nodes::Node* n = dft->getNode(basicEvent->getName()->getString());
-		assert(n);
-		assert(n->getType()==DFT::Nodes::BasicEventType);
-		DFT::Nodes::BasicEvent* be = static_cast<DFT::Nodes::BasicEvent*>(n);
 		return ASTVisitor<int>::visitBasicEvent(basicEvent);
 	}
 	virtual int visitGate(DFT::AST::ASTGate* gate) {
@@ -435,14 +429,14 @@ public:
 			g->getChildren().push_back(node);
 			
 			// Add the rest of the children as dependers
-			for(int i=1; i<gate->getChildren()->size(); ++i) {
+			for(size_t i=1; i<gate->getChildren()->size(); ++i) {
 				DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(i)->getString());
 				g->getDependers().push_back(node);
 				node->getTriggers().push_back(g);
 			}
 		} else {
 			// Fix the parent-child relationship for this Gate and its children
-			for(int i=0; i<gate->getChildren()->size(); ++i) {
+			for(size_t i=0; i<gate->getChildren()->size(); ++i) {
 				
 				// Get a child of the Gate
 				DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(i)->getString());

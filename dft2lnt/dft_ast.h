@@ -194,8 +194,8 @@ class ASTAttrib: public ASTNode {
 public:
 	const std::string origString;
 	ASTAttrib(NodeType type, Location location, std::string orig):
-		origString(orig),
-		ASTNode(type,location) {
+		ASTNode(type,location),
+		origString(orig) {
 	}
 	
 	virtual ~ASTAttrib() {

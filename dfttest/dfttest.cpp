@@ -248,7 +248,6 @@ std::string getRoot(MessageFormatter* messageFormatter) {
 #endif
 	
 	if(messageFormatter) messageFormatter->reportAction("DFT2LNTROOT is: " + dft2lntRoot,VERBOSITY_DATA);
-end:
 	return dft2lntRoot;
 }
 
@@ -277,10 +276,6 @@ bool tryReadFile(MessageFormatter* messageFormatter, File& file, DFTTestSuite& s
 int main(int argc, char** argv) {
 	
 	/* Command line arguments and their default settings */
-	string testSuiteFileName  = "";
-	int    testSuiteFileSet   = 0;
-//	string testFileName       = "";
-//	int    testFileSet        = 0;
 	vector<Test::TestSpecification*> inputTests;
 
 	int verbosity = 0;
@@ -306,14 +301,7 @@ int main(int argc, char** argv) {
 			break;
 		}
 
-		if (!strcmp(argv[argi], "-s")) {
-			// -s FILE
-			if(!strcmp(argv[++argi], "-"))
-				testSuiteFileName = "";
-			else
-				testSuiteFileName = string(argv[++argi]);
-			testSuiteFileSet = 1;
-		} else if (!strcmp(argv[argi], "-c")) {
+		if (!strcmp(argv[argi], "-c")) {
 			forcedRunning = false;
 			useCachedOnly = true;
 		} else if (!strcmp(argv[argi], "-f")) {
@@ -329,7 +317,7 @@ int main(int argc, char** argv) {
 		} else if (!strcmp(argv[argi], "-L")) {
 			outputMode = "latex";
 		} else if (!strncmp(argv[argi], "-v", 2)) {
-			for (int i = 1; i < strlen(argv[argi]); i++) {
+			for (size_t i = 1; i < strlen(argv[argi]); i++) {
 				if (argv[argi][i] == 'v') {
 					++verbosity;
 				} else {
@@ -489,10 +477,6 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-void DFTTest::appendSpecific(const TestSpecification& otherGeneric) {
-	const DFTTest& other = static_cast<const DFTTest&>(otherGeneric);
-}
-
 void DFTTestSuite::applyLimitTests(const vector<string>& limitTests) {
 	for(Test::TestSpecification* testGeneric: tests) {
 		DFTTest* test = static_cast<DFTTest*>(testGeneric);
@@ -515,8 +499,12 @@ Test::TestSpecification* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& no
 	
 	if(const YAML::Node itemNode = node["timeunits"]) {
 		unsigned int value;
-		try { value = itemNode.as<unsigned int>(); }
-		catch(YAML::Exception& e) { reportYAMLException(e); wentOK = false; }
+		try {
+			value = itemNode.as<unsigned int>();
+		} catch(YAML::Exception& e) {
+			reportYAMLException(e);
+			goto error;
+		}
 		test->setTimeUnits(value);
 	}
 	if(const YAML::Node itemNode = node["dft"]) {

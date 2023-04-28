@@ -42,8 +42,8 @@ namespace automata {
 				:automaton::state(parent),
 				 status(status),
 				 repair_status(NONE),
-				 isactive(parent->always_active),
 				 phase(1),
+				 isactive(parent->always_active),
 				 emit_fail(false), emit_online(false),
 				 emit_inspect(false),
 				 can_definitely_fail(false),
@@ -116,9 +116,9 @@ namespace automata {
 
 	public:
 		be(const DFT::Nodes::BasicEvent &be)
-			: cold(be.getMu().is_zero()),
-			  phases(be.getPhases()),
+			: phases(be.getPhases()),
 			  threshold(be.getInterval()),
+			  cold(be.getMu().is_zero()),
 			  repairable(be.isRepairable()),
 			  self_repair(!be.hasInspectionModule()),
 			  independent_repair(!be.hasRepairModule()),

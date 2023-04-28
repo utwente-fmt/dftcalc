@@ -244,7 +244,6 @@ int main(int argc, char** argv) {
 	int    outputMODFileSet  = 0;
 	string rootNode          = "";
 
-	int stopAfterPreproc     = 0;
 	int useColoredMessages   = 1;
 	int verbosity            = 0;
 	int printHelp            = 0;
@@ -312,7 +311,7 @@ int main(int argc, char** argv) {
 			printHelp = true;
 		} else if (!strncmp(argv[argi], "-v", 2)) {
 			// -v
-			for (int i = 1; i < strlen(argv[argi]); i++) {
+			for (size_t i = 1; i < strlen(argv[argi]); i++) {
 				if (argv[argi][i] == 'v') {
 					++verbosity;
 				} else {

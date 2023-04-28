@@ -42,7 +42,7 @@
 #ifdef assert
 	#undef assert
 #endif
-#define assert(e) if(e) {} else { cerr << endl << __FILE__ << ":" << __LINE__ << ":" << endl << "Assertion failed: " << #e << endl; errno = *(int*)(e); }
+#define assert(e) if(e) {} else { cerr << endl << __FILE__ << ":" << __LINE__ << ":" << endl << "Assertion failed: " << #e << endl; }
 
 	typedef struct NumberSuffix {
 		int number;

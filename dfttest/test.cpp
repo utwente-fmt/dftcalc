@@ -441,7 +441,7 @@ bool TestSuite::readAndAppendTestFile(File file) {
 		try {
 			vector<YAML::Node> docs = YAML::LoadAll(fin);
 			error = loadTests(docs,loadedTests) ? true : error ;
-		} catch(YAML::Exception e) {
+		} catch(YAML::Exception &e) {
 			error = true;
 			reportYAMLException(e);
 		}
@@ -471,7 +471,7 @@ bool TestSuite::readAndAppendToTestFile(File file) {
 		try {
 			vector<YAML::Node> docs = YAML::LoadAll(fin);
 			error = loadTests(docs,loadedTests) ? true : error ;
-		} catch(YAML::Exception e) {
+		} catch(YAML::Exception &e) {
 			error = true;
 			reportYAMLException(e);
 		}
@@ -594,7 +594,6 @@ void TestSuite::testWritability() {
 			std::string inputStr = std::string(input);
 			if(inputStr.empty()) inputStr = origin.getFileName();
 			outFile = File(inputStr);
-			bool changed = true;
 		}
 	}
 	

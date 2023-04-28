@@ -131,6 +131,11 @@ public:
 		return *this;
 	}
 
+	virtual ConsoleWriter& operator<<(long long unsigned int i) {
+		ss() << i;
+		return *this;
+	}
+
 	virtual ConsoleWriter& operator<<(float f) {
 		ss() << f;
 		return *this;

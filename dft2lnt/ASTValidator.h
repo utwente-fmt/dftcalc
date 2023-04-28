@@ -62,15 +62,13 @@ public:
 		definedNodes.clear();
 		
 		// Go through all the AST nodes in a linear fashion
-		for(int i=0; i<ast->size(); ++i) {
+		for(size_t i=0; i<ast->size(); ++i) {
 			DFT::AST::ASTNode* node = ast->at(i);
 			assert(node);
 			switch(node->getType()) {
 				
 			// TopLevel references a node
 			case DFT::AST::TopLevelType: {
-				DFT::AST::ASTTopLevel* t = static_cast<DFT::AST::ASTTopLevel*>(node);
-				//referencedNodes.push_back(t->getTopNode());
 				break;
 			}
 
@@ -89,17 +87,11 @@ public:
 			case DFT::AST::GateType: {
 				DFT::AST::ASTGate* g = static_cast<DFT::AST::ASTGate*>(node);
 				definedNodes.push_back(g->getName()->getString());
-				std::vector<DFT::AST::ASTIdentifier*>* children = g->getChildren();
-				//for(int i=children->size();i--;) {
-				//	referencedNodes.push_back(children->at(i));
-				//}
 				break;
 			}
 			
 			// A Page ASTNode references a node
 			case DFT::AST::PageType: {
-				DFT::AST::ASTPage* p = static_cast<DFT::AST::ASTPage*>(node);
-				//referencedNodes.push_back(p->getNodeName());
 				break;
 			}
 			default:

@@ -266,7 +266,6 @@ std::string DFT::DFTCalc::getRoot() {
 #endif
 
 	if(messageFormatter) messageFormatter->reportAction("DFT2LNTROOT is: " + dft2lntRoot,VERBOSITY_DATA);
-end:
 	return dft2lntRoot;
 }
 
@@ -391,7 +390,7 @@ static void addVoteResults(std::vector<DFT::DFTCalculationResultItem> &ret,
 	if (P.empty())
 		return;
 	size_t nResults = P[0].failProbs.size();
-	for (const DFT::DFTCalculationResult r : P) {
+	for (const DFT::DFTCalculationResult &r : P) {
 		if (r.failProbs.size() != nResults) {
 			mf.reportError("Unequal number of results for modules.");
 		}
@@ -399,7 +398,7 @@ static void addVoteResults(std::vector<DFT::DFTCalculationResultItem> &ret,
 	for (size_t i = 0; i < nResults; i++) {
 		std::vector<DFT::DFTCalculationResultItem> probs;
 		DFT::DFTCalculationResultItem ref = P[0].failProbs[i];
-		for (const DFT::DFTCalculationResult r : P) {
+		for (const DFT::DFTCalculationResult &r : P) {
 			DFT::DFTCalculationResultItem it = r.failProbs[i];
 			if (it.missionTime != ref.missionTime
 			    || it.mrmcCommand != ref.mrmcCommand)
@@ -1052,7 +1051,7 @@ int main(int argc, char** argv) {
 			printHelp = true;
 			break;
 		} else if (!strncmp(argv[argi], "-v", 2)) {
-			for (int i = 1; i < strlen(argv[argi]); i++) {
+			for (size_t i = 1; i < strlen(argv[argi]); i++) {
 				if (argv[argi][i] == 'v') {
 					++verbosity;
 				} else {
