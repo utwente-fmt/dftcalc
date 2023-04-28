@@ -441,7 +441,7 @@ bool TestSuite::readAndAppendTestFile(File file) {
 		try {
 			vector<YAML::Node> docs = YAML::LoadAll(fin);
 			error = loadTests(docs,loadedTests) ? true : error ;
-		} catch(YAML::Exception e) {
+		} catch(YAML::Exception &e) {
 			error = true;
 			reportYAMLException(e);
 		}
@@ -471,7 +471,7 @@ bool TestSuite::readAndAppendToTestFile(File file) {
 		try {
 			vector<YAML::Node> docs = YAML::LoadAll(fin);
 			error = loadTests(docs,loadedTests) ? true : error ;
-		} catch(YAML::Exception e) {
+		} catch(YAML::Exception &e) {
 			error = true;
 			reportYAMLException(e);
 		}
