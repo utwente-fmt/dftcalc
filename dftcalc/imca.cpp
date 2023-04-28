@@ -74,9 +74,13 @@ bool parseOutputFile(File file, Query q,
 	len = ftell(fp)+1;
 	fseek(fp,0,SEEK_SET);
 	buffer = (char *)malloc(len);
-	memset(buffer, 0, len);
-	fread(buffer,len,1,fp); //read into buffer
+	if (buffer)
+		len = fread(buffer,len,1,fp); //read into buffer
+
 	fclose(fp);
+
+	if (len != 1)
+		return 0;
 
 	decnumber<> margin = q.errorBound;
 	if (q.errorBoundSet)
