@@ -266,7 +266,6 @@ std::string DFT::DFTCalc::getRoot() {
 #endif
 
 	if(messageFormatter) messageFormatter->reportAction("DFT2LNTROOT is: " + dft2lntRoot,VERBOSITY_DATA);
-end:
 	return dft2lntRoot;
 }
 
