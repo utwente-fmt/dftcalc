@@ -329,7 +329,7 @@ int main(int argc, char** argv) {
 		} else if (!strcmp(argv[argi], "-L")) {
 			outputMode = "latex";
 		} else if (!strncmp(argv[argi], "-v", 2)) {
-			for (int i = 1; i < strlen(argv[argi]); i++) {
+			for (size_t i = 1; i < strlen(argv[argi]); i++) {
 				if (argv[argi][i] == 'v') {
 					++verbosity;
 				} else {

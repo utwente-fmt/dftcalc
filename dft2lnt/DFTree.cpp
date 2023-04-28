@@ -55,7 +55,7 @@ namespace DFT {
 				// Add all children to the SAND.
 				for (Nodes::Node *child : seq->getChildren()) {
 					vector<Nodes::Gate *> &pars = child->getParents();
-					for (int i = 0; i < pars.size(); i++) {
+					for (size_t i = 0; i < pars.size(); i++) {
 						if (pars[i] == seq)
 							pars[i] = sand;
 					}
@@ -67,7 +67,7 @@ namespace DFT {
 					// Add the parent to the OR-node's parents
 					seq->getParents().push_back(parent);
 					vector<Nodes::Node *> &pcs = parent->getChildren();
-					for (int i = 0; i < pcs.size(); i++) {
+					for (size_t i = 0; i < pcs.size(); i++) {
 						if (pcs[i] == seq)
 							pcs[i] = sand;
 					}

@@ -83,7 +83,7 @@ public:
 	 */
 	virtual TReturn visit() {
 		TReturn ret = TReturnInit;
-		for(int i=0; i<ast->size(); ++i) {
+		for(size_t i=0; i<ast->size(); ++i) {
 			DFT::AST::ASTNode* node = ast->at(i);
 			switch(node->getType()) {
 			case DFT::AST::TopLevelType: {

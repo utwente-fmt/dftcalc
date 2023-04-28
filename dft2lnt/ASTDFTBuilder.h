@@ -435,14 +435,14 @@ public:
 			g->getChildren().push_back(node);
 			
 			// Add the rest of the children as dependers
-			for(int i=1; i<gate->getChildren()->size(); ++i) {
+			for(size_t i=1; i<gate->getChildren()->size(); ++i) {
 				DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(i)->getString());
 				g->getDependers().push_back(node);
 				node->getTriggers().push_back(g);
 			}
 		} else {
 			// Fix the parent-child relationship for this Gate and its children
-			for(int i=0; i<gate->getChildren()->size(); ++i) {
+			for(size_t i=0; i<gate->getChildren()->size(); ++i) {
 				
 				// Get a child of the Gate
 				DFT::Nodes::Node* node = dft->getNode(gate->getChildren()->at(i)->getString());
