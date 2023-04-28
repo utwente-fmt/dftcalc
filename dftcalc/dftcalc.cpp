@@ -390,7 +390,7 @@ static void addVoteResults(std::vector<DFT::DFTCalculationResultItem> &ret,
 	if (P.empty())
 		return;
 	size_t nResults = P[0].failProbs.size();
-	for (const DFT::DFTCalculationResult r : P) {
+	for (const DFT::DFTCalculationResult &r : P) {
 		if (r.failProbs.size() != nResults) {
 			mf.reportError("Unequal number of results for modules.");
 		}
@@ -398,7 +398,7 @@ static void addVoteResults(std::vector<DFT::DFTCalculationResultItem> &ret,
 	for (size_t i = 0; i < nResults; i++) {
 		std::vector<DFT::DFTCalculationResultItem> probs;
 		DFT::DFTCalculationResultItem ref = P[0].failProbs[i];
-		for (const DFT::DFTCalculationResult r : P) {
+		for (const DFT::DFTCalculationResult &r : P) {
 			DFT::DFTCalculationResultItem it = r.failProbs[i];
 			if (it.missionTime != ref.missionTime
 			    || it.mrmcCommand != ref.mrmcCommand)
