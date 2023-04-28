@@ -277,10 +277,6 @@ bool tryReadFile(MessageFormatter* messageFormatter, File& file, DFTTestSuite& s
 int main(int argc, char** argv) {
 	
 	/* Command line arguments and their default settings */
-	string testSuiteFileName  = "";
-	int    testSuiteFileSet   = 0;
-//	string testFileName       = "";
-//	int    testFileSet        = 0;
 	vector<Test::TestSpecification*> inputTests;
 
 	int verbosity = 0;
@@ -306,14 +302,7 @@ int main(int argc, char** argv) {
 			break;
 		}
 
-		if (!strcmp(argv[argi], "-s")) {
-			// -s FILE
-			if(!strcmp(argv[++argi], "-"))
-				testSuiteFileName = "";
-			else
-				testSuiteFileName = string(argv[++argi]);
-			testSuiteFileSet = 1;
-		} else if (!strcmp(argv[argi], "-c")) {
+		if (!strcmp(argv[argi], "-c")) {
 			forcedRunning = false;
 			useCachedOnly = true;
 		} else if (!strcmp(argv[argi], "-f")) {
