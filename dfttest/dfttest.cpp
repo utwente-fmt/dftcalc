@@ -515,8 +515,12 @@ Test::TestSpecification* DFTTestSuite::readYAMLNodeSpecific(const YAML::Node& no
 	
 	if(const YAML::Node itemNode = node["timeunits"]) {
 		unsigned int value;
-		try { value = itemNode.as<unsigned int>(); }
-		catch(YAML::Exception& e) { reportYAMLException(e); wentOK = false; }
+		try {
+			value = itemNode.as<unsigned int>();
+		} catch(YAML::Exception& e) {
+			reportYAMLException(e);
+			goto error;
+		}
 		test->setTimeUnits(value);
 	}
 	if(const YAML::Node itemNode = node["dft"]) {
