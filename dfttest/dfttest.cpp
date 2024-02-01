@@ -248,6 +248,7 @@ std::string getRoot(MessageFormatter* messageFormatter) {
 #endif
 	
 	if(messageFormatter) messageFormatter->reportAction("DFT2LNTROOT is: " + dft2lntRoot,VERBOSITY_DATA);
+end:
 	return dft2lntRoot;
 }
 
