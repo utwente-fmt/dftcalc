@@ -42,12 +42,11 @@ jobs:
     - name: Compile yaml-cpp if not cached
       if: steps.cache-yaml-cpp.outputs.cache-hit != 'true'
       run: |
-        & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Launch-VsDevShell.ps1"
-        mkdir yaml-cpp/build | Out-Null
-        cd yaml-cpp/build
-        cmake -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DYAML_BUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release ..
-        ninja yaml-cpp.dll
-        copy yaml-cpp.dll,yaml-cpp.lib ..
+        cd yaml-cpp
+        cmake -B build -DYAML_BUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --parallel --verbose --config Release
+        copy build\Release\yaml-cpp.dll .
+        copy build\Release\yaml-cpp.lib .
     - name: Cache DFTRES
       id: cache-dftres
       uses: actions/cache@v4
@@ -93,16 +92,15 @@ jobs:
     - name: Compile IMRMC
       if: steps.cache-imrmc.outputs.cache-hit != 'true'
       run: |
-        & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Launch-VsDevShell.ps1"
+        & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Launch-VsDevShell.ps1" -SkipAutomaticLocation
         cd imrmc
         nmake /F makefile.win imrmc.exe
     - name: Build DFTCalc
       run: |
-        & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Launch-VsDevShell.ps1"
-        mkdir dftcalc\build | Out-Null
-        cd dftcalc\build
-        cmake -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DCMAKE_PREFIX_PATH="$Env:GITHUB_WORKSPACE\yaml-cpp" -DCMAKE_INCLUDE_PATH="$Env:GITHUB_WORKSPACE\yaml-cpp" -DDFTROOT="$Env:GITHUB_WORKSPACE\dftcalc" ..
-        ninja
+        cd dftcalc
+        cmake -B build -DCMAKE_PREFIX_PATH="$Env:GITHUB_WORKSPACE\yaml-cpp" -DCMAKE_INCLUDE_PATH="$Env:GITHUB_WORKSPACE\yaml-cpp" -DDFTROOT="$Env:GITHUB_WORKSPACE\dftcalc"
+        cmake --build build --parallel --verbose --config Release
+        cmake --install build --verbose --config Release
     - name: Set PATH
       run: |
         "$Env:GITHUB_WORKSPACE\imrmc" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
